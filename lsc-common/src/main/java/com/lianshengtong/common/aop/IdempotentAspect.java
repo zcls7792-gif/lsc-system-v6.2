@@ -72,7 +72,7 @@ public class IdempotentAspect {
         try {
             Object result = joinPoint.proceed();
             return result;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // 业务异常时释放幂等锁(允许重试)
             redisTemplate.delete(redisKey);
             throw e;
@@ -97,7 +97,7 @@ public class IdempotentAspect {
             Expression expression = parser.parseExpression(keyExpr);
             Object value = expression.getValue(context);
             return value == null ? null : value.toString();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("[Idempotent] SpEL解析失败 expr={} error={}", keyExpr, e.getMessage());
             return keyExpr;
         }

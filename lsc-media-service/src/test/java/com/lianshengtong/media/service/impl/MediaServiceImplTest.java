@@ -5,9 +5,10 @@ import com.lianshengtong.common.exception.BizException;
 import com.lianshengtong.common.utils.RedisKeyPrefix;
 import com.lianshengtong.media.dto.MediaUploadResult;
 import com.qcloud.cos.COSClient;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -38,13 +40,15 @@ class MediaServiceImplTest {
     @Mock
     OSS ossClient;
 
+    private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     private COSClient cosClient;
 
-    @InjectMocks
-    MediaServiceImpl mediaService;
+    private MediaServiceImpl mediaService;
 
     @BeforeEach
     void setUp() {
+        mediaService = new MediaServiceImpl(stringRedisTemplate, meterRegistry);
         ReflectionTestUtils.setField(mediaService, "ossCdn", "https://oss.example.com");
         ReflectionTestUtils.setField(mediaService, "cosCdn", "https://cos.example.com");
         ReflectionTestUtils.setField(mediaService, "imageMaxMb", 10L);
@@ -55,7 +59,7 @@ class MediaServiceImplTest {
         ReflectionTestUtils.setField(mediaService, "ossBucket", "test-oss-bucket");
         ReflectionTestUtils.setField(mediaService, "cosBucket", "test-cos-bucket");
 
-        ReflectionTestUtils.setField(mediaService, "ossDown", false);
+        ((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).set(false);
 
         cosClient = mock(COSClient.class);
         ReflectionTestUtils.setField(mediaService, "ossClient", ossClient);
@@ -289,7 +293,7 @@ class MediaServiceImplTest {
         when(mockFile.getContentType()).thenReturn("image/jpeg");
         when(mockFile.getBytes()).thenReturn(fileBytes);
 
-        ReflectionTestUtils.setField(mediaService, "ossDown", true);
+        ((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).set(true);
 
         MediaUploadResult result = mediaService.uploadImage(mockFile);
 
@@ -416,7 +420,7 @@ class MediaServiceImplTest {
     void testGetMediaUrl_OssDown_ReturnsCosUrl() {
         String mediaKey = "lsc/20250101/abc123.jpg";
         when(valueOperations.get(RedisKeyPrefix.MEDIA_URL + mediaKey)).thenReturn(null);
-        ReflectionTestUtils.setField(mediaService, "ossDown", true);
+        ((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).set(true);
 
         String result = mediaService.getMediaUrl(mediaKey);
 

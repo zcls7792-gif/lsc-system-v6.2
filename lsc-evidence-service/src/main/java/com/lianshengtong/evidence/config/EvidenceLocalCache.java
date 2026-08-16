@@ -163,7 +163,7 @@ public class EvidenceLocalCache {
                 evictCount.addAndGet(cleaned);
                 log.debug("Cache cleanup: removed {} expired entries", cleaned);
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Cache cleanup error", e);
         }
     }

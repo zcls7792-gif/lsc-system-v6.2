@@ -143,7 +143,7 @@ public class PromotionServiceImpl implements PromotionService {
         try {
             R<Object> resp = ledgerFeignClient.ledgerOp(opDTO);
             transferSuccess = resp != null && resp.isSuccess();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("奖励划转调用账本服务异常 userId={} referrer={}", dto.getUserId(), referrerId, e);
         }
         if (!transferSuccess) {
@@ -244,7 +244,7 @@ public class PromotionServiceImpl implements PromotionService {
                     pending.setRetryCount(pending.getRetryCount() + 1);
                     promotionPendingMapper.updateById(pending);
                 }
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.error("挂账补发异常 pendingId={}", pending.getId(), e);
                 pending.setRetryCount(pending.getRetryCount() + 1);
                 pending.setRemark("补发异常: " + e.getMessage());
@@ -283,7 +283,7 @@ public class PromotionServiceImpl implements PromotionService {
                     referrerId = Long.valueOf(String.valueOf(ref));
                 }
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("查询用户推荐人失败 consumerId={} err={}", consumerId, e.getMessage());
         }
 
@@ -299,7 +299,7 @@ public class PromotionServiceImpl implements PromotionService {
             RewardResultDTO result = calcReward(dto);
             log.info("首单通知处理完成 consumerId={} orderNo={} firstOrder={} success={} pendingId={}",
                     consumerId, orderNo, result.getFirstOrder(), result.getSuccess(), result.getPendingId());
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // 不抛出，避免阻断调用方主流程(order-service 已 try-catch 兜底)
             log.error("首单通知处理异常 consumerId={} orderNo={}", consumerId, orderNo, e);
         }

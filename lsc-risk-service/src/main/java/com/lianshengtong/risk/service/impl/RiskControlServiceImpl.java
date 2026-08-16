@@ -171,7 +171,7 @@ public class RiskControlServiceImpl implements RiskControlService {
                         riskType = 5;
                     }
                 }
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.error("AI风控评分异常 userId={}", dto.getUserId(), e);
             }
         }

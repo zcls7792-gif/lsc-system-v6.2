@@ -138,7 +138,7 @@ public class AiGatewayController {
         AiRiskControlDTO.Response resp;
         try {
             resp = riskControlService.score(req);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // 降级：异常时返回 0(最低风险=放行)，与"高分=危险"契约一致。
             // 调用方按风险阈值判定，0 不会被判定为高风险，避免误拦截管理员正常操作。
             log.warn("[monitorAdminAction] AI 风控评分异常 adminId={} module={} action={}",

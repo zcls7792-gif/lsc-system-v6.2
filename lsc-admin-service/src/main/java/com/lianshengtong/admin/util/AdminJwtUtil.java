@@ -2,6 +2,7 @@ package com.lianshengtong.admin.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -72,7 +73,7 @@ public class AdminJwtUtil {
         try {
             Claims claims = parseToken(token);
             return claims.getExpiration().after(new Date());
-        } catch (Exception e) {
+        } catch (JwtException e) {
             return false;
         }
     }

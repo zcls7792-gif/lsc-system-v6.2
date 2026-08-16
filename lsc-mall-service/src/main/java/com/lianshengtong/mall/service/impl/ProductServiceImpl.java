@@ -58,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
             if (resp == null || !resp.isSuccess()) {
                 log.warn("AI审核任务提交失败 productId={}", product.getId());
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("AI审核任务提交异常 productId={}", product.getId(), e);
         }
         return product.getId();

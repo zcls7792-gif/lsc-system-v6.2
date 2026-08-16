@@ -8,13 +8,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.RequestPath;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.mock.web.server.MockServerHttpRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.net.InetSocketAddress;
+import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -33,6 +35,21 @@ class RateLimitConfigTest {
         rateLimitConfig = new RateLimitConfig();
     }
 
+    private ServerHttpRequest mockRequest(HttpHeaders headers, InetSocketAddress remoteAddress) {
+        ServerHttpRequest request = mock(ServerHttpRequest.class);
+        lenient().when(request.getURI()).thenReturn(URI.create("/test"));
+        RequestPath requestPath = mock(RequestPath.class);
+        lenient().when(requestPath.value()).thenReturn("/test");
+        lenient().when(request.getPath()).thenReturn(requestPath);
+        when(request.getHeaders()).thenReturn(headers != null ? headers : new HttpHeaders());
+        if (remoteAddress != null) {
+            lenient().when(request.getRemoteAddress()).thenReturn(remoteAddress);
+        } else {
+            lenient().when(request.getRemoteAddress()).thenReturn(null);
+        }
+        return request;
+    }
+
     @Nested
     @DisplayName("IP解析(resolveIp)测试")
     class ResolveIpTest {
@@ -40,9 +57,9 @@ class RateLimitConfigTest {
         @Test
         @DisplayName("优先使用 X-Forwarded-For 头获取IP")
         void shouldResolveIpFromXForwardedFor() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Forwarded-For", "10.0.0.1")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Forwarded-For", "10.0.0.1");
+            ServerHttpRequest request = mockRequest(headers, null);
 
             String ip = ReflectionTestUtils.invokeMethod(
                     rateLimitConfig, "resolveIp", request);
@@ -52,9 +69,9 @@ class RateLimitConfigTest {
         @Test
         @DisplayName("X-Forwarded-For 有多级代理时取第一个IP")
         void shouldResolveFirstIpFromXForwardedForChain() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Forwarded-For", "10.0.0.1, 10.0.0.2, 10.0.0.3")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Forwarded-For", "10.0.0.1, 10.0.0.2, 10.0.0.3");
+            ServerHttpRequest request = mockRequest(headers, null);
 
             String ip = ReflectionTestUtils.invokeMethod(
                     rateLimitConfig, "resolveIp", request);
@@ -64,9 +81,9 @@ class RateLimitConfigTest {
         @Test
         @DisplayName("X-Forwarded-For 为空时使用 X-Real-IP")
         void shouldFallbackToXRealIp() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Real-IP", "172.16.0.1")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Real-IP", "172.16.0.1");
+            ServerHttpRequest request = mockRequest(headers, null);
 
             String ip = ReflectionTestUtils.invokeMethod(
                     rateLimitConfig, "resolveIp", request);
@@ -76,10 +93,10 @@ class RateLimitConfigTest {
         @Test
         @DisplayName("X-Forwarded-For 为空字符串时使用 X-Real-IP")
         void shouldFallbackToXRealIpWhenXffBlank() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Forwarded-For", "")
-                    .header("X-Real-IP", "172.16.0.2")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Forwarded-For", "");
+            headers.add("X-Real-IP", "172.16.0.2");
+            ServerHttpRequest request = mockRequest(headers, null);
 
             String ip = ReflectionTestUtils.invokeMethod(
                     rateLimitConfig, "resolveIp", request);
@@ -89,8 +106,8 @@ class RateLimitConfigTest {
         @Test
         @DisplayName("无代理头时使用远程地址")
         void shouldFallbackToRemoteAddress() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test").build();
-            request.setRemoteAddress(new InetSocketAddress("192.168.1.50", 54321));
+            InetSocketAddress remoteAddress = new InetSocketAddress("192.168.1.50", 54321);
+            ServerHttpRequest request = mockRequest(new HttpHeaders(), remoteAddress);
 
             String ip = ReflectionTestUtils.invokeMethod(
                     rateLimitConfig, "resolveIp", request);
@@ -100,7 +117,7 @@ class RateLimitConfigTest {
         @Test
         @DisplayName("无任何IP信息时返回 unknown")
         void shouldReturnUnknownWhenNoIpAvailable() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test").build();
+            ServerHttpRequest request = mockRequest(new HttpHeaders(), null);
 
             String ip = ReflectionTestUtils.invokeMethod(
                     rateLimitConfig, "resolveIp", request);
@@ -116,9 +133,9 @@ class RateLimitConfigTest {
         @DisplayName("ipKeyResolver 返回 X-Forwarded-For 中的IP")
         void shouldResolveIpFromXForwardedFor() {
             KeyResolver resolver = rateLimitConfig.ipKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Forwarded-For", "10.0.0.1")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Forwarded-For", "10.0.0.1");
+            ServerHttpRequest request = mockRequest(headers, null);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -129,9 +146,9 @@ class RateLimitConfigTest {
         @DisplayName("ipKeyResolver 返回 X-Real-IP 中的IP")
         void shouldResolveIpFromXRealIp() {
             KeyResolver resolver = rateLimitConfig.ipKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Real-IP", "172.16.0.1")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Real-IP", "172.16.0.1");
+            ServerHttpRequest request = mockRequest(headers, null);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -142,8 +159,8 @@ class RateLimitConfigTest {
         @DisplayName("ipKeyResolver 返回远程地址作为兜底")
         void shouldResolveIpFromRemoteAddress() {
             KeyResolver resolver = rateLimitConfig.ipKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test").build();
-            request.setRemoteAddress(new InetSocketAddress("192.168.1.100", 12345));
+            InetSocketAddress remoteAddress = new InetSocketAddress("192.168.1.100", 12345);
+            ServerHttpRequest request = mockRequest(new HttpHeaders(), remoteAddress);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -159,9 +176,9 @@ class RateLimitConfigTest {
         @DisplayName("存在 X-User-Id 时使用用户ID作为限流键")
         void shouldUseUserIdWhenHeaderPresent() {
             KeyResolver resolver = rateLimitConfig.userKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-User-Id", "user123")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-User-Id", "user123");
+            ServerHttpRequest request = mockRequest(headers, null);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -172,9 +189,9 @@ class RateLimitConfigTest {
         @DisplayName("无 X-User-Id 时回退到IP限流")
         void shouldFallbackToIpWhenNoUserHeader() {
             KeyResolver resolver = rateLimitConfig.userKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Forwarded-For", "10.0.0.1")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Forwarded-For", "10.0.0.1");
+            ServerHttpRequest request = mockRequest(headers, null);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -185,10 +202,10 @@ class RateLimitConfigTest {
         @DisplayName("X-User-Id 为空字符串时回退到IP限流")
         void shouldFallbackToIpWhenUserHeaderBlank() {
             KeyResolver resolver = rateLimitConfig.userKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-User-Id", "")
-                    .header("X-Forwarded-For", "10.0.0.2")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-User-Id", "");
+            headers.add("X-Forwarded-For", "10.0.0.2");
+            ServerHttpRequest request = mockRequest(headers, null);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -199,10 +216,10 @@ class RateLimitConfigTest {
         @DisplayName("有用户ID但无代理头时仍正确组合")
         void shouldUseUserPrefixWithRemoteIp() {
             KeyResolver resolver = rateLimitConfig.userKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-User-Id", "merchant456")
-                    .build();
-            request.setRemoteAddress(new InetSocketAddress("192.168.1.200", 33333));
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-User-Id", "merchant456");
+            InetSocketAddress remoteAddress = new InetSocketAddress("192.168.1.200", 33333);
+            ServerHttpRequest request = mockRequest(headers, remoteAddress);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -218,10 +235,10 @@ class RateLimitConfigTest {
         @DisplayName("有用户ID时组合用户和IP作为限流键")
         void shouldCombineUserAndIpWhenUserPresent() {
             KeyResolver resolver = rateLimitConfig.ipUserKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-User-Id", "user789")
-                    .header("X-Forwarded-For", "10.0.0.1")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-User-Id", "user789");
+            headers.add("X-Forwarded-For", "10.0.0.1");
+            ServerHttpRequest request = mockRequest(headers, null);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -232,9 +249,9 @@ class RateLimitConfigTest {
         @DisplayName("无用户ID时回退到纯IP限流")
         void shouldFallbackToIpOnlyWhenNoUser() {
             KeyResolver resolver = rateLimitConfig.ipUserKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Forwarded-For", "10.0.0.2")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Forwarded-For", "10.0.0.2");
+            ServerHttpRequest request = mockRequest(headers, null);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -245,10 +262,10 @@ class RateLimitConfigTest {
         @DisplayName("有用户ID但无代理头时使用远程地址组合")
         void shouldCombineUserWithRemoteAddress() {
             KeyResolver resolver = rateLimitConfig.ipUserKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-User-Id", "admin001")
-                    .build();
-            request.setRemoteAddress(new InetSocketAddress("192.168.1.10", 11111));
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-User-Id", "admin001");
+            InetSocketAddress remoteAddress = new InetSocketAddress("192.168.1.10", 11111);
+            ServerHttpRequest request = mockRequest(headers, remoteAddress);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();
@@ -259,10 +276,10 @@ class RateLimitConfigTest {
         @DisplayName("用户ID为空时回退到纯IP限流")
         void shouldFallbackToIpWhenUserHeaderBlank() {
             KeyResolver resolver = rateLimitConfig.ipUserKeyResolver();
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-User-Id", " ")
-                    .header("X-Real-IP", "172.16.0.5")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-User-Id", " ");
+            headers.add("X-Real-IP", "172.16.0.5");
+            ServerHttpRequest request = mockRequest(headers, null);
             when(exchange.getRequest()).thenReturn(request);
 
             String key = resolver.resolve(exchange).block();

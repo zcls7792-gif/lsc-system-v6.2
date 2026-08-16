@@ -342,11 +342,18 @@ class CommonP4Test {
             return;
         }
         String token = com.lianshengtong.common.utils.JwtUtil.generateToken(1001L, 0, "lsc-user-service");
-        char[] chars = token.toCharArray();
-        chars[chars.length - 1] = chars[chars.length - 1] == 'A' ? 'B' : 'A';
-        String tampered = new String(chars);
+        String[] parts = token.split("\\.");
+        StringBuilder tampered = new StringBuilder();
+        tampered.append(parts[0]).append('.').append(parts[1]).append('.');
+        byte[] sigBytes = java.util.Base64.getUrlDecoder().decode(parts[2]);
+        if (sigBytes.length == 0) {
+            Assumptions.assumeTrue(false, "签名为空,跳过");
+            return;
+        }
+        sigBytes[sigBytes.length - 1] ^= 0x01;
+        tampered.append(java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(sigBytes));
         assertThrows(com.lianshengtong.common.utils.JwtUtil.JwtValidationException.class,
-                () -> com.lianshengtong.common.utils.JwtUtil.parseToken(tampered));
+                () -> com.lianshengtong.common.utils.JwtUtil.parseToken(tampered.toString()));
     }
 
     @Test

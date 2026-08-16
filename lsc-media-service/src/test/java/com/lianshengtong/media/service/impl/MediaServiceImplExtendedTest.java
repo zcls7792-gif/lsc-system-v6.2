@@ -10,17 +10,19 @@ import com.qcloud.cos.exception.CosClientException;
 import com.qcloud.cos.model.PutObjectRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -41,14 +43,15 @@ class MediaServiceImplExtendedTest {
 
     @Mock
     OSS ossClient;
+    private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     private COSClient cosClient;
 
-    @InjectMocks
-    MediaServiceImpl mediaService;
+    private MediaServiceImpl mediaService;
 
     @BeforeEach
     void setUp() {
+        mediaService = new MediaServiceImpl(stringRedisTemplate, meterRegistry);
         ReflectionTestUtils.setField(mediaService, "ossCdn", "https://oss.example.com");
         ReflectionTestUtils.setField(mediaService, "cosCdn", "https://cos.example.com");
         ReflectionTestUtils.setField(mediaService, "imageMaxMb", 10L);
@@ -58,7 +61,7 @@ class MediaServiceImplExtendedTest {
         ReflectionTestUtils.setField(mediaService, "transcodeProfiles", "720p,480p,360p");
         ReflectionTestUtils.setField(mediaService, "ossBucket", "test-oss-bucket");
         ReflectionTestUtils.setField(mediaService, "cosBucket", "test-cos-bucket");
-        ReflectionTestUtils.setField(mediaService, "ossDown", false);
+        ((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).set(false);
 
         cosClient = mock(COSClient.class);
         ReflectionTestUtils.setField(mediaService, "ossClient", ossClient);
@@ -119,7 +122,7 @@ class MediaServiceImplExtendedTest {
 
         assertNotNull(result);
         assertTrue(result.getPrimaryUrl().startsWith("https://cos.example.com/"));
-        assertTrue(ReflectionTestUtils.getField(mediaService, "ossDown").equals(true));
+        assertTrue(((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).get());
         verify(cosClient).putObject(any(PutObjectRequest.class));
     }
 
@@ -134,7 +137,7 @@ class MediaServiceImplExtendedTest {
         when(mockFile.getBytes()).thenReturn(bytes);
 
         // 先让OSS成功
-        ReflectionTestUtils.setField(mediaService, "ossDown", false);
+        ((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).set(false);
         // 备份COS失败
         doThrow(new CosClientException("COS备份失败"))
                 .when(cosClient).putObject(any(PutObjectRequest.class));
@@ -143,7 +146,7 @@ class MediaServiceImplExtendedTest {
 
         assertNotNull(result);
         assertTrue(result.getPrimaryUrl().startsWith("https://oss.example.com/"));
-        assertFalse(result.isBackupEnabled());
+        assertFalse(result.getBackupEnabled());
     }
 
     @Test
@@ -169,7 +172,7 @@ class MediaServiceImplExtendedTest {
         when(mockFile.getContentType()).thenReturn("image/jpeg");
         when(mockFile.getBytes()).thenReturn(bytes);
 
-        ReflectionTestUtils.setField(mediaService, "ossDown", true);
+        ((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).set(true);
         // cosClient 正常，但在 uploadToCos 内抛出 CosClientException
         doThrow(new CosClientException("COS失败"))
                 .when(cosClient).putObject(any(PutObjectRequest.class));
@@ -189,7 +192,7 @@ class MediaServiceImplExtendedTest {
         when(mockFile.getOriginalFilename()).thenReturn("clip.mp4");
         when(mockFile.getContentType()).thenReturn("video/mp4");
         when(mockFile.getBytes()).thenReturn(bytes);
-        ReflectionTestUtils.setField(mediaService, "ossDown", true);
+        ((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).set(true);
 
         MediaUploadResult result = mediaService.uploadVideo(mockFile);
 
@@ -212,7 +215,7 @@ class MediaServiceImplExtendedTest {
         MediaUploadResult result = mediaService.uploadVideo(mockFile);
 
         assertTrue(result.getPrimaryUrl().startsWith("https://cos.example.com/"));
-        assertTrue(ReflectionTestUtils.getField(mediaService, "ossDown").equals(true));
+        assertTrue(((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).get());
     }
 
     @Test
@@ -233,8 +236,6 @@ class MediaServiceImplExtendedTest {
     @Test
     @DisplayName("buildMediaKey: 文件无扩展名时使用bin")
     void buildMediaKey_noExt_usesBin() {
-        when(mockFile.isEmpty()).thenReturn(false);
-        when(mockFile.getSize()).thenReturn(1024L);
         when(mockFile.getOriginalFilename()).thenReturn("noext");
 
         String key = ReflectionTestUtils.invokeMethod(mediaService, "buildMediaKey", mockFile);
@@ -245,8 +246,6 @@ class MediaServiceImplExtendedTest {
     @Test
     @DisplayName("buildMediaKey: 含完整路径的文件名仅取文件名")
     void buildMediaKey_withPath_extracted() {
-        when(mockFile.isEmpty()).thenReturn(false);
-        when(mockFile.getSize()).thenReturn(1024L);
         when(mockFile.getOriginalFilename()).thenReturn("/tmp/path/file.PNG");
 
         String key = ReflectionTestUtils.invokeMethod(mediaService, "buildMediaKey", mockFile);
@@ -312,7 +311,7 @@ class MediaServiceImplExtendedTest {
     void videoStatus_withCosCdnUrl() {
         String url = "https://cos.example.com/lsc/20250101/video.mp4";
         when(valueOperations.get(RedisKeyPrefix.MEDIA_VIDEO_STATUS + url)).thenReturn(null);
-        when(cosClient.doesObjectExist(anyString(), anyString())).thenReturn(false);
+        when(ossClient.doesObjectExist(anyString(), anyString())).thenReturn(false);
 
         Map<String, Object> result = mediaService.videoStatus(url);
         assertEquals("transcoding", result.get("status"));
@@ -364,8 +363,8 @@ class MediaServiceImplExtendedTest {
     void videoStatus_coverExists_returnsCoverUrl() {
         String url = "https://oss.example.com/lsc/20250101/video.mp4";
         when(valueOperations.get(RedisKeyPrefix.MEDIA_VIDEO_STATUS + url)).thenReturn(null);
-        when(ossClient.doesObjectExist(eq("test-oss-bucket"), contains("_cover.jpg"))).thenReturn(true);
-        when(ossClient.doesObjectExist(eq("test-oss-bucket"), contains("720p"))).thenReturn(false);
+        when(ossClient.doesObjectExist(anyString(), anyString())).thenReturn(false);
+        when(ossClient.doesObjectExist(anyString(), contains("_cover.jpg"))).thenReturn(true);
 
         Map<String, Object> result = mediaService.videoStatus(url);
         assertNotNull(result.get("coverUrl"));
@@ -379,7 +378,7 @@ class MediaServiceImplExtendedTest {
     void getMediaUrl_ossDown_noCache_cosCdn() {
         String mediaKey = "lsc/x/y.jpg";
         when(valueOperations.get(RedisKeyPrefix.MEDIA_URL + mediaKey)).thenReturn(null);
-        ReflectionTestUtils.setField(mediaService, "ossDown", true);
+        ((AtomicBoolean) ReflectionTestUtils.getField(mediaService, "ossDown")).set(true);
 
         String result = mediaService.getMediaUrl(mediaKey);
 

@@ -113,7 +113,7 @@ public class BatchReleaseServiceImpl implements BatchReleaseService {
                 summary.setStatus(ReleaseTaskStatusEnum.RUNNING.getCode());
                 dailyReleaseSummaryMapper.updateById(summary);
                 log.info("[BatchRelease] 批次#{} 完成 本批释放={} 累计释放={}/{}", batchNo, batchReleased, actualReleased, planTotal);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 failedBatchCount++;
                 // 失败批次回滚并标记(Seata 全局事务回滚由账本服务侧保障；此处记录失败)
                 log.error("[BatchRelease] 批次#{} 失败，回滚并标记 from={} to={} 原因={}", batchNo, from, to, e.getMessage(), e);
@@ -245,7 +245,7 @@ public class BatchReleaseServiceImpl implements BatchReleaseService {
             }
             log.info("[BatchRelease] 加载待释放记录 用户数={} 累计={} planTotal={} actualReleased={}",
                     items.size(), cumulative, planTotal, actualReleased);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("[BatchRelease] 加载待释放记录异常", e);
         }
         return items;

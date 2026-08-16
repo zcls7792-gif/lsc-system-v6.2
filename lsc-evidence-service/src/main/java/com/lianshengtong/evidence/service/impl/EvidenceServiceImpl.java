@@ -180,14 +180,14 @@ public class EvidenceServiceImpl implements EvidenceService {
                 record.setChainTxHash(txHash);
                 try {
                     record.setBlockNumber(smartContractService.queryBlockNumberWithRetry(txHash, 3));
-                } catch (Exception queryEx) {
+                } catch (RuntimeException queryEx) {
                     log.warn("区块查询失败 recordId={} txHash={} err={}, 记录仍标记为成功", record.getId(), txHash, queryEx.getMessage());
                 }
                 record.setStatus(1);
                 record.setRetryCount(attempt);
                 blockchainRecordMapper.updateById(record);
                 return;
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 String errMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
                 log.warn("存证上链重试 {}/{} recordId={} err={}", attempt, maxRetry, record.getId(), errMsg);
                 record.setRetryCount(attempt);
@@ -245,7 +245,7 @@ public class EvidenceServiceImpl implements EvidenceService {
                 snapshot.setStatus(1);
                 lastError = null;
                 break;
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 lastError = e;
                 log.warn("每日快照Merkle根上链失败 attempt={}/{} date={} err={}",
                         attempt, maxRetries, targetDate, e.getMessage());
@@ -294,7 +294,7 @@ public class EvidenceServiceImpl implements EvidenceService {
                 snap.setRemark("补偿重试成功");
                 dailySnapshotRecordMapper.updateById(snap);
                 successCount++;
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 snap.setStatus(2);
                 snap.setRemark("补偿重试失败: " + e.getMessage());
                 dailySnapshotRecordMapper.updateById(snap);
@@ -343,7 +343,7 @@ public class EvidenceServiceImpl implements EvidenceService {
                 record.setStatus(1);
                 record.setChainTxHash(txHash);
                 blockchainRecordMapper.updateById(record);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 int currentRetry = failover.getRetryCount() != null ? failover.getRetryCount() : 0;
                 int newRetry = currentRetry + 1;
                 failover.setRetryCount(newRetry);

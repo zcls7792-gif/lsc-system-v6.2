@@ -177,7 +177,7 @@ public class OrderServiceImpl implements OrderService {
             promotionFeignClient.notifyFirstOrder(
                     order.getConsumerId(), order.getOrderNo(),
                     paidAmount, OrderStatusEnum.COMPLETED.getCode(), refunded);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("通知推广首单失败 orderNo={} err={}", order.getOrderNo(), e.getMessage());
         }
         log.info("订单完成 orderNo={}", orderNo);

@@ -3,6 +3,7 @@ package com.lianshengtong.gateway.filter;
 import com.alibaba.fastjson2.JSON;
 import com.lianshengtong.common.result.R;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -101,7 +102,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         Claims claims;
         try {
             claims = parseToken(token);
-        } catch (Exception e) {
+        } catch (JwtException e) {
             log.debug("JWT 验签失败 path={} reason={}", path, e.getMessage());
             return unauthorized(exchange, "认证令牌无效或已过期");
         }
@@ -131,7 +132,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-        } catch (Exception userEx) {
+        } catch (JwtException userEx) {
             return Jwts.parser()
                     .verifyWith(adminKey)
                     .requireIssuer(adminIssuer)

@@ -137,7 +137,7 @@ public class MerchantController {
                     return R.ok(result);
                 }
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("[violationLogs] 调用 risk-service 失败 merchantId={}", merchantId, e);
         }
         return R.ok(new ArrayList<>());

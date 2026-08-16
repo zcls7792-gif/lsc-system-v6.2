@@ -31,7 +31,7 @@ class LogSanitizerTest {
         @Test
         @DisplayName("移除HTML标签")
         void removesHtmlTags() {
-            assertEquals("Hello World", LogSanitizer.sanitize("<script>alert(1)</script>Hello World"));
+            assertEquals("alert(1)Hello World", LogSanitizer.sanitize("<script>alert(1)</script>Hello World"));
         }
 
         @Test

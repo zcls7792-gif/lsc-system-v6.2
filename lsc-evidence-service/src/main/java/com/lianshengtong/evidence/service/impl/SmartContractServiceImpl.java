@@ -107,7 +107,7 @@ public class SmartContractServiceImpl implements SmartContractService {
 
             log.info("存证哈希上链成功 hash={} txHash={} latency={}ms", dataHash, txHash, latency);
             return txHash;
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             log.error("存证哈希上链失败 hash={}", dataHash, e);
             throw new RuntimeException("上链失败: " + e.getMessage(), e);
         }
@@ -127,7 +127,7 @@ public class SmartContractServiceImpl implements SmartContractService {
             try {
                 String txHash = writeHash(hash, bizId);
                 results.add(new BatchWriteResult(hash, txHash, null));
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 results.add(new BatchWriteResult(hash, null, e.getMessage()));
             }
         }
@@ -156,7 +156,7 @@ public class SmartContractServiceImpl implements SmartContractService {
             boolean verified = result != null && !result.isBlank();
             evidenceLocalCache.put(cacheKey, verified, VERIFY_CACHE_TTL_MS);
             return verified ? result : null;
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             log.error("链上查询失败 hash={}", dataHash, e);
             return null;
         }
@@ -193,7 +193,7 @@ public class SmartContractServiceImpl implements SmartContractService {
                 recordMetrics(latency);
                 return blockNumber;
             }
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             log.error("查询区块高度失败 txHash={}", txHash, e);
         }
         return null;

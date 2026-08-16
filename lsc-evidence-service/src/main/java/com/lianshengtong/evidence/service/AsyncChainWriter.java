@@ -191,7 +191,7 @@ public class AsyncChainWriter {
             record.setChainTxHash(txHash);
             try {
                 record.setBlockNumber(smartContractService.queryBlockNumberWithRetry(txHash, 3));
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("区块查询失败 recordId={} txHash={} err={}, 记录仍标记为成功", record.getId(), txHash, e.getMessage());
             }
             record.setCompletedAt(LocalDateTime.now());
@@ -199,7 +199,7 @@ public class AsyncChainWriter {
             blockchainRecordMapper.updateById(record);
 
             evidenceLocalCache.put(statusKey, 1, STATUS_CACHE_TTL_MS);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // N5-fix: 失败时创建故障表记录并标记 status=2
             record.setStatus(2);
             record.setUpdatedAt(LocalDateTime.now());
@@ -259,7 +259,7 @@ public class AsyncChainWriter {
                     processRecord(rec);
                     successCount++;
                     totalProcessed.incrementAndGet(); // B15-fix: 串行降级路径需更新全局成功计数
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     failCount++;
                     totalFailed.incrementAndGet();
                     log.error("异步上链失败 recordId={} err={}", rec.getId(), e.getMessage());
@@ -315,7 +315,7 @@ public class AsyncChainWriter {
                         batch.size(), totalProcessed.get(), totalFailed.get(), batchLatency);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.error("并行批处理异常", e);
             } finally {
                 semaphoreWrapper.release(batch.size());
@@ -351,7 +351,7 @@ public class AsyncChainWriter {
             record.setChainTxHash(txHash);
             try {
                 record.setBlockNumber(smartContractService.queryBlockNumberWithRetry(txHash, 3));
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("区块查询失败 recordId={} txHash={} err={}, 记录仍标记为成功", record.getId(), txHash, e.getMessage());
             }
             record.setCompletedAt(LocalDateTime.now());
@@ -363,7 +363,7 @@ public class AsyncChainWriter {
             long latency = System.currentTimeMillis() - start;
             recordSuccess();
             totalProcessLatencyMs.addAndGet(latency);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             recordFailure();
             throw e;
         }

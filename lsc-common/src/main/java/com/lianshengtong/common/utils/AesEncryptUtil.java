@@ -4,6 +4,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -33,7 +34,7 @@ public class AesEncryptUtil {
             MessageDigest sha = MessageDigest.getInstance("SHA-256");
             byte[] keyBytes = sha.digest(keySource.getBytes(StandardCharsets.UTF_8));
             return new SecretKeySpec(keyBytes, "AES");
-        } catch (Exception e) {
+        } catch (GeneralSecurityException e) {
             throw new RuntimeException("AES密钥生成失败", e);
         }
     }
@@ -55,7 +56,7 @@ public class AesEncryptUtil {
             System.arraycopy(iv, 0, combined, 0, IV_LENGTH);
             System.arraycopy(encrypted, 0, combined, IV_LENGTH, encrypted.length);
             return Base64.getEncoder().encodeToString(combined);
-        } catch (Exception e) {
+        } catch (GeneralSecurityException e) {
             throw new RuntimeException("AES加密失败", e);
         }
     }
@@ -77,7 +78,7 @@ public class AesEncryptUtil {
             return new String(decrypted, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
             throw e;
-        } catch (Exception e) {
+        } catch (GeneralSecurityException e) {
             throw new RuntimeException("AES解密失败", e);
         }
     }

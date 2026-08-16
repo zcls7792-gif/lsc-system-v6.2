@@ -55,7 +55,7 @@ public class AdminAuditServiceImpl implements AdminAuditService {
                             auditLog.getAdminId(), auditLog.getModule(), auditLog.getAction(), score);
                 }
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("AI异常监控调用失败 adminId={}", auditLog.getAdminId(), e);
         }
     }

@@ -61,7 +61,7 @@ public class AdminController {
             Long adminId = parseAdminId(token);
             adminAuditService.record(adminId, "admin", "logout",
                     String.valueOf(adminId), "退出登录", request.getRemoteAddr());
-        } catch (Exception ignored) {
+        } catch (RuntimeException ignored) {
             // 退出登录即使 token 无效也返回成功，前端清理本地态即可
         }
         return R.ok();

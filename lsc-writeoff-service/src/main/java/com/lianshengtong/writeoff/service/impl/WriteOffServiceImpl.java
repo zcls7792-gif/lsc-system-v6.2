@@ -197,11 +197,11 @@ public class WriteOffServiceImpl implements WriteOffService {
                 if (rows == 0) {
                     throw new BizException("核销记录更新失败(乐观锁冲突)，请核对账本后人工处理");
                 }
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 // 标记失败并记录原因(通过 self 代理在新事务中执行，避免主事务回滚导致失败记录一并回滚)
                 try {
                     self.markRecordFailed(record.getId(), record.getVersion(), e.getMessage());
-                } catch (Exception ex) {
+                } catch (RuntimeException ex) {
                     log.error("标记核销记录失败时异常 orderNo={} recordId={}", record.getOrderNo(), record.getId(), ex);
                 }
                 log.error("核销失败 orderNo={} merchantId={} err={}", record.getOrderNo(), merchantId, e.getMessage());
@@ -211,7 +211,7 @@ public class WriteOffServiceImpl implements WriteOffService {
             // 11. 更新商家最近核销日期
             try {
                 merchantFeignClient.updateLastNhDate(merchantId, today);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("更新商家最近核销日期失败 merchantId={} err={}", merchantId, e.getMessage());
             }
             log.info("核销成功 orderNo={} merchantId={} lscAmount={} cashAmount={}",

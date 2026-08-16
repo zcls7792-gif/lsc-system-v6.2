@@ -1229,6 +1229,7 @@ class StressAndSecurityTest {
         assertNotNull(defaultToken);
 
         String shortToken = JwtUtil.generateToken(2L, 2, "issuer-short", 100L);
+        assertDoesNotThrow(() -> Thread.sleep(150));
         assertFalse(JwtUtil.isValid(shortToken), "100ms过期的Token应很快失效");
 
         String longToken = JwtUtil.generateToken(3L, 3, "issuer-long", 3600_000L);

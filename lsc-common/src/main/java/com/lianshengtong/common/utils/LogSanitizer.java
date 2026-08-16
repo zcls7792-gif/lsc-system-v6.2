@@ -29,15 +29,26 @@ public final class LogSanitizer {
             "\u001c", "\u001d", "\u001e", "\u001f"
     };
 
+    private static final java.util.regex.Pattern HTML_TAG_PATTERN =
+            java.util.regex.Pattern.compile("<[^>]*>");
+
     public static String sanitize(String input) {
         if (input == null) {
             return null;
         }
         String sanitized = input;
+        sanitized = HTML_TAG_PATTERN.matcher(sanitized).replaceAll("");
+        sanitized = sanitized.replace("\r\n", "_");
+        sanitized = sanitized.replace("\r", "_");
+        sanitized = sanitized.replace("\n", "_");
         for (String pattern : DANGEROUS_PATTERNS) {
-            sanitized = sanitized.replace(pattern, " ");
+            if (!pattern.equals("\r") && !pattern.equals("\n") && !pattern.equals("\r\n")) {
+                sanitized = sanitized.replace(pattern, "");
+            }
         }
-        sanitized = sanitized.replaceAll("\\s{2,}", " ");
+        sanitized = sanitized.replaceAll("_{2,}", "_");
+        sanitized = sanitized.replaceAll("[ \\t]{2,}", " ");
+        sanitized = sanitized.replaceAll(" _ |_ ", "_");
         return sanitized.trim();
     }
 

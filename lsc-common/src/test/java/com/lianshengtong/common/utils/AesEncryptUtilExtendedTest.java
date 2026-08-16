@@ -187,7 +187,7 @@ class AesEncryptUtilExtendedTest {
 
             @Test
             void maskBoundaryMobile() {
-                assertEquals("1380001", AesEncryptUtil.maskMobile("1380001"));
+                assertEquals("138****0001", AesEncryptUtil.maskMobile("1380001"));
             }
         }
 
@@ -236,12 +236,12 @@ class AesEncryptUtilExtendedTest {
 
             @Test
             void maskThreeCharName() {
-                assertEquals("张*三", AesEncryptUtil.maskName("张小明"));
+                assertEquals("张*明", AesEncryptUtil.maskName("张小明"));
             }
 
             @Test
             void maskFourCharName() {
-                assertEquals("张**三", AesEncryptUtil.maskName("张一二三四"));
+                assertEquals("张***四", AesEncryptUtil.maskName("张一二三四"));
             }
 
             @Test

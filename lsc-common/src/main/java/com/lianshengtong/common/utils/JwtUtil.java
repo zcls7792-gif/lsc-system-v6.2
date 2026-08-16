@@ -75,6 +75,12 @@ public class JwtUtil {
         } catch (IllegalArgumentException e) {
             log.warn("[JWT] Token参数异常: {}", e.getMessage());
             throw new JwtValidationException("Token无效", e);
+        } catch (JwtException e) {
+            log.warn("[JWT] Token验证失败: {}", e.getMessage());
+            throw new JwtValidationException("Token无效", e);
+        } catch (Exception e) {
+            log.warn("[JWT] Token解析异常: {}", e.getMessage());
+            throw new JwtValidationException("Token无效", e);
         }
     }
 

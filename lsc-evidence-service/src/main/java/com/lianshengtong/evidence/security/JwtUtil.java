@@ -1,12 +1,15 @@
 package com.lianshengtong.evidence.security;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class JwtUtil {
@@ -90,7 +93,7 @@ public class JwtUtil {
                     type,
                     exp != null ? exp : 0L
             );
-        } catch (Exception e) {
+        } catch (JsonProcessingException | IllegalArgumentException e) {
             return null;
         }
     }
@@ -124,8 +127,7 @@ public class JwtUtil {
                 sb.append(String.format("%02x", b));
             }
             return sb.toString();
-        } catch (Exception e) {
-            // 退化为 token 的 hashcode
+        } catch (NoSuchAlgorithmException e) {
             return Integer.toHexString(token.hashCode());
         }
     }
@@ -135,11 +137,12 @@ public class JwtUtil {
      */
     private Map<String, Object> parsePayloadOnly(String token) {
         try {
+            if (token == null || token.isEmpty()) return null;
             String[] parts = token.split("\\.");
             if (parts.length != 3) return null;
             String payloadJson = new String(base64UrlDecode(parts[1]), StandardCharsets.UTF_8);
             return objectMapper.readValue(payloadJson, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception e) {
+        } catch (JsonProcessingException | IllegalArgumentException e) {
             return null;
         }
     }
@@ -150,7 +153,7 @@ public class JwtUtil {
             mac.init(new SecretKeySpec(secretKey, ALGORITHM));
             byte[] signature = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
             return base64UrlEncode(signature);
-        } catch (Exception e) {
+        } catch (GeneralSecurityException e) {
             throw new RuntimeException("JWT signing failed", e);
         }
     }
@@ -158,7 +161,7 @@ public class JwtUtil {
     private String serializePayload(Map<String, Object> payload) {
         try {
             return objectMapper.writeValueAsString(payload);
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             throw new RuntimeException("JWT payload serialization failed", e);
         }
     }

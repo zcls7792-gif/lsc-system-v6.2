@@ -80,7 +80,7 @@ public class MapServiceImpl implements MapService {
         if (!amapDown) {
             try {
                 result = geocodeByAmap(address, city);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("高德地理编码失败，切换百度 address={}", address, e);
                 amapDown = true;
                 result = geocodeByBaidu(address);
@@ -106,7 +106,7 @@ public class MapServiceImpl implements MapService {
         if (!amapDown) {
             try {
                 result = reverseGeocodeByAmap(longitude, latitude);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("高德逆地理编码失败，切换百度 lon={},lat={}", longitude, latitude, e);
                 amapDown = true;
                 result = reverseGeocodeByBaidu(longitude, latitude);
@@ -144,7 +144,7 @@ public class MapServiceImpl implements MapService {
                     .origin(origin)
                     .destination(dest)
                     .build();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("高德导航URL构建失败", e);
         }
         // 2. 百度
@@ -169,7 +169,9 @@ public class MapServiceImpl implements MapService {
                 + (city != null ? "&city=" + URLEncoder.encode(city, StandardCharsets.UTF_8) : "")
                 + "&output=JSON";
         JSONObject json = httpGet(url);
-        if (!"1".equals(json.getString("status")) || json.getJSONArray("geocodes").isEmpty()) {
+        if (json == null || !"1".equals(json.getString("status"))
+                || json.getJSONArray("geocodes") == null
+                || json.getJSONArray("geocodes").isEmpty()) {
             throw new BizException("高德地理编码无结果");
         }
         JSONObject geo = json.getJSONArray("geocodes").getJSONObject(0);
@@ -189,14 +191,21 @@ public class MapServiceImpl implements MapService {
                 + "&address=" + URLEncoder.encode(address, StandardCharsets.UTF_8)
                 + "&output=json";
         JSONObject json = httpGet(url);
-        if (json.getIntValue("status") != 0) {
-            throw new BizException("百度地理编码失败: " + json.getString("message"));
+        if (json == null || json.getIntValue("status") != 0) {
+            throw new BizException("百度地理编码失败: " + (json != null ? json.getString("message") : "响应为空"));
         }
-        JSONObject loc = json.getJSONObject("result").getJSONObject("location");
+        JSONObject result = json.getJSONObject("result");
+        if (result == null) {
+            throw new BizException("百度地理编码无结果");
+        }
+        JSONObject loc = result.getJSONObject("location");
+        if (loc == null) {
+            throw new BizException("百度地理编码无位置数据");
+        }
         return GeoResult.builder()
                 .longitude(loc.getDouble("lng"))
                 .latitude(loc.getDouble("lat"))
-                .formattedAddress(json.getJSONObject("result").getString("precise") != null ? address : address)
+                .formattedAddress(result.getString("precise") != null ? address : address)
                 .source("baidu")
                 .build();
     }
@@ -207,14 +216,14 @@ public class MapServiceImpl implements MapService {
                 + "&location=" + lon + "," + lat
                 + "&output=JSON";
         JSONObject json = httpGet(url);
-        if (!"1".equals(json.getString("status"))) {
+        if (json == null || !"1".equals(json.getString("status"))) {
             throw new BizException("高德逆地理编码失败");
         }
         JSONObject regeo = json.getJSONObject("regeocode");
         return GeoResult.builder()
                 .longitude(lon)
                 .latitude(lat)
-                .formattedAddress(regeo.getString("formatted_address"))
+                .formattedAddress(regeo != null ? regeo.getString("formatted_address") : null)
                 .source("amap")
                 .build();
     }
@@ -225,13 +234,17 @@ public class MapServiceImpl implements MapService {
                 + "&location=" + lat + "," + lon
                 + "&output=json";
         JSONObject json = httpGet(url);
-        if (json.getIntValue("status") != 0) {
+        if (json == null || json.getIntValue("status") != 0) {
             throw new BizException("百度逆地理编码失败");
+        }
+        JSONObject result = json.getJSONObject("result");
+        if (result == null) {
+            throw new BizException("百度逆地理编码无结果");
         }
         return GeoResult.builder()
                 .longitude(lon)
                 .latitude(lat)
-                .formattedAddress(json.getJSONObject("result").getString("formatted_address"))
+                .formattedAddress(result.getString("formatted_address"))
                 .source("baidu")
                 .build();
     }
@@ -289,7 +302,7 @@ public class MapServiceImpl implements MapService {
                 }
             }
             return result;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("[searchPois] 关键字搜索失败 keyword={} city={}", keyword, city, e);
             return java.util.Collections.emptyList();
         }
@@ -318,7 +331,7 @@ public class MapServiceImpl implements MapService {
                 }
             }
             return geo;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("[ipLocate] IP定位失败 ip={}", ip, e);
             return new GeoResult();
         }

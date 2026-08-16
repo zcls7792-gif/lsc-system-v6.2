@@ -455,7 +455,7 @@ public class LscLedgerServiceImpl implements LscLedgerService {
                 long userReleased = releaseUserBatch(userId, ops);
                 successCount += ops.size();
                 releasedAmount += userReleased;
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("批量释放用户失败 userId={} err={}", userId, e.getMessage());
                 failedCount += ops.size();
             }
@@ -541,7 +541,7 @@ public class LscLedgerServiceImpl implements LscLedgerService {
                         totalTransfer += transferred;
                         userCount++;
                     }
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     log.warn("全网过期转团单用户失败 userId={} err={}", userId, e.getMessage());
                 }
             }

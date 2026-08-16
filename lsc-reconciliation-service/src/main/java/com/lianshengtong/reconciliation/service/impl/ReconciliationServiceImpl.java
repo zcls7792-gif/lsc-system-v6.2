@@ -128,7 +128,7 @@ public class ReconciliationServiceImpl implements ReconciliationService {
         if (consistent) {
             try {
                 hashOnChain(report.getId());
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.error("对账结果上链失败 reportId={}", report.getId(), e);
             }
         }
@@ -165,7 +165,7 @@ public class ReconciliationServiceImpl implements ReconciliationService {
             if (resp != null && resp.isSuccess() && resp.getData() != null) {
                 return resp.getData();
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("拉取支付侧汇总失败 date={} err={}", date, e.getMessage());
         }
         Map<String, Object> empty = new HashMap<>();
@@ -185,7 +185,7 @@ public class ReconciliationServiceImpl implements ReconciliationService {
             if (resp != null && resp.isSuccess() && resp.getData() != null) {
                 return resp.getData();
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("拉取账本侧汇总失败 date={} err={}", date, e.getMessage());
         }
         Map<String, Object> empty = new HashMap<>();

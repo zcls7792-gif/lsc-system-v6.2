@@ -15,9 +15,9 @@ import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.RequestPath;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.mock.web.server.MockServerHttpRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -25,6 +25,7 @@ import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
@@ -95,6 +96,50 @@ class JwtAuthFilterTest {
                 .compact();
     }
 
+    private ServerHttpRequest mockRequest(String path, HttpHeaders headers, InetSocketAddress remoteAddress) {
+        ServerHttpRequest request = mock(ServerHttpRequest.class);
+        lenient().when(request.getURI()).thenReturn(URI.create(path));
+        RequestPath requestPath = mock(RequestPath.class);
+        lenient().when(requestPath.value()).thenReturn(path);
+        lenient().when(request.getPath()).thenReturn(requestPath);
+        lenient().when(request.getHeaders()).thenReturn(headers != null ? headers : new HttpHeaders());
+        if (remoteAddress != null) {
+            lenient().when(request.getRemoteAddress()).thenReturn(remoteAddress);
+        }
+        ServerHttpRequest.Builder reqBuilder = mock(ServerHttpRequest.Builder.class);
+        lenient().when(request.mutate()).thenReturn(reqBuilder);
+        lenient().when(reqBuilder.header(anyString(), any(String[].class))).thenReturn(reqBuilder);
+        lenient().when(reqBuilder.build()).thenReturn(request);
+        return request;
+    }
+
+    private ServerHttpRequest mockRequest(String path, HttpHeaders headers) {
+        return mockRequest(path, headers, null);
+    }
+
+    private ServerWebExchange mockExchangeWithResponse(ServerHttpRequest request, ServerHttpResponse response) {
+        ServerWebExchange exchange = mock(ServerWebExchange.class);
+        lenient().when(exchange.getRequest()).thenReturn(request);
+        lenient().when(exchange.getResponse()).thenReturn(response);
+        ServerWebExchange.Builder builder = mock(ServerWebExchange.Builder.class);
+        lenient().when(exchange.mutate()).thenReturn(builder);
+        lenient().when(builder.request(any(ServerHttpRequest.class))).thenReturn(builder);
+        lenient().when(builder.build()).thenReturn(exchange);
+        return exchange;
+    }
+
+    private ServerHttpResponse mockResponse() {
+        ServerHttpResponse response = mock(ServerHttpResponse.class, RETURNS_DEEP_STUBS);
+        HttpHeaders responseHeaders = new HttpHeaders();
+        lenient().when(response.getHeaders()).thenReturn(responseHeaders);
+        DataBufferFactory bufferFactory = mock(DataBufferFactory.class);
+        lenient().when(response.bufferFactory()).thenReturn(bufferFactory);
+        lenient().when(bufferFactory.wrap(any(byte[].class))).thenReturn(mock(DataBuffer.class));
+        lenient().when(response.writeWith(any())).thenReturn(Mono.empty());
+        lenient().when(response.setStatusCode(any())).thenReturn(true);
+        return response;
+    }
+
     @Nested
     @DisplayName("白名单路径匹配测试")
     class IsWhitelistedTest {
@@ -155,10 +200,9 @@ class JwtAuthFilterTest {
         @Test
         @DisplayName("优先使用 X-Forwarded-For 头")
         void shouldUseXForwardedForFirst() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Forwarded-For", "10.0.0.1")
-                    .build();
-            request.setRemoteAddress(new InetSocketAddress("192.168.1.100", 12345));
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Forwarded-For", "10.0.0.1");
+            ServerHttpRequest request = mockRequest("/test", headers, new InetSocketAddress("192.168.1.100", 12345));
 
             String ip = ReflectionTestUtils.invokeMethod(
                     filter, "resolveClientIp", request);
@@ -168,9 +212,9 @@ class JwtAuthFilterTest {
         @Test
         @DisplayName("X-Forwarded-For 有多级代理时取第一个IP")
         void shouldUseFirstIpFromXForwardedFor() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Forwarded-For", "10.0.0.1, 10.0.0.2, 10.0.0.3")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Forwarded-For", "10.0.0.1, 10.0.0.2, 10.0.0.3");
+            ServerHttpRequest request = mockRequest("/test", headers);
 
             String ip = ReflectionTestUtils.invokeMethod(
                     filter, "resolveClientIp", request);
@@ -180,9 +224,9 @@ class JwtAuthFilterTest {
         @Test
         @DisplayName("X-Forwarded-For 为空时使用 X-Real-IP")
         void shouldFallbackToXRealIp() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Real-IP", "172.16.0.1")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Real-IP", "172.16.0.1");
+            ServerHttpRequest request = mockRequest("/test", headers);
 
             String ip = ReflectionTestUtils.invokeMethod(
                     filter, "resolveClientIp", request);
@@ -192,10 +236,10 @@ class JwtAuthFilterTest {
         @Test
         @DisplayName("X-Forwarded-For 为空字符串时使用 X-Real-IP")
         void shouldFallbackToXRealIpWhenXffBlank() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-                    .header("X-Forwarded-For", "")
-                    .header("X-Real-IP", "172.16.0.2")
-                    .build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Forwarded-For", "");
+            headers.add("X-Real-IP", "172.16.0.2");
+            ServerHttpRequest request = mockRequest("/test", headers);
 
             String ip = ReflectionTestUtils.invokeMethod(
                     filter, "resolveClientIp", request);
@@ -205,8 +249,7 @@ class JwtAuthFilterTest {
         @Test
         @DisplayName("无代理头时使用远程地址")
         void shouldFallbackToRemoteAddress() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test").build();
-            request.setRemoteAddress(new InetSocketAddress("192.168.1.50", 54321));
+            ServerHttpRequest request = mockRequest("/test", new HttpHeaders(), new InetSocketAddress("192.168.1.50", 54321));
 
             String ip = ReflectionTestUtils.invokeMethod(
                     filter, "resolveClientIp", request);
@@ -216,7 +259,7 @@ class JwtAuthFilterTest {
         @Test
         @DisplayName("无任何IP信息时返回 unknown")
         void shouldReturnUnknownWhenNoIpAvailable() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/test").build();
+            ServerHttpRequest request = mockRequest("/test", new HttpHeaders());
 
             String ip = ReflectionTestUtils.invokeMethod(
                     filter, "resolveClientIp", request);
@@ -322,7 +365,7 @@ class JwtAuthFilterTest {
         @Test
         @DisplayName("白名单路径直接放行 - 不经过鉴权")
         void shouldPassThrough_whitelistedPath() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/api/user/login").build();
+            ServerHttpRequest request = mockRequest("/api/user/login", new HttpHeaders());
             ServerWebExchange mockExchange = mock(ServerWebExchange.class);
             when(mockExchange.getRequest()).thenReturn(request);
             when(chain.filter(any())).thenReturn(Mono.empty());
@@ -336,76 +379,56 @@ class JwtAuthFilterTest {
         @Test
         @DisplayName("非白名单路径无Authorization头返回401")
         void shouldReturn401_whenNoAuthHeader() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/api/order/list").build();
-            ServerWebExchange mockExchange = mock(ServerWebExchange.class);
-            ServerHttpResponse mockResponse = mock(ServerHttpResponse.class);
-            DataBufferFactory bufferFactory = mock(DataBufferFactory.class);
-            when(mockExchange.getRequest()).thenReturn(request);
-            when(mockExchange.getResponse()).thenReturn(mockResponse);
-            when(mockResponse.bufferFactory()).thenReturn(bufferFactory);
-            when(bufferFactory.wrap(any(byte[].class))).thenReturn(mock(DataBuffer.class));
+            ServerHttpRequest request = mockRequest("/api/order/list", new HttpHeaders());
+            ServerHttpResponse response = mockResponse();
+            ServerWebExchange mockExchange = mockExchangeWithResponse(request, response);
 
             Mono<Void> result = filter.filter(mockExchange, chain);
 
             assertThat(result).isNotNull();
-            verify(mockResponse).setStatusCode(HttpStatus.UNAUTHORIZED);
+            verify(response).setStatusCode(HttpStatus.UNAUTHORIZED);
         }
 
         @Test
         @DisplayName("Authorization头无Bearer前缀返回401")
         void shouldReturn401_whenNoBearerPrefix() {
-            MockServerHttpRequest request = MockServerHttpRequest.get("/api/order/list")
-                    .header(HttpHeaders.AUTHORIZATION, "InvalidToken123")
-                    .build();
-            ServerWebExchange mockExchange = mock(ServerWebExchange.class);
-            ServerHttpResponse mockResponse = mock(ServerHttpResponse.class);
-            DataBufferFactory bufferFactory = mock(DataBufferFactory.class);
-            when(mockExchange.getRequest()).thenReturn(request);
-            when(mockExchange.getResponse()).thenReturn(mockResponse);
-            when(mockResponse.bufferFactory()).thenReturn(bufferFactory);
-            when(bufferFactory.wrap(any(byte[].class))).thenReturn(mock(DataBuffer.class));
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.AUTHORIZATION, "InvalidToken123");
+            ServerHttpRequest request = mockRequest("/api/order/list", headers);
+            ServerHttpResponse response = mockResponse();
+            ServerWebExchange mockExchange = mockExchangeWithResponse(request, response);
 
             Mono<Void> result = filter.filter(mockExchange, chain);
 
             assertThat(result).isNotNull();
-            verify(mockResponse).setStatusCode(HttpStatus.UNAUTHORIZED);
+            verify(response).setStatusCode(HttpStatus.UNAUTHORIZED);
         }
 
         @Test
         @DisplayName("过期JWT返回401")
         void shouldReturn401_whenTokenExpired() {
             String expiredToken = buildExpiredUserToken("user123");
-            MockServerHttpRequest request = MockServerHttpRequest.get("/api/order/list")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + expiredToken)
-                    .build();
-            ServerWebExchange mockExchange = mock(ServerWebExchange.class);
-            ServerHttpResponse mockResponse = mock(ServerHttpResponse.class);
-            DataBufferFactory bufferFactory = mock(DataBufferFactory.class);
-            when(mockExchange.getRequest()).thenReturn(request);
-            when(mockExchange.getResponse()).thenReturn(mockResponse);
-            when(mockResponse.bufferFactory()).thenReturn(bufferFactory);
-            when(bufferFactory.wrap(any(byte[].class))).thenReturn(mock(DataBuffer.class));
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + expiredToken);
+            ServerHttpRequest request = mockRequest("/api/order/list", headers);
+            ServerHttpResponse response = mockResponse();
+            ServerWebExchange mockExchange = mockExchangeWithResponse(request, response);
 
             Mono<Void> result = filter.filter(mockExchange, chain);
 
             assertThat(result).isNotNull();
-            verify(mockResponse).setStatusCode(HttpStatus.UNAUTHORIZED);
+            verify(response).setStatusCode(HttpStatus.UNAUTHORIZED);
         }
 
         @Test
         @DisplayName("有效用户JWT通过鉴权并设置 X-User-Id 头")
         void shouldPassWithUserToken_andSetUserIdHeader() {
             String token = buildUserToken("user123", "merchant");
-            MockServerHttpRequest request = MockServerHttpRequest.get("/api/order/list")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                    .build();
-            ServerWebExchange mockExchange = mock(ServerWebExchange.class);
-            when(mockExchange.getRequest()).thenReturn(request);
-
-            ServerWebExchange.Builder mockBuilder = mock(ServerWebExchange.Builder.class);
-            when(mockExchange.mutate()).thenReturn(mockBuilder);
-            when(mockBuilder.request(any(ServerHttpRequest.class))).thenReturn(mockBuilder);
-            when(mockBuilder.build()).thenReturn(mockExchange);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+            ServerHttpRequest request = mockRequest("/api/order/list", headers);
+            ServerHttpResponse response = mockResponse();
+            ServerWebExchange mockExchange = mockExchangeWithResponse(request, response);
             when(chain.filter(any())).thenReturn(Mono.empty());
 
             Mono<Void> result = filter.filter(mockExchange, chain);
@@ -418,16 +441,11 @@ class JwtAuthFilterTest {
         @DisplayName("有效管理员JWT通过鉴权并设置 X-Admin-Role 头")
         void shouldPassWithAdminToken_andSetAdminRoleHeader() {
             String token = buildAdminToken("admin001", "SUPER_ADMIN");
-            MockServerHttpRequest request = MockServerHttpRequest.get("/api/admin/users")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                    .build();
-            ServerWebExchange mockExchange = mock(ServerWebExchange.class);
-            when(mockExchange.getRequest()).thenReturn(request);
-
-            ServerWebExchange.Builder mockBuilder = mock(ServerWebExchange.Builder.class);
-            when(mockExchange.mutate()).thenReturn(mockBuilder);
-            when(mockBuilder.request(any(ServerHttpRequest.class))).thenReturn(mockBuilder);
-            when(mockBuilder.build()).thenReturn(mockExchange);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+            ServerHttpRequest request = mockRequest("/api/admin/users", headers);
+            ServerHttpResponse response = mockResponse();
+            ServerWebExchange mockExchange = mockExchangeWithResponse(request, response);
             when(chain.filter(any())).thenReturn(Mono.empty());
 
             Mono<Void> result = filter.filter(mockExchange, chain);
@@ -444,35 +462,29 @@ class JwtAuthFilterTest {
         @Test
         @DisplayName("unauthorized应设置401状态码")
         void shouldSetStatus401() {
+            ServerHttpResponse response = mockResponse();
             ServerWebExchange mockExchange = mock(ServerWebExchange.class);
-            ServerHttpResponse mockResponse = mock(ServerHttpResponse.class);
-            DataBufferFactory bufferFactory = mock(DataBufferFactory.class);
-            when(mockExchange.getResponse()).thenReturn(mockResponse);
-            when(mockResponse.bufferFactory()).thenReturn(bufferFactory);
-            when(bufferFactory.wrap(any(byte[].class))).thenReturn(mock(DataBuffer.class));
+            when(mockExchange.getResponse()).thenReturn(response);
 
             Mono<Void> result = ReflectionTestUtils.invokeMethod(
                     filter, "unauthorized", mockExchange, "测试未授权");
 
             assertThat(result).isNotNull();
-            verify(mockResponse).setStatusCode(HttpStatus.UNAUTHORIZED);
+            verify(response).setStatusCode(HttpStatus.UNAUTHORIZED);
         }
 
         @Test
         @DisplayName("unauthorized应设置Content-Type为JSON")
         void shouldSetJsonContentType() {
+            ServerHttpResponse response = mockResponse();
             ServerWebExchange mockExchange = mock(ServerWebExchange.class);
-            ServerHttpResponse mockResponse = mock(ServerHttpResponse.class);
-            DataBufferFactory bufferFactory = mock(DataBufferFactory.class);
-            when(mockExchange.getResponse()).thenReturn(mockResponse);
-            when(mockResponse.bufferFactory()).thenReturn(bufferFactory);
-            when(bufferFactory.wrap(any(byte[].class))).thenReturn(mock(DataBuffer.class));
+            when(mockExchange.getResponse()).thenReturn(response);
 
             Mono<Void> result = ReflectionTestUtils.invokeMethod(
                     filter, "unauthorized", mockExchange, "测试未授权");
 
             assertThat(result).isNotNull();
-            verify(mockResponse.getHeaders()).setContentType(any(MediaType.class));
+            assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
         }
     }
 }

@@ -178,7 +178,7 @@ public class ReleaseController {
                 data.put("fallback", resp.getData().getFallback());
                 return R.ok(data);
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("[ReleasePredict] AI网关调用失败,降级返回", e);
         }
         return R.ok(fallback);
@@ -192,7 +192,7 @@ public class ReleaseController {
             if (resp != null && resp.isSuccess() && resp.getData() != null) {
                 return R.ok(resp.getData());
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("[ReleaseSimulation] AI网关调用失败,降级返回", e);
         }
         Map<String, Object> fallback = new LinkedHashMap<>();

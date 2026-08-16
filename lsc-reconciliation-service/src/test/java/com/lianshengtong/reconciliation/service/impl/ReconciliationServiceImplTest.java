@@ -425,4 +425,219 @@ class ReconciliationServiceImplTest {
         assertEquals("0xautoHashTx", tx);
         assertNotNull(report.getResultHash());
     }
+
+    // ============== 数据转换边界测试 ==============
+
+    @Test
+    @DisplayName("toBigDecimal: null返回零")
+    void toBigDecimal_null_returnsZero() {
+        stubNewReportInsert(1L);
+        Map<String, Object> paymentData = new HashMap<>();
+        paymentData.put("totalAmount", null);
+        paymentData.put("totalCount", 10L);
+        Map<String, Object> ledgerData = buildLedgerSummary(1000L, 10L);
+        stubPaymentAndLedger(paymentData, ledgerData);
+        stubEvidenceOk("0xhash");
+        ReconcileReport reportWithHash = new ReconcileReport();
+        reportWithHash.setId(1L);
+        stubReportSelectById(reportWithHash);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+
+        assertNotNull(report);
+        assertEquals(BigDecimal.ZERO, report.getPaymentTotalAmount());
+    }
+
+    @Test
+    @DisplayName("toBigDecimal: 非数值字符串返回零")
+    void toBigDecimal_invalidString_returnsZero() {
+        stubNewReportInsert(1L);
+        Map<String, Object> paymentData = new HashMap<>();
+        paymentData.put("totalAmount", "not_a_number");
+        paymentData.put("totalCount", 10L);
+        Map<String, Object> ledgerData = buildLedgerSummary(1000L, 10L);
+        stubPaymentAndLedger(paymentData, ledgerData);
+        stubEvidenceOk("0xhash");
+        ReconcileReport reportWithHash = new ReconcileReport();
+        reportWithHash.setId(1L);
+        stubReportSelectById(reportWithHash);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+
+        assertNotNull(report);
+        assertEquals(BigDecimal.ZERO, report.getPaymentTotalAmount());
+    }
+
+    @Test
+    @DisplayName("toLong: null返回零")
+    void toLong_null_returnsZero() {
+        stubNewReportInsert(1L);
+        Map<String, Object> paymentData = new HashMap<>();
+        paymentData.put("totalAmount", new BigDecimal("100"));
+        paymentData.put("totalCount", null);
+        Map<String, Object> ledgerData = buildLedgerSummary(100L, 1L);
+        stubPaymentAndLedger(paymentData, ledgerData);
+        stubEvidenceOk("0xhash");
+        ReconcileReport reportWithHash = new ReconcileReport();
+        reportWithHash.setId(1L);
+        stubReportSelectById(reportWithHash);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+
+        assertNotNull(report);
+        assertEquals(Long.valueOf(0L), report.getPaymentCount());
+    }
+
+    @Test
+    @DisplayName("toLong: 非数值字符串返回零")
+    void toLong_invalidString_returnsZero() {
+        stubNewReportInsert(1L);
+        Map<String, Object> paymentData = new HashMap<>();
+        paymentData.put("totalAmount", new BigDecimal("100"));
+        paymentData.put("totalCount", "invalid");
+        Map<String, Object> ledgerData = buildLedgerSummary(100L, 1L);
+        stubPaymentAndLedger(paymentData, ledgerData);
+        stubEvidenceOk("0xhash");
+        ReconcileReport reportWithHash = new ReconcileReport();
+        reportWithHash.setId(1L);
+        stubReportSelectById(reportWithHash);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+
+        assertNotNull(report);
+        assertEquals(Long.valueOf(0L), report.getPaymentCount());
+    }
+
+    @Test
+    @DisplayName("toLong: Number类型正确转换")
+    void toLong_numberType_convertsCorrectly() {
+        stubNewReportInsert(1L);
+        Map<String, Object> paymentData = new HashMap<>();
+        paymentData.put("totalAmount", new BigDecimal("100"));
+        paymentData.put("totalCount", 42L);
+        Map<String, Object> ledgerData = buildLedgerSummary(100L, 42L);
+        stubPaymentAndLedger(paymentData, ledgerData);
+        stubEvidenceOk("0xhash");
+        ReconcileReport reportWithHash = new ReconcileReport();
+        reportWithHash.setId(1L);
+        stubReportSelectById(reportWithHash);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+
+        assertNotNull(report);
+        assertEquals(Long.valueOf(42L), report.getPaymentCount());
+    }
+
+    // ============== 边界条件与异常场景 ==============
+
+    @Test
+    @DisplayName("generateReport: 微小差异(0.01)判断为一致")
+    void generateReport_minuteDiff_consideredConsistent() {
+        stubNewReportInsert(1L);
+        Map<String, Object> paymentData = buildPaymentSummary(new BigDecimal("1000.005"), 10L);
+        Map<String, Object> ledgerData = buildLedgerSummary(1000L, 10L);
+        stubPaymentAndLedger(paymentData, ledgerData);
+        stubEvidenceOk("0xchainHash");
+        ReconcileReport reportWithHash = new ReconcileReport();
+        reportWithHash.setId(1L);
+        stubReportSelectById(reportWithHash);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+
+        assertNotNull(report);
+        assertEquals(1, report.getStatus());
+    }
+
+    @Test
+    @DisplayName("generateReport: 支付成功但data为null使用默认值")
+    void generateReport_paymentSuccessNoData_defaults() {
+        stubNewReportInsert(1L);
+        lenient().when(orderFeignClient.dailySummary(anyString())).thenReturn(R.ok(null));
+        Map<String, Object> ledgerData = buildLedgerSummary(500L, 5L);
+        lenient().when(lscLedgerFeignClient.dailySummary(any(LocalDate.class), anyString())).thenReturn(R.ok(ledgerData));
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+
+        assertNotNull(report);
+        assertEquals(BigDecimal.ZERO, report.getPaymentTotalAmount());
+    }
+
+    @Test
+    @DisplayName("generateReport: 账本成功但data为null使用默认值")
+    void generateReport_ledgerSuccessNoData_defaults() {
+        stubNewReportInsert(1L);
+        Map<String, Object> paymentData = buildPaymentSummary(new BigDecimal("500.00"), 5L);
+        lenient().when(orderFeignClient.dailySummary(anyString())).thenReturn(R.ok(paymentData));
+        lenient().when(lscLedgerFeignClient.dailySummary(any(LocalDate.class), anyString())).thenReturn(R.ok(null));
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+
+        assertNotNull(report);
+        assertEquals(Long.valueOf(0L), report.getLedgerCount());
+    }
+
+    @Test
+    @DisplayName("generateReport: 已存在报告状态为0重新生成")
+    void generateReport_existingZeroStatus_regenerates() {
+        ReconcileReport existing = new ReconcileReport();
+        existing.setId(10L);
+        existing.setReconcileDate(TEST_DATE);
+        existing.setStatus(0);
+        when(reconcileReportMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(existing);
+
+        Map<String, Object> paymentData = buildPaymentSummary(new BigDecimal("1000.00"), 10L);
+        Map<String, Object> ledgerData = buildLedgerSummary(1000L, 10L);
+        stubPaymentAndLedger(paymentData, ledgerData);
+        stubEvidenceOk("0xchainHash");
+        ReconcileReport reportWithHash = new ReconcileReport();
+        reportWithHash.setId(10L);
+        stubReportSelectById(reportWithHash);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+
+        assertNotNull(report);
+        assertEquals(10L, report.getId().longValue());
+        assertEquals(1, report.getStatus());
+    }
+
+    @Test
+    @DisplayName("dailyReconcile: 锁被占用但不是当前线程不解锁")
+    void dailyReconcile_lockNotHeld_noUnlock() throws Exception {
+        when(redissonClient.getLock(anyString())).thenReturn(rLock);
+        when(rLock.tryLock(anyLong(), anyLong(), eq(TimeUnit.MINUTES))).thenReturn(true);
+        when(rLock.isHeldByCurrentThread()).thenReturn(false);
+
+        Long reportId = 1L;
+        stubNewReportInsert(reportId);
+        Map<String, Object> paymentData = buildPaymentSummary(new BigDecimal("100.00"), 1L);
+        Map<String, Object> ledgerData = buildLedgerSummary(100L, 1L);
+        stubPaymentAndLedger(paymentData, ledgerData);
+        stubEvidenceOk("0xtxHash");
+        ReconcileReport reportWithHash = new ReconcileReport();
+        reportWithHash.setId(reportId);
+        stubReportSelectById(reportWithHash);
+
+        ReconcileReport report = reconciliationService.dailyReconcile(TEST_DATE);
+
+        assertNotNull(report);
+        verify(rLock, never()).unlock();
+    }
+
+    @Test
+    @DisplayName("hashOnChain: evidenceFeignClient返回失败")
+    void hashOnChain_evidenceFails_stillUpdates() {
+        ReconcileReport report = new ReconcileReport();
+        report.setId(300L);
+        report.setResultHash("sha256hash300");
+
+        when(reconcileReportMapper.selectById(300L)).thenReturn(report);
+        when(evidenceFeignClient.saveEvidence(anyString(), anyString(), anyString()))
+                .thenReturn(R.fail("存证服务不可用"));
+        when(reconcileReportMapper.updateById(any(ReconcileReport.class))).thenReturn(1);
+
+        String chainTxHash = reconciliationService.hashOnChain(300L);
+
+        assertNull(chainTxHash);
+        verify(reconcileReportMapper).updateById(any(ReconcileReport.class));
+    }
 }

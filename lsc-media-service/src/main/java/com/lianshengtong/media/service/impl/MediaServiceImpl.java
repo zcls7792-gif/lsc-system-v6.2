@@ -19,6 +19,8 @@ import com.qcloud.cos.exception.CosClientException;
 import com.qcloud.cos.exception.CosServiceException;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.region.Region;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +37,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 媒体资源服务实现
@@ -82,15 +86,44 @@ public class MediaServiceImpl implements MediaService {
     @Value("${lsc.media.video.transcode-profiles:720p,480p,360p}")
     private String transcodeProfiles;
 
+    private final MeterRegistry meterRegistry;
+
     private final StringRedisTemplate stringRedisTemplate;
 
     private OSS ossClient;
     private COSClient cosClient;
-    /** OSS 故障标记(内存级，故障后短期切换COS为主) */
-    private volatile boolean ossDown = false;
+    /** OSS 故障标记(原子变量，支持并发安全) */
+    private final AtomicBoolean ossDown = new AtomicBoolean(false);
 
-    public MediaServiceImpl(StringRedisTemplate stringRedisTemplate) {
+    private final Timer uploadImageTimer;
+    private final Timer uploadVideoTimer;
+    private final Timer getMediaUrlTimer;
+    private final Timer videoStatusTimer;
+    private final Timer validateFileTimer;
+
+    public MediaServiceImpl(StringRedisTemplate stringRedisTemplate, MeterRegistry meterRegistry) {
         this.stringRedisTemplate = stringRedisTemplate;
+        this.meterRegistry = meterRegistry;
+        this.uploadImageTimer = Timer.builder("media.upload.image")
+                .description("Time taken to upload an image")
+                .tag("service", "media")
+                .register(meterRegistry);
+        this.uploadVideoTimer = Timer.builder("media.upload.video")
+                .description("Time taken to upload a video")
+                .tag("service", "media")
+                .register(meterRegistry);
+        this.getMediaUrlTimer = Timer.builder("media.get.url")
+                .description("Time taken to get media URL")
+                .tag("service", "media")
+                .register(meterRegistry);
+        this.videoStatusTimer = Timer.builder("media.video.status")
+                .description("Time taken to query video status")
+                .tag("service", "media")
+                .register(meterRegistry);
+        this.validateFileTimer = Timer.builder("media.validate.file")
+                .description("Time taken to validate file")
+                .tag("service", "media")
+                .register(meterRegistry);
     }
 
     @PostConstruct
@@ -98,16 +131,16 @@ public class MediaServiceImpl implements MediaService {
         try {
             this.ossClient = new OSSClientBuilder().build(ossEndpoint, ossAk, ossSk);
             log.info("阿里云OSS客户端初始化成功 endpoint={}", ossEndpoint);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("OSS客户端初始化失败，将使用COS为主存储", e);
-            this.ossDown = true;
+            this.ossDown.set(true);
         }
         try {
             COSCredentials cred = new BasicCOSCredentials(cosBucket.split("-")[0], cosId, cosKey);
             ClientConfig clientConfig = new ClientConfig(new Region(cosRegion));
             this.cosClient = new COSClient(cred, clientConfig);
             log.info("腾讯云COS客户端初始化成功 region={}", cosRegion);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("COS客户端初始化失败", e);
         }
     }
@@ -124,187 +157,183 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     public MediaUploadResult uploadImage(MultipartFile file) {
-        validateFile(file, imageMaxMb, imageAllowedTypes, "image");
-        String mediaKey = buildMediaKey(file);
-        byte[] bytes;
-        try {
-            bytes = file.getBytes();
-        } catch (IOException e) {
-            throw new BizException("读取文件失败: " + e.getMessage());
-        }
-        String primaryUrl = null;
-        String backupUrl = null;
-        boolean backupEnabled = false;
-        // 主存储：OSS正常时用OSS，故障时切换COS
-        if (!ossDown) {
+        return uploadImageTimer.record(() -> {
+            validateFile(file, imageMaxMb, imageAllowedTypes, "image");
+            String mediaKey = buildMediaKey(file);
+            byte[] bytes;
             try {
-                uploadToOss(mediaKey, bytes, file.getContentType());
-                primaryUrl = ossCdn + "/" + mediaKey;
-            } catch (Exception e) {
-                log.error("OSS上传失败，切换COS为主存储 key={}", mediaKey, e);
-                ossDown = true;
+                bytes = file.getBytes();
+            } catch (IOException e) {
+                throw new BizException("读取文件失败: " + e.getMessage());
             }
-        }
-        if (primaryUrl == null) {
-            uploadToCos(mediaKey, bytes);
-            primaryUrl = cosCdn + "/" + mediaKey;
-        } else {
-            // OSS 成功，再备份到 COS
-            try {
+            String primaryUrl = null;
+            String backupUrl = null;
+            boolean backupEnabled = false;
+            if (!ossDown.get()) {
+                try {
+                    uploadToOss(mediaKey, bytes, file.getContentType());
+                    primaryUrl = ossCdn + "/" + mediaKey;
+                } catch (RuntimeException e) {
+                    log.error("OSS上传失败，切换COS为主存储 key={}", mediaKey, e);
+                    ossDown.set(true);
+                }
+            }
+            if (primaryUrl == null) {
                 uploadToCos(mediaKey, bytes);
-                backupUrl = cosCdn + "/" + mediaKey;
-                backupEnabled = true;
-            } catch (Exception e) {
-                log.warn("COS备份失败 key={}", mediaKey, e);
+                primaryUrl = cosCdn + "/" + mediaKey;
+            } else {
+                try {
+                    uploadToCos(mediaKey, bytes);
+                    backupUrl = cosCdn + "/" + mediaKey;
+                    backupEnabled = true;
+                } catch (RuntimeException e) {
+                    log.warn("COS备份失败 key={}", mediaKey, e);
+                }
             }
-        }
-        cacheUrl(mediaKey, primaryUrl);
-        log.info("图片上传成功 key={} primary={}", mediaKey, primaryUrl);
-        return MediaUploadResult.builder()
-                .mediaKey(mediaKey)
-                .primaryUrl(primaryUrl)
-                .backupUrl(backupUrl)
-                .type("image")
-                .backupEnabled(backupEnabled)
-                .build();
+            cacheUrl(mediaKey, primaryUrl);
+            log.info("图片上传成功 key={} primary={}", mediaKey, primaryUrl);
+            return MediaUploadResult.builder()
+                    .mediaKey(mediaKey)
+                    .primaryUrl(primaryUrl)
+                    .backupUrl(backupUrl)
+                    .type("image")
+                    .backupEnabled(backupEnabled)
+                    .build();
+        });
     }
 
     @Override
     public MediaUploadResult uploadVideo(MultipartFile file) {
-        validateFile(file, videoMaxMb, videoAllowedTypes, "video");
-        String mediaKey = buildMediaKey(file);
-        byte[] bytes;
-        try {
-            bytes = file.getBytes();
-        } catch (IOException e) {
-            throw new BizException("读取文件失败: " + e.getMessage());
-        }
-        // 原片上传主存储
-        String primaryUrl;
-        if (!ossDown) {
+        return uploadVideoTimer.record(() -> {
+            validateFile(file, videoMaxMb, videoAllowedTypes, "video");
+            String mediaKey = buildMediaKey(file);
+            byte[] bytes;
             try {
-                uploadToOss(mediaKey, bytes, file.getContentType());
-                primaryUrl = ossCdn + "/" + mediaKey;
-            } catch (Exception e) {
-                log.error("OSS视频上传失败，切换COS key={}", mediaKey, e);
-                ossDown = true;
+                bytes = file.getBytes();
+            } catch (IOException e) {
+                throw new BizException("读取文件失败: " + e.getMessage());
+            }
+            String primaryUrl;
+            if (!ossDown.get()) {
+                try {
+                    uploadToOss(mediaKey, bytes, file.getContentType());
+                    primaryUrl = ossCdn + "/" + mediaKey;
+                } catch (RuntimeException e) {
+                    log.error("OSS视频上传失败，切换COS key={}", mediaKey, e);
+                    ossDown.set(true);
+                    uploadToCos(mediaKey, bytes);
+                    primaryUrl = cosCdn + "/" + mediaKey;
+                }
+            } else {
                 uploadToCos(mediaKey, bytes);
                 primaryUrl = cosCdn + "/" + mediaKey;
             }
-        } else {
-            uploadToCos(mediaKey, bytes);
-            primaryUrl = cosCdn + "/" + mediaKey;
-        }
-        // 三档转码(实际由云厂商转码服务异步处理，此处生成转码后预期URL)
-        List<MediaUploadResult.TranscodeResult> transcodeUrls = new ArrayList<>();
-        String basePath = mediaKey.substring(0, mediaKey.lastIndexOf('.'));
-        for (String profile : transcodeProfiles.split(",")) {
-            String transcodeKey = basePath + "_" + profile + ".mp4";
-            String url = ossCdn + "/" + transcodeKey;
-            transcodeUrls.add(MediaUploadResult.TranscodeResult.builder()
-                    .profile(profile)
-                    .url(url)
-                    .build());
-        }
-        cacheUrl(mediaKey, primaryUrl);
-        log.info("视频上传成功 key={} 转码档位数={}", mediaKey, transcodeUrls.size());
-        return MediaUploadResult.builder()
-                .mediaKey(mediaKey)
-                .primaryUrl(primaryUrl)
-                .type("video")
-                .transcodeUrls(transcodeUrls)
-                .backupEnabled(false)
-                .build();
+            List<MediaUploadResult.TranscodeResult> transcodeUrls = new ArrayList<>();
+            String basePath = mediaKey.substring(0, mediaKey.lastIndexOf('.'));
+            for (String profile : transcodeProfiles.split(",")) {
+                String transcodeKey = basePath + "_" + profile + ".mp4";
+                String url = ossCdn + "/" + transcodeKey;
+                transcodeUrls.add(MediaUploadResult.TranscodeResult.builder()
+                        .profile(profile)
+                        .url(url)
+                        .build());
+            }
+            cacheUrl(mediaKey, primaryUrl);
+            log.info("视频上传成功 key={} 转码档位数={}", mediaKey, transcodeUrls.size());
+            return MediaUploadResult.builder()
+                    .mediaKey(mediaKey)
+                    .primaryUrl(primaryUrl)
+                    .type("video")
+                    .transcodeUrls(transcodeUrls)
+                    .backupEnabled(false)
+                    .build();
+        });
     }
 
     @Override
     public String getMediaUrl(String mediaKey) {
-        if (StrUtil.isBlank(mediaKey)) {
-            throw new BizException("mediaKey不能为空");
-        }
-        String cacheKey = RedisKeyPrefix.MEDIA_URL + mediaKey;
-        String cached = stringRedisTemplate.opsForValue().get(cacheKey);
-        if (cached != null) {
-            return cached;
-        }
-        // 主存储故障时返回COS CDN，否则返回OSS CDN
-        String url = ossDown ? (cosCdn + "/" + mediaKey) : (ossCdn + "/" + mediaKey);
-        cacheUrl(mediaKey, url);
-        return url;
+        return getMediaUrlTimer.record(() -> {
+            if (StrUtil.isBlank(mediaKey)) {
+                throw new BizException("mediaKey不能为空");
+            }
+            String cacheKey = RedisKeyPrefix.MEDIA_URL + mediaKey;
+            String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+            if (cached != null) {
+                return cached;
+            }
+            String url = ossDown.get() ? (cosCdn + "/" + mediaKey) : (ossCdn + "/" + mediaKey);
+            cacheUrl(mediaKey, url);
+            return url;
+        });
     }
 
     @Override
     public java.util.Map<String, Object> videoStatus(String url) {
-        if (StrUtil.isBlank(url)) {
-            throw new BizException("url不能为空");
-        }
-        // 转码状态缓存(默认10秒轮询)
-        String cacheKey = RedisKeyPrefix.MEDIA_VIDEO_STATUS + url;
-        String cached = stringRedisTemplate.opsForValue().get(cacheKey);
-        if (cached != null) {
-            return JSON.parseObject(cached, java.util.Map.class);
-        }
-        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
-        result.put("url", url);
-        // 提取 mediaKey(去掉CDN前缀)
-        String mediaKey = url;
-        if (url.startsWith(ossCdn + "/")) {
-            mediaKey = url.substring((ossCdn + "/").length());
-        } else if (url.startsWith(cosCdn + "/")) {
-            mediaKey = url.substring((cosCdn + "/").length());
-        }
-        // 检查各转码档位是否就绪(对象存储是否存在该key)
-        String basePath = mediaKey.contains(".") ? mediaKey.substring(0, mediaKey.lastIndexOf('.')) : mediaKey;
-        boolean ready = false;
-        for (String profile : transcodeProfiles.split(",")) {
-            String transcodeKey = basePath + "_" + profile + ".mp4";
-            if (objectExists(transcodeKey)) {
-                ready = true;
-                break;
+        return videoStatusTimer.record(() -> {
+            if (StrUtil.isBlank(url)) {
+                throw new BizException("url不能为空");
             }
-        }
-        // 封面(默认取首帧截图，约定 <basePath>_cover.jpg)
-        String coverKey = basePath + "_cover.jpg";
-        String coverUrl = objectExists(coverKey) ? (ossCdn + "/" + coverKey) : null;
-        // status: uploaded(已上传转码中) / transcoding(转码中) / ready(就绪) / failed(失败)
-        String status = ready ? "ready" : "transcoding";
-        result.put("status", status);
-        result.put("coverUrl", coverUrl);
-        // 元信息(实际由云厂商转码回调写入Redis，此处回退默认值)
-        java.util.Map<String, Object> meta = new java.util.LinkedHashMap<>();
-        meta.put("duration", 0);
-        meta.put("width", 0);
-        meta.put("height", 0);
-        meta.put("size", 0L);
-        String metaCached = stringRedisTemplate.opsForValue().get(RedisKeyPrefix.MEDIA_VIDEO_META + url);
-        if (metaCached != null) {
-            try {
-                java.util.Map<String, Object> m = JSON.parseObject(metaCached, java.util.Map.class);
-                meta.putAll(m);
-            } catch (Exception ignored) {
-                // 元信息解析失败时回退默认值
+            String cacheKey = RedisKeyPrefix.MEDIA_VIDEO_STATUS + url;
+            String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+            if (cached != null) {
+                return JSON.parseObject(cached, java.util.Map.class);
             }
-        }
-        result.putAll(meta);
-        stringRedisTemplate.opsForValue().set(cacheKey, JSON.toJSONString(result), Duration.ofSeconds(10));
-        log.debug("视频转码状态查询 url={} status={}", url, status);
-        return result;
+            java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+            result.put("url", url);
+            String mediaKey = url;
+            if (url.startsWith(ossCdn + "/")) {
+                mediaKey = url.substring((ossCdn + "/").length());
+            } else if (url.startsWith(cosCdn + "/")) {
+                mediaKey = url.substring((cosCdn + "/").length());
+            }
+            String basePath = mediaKey.contains(".") ? mediaKey.substring(0, mediaKey.lastIndexOf('.')) : mediaKey;
+            boolean ready = false;
+            for (String profile : transcodeProfiles.split(",")) {
+                String transcodeKey = basePath + "_" + profile + ".mp4";
+                if (objectExists(transcodeKey)) {
+                    ready = true;
+                    break;
+                }
+            }
+            String coverKey = basePath + "_cover.jpg";
+            String coverUrl = objectExists(coverKey) ? (ossCdn + "/" + coverKey) : null;
+            String status = ready ? "ready" : "transcoding";
+            result.put("status", status);
+            result.put("coverUrl", coverUrl);
+            java.util.Map<String, Object> meta = new java.util.LinkedHashMap<>();
+            meta.put("duration", 0);
+            meta.put("width", 0);
+            meta.put("height", 0);
+            meta.put("size", 0L);
+            String metaCached = stringRedisTemplate.opsForValue().get(RedisKeyPrefix.MEDIA_VIDEO_META + url);
+            if (metaCached != null) {
+                try {
+                    java.util.Map<String, Object> m = JSON.parseObject(metaCached, java.util.Map.class);
+                    meta.putAll(m);
+                } catch (RuntimeException ignored) {
+                }
+            }
+            result.putAll(meta);
+            stringRedisTemplate.opsForValue().set(cacheKey, JSON.toJSONString(result), Duration.ofSeconds(10));
+            log.debug("视频转码状态查询 url={} status={}", url, status);
+            return result;
+        });
     }
 
     /** 检查对象是否存在(优先OSS，故障时COS) */
     private boolean objectExists(String key) {
-        if (!ossDown && ossClient != null) {
+        if (!ossDown.get() && ossClient != null) {
             try {
                 return ossClient.doesObjectExist(ossBucket, key);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("OSS对象存在性检查失败 key={}", key, e);
-                ossDown = true;
+                ossDown.set(true);
             }
         }
         if (cosClient != null) {
             try {
                 return cosClient.doesObjectExist(cosBucket, key);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("COS对象存在性检查失败 key={}", key, e);
             }
         }
@@ -323,6 +352,9 @@ public class MediaServiceImpl implements MediaService {
 
     /** 上传至腾讯云COS */
     private void uploadToCos(String key, byte[] bytes) {
+        if (cosClient == null) {
+            throw new BizException("COS客户端未初始化");
+        }
         try {
             com.qcloud.cos.model.ObjectMetadata metadata = new com.qcloud.cos.model.ObjectMetadata();
             metadata.setContentLength(bytes.length);

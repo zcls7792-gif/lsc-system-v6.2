@@ -2,6 +2,7 @@ package com.lianshengtong.risk.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lianshengtong.common.exception.BizException;
 import com.lianshengtong.common.result.R;
 import com.lianshengtong.risk.dto.RiskCheckDTO;
@@ -617,5 +618,347 @@ class RiskControlServiceImplTest {
         when(riskLogMapper.selectById(999L)).thenReturn(null);
 
         assertThrows(BizException.class, () -> riskControlService.getById(999L));
+    }
+
+    // ============== 边界条件与分支覆盖测试 ==============
+
+    @Test
+    @DisplayName("异常混合支付：orderAmount为null跳过检测")
+    void testCheck_HybridPayOrderAmountNull() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setOrderAmount(null);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("异常混合支付：lscAmount为null跳过检测")
+    void testCheck_HybridPayLscAmountNull() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setLscAmount(null);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("异常混合支付：orderAmount为0跳过检测")
+    void testCheck_HybridPayOrderAmountZero() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setOrderAmount(BigDecimal.ZERO);
+        dto.setLscAmount(50L);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("产品ID为null时跳过套利检测")
+    void testCheck_ProductIdNull_SkipArbitrage() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setProductId(null);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("clientCity为null时跳过异地检测")
+    void testCheck_ClientCityNull_SkipGeo() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setClientCity(null);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("increment返回null时边界处理")
+    void testCheck_IncrementReturnNull() {
+        RiskCheckDTO dto = buildBaseDto();
+
+        when(valueOperations.increment(anyString())).thenReturn(null);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("计数器首次命中时设置过期时间")
+    void testCheck_FirstIncrementSetsExpire() {
+        RiskCheckDTO dto = buildBaseDto();
+
+        when(valueOperations.increment(anyString())).thenReturn(1L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        riskControlService.check(dto);
+
+        verify(stringRedisTemplate, atLeastOnce()).expire(anyString(), any(Duration.class));
+    }
+
+    @Test
+    @DisplayName("批量下单首次触发风险 - 计数器恰好超过阈值")
+    void testCheck_BatchOrderFirstOverThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:batch:"))).thenReturn(11L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(3, result.getRiskLevel());
+        assertEquals(1, result.getRiskType());
+        verify(riskLogMapper).insert(result);
+    }
+
+    @Test
+    @DisplayName("混合支付连续计数恰好达到阈值")
+    void testCheck_HybridPayStreakExactThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setLscAmount(95L);
+        dto.setOrderAmount(new BigDecimal("100.00"));
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:batch:"))).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:hybrid-streak:"))).thenReturn(3L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(3, result.getRiskLevel());
+        assertEquals(2, result.getRiskType());
+    }
+
+    @Test
+    @DisplayName("混合支付连续计数略低于阈值不触发")
+    void testCheck_HybridPayStreakBelowThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setLscAmount(95L);
+        dto.setOrderAmount(new BigDecimal("100.00"));
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:batch:"))).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:hybrid-streak:"))).thenReturn(2L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("套利次数恰好达到阈值触发")
+    void testCheck_ArbitrageExactThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:batch:"))).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:arb:"))).thenReturn(6L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(3, result.getRiskLevel());
+        assertEquals(3, result.getRiskType());
+    }
+
+    @Test
+    @DisplayName("套利次数略低于阈值不触发")
+    void testCheck_ArbitrageBelowThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:batch:"))).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:arb:"))).thenReturn(5L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("异地城市数恰好达到阈值触发")
+    void testCheck_GeoExactThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+        when(setOperations.size(startsWith("lsc:risk:geo:"))).thenReturn(3L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(3, result.getRiskLevel());
+        assertEquals(4, result.getRiskType());
+    }
+
+    @Test
+    @DisplayName("AI评分边界值 - 恰好等于高风险阈值")
+    void testCheck_AiScoreExactlyHighThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setEnableAi(true);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        R<Integer> resp = R.ok(80);
+        when(aiGatewayFeignClient.riskScore(anyLong(), anyString())).thenReturn(resp);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(3, result.getRiskLevel());
+        assertEquals(5, result.getRiskType());
+    }
+
+    @Test
+    @DisplayName("AI评分边界值 - 恰好等于中风险阈值")
+    void testCheck_AiScoreExactlyMidThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setEnableAi(true);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        R<Integer> resp = R.ok(50);
+        when(aiGatewayFeignClient.riskScore(anyLong(), anyString())).thenReturn(resp);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(2, result.getRiskLevel());
+        assertEquals(5, result.getRiskType());
+    }
+
+    @Test
+    @DisplayName("AI评分边界值 - 略低于中风险阈值")
+    void testCheck_AiScoreBelowMidThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setEnableAi(true);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        R<Integer> resp = R.ok(49);
+        when(aiGatewayFeignClient.riskScore(anyLong(), anyString())).thenReturn(resp);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(1, result.getRiskLevel());
+        assertEquals(5, result.getRiskType());
+    }
+
+    @Test
+    @DisplayName("AI网关返回null响应 - 降级为无风险")
+    void testCheck_AiGatewayReturnsNull() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setEnableAi(true);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+        when(aiGatewayFeignClient.riskScore(anyLong(), anyString())).thenReturn(null);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+        assertNull(result.getAiScore());
+    }
+
+    @Test
+    @DisplayName("AI网关返回成功但data为null")
+    void testCheck_AiGatewaySuccessButNoData() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setEnableAi(true);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        R<Integer> resp = R.ok(null);
+        when(aiGatewayFeignClient.riskScore(anyLong(), anyString())).thenReturn(resp);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+        assertNull(result.getAiScore());
+    }
+
+    @Test
+    @DisplayName("批量下单与AI中风险同时命中 - 取高等级")
+    void testCheck_BatchOrderAndAiMidRisk() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setEnableAi(true);
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:batch:"))).thenReturn(11L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        R<Integer> resp = R.ok(60);
+        when(aiGatewayFeignClient.riskScore(anyLong(), anyString())).thenReturn(resp);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(3, result.getRiskLevel());
+        assertEquals(1, result.getRiskType());
+    }
+
+    @Test
+    @DisplayName("logs查询 - 所有参数为null使用默认值")
+    void testLogs_AllParamsNull() {
+        Page<RiskLog> page = new Page<>(1, 20);
+        page.setRecords(java.util.Collections.emptyList());
+        page.setTotal(0);
+        when(riskLogMapper.selectPage(any(), any())).thenReturn(page);
+
+        var result = riskControlService.logs(null, null, null, null, null);
+
+        assertNotNull(result);
+        assertEquals(0, result.getTotal());
+    }
+
+    @Test
+    @DisplayName("logs查询 - 指定所有过滤条件")
+    void testLogs_WithAllFilters() {
+        Page<RiskLog> page = new Page<>(1, 20);
+        page.setRecords(java.util.Collections.emptyList());
+        page.setTotal(0);
+        when(riskLogMapper.selectPage(any(), any())).thenReturn(page);
+
+        var result = riskControlService.logs(1, 20, 1L, 3, 0);
+
+        assertNotNull(result);
     }
 }

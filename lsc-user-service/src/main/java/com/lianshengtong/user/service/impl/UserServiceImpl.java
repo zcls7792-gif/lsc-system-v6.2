@@ -185,7 +185,7 @@ public class UserServiceImpl implements UserService {
             try {
                 String plain = SecureUtil.aes(aesKey).decryptStr(user.getIdCardNo());
                 user.setIdCardNo(maskIdCard(plain));
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 user.setIdCardNo("**************");
             }
         }

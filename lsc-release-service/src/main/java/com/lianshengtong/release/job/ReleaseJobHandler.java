@@ -70,7 +70,7 @@ public class ReleaseJobHandler {
                     lLocked = Long.parseLong(String.valueOf(totalLocked));
                 }
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("[dailyReleaseJob] 拉取全网锁定汇总失败 err={}", e.getMessage());
         }
         // 2) N_total: 前一日核销总额(流水类型=7 商家核销，按昨日聚合)
@@ -84,7 +84,7 @@ public class ReleaseJobHandler {
                     nTotal = new BigDecimal(String.valueOf(totalAmount));
                 }
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("[dailyReleaseJob] 拉取前一日核销总额失败 err={}", e.getMessage());
         }
         // 3) M_total: 监管账户总余额(由支付机构提供，简化为 N_total 的固定倍数估算；真实部署对接支付机构接口)
@@ -116,14 +116,14 @@ public class ReleaseJobHandler {
                 summary.setAiPredictedK7d(predictResp.getData().getPredictedK7d());
                 summary.setAiPredictedK30d(predictResp.getData().getPredictedK30d());
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("[dailyReleaseJob] AI趋势预测调用失败，跳过 date={} 原因={}", date, e.getMessage());
         }
 
         // 核心算法：k -> rate -> 校验 -> T_release
         try {
             releaseCalcService.calcDailyRelease(summary);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("[dailyReleaseJob] 释放计算失败(可能rate越界)，终止任务 date={}", date, e);
             dailyReleaseSummaryMapper.updateById(summary);
             return;
@@ -150,7 +150,7 @@ public class ReleaseJobHandler {
             } else {
                 log.warn("[expireTransferJob] 账本服务返回失败 {}", resp == null ? "null" : resp.getMessage());
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("[expireTransferJob] 执行异常", e);
         }
     }

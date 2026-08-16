@@ -116,7 +116,7 @@ public class ParamChangeServiceImpl implements ParamChangeService {
                     } else {
                         log.warn("参数变更存证未成功 approvalId={} resp={}", approvalId, resp);
                     }
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     log.error("参数变更存证异常 approvalId={}", approvalId, e);
                 }
                 // 配置生效：调用 release-service 更新配置后才能置为 3(已生效)。

@@ -11,6 +11,7 @@ import com.lianshengtong.user.entity.User;
 import com.lianshengtong.user.service.UserService;
 import com.lianshengtong.user.util.JwtUtil;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -67,7 +68,7 @@ public class UserController {
                     log.info("[logout] 用户 {} 退出登录，token 已加入黑名单", claims.getSubject());
                 }
             }
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException e) {
             // token 无效也返回成功，避免泄露 token 状态
             log.debug("[logout] token 解析失败，可能已过期或无效");
         }
