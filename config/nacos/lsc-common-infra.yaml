@@ -1,0 +1,115 @@
+# ============================================================
+# Nacos共享配置 - 公共Seata/RabbitMQ/XXL-JOB配置
+# Data ID: lsc-common-infra.yaml
+# Group: LSC_GROUP
+# ============================================================
+
+# Seata分布式事务
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: ${spring.application.name}-group
+  service:
+    vgroup-mapping:
+      lsc-ledger-service-group: default
+      lsc-b2b-service-group: default
+      lsc-order-service-group: default
+      lsc-writeoff-service-group: default
+      lsc-release-service-group: default
+      lsc-promotion-service-group: default
+    grouplist:
+      default: seata-server:8091
+  registry:
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: nacos:8848
+      group: SEATA_GROUP
+      username: lsc_nacos
+      password: Lsc@Nacos2026
+  config:
+    type: file
+    file:
+      name: file:/root/seata-config/file.conf
+  data-source-proxy-mode: AT
+  client:
+    rm:
+      report-success-enable: true
+      table-meta-check-enable: true
+    tm:
+      commit-retry-count: 5
+      rollback-retry-count: 5
+
+# RabbitMQ消息队列
+spring:
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: lsc_admin
+    password: Lsc@MQ2026
+    virtual-host: /
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    publisher-confirms: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 10
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000
+        concurrency: 5
+        max-concurrency: 20
+    template:
+      mandatory: true
+      retry:
+        enabled: true
+
+# XXL-JOB分布式调度
+xxl:
+  job:
+    admin:
+      addresses: http://xxl-job-admin:8080/xxl-job-admin
+    accessToken: Lsc@XxlJob2026Token
+    executor:
+      appname: ${spring.application.name}
+      address:
+      ip:
+      port: 9999
+      logpath: /data/logs/xxl-job
+      logretentiondays: 30
+
+# Knife4j API文档
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    enable-version: true
+    enable-swagger-models: true
+
+# Spring Boot Actuator监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+        exclude: env,beans
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.lianshengtong: DEBUG
+    org.springframework: WARN
+    com.baomidou.mybatisplus: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"

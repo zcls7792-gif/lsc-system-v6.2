@@ -1,0 +1,79 @@
+{
+  "name": "链生通",
+  "appid": "",
+  "description": "链生通LSC移动端 - 权益商城 + LSC账户 + 混合支付",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {
+    "usingComponents": true,
+    "nvueStyleCompiler": "uni-app",
+    "compilerVersion": 3,
+    "splashscreen": {
+      "alwaysShowBeforeRender": true,
+      "waiting": true,
+      "autoclose": true,
+      "delay": 0
+    },
+    "modules": {
+      "Geolocation": {},
+      "Maps": {}
+    },
+    "distribute": {
+      "android": {
+        "permissions": [
+          "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>",
+          "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"/>",
+          "<uses-permission android:name=\"android.permission.CAMERA\"/>",
+          "<uses-permission android:name=\"android.permission.INTERNET\"/>"
+        ],
+        "minSdkVersion": 21,
+        "targetSdkVersion": 30
+      },
+      "ios": {
+        "dSYMs": false
+      },
+      "sdkConfigs": {
+        "maps": {
+          "amap": {
+            "appkey_ios": "",
+            "appkey_android": ""
+          }
+        }
+      }
+    }
+  },
+  "quickapp": {},
+  "mp-weixin": {
+    "appid": "wx0000000000000000",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true,
+      "postcss": true
+    },
+    "usingComponents": true,
+    "permission": {
+      "scope.userLocation": {
+        "desc": "用于商家门店导航定位"
+      }
+    },
+    "requiredPrivateInfos": ["getLocation", "chooseLocation"],
+    "optimization": {
+      "subPackages": true
+    }
+  },
+  "h5": {
+    "router": { "mode": "hash", "base": "./" },
+    "devServer": {
+      "port": 8080,
+      "proxy": {
+        "/api": {
+          "target": "http://localhost:8081",
+          "changeOrigin": true
+        }
+      }
+    }
+  },
+  "vueVersion": "3"
+}

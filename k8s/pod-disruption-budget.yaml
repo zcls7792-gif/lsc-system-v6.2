@@ -1,0 +1,100 @@
+# ============================================================
+# K8s PodDisruptionBudget - 可用性保障
+# 确保在节点维护时服务不中断
+# ============================================================
+
+# 账本服务 PDB (3副本，允许1个不可用)
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lsc-ledger-pdb
+  namespace: lsc-system
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: lsc-ledger-service
+---
+# 用户服务 PDB (2副本，允许0个不可用)
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lsc-user-pdb
+  namespace: lsc-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: lsc-user-service
+---
+# Gateway PDB (2副本，允许0个不可用)
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lsc-gateway-pdb
+  namespace: lsc-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: lsc-gateway
+---
+# AI Gateway PDB
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lsc-ai-gateway-pdb
+  namespace: lsc-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: lsc-ai-gateway
+---
+# 订单服务 PDB
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lsc-order-pdb
+  namespace: lsc-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: lsc-order-service
+---
+# 核销服务 PDB
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lsc-writeoff-pdb
+  namespace: lsc-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: lsc-writeoff-service
+---
+# B2B 服务 PDB
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lsc-b2b-pdb
+  namespace: lsc-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: lsc-b2b-service
+---
+# 管理后台 PDB
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lsc-admin-pdb
+  namespace: lsc-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: lsc-admin-service

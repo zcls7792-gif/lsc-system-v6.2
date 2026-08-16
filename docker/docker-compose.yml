@@ -1,0 +1,311 @@
+version: '3.8'
+
+# ============================================================
+# 链盛通LSC系统 V6.2-AI 本地开发环境
+# 包含: MySQL8 + Redis7 + RabbitMQ + Nacos + Seata + XXL-JOB
+# ============================================================
+
+services:
+  # ---- MySQL 8.0 ----
+  mysql:
+    image: mysql:8.0.36
+    container_name: lsc-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Lsc@2026#Secure
+      MYSQL_DATABASE: lsc_system
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../sql/lsc_system_v6.2.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ../sql/lsc_sharding.sql:/docker-entrypoint-initdb.d/02-sharding.sql:ro
+      - ./config/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+    command:
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+      --max-connections=2000
+      --innodb-buffer-pool-size=2G
+      --innodb-log-file-size=512M
+      --binlog-format=ROW
+      --log-bin=mysql-bin
+      --server-id=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pLsc@2026#Secure"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - lsc-net
+
+  # ---- Redis 7.0 集群(6节点: 3主3从) ----
+  redis-node-1:
+    image: redis:7.2-alpine
+    container_name: lsc-redis-1
+    restart: always
+    command: redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass Lsc@Redis2026
+    ports:
+      - "7000:7000"
+    volumes:
+      - redis_1:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7000", "-a", "Lsc@Redis2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lsc-net
+
+  redis-node-2:
+    image: redis:7.2-alpine
+    container_name: lsc-redis-2
+    restart: always
+    command: redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass Lsc@Redis2026
+    ports:
+      - "7001:7001"
+    volumes:
+      - redis_2:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7001", "-a", "Lsc@Redis2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lsc-net
+
+  redis-node-3:
+    image: redis:7.2-alpine
+    container_name: lsc-redis-3
+    restart: always
+    command: redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass Lsc@Redis2026
+    ports:
+      - "7002:7002"
+    volumes:
+      - redis_3:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7002", "-a", "Lsc@Redis2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lsc-net
+
+  redis-node-4:
+    image: redis:7.2-alpine
+    container_name: lsc-redis-4
+    restart: always
+    command: redis-server --port 7003 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass Lsc@Redis2026
+    ports:
+      - "7003:7003"
+    volumes:
+      - redis_4:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7003", "-a", "Lsc@Redis2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lsc-net
+
+  redis-node-5:
+    image: redis:7.2-alpine
+    container_name: lsc-redis-5
+    restart: always
+    command: redis-server --port 7004 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass Lsc@Redis2026
+    ports:
+      - "7004:7004"
+    volumes:
+      - redis_5:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7004", "-a", "Lsc@Redis2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lsc-net
+
+  redis-node-6:
+    image: redis:7.2-alpine
+    container_name: lsc-redis-6
+    restart: always
+    command: redis-server --port 7005 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass Lsc@Redis2026
+    ports:
+      - "7005:7005"
+    volumes:
+      - redis_6:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7005", "-a", "Lsc@Redis2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lsc-net
+
+  # Redis集群初始化(一次性运行)
+  redis-cluster-init:
+    image: redis:7.2-alpine
+    container_name: lsc-redis-init
+    depends_on:
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - redis-node-4
+      - redis-node-5
+      - redis-node-6
+    command: >
+      sh -c "
+      sleep 5 &&
+      echo 'yes' | redis-cli --cluster create
+      redis-node-1:7000 redis-node-2:7001 redis-node-3:7002
+      redis-node-4:7003 redis-node-5:7004 redis-node-6:7005
+      --cluster-replicas 1
+      -a Lsc@Redis2026
+      "
+    networks:
+      - lsc-net
+
+  # ---- RabbitMQ ----
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: lsc-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: lsc_admin
+      RABBITMQ_DEFAULT_PASS: Lsc@MQ2026
+      TZ: Asia/Shanghai
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - lsc-net
+
+  # ---- Nacos 2.3 ----
+  nacos:
+    image: nacos/nacos-server:v2.3.2
+    container_name: lsc-nacos
+    restart: always
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: Lsc@2026#Secure
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=true&serverTimezone=Asia/Shanghai
+      NACOS_AUTH_ENABLE: "true"
+      NACOS_AUTH_IDENTITY_KEY: lsc_nacos
+      NACOS_AUTH_IDENTITY_VALUE: Lsc@Nacos2026
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - nacos_logs:/home/nacos/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - lsc-net
+
+  # ---- Seata Server 2.0 ----
+  seata-server:
+    image: seataio/seata-server:2.0.0
+    container_name: lsc-seata
+    restart: always
+    environment:
+      SEATA_IP: seata-server
+      SEATA_PORT: 8091
+      STORE_MODE: db
+      SEATA_CONFIG_NAME: file:/root/seata-config/registry
+    ports:
+      - "8091:8091"
+    volumes:
+      - ./config/seata:/root/seata-config
+    depends_on:
+      - mysql
+      - nacos
+    networks:
+      - lsc-net
+
+  # ---- XXL-JOB Admin ----
+  xxl-job-admin:
+    image: xuxueli/xxl-job-admin:2.4.0
+    container_name: lsc-xxl-job
+    restart: always
+    environment:
+      PARAMS: >
+        --spring.datasource.url=jdbc:mysql://mysql:3306/xxl_job?useSSL=true&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+        --spring.datasource.username=root
+        --spring.datasource.password=Lsc@2026#Secure
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    networks:
+      - lsc-net
+
+  # ---- Prometheus 监控 ----
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: lsc-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - lsc-net
+
+  # ---- Grafana 可视化 ----
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lsc-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: Lsc@Grafana2026
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - lsc-net
+
+volumes:
+  mysql_data:
+  redis_1:
+  redis_2:
+  redis_3:
+  redis_4:
+  redis_5:
+  redis_6:
+  rabbitmq_data:
+  nacos_logs:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  lsc-net:
+    driver: bridge

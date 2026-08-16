@@ -1,0 +1,5 @@
+-cp
+/tmp/extracted-libs/BOOT-INF/lib/micrometer-core-1.12.5.jar:/tmp/extracted-libs/BOOT-INF/lib/micrometer-commons-1.12.5.jar:/tmp/extracted-libs/BOOT-INF/lib/slf4j-api-2.0.13.jar:/tmp/extracted-libs/BOOT-INF/lib/micrometer-observation-1.12.5.jar
+-d
+/workspace/metrics-verification/out
+/workspace/metrics-verification/CaffeineMetricsServer.java

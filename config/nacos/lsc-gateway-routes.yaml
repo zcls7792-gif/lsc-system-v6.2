@@ -1,0 +1,142 @@
+# ============================================================
+# Nacos共享配置 - 网关路由规则
+# Data ID: lsc-gateway-routes.yaml
+# Group: LSC_GROUP
+# ============================================================
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # ---- API 路由 ----
+        - id: lsc-user-service
+          uri: lb://lsc-user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+
+        - id: lsc-ledger-service
+          uri: lb://lsc-ledger-service
+          predicates:
+            - Path=/api/ledger/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-b2b-service
+          uri: lb://lsc-b2b-service
+          predicates:
+            - Path=/api/b2b/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-order-service
+          uri: lb://lsc-order-service
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-writeoff-service
+          uri: lb://lsc-writeoff-service
+          predicates:
+            - Path=/api/writeoff/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-release-service
+          uri: lb://lsc-release-service
+          predicates:
+            - Path=/api/release/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-promotion-service
+          uri: lb://lsc-promotion-service
+          predicates:
+            - Path=/api/promotion/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-mall-service
+          uri: lb://lsc-mall-service
+          predicates:
+            - Path=/api/mall/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-risk-service
+          uri: lb://lsc-risk-service
+          predicates:
+            - Path=/api/risk/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-media-service
+          uri: lb://lsc-media-service
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-map-service
+          uri: lb://lsc-map-service
+          predicates:
+            - Path=/api/map/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-reconciliation-service
+          uri: lb://lsc-reconciliation-service
+          predicates:
+            - Path=/api/reconciliation/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-evidence-service
+          uri: lb://lsc-evidence-service
+          predicates:
+            - Path=/api/evidence/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-admin-service
+          uri: lb://lsc-admin-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=2
+
+        - id: lsc-ai-gateway
+          uri: lb://lsc-ai-gateway
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - StripPrefix=2
+
+        # ---- 前端路由 ----
+        - id: lsc-admin-web
+          uri: http://lsc-admin-web:80
+          predicates:
+            - Path=/admin/**
+          filters:
+            - StripPrefix=1
+
+        - id: lsc-merchant-web
+          uri: http://lsc-merchant-web:80
+          predicates:
+            - Path=/merchant/**
+          filters:
+            - StripPrefix=1
+
+        # ---- 健康检查直通 ----
+        - id: health-check
+          uri: lb://lsc-gateway
+          predicates:
+            - Path=/actuator/**
+          filters:
+            - StripPrefix=0

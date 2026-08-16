@@ -1,0 +1,103 @@
+server:
+  port: 8111
+  servlet:
+    context-path: /lsc-map
+
+spring:
+  application:
+    name: lsc-map-service
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+      config:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+        file-extension: yaml
+        shared-configs:
+          - data-id: lsc-common-datasource.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-infra.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-redis.yaml
+            group: LSC_GROUP
+            refresh: true
+  # ============ Redis 集群 (地理编码结果缓存) ============
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PWD:}
+      database: ${REDIS_DB:11}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 3000ms
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# 业务配置 - 双地图服务商
+lsc:
+  map:
+    # 高德地图(主)
+    amap:
+      key: ${AMAP_KEY:}
+      geocode-url: https://restapi.amap.com/v3/geocode/geo
+      regeocode-url: https://restapi.amap.com/v3/geocode/regeo
+      navigate-url: https://uri.amap.com/navigation
+    # 百度地图(备份)
+    baidu:
+      ak: ${BAIDU_AK:}
+      geocode-url: https://api.map.baidu.com/geocoding/v3
+      regeocode-url: https://api.map.baidu.com/reverse_geocoding/v3
+      navigate-url: https://api.map.baidu.com/direction
+    # 地理编码缓存有效期(秒)
+    cache-ttl-seconds: 86400
+
+# 日志
+logging:
+  level:
+    root: INFO
+    com.lianshengtong.map: DEBUG
+    com.lianshengtong.common: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# Knife4j
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: map
+      paths-to-match: /api/**
+      packages-to-scan: com.lianshengtong.map.controller

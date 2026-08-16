@@ -1,0 +1,61 @@
+/* ===== 链生通 LSC 主题变量 ===== */
+/* 主色：橙色系 #FF6B00 */
+$uni-color-primary: #FF6B00;
+$primary: #FF6B00;
+$primary-light: #FF8C33;
+$primary-dark: #E55F00;
+$primary-bg: #FFF3EB;
+
+/* 辅助色 */
+$success: #07C160;
+$warning: #FFB020;
+$danger: #FA5150;
+$info: #909399;
+
+/* LSC 专属色（紫色，区分人民币） */
+$lsc-color: #6C5CE7;
+$lsc-color-light: #A29BFE;
+$lsc-color-bg: #F0EDFF;
+
+/* 文本 */
+$text-primary: #303133;
+$text-regular: #606266;
+$text-secondary: #909399;
+$text-placeholder: #C0C4CC;
+
+/* 背景 */
+$bg-page: #F5F6FA;
+$bg-card: #FFFFFF;
+$bg-gray: #F7F8FA;
+
+/* 边框 */
+$border-color: #EBEEF5;
+$border-color-light: #F2F6FC;
+
+/* 圆角 */
+$radius-sm: 8rpx;
+$radius-base: 12rpx;
+$radius-lg: 20rpx;
+$radius-xl: 32rpx;
+$radius-circle: 50%;
+
+/* 间距 */
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-base: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
+
+/* 字号 */
+$font-xs: 20rpx;
+$font-sm: 24rpx;
+$font-base: 28rpx;
+$font-md: 32rpx;
+$font-lg: 36rpx;
+$font-xl: 40rpx;
+$font-xxl: 48rpx;
+
+/* 阴影 */
+$shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+$shadow-base: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+$shadow-card: 0 4rpx 24rpx rgba(255, 107, 0, 0.08);

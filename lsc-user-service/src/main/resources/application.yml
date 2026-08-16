@@ -1,0 +1,170 @@
+server:
+  port: 8101
+  servlet:
+    context-path: /user-service
+
+spring:
+  application:
+    name: lsc-user-service
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+      config:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+        file-extension: yaml
+        shared-configs:
+          - data-id: lsc-common-datasource.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-infra.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-redis.yaml
+            group: LSC_GROUP
+            refresh: true
+  # ============ 数据源 (MySQL 8.0.28, 分库分表按user_id取模32) ============
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/lsc_user?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai&
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 10000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PWD}
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat,wall
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000
+  # ============ 分库分表配置示例 (ShardingSphere 8库32表, 按 user_id 取模) ============
+  # 生产环境启用 shardingsphere-jdbc 时, 注释上方单库 datasource 并启用以下配置:
+  # shardingsphere:
+  #   datasource:
+  #     names: ds0,ds1,ds2,ds3,ds4,ds5,ds6,ds7
+  #     ds0: { type: com.alibaba.druid.pool.DruidDataSource, driver-class-name: com.mysql.cj.jdbc.Driver,
+  #            url: jdbc:mysql://127.0.0.1:3306/lsc_user_0?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai&,
+  #            username: root, password: root123 }
+  #     ds1: { type: com.alibaba.druid.pool.DruidDataSource, driver-class-name: com.mysql.cj.jdbc.Driver,
+  #            url: jdbc:mysql://127.0.0.1:3306/lsc_user_1?..., username: root, password: root123 }
+  #     # ds2 ~ ds7 同理, 库名 lsc_user_2 ~ lsc_user_7
+  #   rules:
+  #     sharding:
+  #       tables:
+  #         users:
+  #           actual-data-nodes: ds$->{0..7}.users$->{0..31}
+  #           database-strategy: { standard: { sharding-column: user_id, sharding-algorithm-name: db-mod } }
+  #           table-strategy: { standard: { sharding-column: user_id, sharding-algorithm-name: tbl-mod } }
+  #         merchant_extensions:
+  #           actual-data-nodes: ds$->{0..7}.merchant_extensions$->{0..31}
+  #           database-strategy: { standard: { sharding-column: merchant_id, sharding-algorithm-name: db-mod } }
+  #           table-strategy: { standard: { sharding-column: merchant_id, sharding-algorithm-name: tbl-mod } }
+  #       sharding-algorithms:
+  #         db-mod: { type: MOD, props: { sharding-count: 8 } }
+  #         tbl-mod: { type: MOD, props: { sharding-count: 32 } }
+  # ============ Redis 7.0 集群模式 (Token缓存) ============
+  data:
+    redis:
+      # 集群模式示例 (生产环境推荐 3主3从)
+      cluster:
+        nodes:
+          - 127.0.0.1:6379
+          - 127.0.0.1:6380
+          - 127.0.0.1:6381
+          - 127.0.0.1:6382
+          - 127.0.0.1:6383
+          - 127.0.0.1:6384
+        max-redirects: 3
+      password:
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 3000ms
+        cluster:
+          refresh:
+            adaptive: true
+            period: 30s
+  # ============ Jackson ============
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+# ============ MyBatis-Plus ============
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.lianshengtong.user.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# ============ 服务治理 ============
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+
+# ============ 业务自定义配置 ============
+lsc:
+  jwt:
+    # JWT 密钥 (生产环境请通过 Nacos/K8s Secret 注入 JWT_SECRET)
+    secret: ${JWT_SECRET}
+    # Token 有效期 24小时 (单位: 毫秒)
+    expire-millis: 86400000
+    issuer: lsc-user-service
+  # 身份证号 AES-256 加密密钥 (16/24/32字节)
+  aes:
+    id-card-key: ${AES_ID_CARD_KEY}
+  # 推荐关系：严格一级（不允许链式）
+  referral:
+    max-level: 1
+
+# ============ Knife4j ============
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: default
+      paths-to-match: /**
+      packages-to-scan: com.lianshengtong.user.controller

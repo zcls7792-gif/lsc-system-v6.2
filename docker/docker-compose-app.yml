@@ -1,0 +1,396 @@
+version: '3.8'
+
+services:
+  lsc-gateway:
+    image: lsc/lsc-gateway:6.2.0
+    container_name: lsc-gateway
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - SERVER_PORT=8000
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+      redis-cluster-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-user-service:
+    image: lsc/lsc-user-service:6.2.0
+    container_name: lsc-user-service
+    restart: always
+    ports:
+      - "8101:8101"
+    environment:
+      - SERVER_PORT=8101
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8101/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-ledger-service:
+    image: lsc/lsc-ledger-service:6.2.0
+    container_name: lsc-ledger-service
+    restart: always
+    ports:
+      - "8102:8102"
+    environment:
+      - SERVER_PORT=8102
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-Xms1g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8102/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-b2b-service:
+    image: lsc/lsc-b2b-service:6.2.0
+    container_name: lsc-b2b-service
+    restart: always
+    ports:
+      - "8103:8103"
+    environment:
+      - SERVER_PORT=8103
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8103/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-order-service:
+    image: lsc/lsc-order-service:6.2.0
+    container_name: lsc-order-service
+    restart: always
+    ports:
+      - "8104:8104"
+    environment:
+      - SERVER_PORT=8104
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8104/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-writeoff-service:
+    image: lsc/lsc-writeoff-service:6.2.0
+    container_name: lsc-writeoff-service
+    restart: always
+    ports:
+      - "8105:8105"
+    environment:
+      - SERVER_PORT=8105
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8105/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-release-service:
+    image: lsc/lsc-release-service:6.2.0
+    container_name: lsc-release-service
+    restart: always
+    ports:
+      - "8106:8106"
+    environment:
+      - SERVER_PORT=8106
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-Xms1g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8106/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-promotion-service:
+    image: lsc/lsc-promotion-service:6.2.0
+    container_name: lsc-promotion-service
+    restart: always
+    ports:
+      - "8107:8107"
+    environment:
+      - SERVER_PORT=8107
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8107/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-mall-service:
+    image: lsc/lsc-mall-service:6.2.0
+    container_name: lsc-mall-service
+    restart: always
+    ports:
+      - "8108:8108"
+    environment:
+      - SERVER_PORT=8108
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8108/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-risk-service:
+    image: lsc/lsc-risk-service:6.2.0
+    container_name: lsc-risk-service
+    restart: always
+    ports:
+      - "8109:8109"
+    environment:
+      - SERVER_PORT=8109
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8109/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-media-service:
+    image: lsc/lsc-media-service:6.2.0
+    container_name: lsc-media-service
+    restart: always
+    ports:
+      - "8110:8110"
+    environment:
+      - SERVER_PORT=8110
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - media_data:/app/data
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8110/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-map-service:
+    image: lsc/lsc-map-service:6.2.0
+    container_name: lsc-map-service
+    restart: always
+    ports:
+      - "8111:8111"
+    environment:
+      - SERVER_PORT=8111
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8111/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-reconciliation-service:
+    image: lsc/lsc-reconciliation-service:6.2.0
+    container_name: lsc-reconciliation-service
+    restart: always
+    ports:
+      - "8112:8112"
+    environment:
+      - SERVER_PORT=8112
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8112/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-evidence-service:
+    image: lsc/lsc-evidence-service:6.2.0
+    container_name: lsc-evidence-service
+    restart: always
+    ports:
+      - "8113:8113"
+    environment:
+      - SERVER_PORT=8113
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8113/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-admin-service:
+    image: lsc/lsc-admin-service:6.2.0
+    container_name: lsc-admin-service
+    restart: always
+    ports:
+      - "8200:8200"
+    environment:
+      - SERVER_PORT=8200
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8200/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-ai-gateway:
+    image: lsc/lsc-ai-gateway:6.2.0
+    container_name: lsc-ai-gateway
+    restart: always
+    ports:
+      - "8201:8201"
+    environment:
+      - SERVER_PORT=8201
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8201/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - lsc-net
+
+  lsc-admin-web:
+    image: lsc/lsc-admin-web:6.2.0
+    container_name: lsc-admin-web
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - lsc-gateway
+    networks:
+      - lsc-net
+
+  lsc-merchant-web:
+    image: lsc/lsc-merchant-web:6.2.0
+    container_name: lsc-merchant-web
+    restart: always
+    ports:
+      - "81:80"
+    depends_on:
+      - lsc-gateway
+    networks:
+      - lsc-net
+
+  lsc-mobile-web:
+    image: lsc/lsc-mobile-web:6.2.0
+    container_name: lsc-mobile-web
+    restart: always
+    ports:
+      - "82:80"
+    depends_on:
+      - lsc-gateway
+    networks:
+      - lsc-net
+
+volumes:
+  media_data:
+
+networks:
+  lsc-net:
+    external: true

@@ -1,0 +1,58 @@
+# ============================================================
+# Nacos共享配置 - 公共Redis配置
+# Data ID: lsc-common-redis.yaml
+# Group: LSC_GROUP
+# ============================================================
+spring:
+  data:
+    redis:
+      cluster:
+        nodes:
+          - redis-node-1:7000
+          - redis-node-2:7001
+          - redis-node-3:7002
+          - redis-node-4:7003
+          - redis-node-5:7004
+          - redis-node-6:7005
+        max-redirects: 3
+      password: Lsc@Redis2026
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 200
+          max-idle: 50
+          min-idle: 10
+          max-wait: 3000ms
+        cluster:
+          refresh:
+            adaptive: true
+            period: 30s
+
+# Redisson配置
+redisson:
+  config: |
+    clusterServersConfig:
+      nodeAddresses:
+        - "redis://redis-node-1:7000"
+        - "redis://redis-node-2:7001"
+        - "redis://redis-node-3:7002"
+        - "redis://redis-node-4:7003"
+        - "redis://redis-node-5:7004"
+        - "redis://redis-node-6:7005"
+      password: "Lsc@Redis2026"
+      scanInterval: 1000
+      readMode: "SLAVE"
+      subscriptionMode: "SLAVE"
+      slaveConnectionMinimumIdleSize: 10
+      slaveConnectionPoolSize: 64
+      masterConnectionMinimumIdleSize: 10
+      masterConnectionPoolSize: 64
+      idleConnectionTimeout: 10000
+      connectTimeout: 10000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
+    threads: 16
+    nettyThreads: 32
+    codec: !<org.redisson.codec.JsonJacksonCodec> {}
+    useScriptCache: true

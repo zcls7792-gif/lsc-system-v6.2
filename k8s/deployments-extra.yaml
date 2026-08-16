@@ -1,0 +1,588 @@
+# ============================================================
+# K8s补充微服务Deployment清单
+# 包含: promotion, mall, risk, reconciliation, media, map, evidence
+# 前端: merchant-web (Nginx)
+# Ingress更新: admin.lianshengtong.com -> merchant-web
+# ============================================================
+
+# ---- 营销推广服务 ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-promotion-service
+  namespace: lsc-system
+  labels:
+    app: lsc-promotion-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-promotion-service
+  template:
+    metadata:
+      labels:
+        app: lsc-promotion-service
+    spec:
+      containers:
+        - name: lsc-promotion-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/promotion-service:6.2.0
+          ports:
+            - containerPort: 8107
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8107"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8107
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8107
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-promotion-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8107
+      targetPort: 8107
+  selector:
+    app: lsc-promotion-service
+
+---
+# ---- 商城服务 ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-mall-service
+  namespace: lsc-system
+  labels:
+    app: lsc-mall-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-mall-service
+  template:
+    metadata:
+      labels:
+        app: lsc-mall-service
+    spec:
+      containers:
+        - name: lsc-mall-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/mall-service:6.2.0
+          ports:
+            - containerPort: 8108
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8108"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8108
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8108
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-mall-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8108
+      targetPort: 8108
+  selector:
+    app: lsc-mall-service
+
+---
+# ---- 风控服务 ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-risk-service
+  namespace: lsc-system
+  labels:
+    app: lsc-risk-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-risk-service
+  template:
+    metadata:
+      labels:
+        app: lsc-risk-service
+    spec:
+      containers:
+        - name: lsc-risk-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/risk-service:6.2.0
+          ports:
+            - containerPort: 8109
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8109"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8109
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8109
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-risk-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8109
+      targetPort: 8109
+  selector:
+    app: lsc-risk-service
+
+---
+# ---- 对账服务 ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-reconciliation-service
+  namespace: lsc-system
+  labels:
+    app: lsc-reconciliation-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-reconciliation-service
+  template:
+    metadata:
+      labels:
+        app: lsc-reconciliation-service
+    spec:
+      containers:
+        - name: lsc-reconciliation-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/reconciliation-service:6.2.0
+          ports:
+            - containerPort: 8112
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8112"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8112
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8112
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-reconciliation-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8112
+      targetPort: 8112
+  selector:
+    app: lsc-reconciliation-service
+
+---
+# ---- 媒体服务 ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-media-service
+  namespace: lsc-system
+  labels:
+    app: lsc-media-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-media-service
+  template:
+    metadata:
+      labels:
+        app: lsc-media-service
+    spec:
+      containers:
+        - name: lsc-media-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/media-service:6.2.0
+          ports:
+            - containerPort: 8110
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8110"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8110
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8110
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-media-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8110
+      targetPort: 8110
+  selector:
+    app: lsc-media-service
+
+---
+# ---- 地图服务 ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-map-service
+  namespace: lsc-system
+  labels:
+    app: lsc-map-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-map-service
+  template:
+    metadata:
+      labels:
+        app: lsc-map-service
+    spec:
+      containers:
+        - name: lsc-map-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/map-service:6.2.0
+          ports:
+            - containerPort: 8111
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8111"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8111
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8111
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-map-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8111
+      targetPort: 8111
+  selector:
+    app: lsc-map-service
+
+---
+# ---- 链上存证服务 (资源密集型) ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-evidence-service
+  namespace: lsc-system
+  labels:
+    app: lsc-evidence-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-evidence-service
+  template:
+    metadata:
+      labels:
+        app: lsc-evidence-service
+    spec:
+      containers:
+        - name: lsc-evidence-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/evidence-service:6.2.0
+          ports:
+            - containerPort: 8113
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8113"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8113
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8113
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-evidence-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8113
+      targetPort: 8113
+  selector:
+    app: lsc-evidence-service
+
+---
+# ============================================================
+# 前端 - 商户管理后台 (Nginx)
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-merchant-web
+  namespace: lsc-system
+  labels:
+    app: lsc-merchant-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-merchant-web
+  template:
+    metadata:
+      labels:
+        app: lsc-merchant-web
+    spec:
+      containers:
+        - name: lsc-merchant-web
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-html
+              mountPath: /usr/share/nginx/html
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: nginx-html
+          emptyDir: {}
+        - name: nginx-conf
+          configMap:
+            name: lsc-merchant-web-nginx-conf
+            optional: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-merchant-web
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: lsc-merchant-web
+
+---
+# ============================================================
+# Ingress更新 - admin.lianshengtong.com -> merchant-web
+# 注意: 此Ingress替换原有deployments.yaml中的同名Ingress
+#       如需保留原Ingress，请修改此文件中的name
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lsc-ingress
+  namespace: lsc-system
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/limit-rps: "200"
+    nginx.ingress.kubernetes.io/limit-connections: "1000"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-hide-header: "X-Powered-By,Server"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - api.lianshengtong.com
+        - admin.lianshengtong.com
+      secretName: lsc-tls-secret
+  rules:
+    - host: api.lianshengtong.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lsc-gateway
+                port:
+                  number: 8000
+    - host: admin.lianshengtong.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lsc-merchant-web
+                port:
+                  number: 80

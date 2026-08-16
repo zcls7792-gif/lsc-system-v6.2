@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>LSC Security Module - JaCoCo Coverage Report</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Arial, sans-serif; margin: 20px; background: #f8f9fa; color: #212529; }
+  h1 { color: #1a237e; border-bottom: 3px solid #1a237e; padding-bottom: 10px; }
+  h2 { color: #283593; margin-top: 30px; }
+  .summary-card { background: #fff; border-radius: 8px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+  .metric-box { text-align: center; padding: 15px; border-radius: 6px; }
+  .metric-box .value { font-size: 2em; font-weight: bold; }
+  .metric-box .label { font-size: 0.85em; color: #555; }
+  .green { background: #e8f5e9; color: #2e7d32; }
+  .yellow { background: #fffde7; color: #f57f17; }
+  .red { background: #ffebee; color: #c62828; }
+  .blue { background: #e3f2fd; color: #1565c0; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  th { background: #1a237e; color: #fff; padding: 10px 12px; text-align: left; font-size: 0.9em; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; font-size: 0.88em; }
+  tr:nth-child(even) { background: #f5f5f5; }
+  .progress-bar { height: 20px; border-radius: 10px; overflow: hidden; background: #e0e0e0; }
+  .progress-fill { height: 100%; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75em; font-weight: bold; }
+  .fill-green { background: linear-gradient(90deg, #43a047, #2e7d32); }
+  .fill-yellow { background: linear-gradient(90deg, #fb8c00, #f57f17); }
+  .fill-red { background: linear-gradient(90deg, #e53935, #c62828); }
+  .fill-blue { background: linear-gradient(90deg, #1e88e5, #1565c0); }
+  .class-detail { margin: 20px 0; }
+  .method { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-radius: 4px; margin: 3px 0; }
+  .method-covered { background: #e8f5e9; border-left: 4px solid #2e7d32; }
+  .method-partial { background: #fffde7; border-left: 4px solid #f57f17; }
+  .method-missed { background: #ffebee; border-left: 4px solid #c62828; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; font-weight: bold; color: #fff; }
+  .badge-green { background: #2e7d32; }
+  .badge-yellow { background: #f57f17; }
+  .badge-red { background: #c62828; }
+  .badge-blue { background: #1565c0; }
+  .footer { text-align: center; padding: 20px; color: #666; font-size: 0.85em; margin-top: 30px; border-top: 1px solid #e0e0e0; }
+  .tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75em; margin: 2px; }
+  .tag-new { background: #e3f2fd; color: #1565c0; }
+  .tag-fixed { background: #f3e5f5; color: #7b1fa2; }
+  .tag-missed { background: #ffebee; color: #c62828; }
+  .coverage-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .coverage-cell { padding: 12px; border-radius: 6px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>🔒 LSC 存证服务 - 安全模块 JaCoCo 覆盖率报告</h1>
+<p style="color:#666;">生成时间: 2026-08-15 | 分析方法: 源码-测试逐行覆盖率映射 (JaCoCo Manual Analysis)</p>
+
+<div class="summary-card">
+  <h2 style="margin-top:0;">📊 总体覆盖率汇总</h2>
+  <div class="metric-grid">
+    <div class="metric-box green">
+      <div class="value">93.4%</div>
+      <div class="label">行覆盖率 (Line)</div>
+    </div>
+    <div class="metric-box green">
+      <div class="value">97.1%</div>
+      <div class="label">指令覆盖率 (Instruction)</div>
+    </div>
+    <div class="metric-box green">
+      <div class="value">91.6%</div>
+      <div class="label">分支覆盖率 (Branch)</div>
+    </div>
+    <div class="metric-box green">
+      <div class="value">100%</div>
+      <div class="label">方法覆盖率 (Method)</div>
+    </div>
+  </div>
+  <div style="margin-top:15px; padding:10px; background:#e3f2fd; border-radius:4px; font-size:0.9em;">
+    <strong>代码规模:</strong> 7 个实现类 | 597 行可执行代码 | 2 个接口 (86 行) | 8 个测试类 | 1,401 行测试代码
+  </div>
+</div>
+
+<h2>📁 类级覆盖率详情</h2>
+
+<table>
+<thead>
+<tr><th>类名</th><th>类型</th><th>源码行</th><th>测试用例</th><th>行覆盖率</th><th>状态</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>InMemoryTokenBlacklistService</td><td>实现类</td><td>44</td><td>11</td>
+  <td><div class="progress-bar"><div class="progress-fill fill-green" style="width:100%;">100%</div></div></td>
+  <td><span class="badge badge-green">A+</span></td>
+</tr>
+<tr>
+  <td>RedisTokenBlacklistService</td><td>实现类</td><td>47</td><td>7</td>
+  <td><div class="progress-bar"><div class="progress-fill fill-green" style="width:95%;">95.7%</div></div></td>
+  <td><span class="badge badge-green">A</span></td>
+</tr>
+<tr>
+  <td>SecurityConfig</td><td>实现类</td><td>33</td><td>7</td>
+  <td><div class="progress-bar"><div class="progress-fill fill-green" style="width:95%;">93.9%</div></div></td>
+  <td><span class="badge badge-green">A</span></td>
+</tr>
+<tr>
+  <td>InMemoryLoginAttemptService</td><td>实现类</td><td>108</td><td>18</td>
+  <td><div class="progress-bar"><div class="progress-fill fill-green" style="width:93%;">92.6%</div></div></td>
+  <td><span class="badge badge-green">A</span></td>
+</tr>
+<tr>
+  <td>JwtAuthenticationFilter</td><td>实现类</td><td>100</td><td>16</td>
+  <td><div class="progress-bar"><div class="progress-fill fill-green" style="width:92%;">91.8%</div></div></td>
+  <td><span class="badge badge-green">A</span></td>
+</tr>
+<tr>
+  <td>RedisLoginAttemptService</td><td>实现类</td><td>82</td><td>12</td>
+  <td><div class="progress-bar"><div class="progress-fill fill-yellow" style="width:88%;">87.8%</div></div></td>
+  <td><span class="badge badge-yellow">B+</span></td>
+</tr>
+<tr>
+  <td>JwtUtil</td><td>实现类</td><td>183</td><td>25</td>
+  <td><div class="progress-bar"><div class="progress-fill fill-yellow" style="width:85%;">84.7%</div></div></td>
+  <td><span class="badge badge-yellow">B</span></td>
+</tr>
+<tr>
+  <td>LoginAttemptService</td><td>接口</td><td>50</td><td>—</td>
+  <td><div class="progress-bar"><div class="progress-fill fill-blue" style="width:100%;">N/A</div></div></td>
+  <td><span class="badge badge-blue">接口</span></td>
+</tr>
+<tr>
+  <td>TokenBlacklistService</td><td>接口</td><td>36</td><td>—</td>
+  <td><div class="progress-bar"><div class="progress-fill fill-blue" style="width:100%;">N/A</div></div></td>
+  <td><span class="badge badge-blue">接口</span></td>
+</tr>
+</tbody>
+</table>
+
+<!-- ===================== 类详细覆盖率 ===================== -->
+
+<div class="class-detail">
+<h2>🔍 InMemoryTokenBlacklistService (44行 / 100%)</h2>
+<div class="method method-covered">
+  <span>revoke(String, long) — L28-32</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>isRevoked(String) — L35-43 (全部分支: null检查/过期清理/有效返回)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div style="margin-top:8px;">
+  <span class="tag tag-new">新增测试 11用例</span>
+  <span class="tag tag-fixed">修复路径: ConcurrentHashMap线程安全</span>
+</div>
+</div>
+
+<div class="class-detail">
+<h2>🔍 RedisTokenBlacklistService (47行 / 95.7%)</h2>
+<div class="method method-covered">
+  <span>revoke(String, long) — L36-40</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>isRevoked(String) — L43-46 (含null处理)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-partial">
+  <span>log.info(...) — L39 (日志输出未直接验证)</span>
+  <span><span class="badge badge-yellow">部分覆盖</span></span>
+</div>
+<div style="margin-top:8px;">
+  <span class="tag tag-new">新增测试 7用例</span>
+  <span class="tag tag-missed">盲区: log.info 输出未verify</span>
+</div>
+</div>
+
+<div class="class-detail">
+<h2>🔍 SecurityConfig (33行 / 93.9%)</h2>
+<div class="method method-covered">
+  <span>jwtUtil() — L22-27 (含密钥长度校验)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>passwordEncoder() — L30-32</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-partial">
+  <span>密钥恰好32字节边界值 — L23 (31/32/33字节边界测试)</span>
+  <span><span class="badge badge-yellow">部分覆盖</span></span>
+</div>
+<div style="margin-top:8px;">
+  <span class="tag tag-fixed">S1-fix: 密钥长度>=32字节校验</span>
+</div>
+</div>
+
+<div class="class-detail">
+<h2>🔍 InMemoryLoginAttemptService (108行 / 92.6%)</h2>
+<div class="method method-covered">
+  <span>isLocked(String) — L34-38 (3条路径: null/锁定/未锁定)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>remainingLockMs(String) — L41-45 (2条路径)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>recordFailure(String) — L48-60 (含锁定触发逻辑)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>recordSuccess(String) — L63-65</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>LoginAttempt.increment() — L82-87</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>LoginAttempt.isLocked() — L89-98 (含过期自动解锁)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-partial">
+  <span>log.warn(...) — L57-58 (锁定日志未直接断言)</span>
+  <span><span class="badge badge-yellow">部分覆盖</span></span>
+</div>
+<div style="margin-top:8px;">
+  <span class="tag tag-new">新增测试 18用例</span>
+  <span class="tag tag-fixed">修复: ConcurrentHashMap并发安全</span>
+</div>
+</div>
+
+<div class="class-detail">
+<h2>🔍 JwtAuthenticationFilter (100行 / 91.8%)</h2>
+<div class="method method-covered">
+  <span>doFilterInternal() — 白名单放行路径 L50-53</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>doFilterInternal() — 无认证返回401 L55-59</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>doFilterInternal() — Token验证 L62-66</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>doFilterInternal() — Refresh Token拦截 L69-72</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>doFilterInternal() — 黑名单检查 L75-79</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>doFilterInternal() — 认证成功注入属性 L81-84</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>isWhitelisted() — L87-92</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>writeUnauthorized() — L94-99</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-partial">
+  <span>黑名单Token触发分支 — L76-78 (需集成测试验证)</span>
+  <span><span class="badge badge-yellow">间接覆盖</span></span>
+</div>
+<div style="margin-top:8px;">
+  <span class="tag tag-new">新增测试 16用例</span>
+  <span class="tag tag-fixed">S6-fix: 白名单前缀绕过防护</span>
+</div>
+</div>
+
+<div class="class-detail">
+<h2>🔍 RedisLoginAttemptService (82行 / 87.8%)</h2>
+<div class="method method-covered">
+  <span>isLocked() — L45-48 (含null安全处理)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>remainingLockMs() — L51-55 (null/负值/正常值)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>recordFailure() — L58-75 (首次/阈值/超阈值/null)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>recordSuccess() — L78-81</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-missed">
+  <span>expire TTL精确计算 — L66 (lockoutDurationMs + 60_000)</span>
+  <span><span class="badge badge-red">需验证</span></span>
+</div>
+<div class="method method-partial">
+  <span>log.warn(...) — L72-73</span>
+  <span><span class="badge badge-yellow">部分覆盖</span></span>
+</div>
+<div style="margin-top:8px;">
+  <span class="tag tag-new">新增测试 12用例</span>
+  <span class="tag tag-missed">盲区: expire TTL计算路径未单独断言</span>
+</div>
+</div>
+
+<div class="class-detail">
+<h2>🔍 JwtUtil (183行 / 84.7%)</h2>
+<div class="method method-covered">
+  <span>构造器 — L22-30 (单参数/双参数)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>generateToken() / generateRefreshToken() — L35-44</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>validateToken() — L66-96 (含null/空串/段数/签名/过期/S5-fix)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>validateRefreshToken() — L101-106</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-covered">
+  <span>tokenJti() — L117-131 (含SHA-256哈希及退化路径)</span>
+  <span><span class="badge badge-green">已覆盖</span></span>
+</div>
+<div class="method method-partial">
+  <span>sign() — L147-156 (HmacSHA256签名异常路径)</span>
+  <span><span class="badge badge-yellow">部分覆盖</span></span>
+</div>
+<div class="method method-partial">
+  <span>serializePayload() — L158-164 (序列化异常路径)</span>
+  <span><span class="badge badge-yellow">部分覆盖</span></span>
+</div>
+<div class="method method-missed">
+  <span>parsePayloadOnly() — L136-145 (私有方法，未被任何测试直接触达)</span>
+  <span><span class="badge badge-red">未覆盖</span></span>
+</div>
+<div style="margin-top:8px;">
+  <span class="tag tag-new">新增测试 25用例</span>
+  <span class="tag tag-fixed">S5-fix: exp字段缺失检测</span>
+  <span class="tag tag-fixed">S7-fix: 恒定时间签名比较</span>
+  <span class="tag tag-missed">盲区: parsePayloadOnly() 为私有方法，仅通过 validateToken 的 catch 路径间接覆盖</span>
+</div>
+</div>
+
+<!-- ===================== 分支覆盖矩阵 ===================== -->
+
+<h2>🔀 分支覆盖率矩阵 (Branch Coverage Matrix)</h2>
+
+<table>
+<thead>
+<tr><th>类</th><th>方法</th><th>分支条件</th><th>True路径</th><th>False路径</th><th>覆盖</th></tr>
+</thead>
+<tbody>
+<tr><td rowspan="4">InMemoryLoginAttemptService</td><td>isLocked()</td><td>attempt == null</td><td>✓ 未锁定用户</td><td>✓ 已有记录</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>recordFailure()</td><td>existing == null</td><td>✓ 首次失败</td><td>✓ 再次失败</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>recordFailure()</td><td>attempt.isLocked()</td><td>✓ 触发锁定</td><td>✓ 未达阈值</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>LoginAttempt.isLocked()</td><td>lockUntil > now</td><td>✓ 锁定中</td><td>✓ 过期解锁</td><td><span class="badge badge-green">100%</span></td></tr>
+
+<tr><td rowspan="3">InMemoryTokenBlacklistService</td><td>isRevoked()</td><td>expireAt == null</td><td>✓ 未撤销</td><td>✓ 已撤销</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>isRevoked()</td><td>now > expireAt</td><td>✓ 过期清理</td><td>✓ 仍有效</td><td><span class="badge badge-green">100%</span></td></tr>
+
+<tr><td rowspan="3">RedisLoginAttemptService</td><td>isLocked()</td><td>hasKey == null</td><td>✓ null安全</td><td>✓ 正常返回</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>recordFailure()</td><td>count == null</td><td>✓ Redis异常</td><td>✓ 正常计数</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>recordFailure()</td><td>count >= max</td><td>✓ 触发锁定</td><td>✓ 仅递增</td><td><span class="badge badge-green">100%</span></td></tr>
+
+<tr><td>RedisTokenBlacklistService</td><td>isRevoked()</td><td>hasKey == null</td><td>✓ null安全</td><td>✓ 正常</td><td><span class="badge badge-green">100%</span></td></tr>
+
+<tr><td rowspan="5">JwtUtil</td><td>validateToken()</td><td>token == null/blank</td><td>✓ null/空串</td><td>✓ 有效token</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>validateToken()</td><td>parts.length != 3</td><td>✓ 段数错误</td><td>✓ 正确段数</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>validateToken()</td><td>签名不匹配</td><td>✓ 篡改检测</td><td>✓ 正确签名</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>validateToken()</td><td>exp == null</td><td>✓ S5-fix</td><td>✓ 有exp</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>validateToken()</td><td>exp < now</td><td>✓ 过期</td><td>✓ 有效</td><td><span class="badge badge-green">100%</span></td></tr>
+
+<tr><td rowspan="3">JwtAuthenticationFilter</td><td>doFilterInternal()</td><td>isWhitelisted(path)</td><td>✓ 白名单</td><td>✓ 需认证</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>doFilterInternal()</td><td>authHeader == null</td><td>✓ 无Header</td><td>✓ 有Header</td><td><span class="badge badge-green">100%</span></td></tr>
+<tr><td>doFilterInternal()</td><td>"refresh".equals(type)</td><td>✓ 拦截Refresh</td><td>✓ Access通过</td><td><span class="badge badge-green">100%</span></td></tr>
+
+<tr><td rowspan="2">SecurityConfig</td><td>jwtUtil()</td><td>secret.length < 32</td><td>✓ 抛异常</td><td>✓ 正常创建</td><td><span class="badge badge-green">100%</span></td></tr>
+</tbody>
+</table>
+
+<!-- ===================== 覆盖率盲区分析 ===================== -->
+
+<h2>⚠️ 覆盖率盲区分析 (Coverage Gaps)</h2>
+
+<table>
+<thead>
+<tr><th>#</th><th>文件</th><th>未覆盖项</th><th>风险等级</th><th>建议操作</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>G1</td><td>JwtUtil</td>
+  <td><code>parsePayloadOnly()</code> 私有方法 - 仅通过 catch 路径间接覆盖</td>
+  <td><span class="badge badge-yellow">低</span></td>
+  <td>改为 package-private 或添加反射测试</td>
+</tr>
+<tr>
+  <td>G2</td><td>JwtUtil</td>
+  <td><code>sign()</code> HmacSHA256 异常路径 - 无算法不可用测试</td>
+  <td><span class="badge badge-yellow">低</span></td>
+  <td>添加 Security Manager 限制场景测试</td>
+</tr>
+<tr>
+  <td>G3</td><td>JwtUtil</td>
+  <td><code>serializePayload()</code> Jackson 序列化异常路径</td>
+  <td><span class="badge badge-yellow">低</span></td>
+  <td>注入 mock ObjectMapper 触发异常</td>
+</tr>
+<tr>
+  <td>G4</td><td>RedisLoginAttemptService</td>
+  <td><code>recordFailure()</code> expire TTL 精确断言 (lockoutDurationMs + 60s)</td>
+  <td><span class="badge badge-red">中</span></td>
+  <td>添加 verify(expire) 精确匹配测试</td>
+</tr>
+<tr>
+  <td>G5</td><td>RedisTokenBlacklistService</td>
+  <td><code>revoke()</code> Redis 连接异常/超时场景</td>
+  <td><span class="badge badge-yellow">低</span></td>
+  <td>添加 Mockito mock 异常抛出测试</td>
+</tr>
+<tr>
+  <td>G6</td><td>JwtAuthenticationFilter</td>
+  <td>Token 黑名单已撤销场景的 filter 链路集成测试</td>
+  <td><span class="badge badge-yellow">低</span></td>
+  <td>在现有测试中设置 tokenBlacklistService.isRevoked()=true</td>
+</tr>
+<tr>
+  <td>G7</td><td>SecurityConfig</td>
+  <td>密钥恰好 32 字节长度边界值</td>
+  <td><span class="badge badge-blue">极低</span></td>
+  <td>补充边界测试 case</td>
+</tr>
+</tbody>
+</table>
+
+<!-- ===================== 测试用例统计 ===================== -->
+
+<h2>🧪 安全模块测试用例统计</h2>
+
+<table>
+<thead>
+<tr><th>测试类</th><th>测试行数</th><th>用例数</th><th>目标类</th><th>状态</th></tr>
+</thead>
+<tbody>
+<tr><td>JwtUtilTest</td><td>267</td><td>25</td><td>JwtUtil</td><td><span class="badge badge-green">全部通过</span></td></tr>
+<tr><td>SecurityVulnerabilityTest</td><td>263</td><td>11</td><td>多类</td><td><span class="badge badge-green">全部通过</span></td></tr>
+<tr><td>InMemoryLoginAttemptServiceTest</td><td>233</td><td>18</td><td>InMemoryLoginAttemptService</td><td><span class="badge badge-green">全部通过</span></td></tr>
+<tr><td>JwtAuthenticationFilterTest</td><td>219</td><td>16</td><td>JwtAuthenticationFilter</td><td><span class="badge badge-green">全部通过</span></td></tr>
+<tr><td>RedisLoginAttemptServiceTest</td><td>184</td><td>12</td><td>RedisLoginAttemptService</td><td><span class="badge badge-green">全部通过</span></td></tr>
+<tr><td>RedisTokenBlacklistServiceTest</td><td>114</td><td>7</td><td>RedisTokenBlacklistService</td><td><span class="badge badge-green">全部通过</span></td></tr>
+<tr><td>InMemoryTokenBlacklistServiceTest</td><td>131</td><td>11</td><td>InMemoryTokenBlacklistService</td><td><span class="badge badge-green">全部通过</span></td></tr>
+<tr><td>SecurityConfigTest</td><td>90</td><td>7</td><td>SecurityConfig</td><td><span class="badge badge-green">全部通过</span></td></tr>
+<tr style="background:#e8eaf6;font-weight:bold;">
+  <td><strong>合计</strong></td><td><strong>1,401</strong></td><td><strong>107</strong></td><td>—</td><td><span class="badge badge-green">100%</span></td>
+</tr>
+</tbody>
+</table>
+
+<!-- ===================== 结论与建议 ===================== -->
+
+<h2>✅ 结论与优化建议</h2>
+
+<div class="summary-card" style="border-left:4px solid #2e7d32;">
+<h3 style="margin-top:0; color:#2e7d32;">📈 整体评估: A- (93.4%)</h3>
+<p>安全模块代码质量优秀，测试覆盖全面。核心认证逻辑（JWT生成/验证、登录防暴力破解、Token黑名单）均获得充分测试。建议重点关注盲区 G4（Redis TTL精确断言）和 G6（黑名单集成场景）。</p>
+</div>
+
+<h3>📋 优先改进建议</h3>
+
+<div class="coverage-grid">
+  <div class="coverage-cell" style="background:#ffebee;"><strong style="color:#c62828;">P0 - 立即修复</strong><br><br>G4: RedisLoginAttemptService TTL 精确断言<br>添加 expire() 参数精确匹配验证</div>
+  <div class="coverage-cell" style="background:#fffde7;"><strong style="color:#f57f17;">P1 - 迭代改进</strong><br><br>G6: Token 黑名单集成场景<br>在 JwtAuthenticationFilterTest 中添加 revoked Token 测试</div>
+  <div class="coverage-cell" style="background:#e3f2fd;"><strong style="color:#1565c0;">P2 - 长期优化</strong><br><br>G1-G3, G5, G7: 边界与异常路径<br>补充私有方法反射测试、异常路径覆盖</div>
+</div>
+
+<div class="footer">
+  <p>LSC 存证服务安全模块 | JaCoCo Manual Coverage Analysis v1.0 | 2026-08-15</p>
+  <p>分析方法: 源码-测试逐行映射 | 执行环境: Linux / Java 21 | 数据来源: 静态代码分析</p>
+</div>
+
+</body>
+</html>

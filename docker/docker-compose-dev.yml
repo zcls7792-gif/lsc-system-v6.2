@@ -1,0 +1,293 @@
+version: '3.8'
+
+# ============================================================
+# 链盛通LSC系统 V6.2 — 本地开发版配置
+# 仅包含8个核心微服务: gateway, user, ledger, b2b, order, writeoff, evidence, ai-gateway
+# 依赖: 基础环境层 (docker-compose.yml) 中的 nacos, mysql, redis-cluster-init
+# ============================================================
+
+services:
+
+  # ---- API 网关 ----
+  lsc-gateway:
+    image: lsc/lsc-gateway:6.2.0
+    build:
+      context: ../lsc-gateway
+      dockerfile: ../docker/Dockerfile
+      args:
+        JAR_FILE: lsc-gateway.jar
+        SERVICE_NAME: lsc-gateway
+    container_name: lsc-gateway
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      - SERVER_PORT=8000
+      - TZ=Asia/Shanghai
+    depends_on:
+      - nacos
+      - mysql
+      - redis-cluster-init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+    networks:
+      - lsc-net
+
+  # ---- 用户服务 ----
+  lsc-user-service:
+    image: lsc/lsc-user-service:6.2.0
+    build:
+      context: ../lsc-user-service
+      dockerfile: ../docker/Dockerfile
+      args:
+        JAR_FILE: lsc-user-service.jar
+        SERVICE_NAME: lsc-user-service
+    container_name: lsc-user-service
+    restart: always
+    ports:
+      - "8101:8101"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      - SERVER_PORT=8101
+      - TZ=Asia/Shanghai
+    depends_on:
+      - nacos
+      - mysql
+      - redis-cluster-init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8101/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+    networks:
+      - lsc-net
+
+  # ---- 账本服务 (核心) ----
+  lsc-ledger-service:
+    image: lsc/lsc-ledger-service:6.2.0
+    build:
+      context: ../lsc-ledger-service
+      dockerfile: ../docker/Dockerfile
+      args:
+        JAR_FILE: lsc-ledger-service.jar
+        SERVICE_NAME: lsc-ledger-service
+    container_name: lsc-ledger-service
+    restart: always
+    ports:
+      - "8102:8102"
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      - SERVER_PORT=8102
+      - TZ=Asia/Shanghai
+    depends_on:
+      - nacos
+      - mysql
+      - redis-cluster-init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8102/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+    networks:
+      - lsc-net
+
+  # ---- B2B服务 ----
+  lsc-b2b-service:
+    image: lsc/lsc-b2b-service:6.2.0
+    build:
+      context: ../lsc-b2b-service
+      dockerfile: ../docker/Dockerfile
+      args:
+        JAR_FILE: lsc-b2b-service.jar
+        SERVICE_NAME: lsc-b2b-service
+    container_name: lsc-b2b-service
+    restart: always
+    ports:
+      - "8103:8103"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      - SERVER_PORT=8103
+      - TZ=Asia/Shanghai
+    depends_on:
+      - nacos
+      - mysql
+      - redis-cluster-init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8103/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+    networks:
+      - lsc-net
+
+  # ---- 订单服务 ----
+  lsc-order-service:
+    image: lsc/lsc-order-service:6.2.0
+    build:
+      context: ../lsc-order-service
+      dockerfile: ../docker/Dockerfile
+      args:
+        JAR_FILE: lsc-order-service.jar
+        SERVICE_NAME: lsc-order-service
+    container_name: lsc-order-service
+    restart: always
+    ports:
+      - "8104:8104"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      - SERVER_PORT=8104
+      - TZ=Asia/Shanghai
+    depends_on:
+      - nacos
+      - mysql
+      - redis-cluster-init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8104/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+    networks:
+      - lsc-net
+
+  # ---- 核销服务 ----
+  lsc-writeoff-service:
+    image: lsc/lsc-writeoff-service:6.2.0
+    build:
+      context: ../lsc-writeoff-service
+      dockerfile: ../docker/Dockerfile
+      args:
+        JAR_FILE: lsc-writeoff-service.jar
+        SERVICE_NAME: lsc-writeoff-service
+    container_name: lsc-writeoff-service
+    restart: always
+    ports:
+      - "8105:8105"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      - SERVER_PORT=8105
+      - TZ=Asia/Shanghai
+    depends_on:
+      - nacos
+      - mysql
+      - redis-cluster-init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8105/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+    networks:
+      - lsc-net
+
+  # ---- 存证服务 ----
+  lsc-evidence-service:
+    image: lsc/lsc-evidence-service:6.2.0
+    build:
+      context: ../lsc-evidence-service
+      dockerfile: ../docker/Dockerfile
+      args:
+        JAR_FILE: lsc-evidence-service.jar
+        SERVICE_NAME: lsc-evidence-service
+    container_name: lsc-evidence-service
+    restart: always
+    ports:
+      - "8113:8113"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      - SERVER_PORT=8113
+      - TZ=Asia/Shanghai
+    depends_on:
+      - nacos
+      - mysql
+      - redis-cluster-init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8113/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+    networks:
+      - lsc-net
+
+  # ---- AI网关服务 ----
+  lsc-ai-gateway:
+    image: lsc/lsc-ai-gateway:6.2.0
+    build:
+      context: ../lsc-ai-gateway
+      dockerfile: ../docker/Dockerfile
+      args:
+        JAR_FILE: lsc-ai-gateway.jar
+        SERVICE_NAME: lsc-ai-gateway
+    container_name: lsc-ai-gateway
+    restart: always
+    ports:
+      - "8201:8201"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      - SERVER_PORT=8201
+      - TZ=Asia/Shanghai
+    depends_on:
+      - nacos
+      - mysql
+      - redis-cluster-init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8201/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+    networks:
+      - lsc-net
+
+networks:
+  lsc-net:
+    driver: bridge

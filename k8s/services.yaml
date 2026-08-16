@@ -1,0 +1,275 @@
+# ============================================================
+# K8s Services - 所有微服务 Service 清单
+# 可单独应用: kubectl apply -f k8s/services.yaml
+# ============================================================
+
+# ---- API网关 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-gateway
+  namespace: lsc-system
+  labels:
+    app: lsc-gateway
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: lsc-gateway
+
+---
+# ---- 用户服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-user-service
+  namespace: lsc-system
+  labels:
+    app: lsc-user-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8101
+      targetPort: 8101
+  selector:
+    app: lsc-user-service
+
+---
+# ---- 账本服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-ledger-service
+  namespace: lsc-system
+  labels:
+    app: lsc-ledger-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8102
+      targetPort: 8102
+  selector:
+    app: lsc-ledger-service
+
+---
+# ---- B2B服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-b2b-service
+  namespace: lsc-system
+  labels:
+    app: lsc-b2b-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8103
+      targetPort: 8103
+  selector:
+    app: lsc-b2b-service
+
+---
+# ---- 订单服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-order-service
+  namespace: lsc-system
+  labels:
+    app: lsc-order-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8104
+      targetPort: 8104
+  selector:
+    app: lsc-order-service
+
+---
+# ---- 核销服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-writeoff-service
+  namespace: lsc-system
+  labels:
+    app: lsc-writeoff-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8105
+      targetPort: 8105
+  selector:
+    app: lsc-writeoff-service
+
+---
+# ---- 释放计算服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-release-service
+  namespace: lsc-system
+  labels:
+    app: lsc-release-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8106
+      targetPort: 8106
+  selector:
+    app: lsc-release-service
+
+---
+# ---- 营销服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-promotion-service
+  namespace: lsc-system
+  labels:
+    app: lsc-promotion-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8107
+      targetPort: 8107
+  selector:
+    app: lsc-promotion-service
+
+---
+# ---- 商城服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-mall-service
+  namespace: lsc-system
+  labels:
+    app: lsc-mall-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8108
+      targetPort: 8108
+  selector:
+    app: lsc-mall-service
+
+---
+# ---- 风控服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-risk-service
+  namespace: lsc-system
+  labels:
+    app: lsc-risk-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8109
+      targetPort: 8109
+  selector:
+    app: lsc-risk-service
+
+---
+# ---- 媒体服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-media-service
+  namespace: lsc-system
+  labels:
+    app: lsc-media-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8110
+      targetPort: 8110
+  selector:
+    app: lsc-media-service
+
+---
+# ---- 地图服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-map-service
+  namespace: lsc-system
+  labels:
+    app: lsc-map-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8111
+      targetPort: 8111
+  selector:
+    app: lsc-map-service
+
+---
+# ---- 对账服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-reconciliation-service
+  namespace: lsc-system
+  labels:
+    app: lsc-reconciliation-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8112
+      targetPort: 8112
+  selector:
+    app: lsc-reconciliation-service
+
+---
+# ---- 存证服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-evidence-service
+  namespace: lsc-system
+  labels:
+    app: lsc-evidence-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8113
+      targetPort: 8113
+  selector:
+    app: lsc-evidence-service
+
+---
+# ---- 管理后台服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-admin-service
+  namespace: lsc-system
+  labels:
+    app: lsc-admin-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8200
+      targetPort: 8200
+  selector:
+    app: lsc-admin-service
+
+---
+# ---- AI网关服务 ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-ai-gateway
+  namespace: lsc-system
+  labels:
+    app: lsc-ai-gateway
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8201
+      targetPort: 8201
+  selector:
+    app: lsc-ai-gateway

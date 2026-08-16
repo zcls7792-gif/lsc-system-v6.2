@@ -1,0 +1,198 @@
+server:
+  port: 8106
+  servlet:
+    context-path: /lsc-release
+
+spring:
+  application:
+    name: lsc-release-service
+  profiles:
+    active: ${SPRING_PROFILE:dev}
+  # 数据源
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/lsc_release?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai&&rewriteBatchedStatements=true
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 10000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PWD}
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      keep-alive: true
+  # Redis
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PWD:}
+      database: 2
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+  # Spring Cloud Nacos
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+      config:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+        file-extension: yaml
+        shared-configs:
+          - data-id: lsc-common-datasource.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-infra.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-redis.yaml
+            group: LSC_GROUP
+            refresh: true
+        refresh-enabled: true
+  # Jackson
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# MyBatis-Plus
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.lianshengtong.release.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: AUTO
+
+# Seata AT 模式配置 (释放操作跨账本服务一致性)
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: lsc_tx_group
+  service:
+    vgroup-mapping:
+      lsc_tx_group: default
+    grouplist:
+      default: ${SEATA_ADDR:127.0.0.1:8091}
+  registry:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_ADDR:nacos:8848}
+      namespace: ${NACOS_NAMESPACE:public}
+      group: SEATA_GROUP
+      application: seata-server
+  config:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_ADDR:nacos:8848}
+      namespace: ${NACOS_NAMESPACE:public}
+      group: SEATA_GROUP
+  data-source-proxy-mode: AT
+  enable-auto-data-source-proxy: true
+
+# Redisson 分布式锁配置 (单实例运行防重复执行)
+redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://${REDIS_HOST:127.0.0.1}:${REDIS_PORT:6379}"
+      password: ${REDIS_PWD}
+      database: ${REDIS_DB:2}
+      connectionMinimumIdleSize: 8
+      connectionPoolSize: 32
+      idleConnectionTimeout: 10000
+      connectTimeout: 5000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
+    threads: 8
+    nettyThreads: 16
+    codec: !<org.redisson.codec.JsonJacksonCodec> {}
+
+# XXL-JOB 分布式调度
+xxl:
+  job:
+    admin:
+      addresses: ${XXL_JOB_ADMIN:http://127.0.0.1:8080/xxl-job-admin}
+    accessToken: ${XXL_JOB_TOKEN}
+    executor:
+      appname: lsc-release-service
+      address:
+      ip:
+      port: 9993
+      logpath: /data/applogs/xxl-job/lsc-release-service
+      logretentiondays: 30
+
+# 释放服务业务参数
+release:
+  # 每批处理记录数(默认10万)
+  batch-size: 100000
+  # 分布式锁键(每日释放单实例运行)
+  lock-key: lsc:release:lock:daily
+  # 释放锁过期时间(秒) - 防死锁
+  lock-expire-seconds: 7200
+  # 超级管理员告警接收人(释放比例越界/任务失败时推送)
+  alert-receivers: admin-super-001,admin-super-002
+
+# 日志
+logging:
+  level:
+    root: INFO
+    com.lianshengtong: DEBUG
+    com.lianshengtong.release.service.impl: INFO
+    com.baomidou.mybatisplus: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# Knife4j
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: release
+      paths-to-match: /api/**
+      packages-to-scan: com.lianshengtong.release.controller
+
+lsc:
+  tracing:
+    enabled: ${LSC_TRACING_ENABLED:false}
+    service-name: ${spring.application.name:unknown-service}

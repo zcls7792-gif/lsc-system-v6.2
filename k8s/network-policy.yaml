@@ -1,0 +1,211 @@
+# ============================================================
+# K8s 网络隔离策略 - NetworkPolicy
+# 限制服务间通信，只允许必要的网络流量
+# ============================================================
+
+# 默认拒绝所有入站流量
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lsc-default-deny
+  namespace: lsc-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# 允许 DNS 解析
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lsc-allow-dns
+  namespace: lsc-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# Gateway 网络策略 - 允许外部流量进入
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lsc-gateway-policy
+  namespace: lsc-system
+spec:
+  podSelector:
+    matchLabels:
+      app: lsc-gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector: {}
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lsc-user-service
+      ports:
+        - protocol: TCP
+          port: 8101
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lsc-ledger-service
+      ports:
+        - protocol: TCP
+          port: 8102
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lsc-b2b-service
+      ports:
+        - protocol: TCP
+          port: 8103
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lsc-order-service
+      ports:
+        - protocol: TCP
+          port: 8104
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lsc-writeoff-service
+      ports:
+        - protocol: TCP
+          port: 8105
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lsc-release-service
+      ports:
+        - protocol: TCP
+          port: 8106
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lsc-admin-service
+      ports:
+        - protocol: TCP
+          port: 8200
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lsc-ai-gateway
+      ports:
+        - protocol: TCP
+          port: 8201
+---
+# 账本服务网络策略 - 只允许 Gateway 和核心服务访问
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lsc-ledger-policy
+  namespace: lsc-system
+spec:
+  podSelector:
+    matchLabels:
+      app: lsc-ledger-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: lsc-gateway
+        - podSelector:
+            matchLabels:
+              app: lsc-release-service
+        - podSelector:
+            matchLabels:
+              app: lsc-order-service
+        - podSelector:
+            matchLabels:
+              app: lsc-b2b-service
+        - podSelector:
+            matchLabels:
+              app: lsc-writeoff-service
+        - podSelector:
+            matchLabels:
+              app: lsc-user-service
+      ports:
+        - protocol: TCP
+          port: 8102
+---
+# AI Gateway 网络策略 - 限制外部 API 调用
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lsc-ai-gateway-policy
+  namespace: lsc-system
+spec:
+  podSelector:
+    matchLabels:
+      app: lsc-ai-gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: lsc-gateway
+        - podSelector:
+            matchLabels:
+              app: lsc-release-service
+      ports:
+        - protocol: TCP
+          port: 8201
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+          ports:
+            - protocol: TCP
+              port: 443
+            - protocol: TCP
+              port: 80
+---
+# 允许所有服务访问数据库和 Redis
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lsc-allow-data-tier
+  namespace: lsc-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: default
+      ports:
+        - protocol: TCP
+          port: 3306
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 8848
+        - protocol: TCP
+          port: 9092
+        - protocol: TCP
+          port: 6380

@@ -1,0 +1,228 @@
+# ============================================================
+# 存证服务 - 生产环境配置
+# Profile: prod
+# 启动: java -Dspring.profiles.active=prod -jar lsc-evidence-service.jar
+# ============================================================
+
+server:
+  port: 8113
+  servlet:
+    context-path: /lsc-evidence
+  # ============ HTTPS 配置 ============
+  # 生产环境必须启用 HTTPS，以下为示例配置
+  # 实际证书文件路径和密码通过环境变量注入，禁止硬编码到代码仓库
+  ssl:
+    enabled: true
+    key-store: ${SSL_KEY_STORE:/etc/lsc-evidence/certs/server.p12}
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: ${SSL_KEY_ALIAS:server}
+    # 如需同时支持 HTTP 重定向到 HTTPS，配置下方 connector
+    # forward-strategy: native
+  # 可选: HTTP connector 8080 重定向到 HTTPS 8113
+  # 生产环境通常由 Nginx/Ingress 处理 TLS 终止，应用层可选择仅监听 HTTP
+  # 这里提供应用层 SSL 配置作为备选方案
+
+# 激活的 Profile
+spring:
+  profiles:
+    active: prod
+  application:
+    name: lsc-evidence-service
+  # ============ 数据源 (MySQL 8.0, 生产环境) ============
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 主库（写）
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1:3306}/lsc_evidence?useUnicode=true&characterEncoding=utf8&useSSL=true&requireSSL=true&verifyServerCertificate=true&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true&connectionCollation=utf8mb4
+    # 从库（读，可选，用于读写分离）
+    # url: jdbc:mysql://${MYSQL_SLAVE_HOST:127.0.0.1:3306}/lsc_evidence?...
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PWD}
+    druid:
+      initial-size: 10
+      min-idle: 10
+      max-active: 50
+      max-wait: 60000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      # 生产环境关闭 wall 中的危险 SQL，但保留 stat 监控
+      filters: stat,slf4j
+      # 慢 SQL 监控
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        login-username: ${DRUID_MONITOR_USER:admin}
+        login-password: ${DRUID_MONITOR_PWD}
+      # SQL Wall 仅允许安全语句
+      wall-config:
+        multi-statement-allow: false
+  # ============ Redis 集群 (存证批次计数、补传锁) ============
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PWD}
+      database: ${REDIS_DB:13}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 4
+          max-wait: 3000ms
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# ============ MyBatis-Plus (生产环境) ============
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.lianshengtong.evidence.entity
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    # 生产环境关闭 SQL 日志，避免日志泄露
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+# ============ Redisson (分布式锁) ============
+redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://${REDIS_HOST:127.0.0.1}:${REDIS_PORT:6379}"
+      password: ${REDIS_PWD}
+      database: ${REDIS_DB:13}
+      connectionMinimumIdleSize: 8
+      connectionPoolSize: 32
+      idleConnectionTimeout: 10000
+      connectTimeout: 5000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
+    threads: 8
+    nettyThreads: 16
+    codec: !<org.redisson.codec.JsonJacksonCodec> {}
+
+# ============ 业务配置 ============
+lsc:
+  evidence:
+    # ============ JWT 鉴权配置 ============
+    # 生产环境：短期 Access Token (2小时) + 长期 Refresh Token (7天)
+    jwt:
+      # Access Token 过期时间: 2小时 (7200秒)
+      expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:7200000}
+      # Refresh Token 过期时间: 7天 (604800秒)
+      refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+      # 密钥: 必须使用至少256位(32字节)的随机密钥，通过环境变量注入
+      # 示例生成: openssl rand -base64 32
+      secret: ${JWT_SECRET}
+    # ============ 凭据外部化 (生产环境必须配置) ============
+    auth:
+      # 生产环境强制要求外部凭据，禁止使用硬编码默认密码
+      require-external-credentials: true
+      # 登录尝试限制 (配合 RedisLoginAttemptService 实现多副本共享)
+      # 连续失败 5 次后锁定账户
+      max-login-attempts: ${AUTH_MAX_LOGIN_ATTEMPTS:5}
+      # 锁定时长: 5 分钟 (单位: 毫秒)
+      lockout-duration-ms: ${AUTH_LOCKOUT_DURATION_MS:300000}
+      users:
+        admin:
+          password: ${ADMIN_PASSWORD}
+        auditor:
+          password: ${AUDITOR_PASSWORD}
+        operator:
+          password: ${OPERATOR_PASSWORD}
+    # ============ 存证批处理配置 ============
+    batch-count: 3000
+    batch-interval-cron: "0 0 * * * ?"
+    max-retry: 3
+    failover-scan-cron: "0 */30 * * * ?"
+    # 异步上链
+    async:
+      enabled: true
+      batch-size: 50
+      flush-interval-ms: 100
+      max-concurrent: 32
+    # ============ 区块链节点 RPC ============
+    chain:
+      rpc-url: ${CHAIN_RPC_URL}
+      contract-address: ${CHAIN_CONTRACT}
+      private-key: ${CHAIN_PK}
+
+# ============ 日志配置 (生产环境) ============
+logging:
+  level:
+    root: WARN
+    com.lianshengtong.evidence: WARN
+    com.lianshengtong.common: WARN
+    com.baomidou.mybatisplus: ERROR
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_PATH:/var/log/lsc-evidence}/lsc-evidence.log
+    max-history: 30
+    max-size: 500MB
+    total-size-cap: 5GB
+
+# ============ 监控端点 (生产环境) ============
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+    info:
+      show-values: never
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
+
+# ============ Knife4j/Swagger (生产环境关闭) ============
+knife4j:
+  enable: false
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+# ============ Nacos (生产环境配置中心 + 注册中心) ============
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR}
+        namespace: ${NACOS_NAMESPACE:production}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        cluster-name: ${NACOS_CLUSTER}
+        metadata:
+          version: ${APP_VERSION:1.0.0}
+          region: ${APP_REGION:cn-east}
+      config:
+        server-addr: ${NACOS_ADDR}
+        namespace: ${NACOS_NAMESPACE:production}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        file-extension: yaml
+        shared-configs:
+          - data-id: lsc-common.yaml
+            group: DEFAULT_GROUP
+            refresh: true
+          - data-id: lsc-evidence-prod.yaml
+            group: ${NACOS_GROUP:DEFAULT_GROUP}
+            refresh: true

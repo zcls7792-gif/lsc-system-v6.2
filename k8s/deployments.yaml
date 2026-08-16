@@ -1,0 +1,520 @@
+# ============================================================
+# K8s后端微服务Deployment统一模板
+# 通过env注入微服务名，一个文件部署所有服务
+# ============================================================
+
+# ---- API网关 ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-gateway
+  namespace: lsc-system
+  labels:
+    app: lsc-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-gateway
+  template:
+    metadata:
+      labels:
+        app: lsc-gateway
+    spec:
+      containers:
+        - name: lsc-gateway
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/gateway:6.2.0
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8000"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-gateway
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: lsc-gateway
+
+---
+# ---- 用户服务 ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-user-service
+  namespace: lsc-system
+  labels:
+    app: lsc-user-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-user-service
+  template:
+    metadata:
+      labels:
+        app: lsc-user-service
+    spec:
+      containers:
+        - name: lsc-user-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/user-service:6.2.0
+          ports:
+            - containerPort: 8101
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8101"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8101
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8101
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-user-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8101
+      targetPort: 8101
+  selector:
+    app: lsc-user-service
+
+---
+# ---- LSC账本服务 (核心服务，3副本) ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-ledger-service
+  namespace: lsc-system
+  labels:
+    app: lsc-ledger-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: lsc-ledger-service
+  template:
+    metadata:
+      labels:
+        app: lsc-ledger-service
+    spec:
+      containers:
+        - name: lsc-ledger-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/ledger-service:6.2.0
+          ports:
+            - containerPort: 8102
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8102"
+            - name: JAVA_OPTS
+              value: "-Xms1g -Xmx2g -XX:+UseG1GC"
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "2Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8102
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8102
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-ledger-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8102
+      targetPort: 8102
+  selector:
+    app: lsc-ledger-service
+
+---
+# ---- 释放计算服务 (单实例，XXL-JOB限制单实例执行) ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-release-service
+  namespace: lsc-system
+  labels:
+    app: lsc-release-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lsc-release-service
+  template:
+    metadata:
+      labels:
+        app: lsc-release-service
+    spec:
+      containers:
+        - name: lsc-release-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/release-service:6.2.0
+          ports:
+            - containerPort: 8106
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8106"
+            - name: JAVA_OPTS
+              value: "-Xms1g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "2Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8106
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8106
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-release-service
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8106
+      targetPort: 8106
+  selector:
+    app: lsc-release-service
+
+---
+# ---- AI网关服务 ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-ai-gateway
+  namespace: lsc-system
+  labels:
+    app: lsc-ai-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsc-ai-gateway
+  template:
+    metadata:
+      labels:
+        app: lsc-ai-gateway
+    spec:
+      containers:
+        - name: lsc-ai-gateway
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/ai-gateway:6.2.0
+          ports:
+            - containerPort: 8201
+          envFrom:
+            - configMapRef:
+                name: lsc-config
+            - secretRef:
+                name: lsc-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8201"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8201
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8201
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsc-ai-gateway
+  namespace: lsc-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8201
+      targetPort: 8201
+  selector:
+    app: lsc-ai-gateway
+
+---
+# ---- 其余微服务统一Deployment ----
+# B2B服务
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsc-b2b-service
+  namespace: lsc-system
+  labels: { app: lsc-b2b-service }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: lsc-b2b-service } }
+  template:
+    metadata: { labels: { app: lsc-b2b-service } }
+    spec:
+      containers:
+        - name: lsc-b2b-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/b2b-service:6.2.0
+          ports: [{ containerPort: 8103 }]
+          envFrom: [{ configMapRef: { name: lsc-config } }, { secretRef: { name: lsc-secrets } }]
+          env: [{ name: SERVER_PORT, value: "8103" }]
+          resources: { requests: { cpu: "250m", memory: "512Mi" }, limits: { cpu: "500m", memory: "1Gi" } }
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8103 }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8103 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata: { name: lsc-b2b-service, namespace: lsc-system }
+spec: { type: ClusterIP, ports: [{ port: 8103, targetPort: 8103 }], selector: { app: lsc-b2b-service } }
+
+---
+# 订单服务
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: lsc-order-service, namespace: lsc-system, labels: { app: lsc-order-service } }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: lsc-order-service } }
+  template:
+    metadata: { labels: { app: lsc-order-service } }
+    spec:
+      containers:
+        - name: lsc-order-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/order-service:6.2.0
+          ports: [{ containerPort: 8104 }]
+          envFrom: [{ configMapRef: { name: lsc-config } }, { secretRef: { name: lsc-secrets } }]
+          env: [{ name: SERVER_PORT, value: "8104" }]
+          resources: { requests: { cpu: "250m", memory: "512Mi" }, limits: { cpu: "500m", memory: "1Gi" } }
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8104 }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8104 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata: { name: lsc-order-service, namespace: lsc-system }
+spec: { type: ClusterIP, ports: [{ port: 8104, targetPort: 8104 }], selector: { app: lsc-order-service } }
+
+---
+# 核销服务
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: lsc-writeoff-service, namespace: lsc-system, labels: { app: lsc-writeoff-service } }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: lsc-writeoff-service } }
+  template:
+    metadata: { labels: { app: lsc-writeoff-service } }
+    spec:
+      containers:
+        - name: lsc-writeoff-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/writeoff-service:6.2.0
+          ports: [{ containerPort: 8105 }]
+          envFrom: [{ configMapRef: { name: lsc-config } }, { secretRef: { name: lsc-secrets } }]
+          env: [{ name: SERVER_PORT, value: "8105" }]
+          resources: { requests: { cpu: "250m", memory: "512Mi" }, limits: { cpu: "500m", memory: "1Gi" } }
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8105 }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8105 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata: { name: lsc-writeoff-service, namespace: lsc-system }
+spec: { type: ClusterIP, ports: [{ port: 8105, targetPort: 8105 }], selector: { app: lsc-writeoff-service } }
+
+---
+# 管理后台服务
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: lsc-admin-service, namespace: lsc-system, labels: { app: lsc-admin-service } }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: lsc-admin-service } }
+  template:
+    metadata: { labels: { app: lsc-admin-service } }
+    spec:
+      containers:
+        - name: lsc-admin-service
+          image: registry.cn-hangzhou.aliyuncs.com/lsc/admin-service:6.2.0
+          ports: [{ containerPort: 8200 }]
+          envFrom: [{ configMapRef: { name: lsc-config } }, { secretRef: { name: lsc-secrets } }]
+          env: [{ name: SERVER_PORT, value: "8200" }]
+          resources: { requests: { cpu: "250m", memory: "512Mi" }, limits: { cpu: "500m", memory: "1Gi" } }
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8200 }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8200 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata: { name: lsc-admin-service, namespace: lsc-system }
+spec: { type: ClusterIP, ports: [{ port: 8200, targetPort: 8200 }], selector: { app: lsc-admin-service } }
+
+---
+# ============================================================
+# Ingress - 统一入口 (含 TLS)
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lsc-ingress
+  namespace: lsc-system
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/limit-rps: "200"
+    nginx.ingress.kubernetes.io/limit-connections: "1000"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-hide-header: "X-Powered-By,Server"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - api.lianshengtong.com
+        - admin.lianshengtong.com
+      secretName: lsc-tls-secret
+  rules:
+    - host: api.lianshengtong.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lsc-gateway
+                port:
+                  number: 8000
+    - host: admin.lianshengtong.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lsc-gateway
+                port:
+                  number: 8000

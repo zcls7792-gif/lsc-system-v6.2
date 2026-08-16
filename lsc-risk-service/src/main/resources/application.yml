@@ -1,0 +1,167 @@
+server:
+  port: 8109
+  servlet:
+    context-path: /lsc-risk
+
+spring:
+  application:
+    name: lsc-risk-service
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+      config:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+        file-extension: yaml
+        shared-configs:
+          - data-id: lsc-common-datasource.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-infra.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-redis.yaml
+            group: LSC_GROUP
+            refresh: true
+  # ============ 数据源 (MySQL 8.0, 8库分库分表: lsc_risk库, risk_logs表按user_id取模32) ============
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1:3306}/lsc_risk?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai&&rewriteBatchedStatements=true
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 10000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PWD}
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat,wall
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000
+  # ============ Redis 集群 (风控滑动窗口计数、IP城市统计) ============
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PWD:}
+      database: ${REDIS_DB:9}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 3000ms
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# MyBatis-Plus
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.lianshengtong.risk.entity
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+
+# Redisson
+redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://${REDIS_HOST:127.0.0.1}:${REDIS_PORT:6379}"
+      password: ${REDIS_PWD}
+      database: ${REDIS_DB:9}
+      connectionMinimumIdleSize: 8
+      connectionPoolSize: 32
+      idleConnectionTimeout: 10000
+      connectTimeout: 5000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
+    threads: 8
+    nettyThreads: 16
+    codec: !<org.redisson.codec.JsonJacksonCodec> {}
+
+# 业务配置 - 固定风控规则阈值
+lsc:
+  risk:
+    # 批量下单: 1小时 > 10笔
+    batch-order-window-seconds: 3600
+    batch-order-threshold: 10
+    # 异常混合支付: 连续3笔 LSC > 90%
+    hybrid-pay-streak-count: 3
+    hybrid-pay-lsc-ratio: 0.90
+    # 高频套利: 同商品 > 5次
+    arbitrage-product-threshold: 5
+    # 异地操作: 1小时 3+城市IP
+    geo-window-seconds: 3600
+    geo-city-threshold: 3
+    # AI动态风控评分阈值(0~100, >=阈值视为高风险)
+    ai-high-risk-score: 80
+    # 中风险阈值
+    ai-mid-risk-score: 50
+
+# 日志
+logging:
+  level:
+    root: INFO
+    com.lianshengtong.risk: DEBUG
+    com.lianshengtong.common: INFO
+    com.baomidou.mybatisplus: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# Knife4j
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: risk
+      paths-to-match: /api/**
+      packages-to-scan: com.lianshengtong.risk.controller

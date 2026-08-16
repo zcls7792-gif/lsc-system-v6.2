@@ -1,0 +1,51 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+
+rule_files:
+  - /etc/prometheus/rules.yml
+
+scrape_configs:
+  # Spring Boot微服务 (通过Eureka/Nacos服务发现)
+  - job_name: 'lsc-services'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - 'lsc-gateway:8000'
+          - 'lsc-user-service:8101'
+          - 'lsc-ledger-service:8102'
+          - 'lsc-b2b-service:8103'
+          - 'lsc-order-service:8104'
+          - 'lsc-writeoff-service:8105'
+          - 'lsc-release-service:8106'
+          - 'lsc-promotion-service:8107'
+          - 'lsc-mall-service:8108'
+          - 'lsc-risk-service:8109'
+          - 'lsc-media-service:8110'
+          - 'lsc-map-service:8111'
+          - 'lsc-reconciliation-service:8112'
+          - 'lsc-evidence-service:8113'
+          - 'lsc-ai-gateway:8201'
+          - 'lsc-admin-service:8200'
+
+  # 基础设施
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql:9104']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-node-1:9121']
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']

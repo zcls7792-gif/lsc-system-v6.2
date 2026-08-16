@@ -1,0 +1,188 @@
+server:
+  port: 8107
+  servlet:
+    context-path: /lsc-promotion
+
+spring:
+  application:
+    name: lsc-promotion-service
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+      config:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+        file-extension: yaml
+        shared-configs:
+          - data-id: lsc-common-datasource.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-infra.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-redis.yaml
+            group: LSC_GROUP
+            refresh: true
+  # ============ 数据源 (MySQL 8.0, 8库分库分表: lsc_promotion库, promotion_pending表按referrer_id取模32) ============
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1:3306}/lsc_promotion?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai&&rewriteBatchedStatements=true
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 10000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PWD}
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat,wall
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000
+  # ============ Redis 集群 (首单判定缓存、挂账补发分布式锁) ============
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PWD:}
+      database: ${REDIS_DB:7}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 3000ms
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# MyBatis-Plus
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.lianshengtong.promotion.entity
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+
+# Seata AT 模式 (奖励划转与账本跨服务一致性)
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: lsc_tx_group
+  service:
+    vgroup-mapping:
+      lsc_tx_group: default
+    grouplist:
+      default: ${SEATA_ADDR:127.0.0.1:8091}
+  registry:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_ADDR:nacos:8848}
+      namespace: ${NACOS_NAMESPACE:public}
+      group: SEATA_GROUP
+      application: seata-server
+  config:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_ADDR:nacos:8848}
+      namespace: ${NACOS_NAMESPACE:public}
+      group: SEATA_GROUP
+  data-source-proxy-mode: AT
+  enable-auto-data-source-proxy: true
+
+# Redisson 分布式锁
+redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://${REDIS_HOST:127.0.0.1}:${REDIS_PORT:6379}"
+      password: ${REDIS_PWD}
+      database: ${REDIS_DB:7}
+      connectionMinimumIdleSize: 8
+      connectionPoolSize: 32
+      idleConnectionTimeout: 10000
+      connectTimeout: 5000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
+    threads: 8
+    nettyThreads: 16
+    codec: !<org.redisson.codec.JsonJacksonCodec> {}
+
+# 业务配置
+lsc:
+  promotion:
+    # 奖励比例: 首单消费金额的 10%
+    reward-rate: 0.10
+    # 首单门槛: 有效消费 >= 1 元
+    first-order-min-amount: 1
+    # 严格一级推荐 (数据库外键约束 referrer_id 单一外键)
+    max-level: 1
+    # 挂账自动补发扫描 cron (每日凌晨2点)
+    pending-scan-cron: "0 0 2 * * ?"
+    # 挂账补发批次大小
+    pending-batch-size: 500
+
+# 日志
+logging:
+  level:
+    root: INFO
+    com.lianshengtong.promotion: DEBUG
+    com.lianshengtong.common: INFO
+    com.baomidou.mybatisplus: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# Knife4j
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: promotion
+      paths-to-match: /api/**
+      packages-to-scan: com.lianshengtong.promotion.controller

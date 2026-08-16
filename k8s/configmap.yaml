@@ -1,0 +1,174 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lsc-config
+  namespace: lsc-system
+data:
+  application.yml: |
+    spring:
+      cloud:
+        nacos:
+          discovery:
+            server-addr: nacos:8848
+            namespace: public
+            group: LSC_GROUP
+          config:
+            server-addr: nacos:8848
+            namespace: public
+            group: LSC_GROUP
+            file-extension: yaml
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus
+      endpoint:
+        health:
+          show-details: always
+
+  datasource.yml: |
+    spring:
+      datasource:
+        druid:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://mysql:3306/lsc_system?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+          username: ${MYSQL_USER}
+          password: ${MYSQL_PASSWORD}
+          initial-size: 10
+          max-active: 200
+
+  redis.yml: |
+    spring:
+      data:
+        redis:
+          cluster:
+            nodes:
+              - redis-node-1:7000
+              - redis-node-2:7001
+              - redis-node-3:7002
+              - redis-node-4:7003
+              - redis-node-5:7004
+              - redis-node-6:7005
+          password: ${REDIS_PASSWORD}
+          timeout: 5000ms
+          lettuce:
+            pool:
+              max-active: 200
+
+  seata.yml: |
+    seata:
+      enabled: true
+      application-id: ${spring.application.name}
+      tx-service-group: ${spring.application.name}-group
+      service:
+        vgroup-mapping:
+          lsc-ledger-service-group: default
+          lsc-b2b-service-group: default
+          lsc-order-service-group: default
+          lsc-writeoff-service-group: default
+          lsc-release-service-group: default
+          lsc-promotion-service-group: default
+        grouplist:
+          default: seata-server:8091
+
+  gateway.yml: |
+    spring:
+      cloud:
+        gateway:
+          routes:
+            - id: auth
+              uri: lb://lsc-user-service
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - StripPrefix=2
+            - id: users
+              uri: lb://lsc-user-service
+              predicates:
+                - Path=/api/users/**
+              filters:
+                - StripPrefix=2
+            - id: ledger
+              uri: lb://lsc-ledger-service
+              predicates:
+                - Path=/api/ledger/**
+              filters:
+                - StripPrefix=2
+            - id: b2b
+              uri: lb://lsc-b2b-service
+              predicates:
+                - Path=/api/b2b/**
+              filters:
+                - StripPrefix=2
+            - id: orders
+              uri: lb://lsc-order-service
+              predicates:
+                - Path=/api/orders/**
+              filters:
+                - StripPrefix=2
+            - id: writeoff
+              uri: lb://lsc-writeoff-service
+              predicates:
+                - Path=/api/writeoff/**
+              filters:
+                - StripPrefix=2
+            - id: release
+              uri: lb://lsc-release-service
+              predicates:
+                - Path=/api/release/**
+              filters:
+                - StripPrefix=2
+            - id: promotion
+              uri: lb://lsc-promotion-service
+              predicates:
+                - Path=/api/promotion/**
+              filters:
+                - StripPrefix=2
+            - id: mall
+              uri: lb://lsc-mall-service
+              predicates:
+                - Path=/api/mall/**
+              filters:
+                - StripPrefix=2
+            - id: risk
+              uri: lb://lsc-risk-service
+              predicates:
+                - Path=/api/risk/**
+              filters:
+                - StripPrefix=2
+            - id: reconciliation
+              uri: lb://lsc-reconciliation-service
+              predicates:
+                - Path=/api/reconciliation/**
+              filters:
+                - StripPrefix=2
+            - id: media
+              uri: lb://lsc-media-service
+              predicates:
+                - Path=/api/media/**
+              filters:
+                - StripPrefix=2
+            - id: map
+              uri: lb://lsc-map-service
+              predicates:
+                - Path=/api/map/**
+              filters:
+                - StripPrefix=2
+            - id: evidence
+              uri: lb://lsc-evidence-service
+              predicates:
+                - Path=/api/evidence/**
+              filters:
+                - StripPrefix=2
+            - id: admin
+              uri: lb://lsc-admin-service
+              predicates:
+                - Path=/api/admin/**
+              filters:
+                - StripPrefix=2
+            - id: ai
+              uri: lb://lsc-ai-gateway
+              predicates:
+                - Path=/api/ai/**
+              filters:
+                - StripPrefix=2

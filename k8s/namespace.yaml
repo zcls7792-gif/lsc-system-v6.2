@@ -1,0 +1,9 @@
+# ============================================================
+# K8s命名空间
+# ============================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lsc-system
+  labels:
+    app.kubernetes.io/part-of: lsc-system

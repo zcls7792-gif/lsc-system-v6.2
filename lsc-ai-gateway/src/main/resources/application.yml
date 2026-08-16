@@ -1,0 +1,174 @@
+server:
+  port: 8201
+  servlet:
+    context-path: /lsc-ai-gateway
+
+spring:
+  application:
+    name: lsc-ai-gateway
+  profiles:
+    active: ${SPRING_PROFILE:dev}
+  # Spring Cloud Nacos
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+      config:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+        file-extension: yaml
+        shared-configs:
+          - data-id: lsc-common-datasource.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-infra.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-redis.yaml
+            group: LSC_GROUP
+            refresh: true
+        refresh-enabled: true
+  # Redis (推理结果缓存)
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PWD:}
+      database: ${REDIS_DB:5}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 3000ms
+  # Jackson
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# AI 网关业务配置
+ai:
+  gateway:
+    # AI模型统一调用超时(毫秒) - 超时自动降级为人工审核模式
+    model-timeout-ms: 10000
+    # 推理结果缓存开关
+    cache-enabled: true
+    # 缓存默认过期时间(秒)
+    cache-ttl-seconds: 300
+    # 降级开关：熔断开启后所有AI能力回退人工审核
+    fallback-enabled: true
+    # 熔断器：连续失败达到阈值触发熔断
+    circuit-breaker:
+      failure-threshold: 5
+      retry-after-seconds: 60
+  # 各外部AI模型服务端点(占位，实际由配置中心下发)
+  model:
+    # 商品多模态审核(图片违规+视频识别+文案敏感词)
+    product-review:
+      endpoint: ${AI_PRODUCT_REVIEW_URL:http://127.0.0.1:9000/product-review}
+      api-key: ${AI_PRODUCT_REVIEW_KEY:}
+    # B2B贸易背景核验(OCR+合同匹配+画像异常)
+    b2b-verify:
+      endpoint: ${AI_B2B_VERIFY_URL:http://127.0.0.1:9000/b2b-verify}
+      api-key: ${AI_B2B_VERIFY_KEY:}
+    # 地址真实性核验(高德/百度实景图+工商注册地址比对)
+    address-verify:
+      endpoint: ${AI_ADDRESS_VERIFY_URL:http://127.0.0.1:9000/address-verify}
+      api-key: ${AI_ADDRESS_VERIFY_KEY:}
+    # 动态风控评分
+    risk-control:
+      endpoint: ${AI_RISK_CONTROL_URL:http://127.0.0.1:9000/risk-control}
+      api-key: ${AI_RISK_CONTROL_KEY:}
+    # LSC释放趋势预测(7-30天核销率预测)
+    release-predict:
+      endpoint: ${AI_RELEASE_PREDICT_URL:http://127.0.0.1:9000/release-predict}
+      api-key: ${AI_RELEASE_PREDICT_KEY:}
+    # 参数调整仿真推演
+    param-simulation:
+      endpoint: ${AI_PARAM_SIMULATION_URL:http://127.0.0.1:9000/param-simulation}
+      api-key: ${AI_PARAM_SIMULATION_KEY:}
+    # 商家画像构建
+    merchant-profile:
+      endpoint: ${AI_MERCHANT_PROFILE_URL:http://127.0.0.1:9000/merchant-profile}
+      api-key: ${AI_MERCHANT_PROFILE_KEY:}
+    # 商品个性化推荐
+    recommend:
+      endpoint: ${AI_RECOMMEND_URL:http://127.0.0.1:9000/recommend}
+      api-key: ${AI_RECOMMEND_KEY:}
+    # AI客服问答
+    customer-service:
+      endpoint: ${AI_CUSTOMER_SERVICE_URL:http://127.0.0.1:9000/customer-service}
+      api-key: ${AI_CUSTOMER_SERVICE_KEY:}
+
+# Redisson 分布式锁配置
+redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://${REDIS_HOST:127.0.0.1}:${REDIS_PORT:6379}"
+      password: ${REDIS_PWD}
+      database: ${REDIS_DB:5}
+      connectionMinimumIdleSize: 8
+      connectionPoolSize: 32
+      idleConnectionTimeout: 10000
+      connectTimeout: 5000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
+    threads: 8
+    nettyThreads: 16
+    codec: !<org.redisson.codec.JsonJacksonCodec> {}
+
+# 日志
+logging:
+  level:
+    root: INFO
+    com.lianshengtong: DEBUG
+    com.lianshengtong.aigateway.service.impl: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# Knife4j
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: ai-gateway
+      paths-to-match: /api/**
+      packages-to-scan: com.lianshengtong.aigateway.controller
+
+lsc:
+  tracing:
+    enabled: ${LSC_TRACING_ENABLED:false}
+    service-name: ${spring.application.name:unknown-service}
+  ai:
+    model:
+      provider: ${AI_PROVIDER:local}
+      api-key: ${AI_API_KEY:}
+      api-endpoint: ${AI_ENDPOINT:}
+    circuit-breaker:
+      enabled: true
+      failure-threshold: 5
+      open-ms: 30000

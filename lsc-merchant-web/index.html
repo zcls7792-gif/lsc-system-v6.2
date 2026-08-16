@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="链盛通 LSC 商家管理后台 - 商品管理、订单处理、B2B交易、核销申请、LSC账户" />
+    <title>链盛通 · 商家管理后台</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // 防止闪屏：提前读取主题色变量
+      (function () {
+        try {
+          var token = localStorage.getItem('lsc_merchant_token');
+          window.__LSC_HAS_TOKEN__ = !!token;
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <div class="app-boot">
+        <div class="app-boot__mark">
+          <span class="app-boot__mark-inner"></span>
+        </div>
+        <p class="app-boot__text">链盛通 LSC 商家管理后台</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

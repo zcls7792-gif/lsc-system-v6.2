@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lianshengtong.ledger.mapper.AvailableLscDetailMapper">
+
+    <!-- 扫描某用户已过期但未转回的可用LSC明细 -->
+    <select id="selectExpiredForTransfer"
+            resultType="com.lianshengtong.ledger.entity.AvailableLscDetail">
+        SELECT id, user_id, amount, source_type, source_id,
+               original_expire_date, expire_date, status,
+               created_at, updated_at
+        FROM available_lsc_details
+        WHERE user_id = #{userId}
+          AND status = 1
+          AND expire_date <![CDATA[ < ]]> #{today}
+        ORDER BY expire_date ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 批量扫描所有用户已过期但未转回的可用LSC明细 -->
+    <select id="selectBatchExpiredForTransfer"
+            resultType="com.lianshengtong.ledger.entity.AvailableLscDetail">
+        SELECT id, user_id, amount, source_type, source_id,
+               original_expire_date, expire_date, status,
+               created_at, updated_at
+        FROM available_lsc_details
+        WHERE status = 1
+          AND expire_date <![CDATA[ < ]]> #{today}
+        ORDER BY user_id, expire_date ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 批量更新明细状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE available_lsc_details
+        SET status = #{status},
+            updated_at = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

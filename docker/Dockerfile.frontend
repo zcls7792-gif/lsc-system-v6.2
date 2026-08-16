@@ -1,0 +1,33 @@
+# ============================================================
+# 前端Nginx Dockerfile
+# 支持多前端应用构建：admin / merchant / mobile
+# 使用方式：docker build --build-arg APP_TYPE=admin -f Dockerfile.frontend -t lsc-admin-web .
+# ============================================================
+FROM node:20-alpine AS builder
+
+ARG APP_TYPE=admin
+ARG PROJECT_DIR
+WORKDIR /app
+
+COPY . /app
+
+RUN npm install --silent && npm run build
+
+# ============================================================
+FROM nginx:1.25-alpine
+
+ARG APP_TYPE=admin
+
+# 根据 APP_TYPE 确定构建产物目录和 Nginx 配置
+ENV APP_TYPE=${APP_TYPE}
+
+# 复制对应应用的构建产物
+COPY --from=builder /app/dist /usr/share/nginx/html/${APP_TYPE}
+
+# 复制对应的 Nginx 配置
+COPY config/nginx/${APP_TYPE}.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD wget -q -O- http://localhost/health || exit 1

@@ -1,0 +1,356 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: lsc-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+      config:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        file-extension: yaml
+        shared-configs:
+          - data-id: lsc-common.yaml
+            group: DEFAULT_GROUP
+            refresh: true
+
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
+
+      routes:
+        # ============ 1. 用户服务 (认证/登录 + 用户管理) ============
+        - id: auth-service
+          uri: lb://lsc-user-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: authCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        - id: user-service
+          uri: lb://lsc-user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: userCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 2. 账本服务 (LSC账本) ============
+        - id: ledger-service
+          uri: lb://lsc-ledger-service
+          predicates:
+            - Path=/api/ledger/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: ledgerCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 3. B2B交易服务 ============
+        - id: b2b-service
+          uri: lb://lsc-b2b-service
+          predicates:
+            - Path=/api/b2b/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: b2bCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 4. 订单服务 ============
+        - id: order-service
+          uri: lb://lsc-order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: orderCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 5. 核销服务 ============
+        - id: writeoff-service
+          uri: lb://lsc-writeoff-service
+          predicates:
+            - Path=/api/writeoff/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: writeoffCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 6. 释放/清算服务 ============
+        - id: release-service
+          uri: lb://lsc-release-service
+          predicates:
+            - Path=/api/release/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: releaseCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 7. 营销/促销服务 ============
+        - id: promotion-service
+          uri: lb://lsc-promotion-service
+          predicates:
+            - Path=/api/promotion/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: promotionCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 8. 商城服务 ============
+        - id: mall-service
+          uri: lb://lsc-mall-service
+          predicates:
+            - Path=/api/mall/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: mallCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 9. 风控服务 ============
+        - id: risk-service
+          uri: lb://lsc-risk-service
+          predicates:
+            - Path=/api/risk/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: riskCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 10. 对账服务 ============
+        - id: reconciliation-service
+          uri: lb://lsc-reconciliation-service
+          predicates:
+            - Path=/api/reconciliation/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: reconciliationCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 11. 媒体/图片/视频服务 ============
+        - id: media-service
+          uri: lb://lsc-media-service
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: mediaCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 12. 地图/地址服务 ============
+        - id: map-service
+          uri: lb://lsc-map-service
+          predicates:
+            - Path=/api/map/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: mapCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 13. 存证/链上服务 ============
+        - id: evidence-service
+          uri: lb://lsc-evidence-service
+          predicates:
+            - Path=/api/evidence/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: evidenceCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 14. 管理后台服务 ============
+        - id: admin-service
+          uri: lb://lsc-admin-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: adminCircuitBreaker
+                fallbackUri: forward:/fallback
+
+        # ============ 15. AI网关服务 ============
+        - id: ai-gateway
+          uri: lb://lsc-ai-gateway
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: aiCircuitBreaker
+                fallbackUri: forward:/fallback
+
+  # ============ Reactive Redis (限流令牌桶 + 鉴权缓存) ============
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PWD:}
+      database: ${REDIS_DB:0}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 3000ms
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# ============ JWT 鉴权配置 ============
+lsc:
+  jwt:
+    secret: ${JWT_SECRET:LscUserSecretKey2026ForJwtTokenSignMustBeLongEnough}
+    issuer: lsc-user-service
+  admin:
+    jwt:
+      secret: ${ADMIN_JWT_SECRET:LscAdminSecretKey2026ForJwtTokenSignMustBeLongEnough}
+      issuer: lsc-admin-service
+  gateway:
+    auth-whitelist: /api/auth/login,/api/auth/refresh,/api/users/register,/api/admin/login,/actuator/**,/doc.html,/swagger-ui/**,/swagger-resources/**,/v3/api-docs/**,/webjars/**
+
+# ============ 日志 ============
+logging:
+  level:
+    root: INFO
+    com.lianshengtong.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# ============ 监控 ============
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: when_authorized

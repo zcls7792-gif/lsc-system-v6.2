@@ -1,0 +1,262 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: lsc-gateway
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+      config:
+        server-addr: ${NACOS_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: LSC_GROUP
+        file-extension: yaml
+        shared-configs:
+          - data-id: lsc-gateway-routes.yaml
+            group: LSC_GROUP
+            refresh: true
+    # ============ Spring Cloud Gateway 路由配置 ============
+    # 限流策略(RequestRateLimiter 基于 Redis 令牌桶):
+    #   - 默认业务接口: 单 IP 200 req/s (burstCapacity 400)
+    #   - 核心账务接口(/api/ledger/**): 单 IP 50 req/s (burstCapacity 100)
+    #   - AI 接口(/api/ai/**): 单 IP 20 req/s (burstCapacity 40)
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      # 全局 CORS
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
+      # 跨域预检 OPTIONS 请求放行
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
+      routes:
+        # 1. 用户服务 (用户/商家)
+        - id: user-service
+          uri: lb://lsc-user-service
+          predicates:
+            - Path=/api/user/**,/api/merchant/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 2. 账本服务 (核心账务, 严格限流 50/s)
+        - id: ledger-service
+          uri: lb://lsc-ledger-service
+          predicates:
+            - Path=/api/ledger/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@ipKeyResolver}"
+        # 3. B2B 服务
+        - id: b2b-service
+          uri: lb://lsc-b2b-service
+          predicates:
+            - Path=/api/b2b/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 4. 订单服务
+        - id: order-service
+          uri: lb://lsc-order-service
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 5. 推广服务
+        - id: promotion-service
+          uri: lb://lsc-promotion-service
+          predicates:
+            - Path=/api/promotion/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 6. 核销服务
+        - id: writeoff-service
+          uri: lb://lsc-writeoff-service
+          predicates:
+            - Path=/api/writeoff/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 7. 释放计算服务
+        - id: release-service
+          uri: lb://lsc-release-service
+          predicates:
+            - Path=/api/release/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 8. 权益商城服务 (商品/混合支付)
+        - id: mall-service
+          uri: lb://lsc-mall-service
+          predicates:
+            - Path=/api/product/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 9. AI 网关 (AI 接口严格限流 20/s)
+        - id: ai-gateway
+          uri: lb://lsc-ai-gateway
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@ipKeyResolver}"
+        # 10. 风控服务
+        - id: risk-service
+          uri: lb://lsc-risk-service
+          predicates:
+            - Path=/api/risk/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 11. 媒体资源服务
+        - id: media-service
+          uri: lb://lsc-media-service
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 12. 地图定位服务
+        - id: map-service
+          uri: lb://lsc-map-service
+          predicates:
+            - Path=/api/map/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 13. 对账服务
+        - id: reconciliation-service
+          uri: lb://lsc-reconciliation-service
+          predicates:
+            - Path=/api/reconcile/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 14. 存证服务
+        - id: evidence-service
+          uri: lb://lsc-evidence-service
+          predicates:
+            - Path=/api/evidence/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+        # 15. 管理后台服务
+        - id: admin-service
+          uri: lb://lsc-admin-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                key-resolver: "#{@ipKeyResolver}"
+  # ============ Reactive Redis (限流令牌桶 + 鉴权缓存) ============
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PWD:}
+      database: ${REDIS_DB:0}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 3000ms
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# ============ JWT 鉴权配置 (与 lsc-user-service / lsc-admin-service 共用密钥) ============
+lsc:
+  jwt:
+    # 与 user-service 共用 JWT_SECRET，统一通过 K8s Secret 注入
+    secret: ${JWT_SECRET}
+    issuer: lsc-user-service
+  admin:
+    jwt:
+      secret: ${ADMIN_JWT_SECRET}
+      issuer: lsc-admin-service
+  gateway:
+    # 鉴权白名单 (无需 JWT 即可访问, 逗号分隔)
+    auth-whitelist: /api/user/login,/api/user/register,/api/user/sms-code,/api/user/logout,/api/merchant/auth/login,/api/admin/login,/actuator/**,/doc.html,/swagger-ui/**,/swagger-resources/**,/v3/api-docs/**,/webjars/**
+
+# 日志
+logging:
+  level:
+    root: INFO
+    com.lianshengtong.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: when_authorized

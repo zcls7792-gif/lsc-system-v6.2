@@ -1,0 +1,23 @@
+spring:
+  profiles:
+    include: ""
+
+logging:
+  level:
+    root: WARN
+
+lsc:
+  cors:
+    allowed-origins: https://*.lianshengtong.com,https://*.chainshangtong.com
+
+knife4j:
+  enable: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+  endpoint:
+    health:
+      show-details: when_authorized

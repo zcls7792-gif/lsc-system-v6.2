@@ -1,0 +1,214 @@
+# ============================================================
+# 链盛通LSC系统 - Prometheus告警规则
+# ============================================================
+
+groups:
+  # ---- 服务可用性 ----
+  - name: lsc-availability
+    rules:
+      - alert: 服务不可用
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "服务 {{ $labels.job }} 已下线超过2分钟"
+          description: "{{ $labels.job }} 在 {{ $labels.instance }} 上不可达, 请立即检查"
+
+      - alert: 服务健康检查异常
+        expr: health_status == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "服务 {{ $labels.service }} 健康检查失败"
+          description: "服务持续报告不健康状态超过3分钟"
+
+  # ---- API网关性能 ----
+  - name: lsc-gateway-performance
+    rules:
+      - alert: API网关响应时间过高
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API网关P95响应时间超过2秒"
+          description: "API网关请求处理缓慢, P95响应时间 {{ $value }}s"
+
+      - alert: API网关错误率过高
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) / rate(http_server_requests_seconds_count[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API网关5xx错误率超过1%"
+          description: "API网关出现大量服务器错误, 错误率 {{ $value | humanizePercentage }}"
+
+      - alert: API网关QPS异常
+        expr: rate(http_server_requests_seconds_count[1m]) > 10000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API网关QPS超过10000"
+          description: "可能存在流量突发或DDoS攻击"
+
+  # ---- 数据库性能 ----
+  - name: lsc-database-performance
+    rules:
+      - alert: MySQL连接池耗尽
+        expr: mysql_connections_used / mysql_connections_max > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL连接池使用率超过90%"
+          description: "连接池即将耗尽, 当前使用率 {{ $value | humanizePercentage }}"
+
+      - alert: MySQL慢查询
+        expr: rate(mysql_slow_queries_total[5m]) > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MySQL每秒慢查询超过10次"
+          description: "可能存在SQL性能问题或锁等待"
+
+      - alert: MySQL主从延迟
+        expr: mysql_slave_status_seconds_behind_master > 60
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL主从同步延迟超过60秒"
+          description: "主从数据不一致, 延迟 {{ $value }}s"
+
+  # ---- Redis性能 ----
+  - name: lsc-redis-performance
+    rules:
+      - alert: Redis内存使用率过高
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis内存使用率超过85%"
+          description: "Redis内存即将耗尽, 使用率 {{ $value | humanizePercentage }}"
+
+      - alert: Redis连接数过高
+        expr: redis_connected_clients > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis连接数超过1000"
+          description: "Redis客户端连接数过多"
+
+      - alert: Redis命中率过低
+        expr: rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m])) < 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis缓存命中率低于80%"
+          description: "缓存效果不佳, 命中率 {{ $value | humanizePercentage }}"
+
+  # ---- 系统资源 ----
+  - name: lsc-system-resources
+    rules:
+      - alert: CPU使用率过高
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU使用率超过80%"
+          description: "主机 {{ $labels.instance }} CPU使用率 {{ $value | humanizePercentage }}"
+
+      - alert: 内存使用率过高
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "内存使用率超过85%"
+          description: "主机 {{ $labels.instance }} 内存使用率 {{ $value | humanizePercentage }}"
+
+      - alert: 磁盘空间不足
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "磁盘使用率超过85%"
+          description: "主机 {{ $labels.instance }} 磁盘使用率 {{ $value | humanizePercentage }}"
+
+  # ---- 业务指标 ----
+  - name: lsc-business-metrics
+    rules:
+      - alert: 订单量骤降
+        expr: rate(lsc_order_count[1m]) < 1 and time() - process_start_time_seconds > 3600
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "订单量异常偏低"
+          description: "订单系统可能存在故障"
+
+      - alert: 核销异常
+        expr: increase(lsc_writeoff_failed_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "核销失败次数异常增多"
+          description: "最近5分钟核销失败超过10次"
+
+      - alert: 支付异常
+        expr: rate(lsc_payment_failed_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "支付失败率异常升高"
+          description: "支付系统可能存在问题"
+
+  # ---- 存证服务缓存指标 ----
+  - name: lsc-evidence-cache
+    rules:
+      - alert: 存证缓存命中率过低
+        expr: rate(caffeine_cache_hit_count{name="evidence"}[5m]) / (rate(caffeine_cache_hit_count{name="evidence"}[5m]) + rate(caffeine_cache_miss_count{name="evidence"}[5m])) < 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "存证服务Caffeine缓存命中率低于80%"
+          description: "缓存命中率 {{ $value | humanizePercentage }}，可能存在缓存污染或TTL配置不合理"
+
+      - alert: 存证缓存淘汰率过高
+        expr: rate(caffeine_cache_eviction_count{name="evidence"}[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "存证服务Caffeine缓存淘汰频率过高"
+          description: "每秒淘汰超过100个条目，检查缓存容量是否充足或访问模式是否存在抖动"
+
+      - alert: 存证缓存容量告警
+        expr: caffeine_cache_size{name="evidence"} / 10000 > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "存证服务Caffeine缓存使用率超过90%"
+          description: "缓存使用率 {{ $value | humanizePercentage }}，即将触发容量淘汰，建议扩容或优化缓存策略"
+
+      - alert: 存证缓存缺失率激增
+        expr: rate(caffeine_cache_miss_count{name="evidence"}[1m]) > 500 and rate(caffeine_cache_hit_count{name="evidence"}[1m]) < 100
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "存证服务缓存命中率骤降"
+          description: "可能发生缓存雪崩，大量key同时失效或缓存被整体清空"

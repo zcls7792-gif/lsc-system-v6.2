@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: lsc-user-service
+  cloud:
+    nacos:
+      # ============ Nacos 注册发现 ============
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: lsc-dev
+        group: LSC_GROUP
+        cluster-name: LSC-USER-CLUSTER
+        metadata:
+          version: 6.2.0-AI
+          service-type: user
+      # ============ Nacos 配置中心 ============
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: lsc-dev
+        group: LSC_GROUP
+        file-extension: yaml
+        # 共享配置：数据源、Redis、JWT密钥等敏感配置统一拉取
+        shared-configs:
+          - data-id: lsc-common-db.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-common-redis.yaml
+            group: LSC_GROUP
+            refresh: true
+          - data-id: lsc-user-service.yaml
+            group: LSC_GROUP
+            refresh: true
+        # 启用配置刷新
+        refresh-enabled: true

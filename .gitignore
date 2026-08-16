@@ -1,0 +1,78 @@
+# Maven / Java
+**/target/
+*.class
+*.jar
+*.war
+*.log
+*.iml
+.idea/
+*.ipr
+*.iws
+.settings/
+.project
+.classpath
+.factorypath
+.vscode/
+*.swp
+*.swo
+
+# Node.js
+node_modules/
+dist/
+.cache/
+.parcel-cache/
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.eggs/
+
+# Build artifacts
+*.zip
+*.tar.gz
+*.tgz
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+*.code-workspace
+.idea/
+*.sublime-workspace
+.vscode/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Temp
+tmp/
+temp/
+*.tmp
+
+# Maven local repo (if any)
+.mvn/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Backup
+*.bak
+*.backup
+*.old
+
+# Large binary data
+sql/*.sql.bak
+
+# Trae specific
+.trae-html-share-packages/

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lianshengtong.ledger.mapper.LscTransactionMapper">
+
+    <!-- 根据幂等键查询是否已存在流水 -->
+    <select id="selectByIdempotentKey" resultType="com.lianshengtong.ledger.entity.LscTransaction">
+        SELECT id, user_id, type, amount,
+               before_locked, after_locked,
+               before_available, after_available,
+               counterparty_id, order_no,
+               idempotent_key, remark, created_at
+        FROM lsc_transactions
+        WHERE idempotent_key = #{idempotentKey}
+        LIMIT 1
+    </select>
+
+    <!-- 按时间范围 + 流水类型聚合统计(对账) -->
+    <select id="aggregateByTimeRange" resultType="java.util.Map">
+        SELECT
+            COALESCE(SUM(amount), 0) AS totalAmount,
+            COUNT(*) AS totalCount
+        FROM lsc_transactions
+        WHERE created_at &gt;= #{start}
+          AND created_at &lt; #{end}
+        <if test="types != null and types.size() > 0">
+            AND type IN
+            <foreach collection="types" item="t" open="(" separator="," close=")">
+                #{t}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

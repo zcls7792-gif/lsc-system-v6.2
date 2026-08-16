@@ -1,0 +1,72 @@
+package com.lianshengtong.evidence.config;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Profile;
+
+@Configuration
+@Profile("standalone")
+@ComponentScan(
+    basePackages = {"com.lianshengtong.evidence", "com.lianshengtong.common"},
+    excludeFilters = {
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.common\\.mq\\..*"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.common\\.config\\.RabbitTemplateConfig"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.common\\.config\\.CacheConfig"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.common\\.config\\.ShardingSphereConfig"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.common\\.config\\.MybatisPlusConfig"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.common\\.tracing\\..*"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.common\\.lock\\..*"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.common\\.aop\\..*"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.common\\.config\\.WebMvcConfig"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.evidence\\.mapper\\..*"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.evidence\\.service\\.impl\\.EvidenceServiceImpl"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.evidence\\.service\\.impl\\.SmartContractServiceImpl"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.evidence\\.service\\.AsyncChainWriter"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.lianshengtong\\.evidence\\.schedule\\..*"
+        )
+    }
+)
+public class StandaloneProfileConfig {
+}
