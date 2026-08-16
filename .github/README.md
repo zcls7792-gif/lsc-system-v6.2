@@ -1,1 +1,0 @@
-# Fithub configurations for this project.
