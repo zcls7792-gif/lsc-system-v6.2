@@ -229,7 +229,8 @@ public class MediaServiceImpl implements MediaService {
                 primaryUrl = cosCdn + "/" + mediaKey;
             }
             List<MediaUploadResult.TranscodeResult> transcodeUrls = new ArrayList<>();
-            String basePath = mediaKey.substring(0, mediaKey.lastIndexOf('.'));
+            // [IOOBE-fix] 防止 mediaKey 无扩展名时 lastIndexOf('.') 返回 -1 导致 substring 越界
+            String basePath = mediaKey.contains(".") ? mediaKey.substring(0, mediaKey.lastIndexOf('.')) : mediaKey;
             for (String profile : transcodeProfiles.split(",")) {
                 String transcodeKey = basePath + "_" + profile + ".mp4";
                 String url = ossCdn + "/" + transcodeKey;

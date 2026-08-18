@@ -351,6 +351,10 @@ public class OrderServiceImpl implements OrderService {
         if (order.getRefundRmbAmount() == null) {
             order.setRefundRmbAmount(BigDecimal.ZERO);
         }
+        // [NPE-fix] rmbAmount 字段兜底，防止后续 compareTo/getRmbAmount 调用 NPE
+        if (order.getRmbAmount() == null) {
+            order.setRmbAmount(BigDecimal.ZERO);
+        }
         return order;
     }
 

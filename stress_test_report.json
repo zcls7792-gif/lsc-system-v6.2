@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-08-07T08:30:26.328275",
+  "timestamp": "2026-08-18T05:12:13.017492",
   "total_requests": 59000,
-  "total_failures": 545,
-  "success_rate": 99.08,
+  "total_failures": 643,
+  "success_rate": 98.91,
   "scenarios": [
     {
       "name": "场景1: 用户登录与认证",

@@ -219,8 +219,10 @@ public class PromotionServiceImpl implements PromotionService {
     @Scheduled(cron = "${lsc.promotion.pending-scan-cron:0 0 2 * * ?}")
     public int pendingAutoFill() {
         LambdaQueryWrapper<PromotionPending> wrapper = new LambdaQueryWrapper<>();
+        // [SQL-fix] 边界校验，防止配置异常导致 LIMIT 负值或超大值
+        int safeLimit = Math.max(1, Math.min(pendingBatchSize, 10000));
         wrapper.eq(PromotionPending::getStatus, 0)
-                .last("LIMIT " + pendingBatchSize);
+                .last("LIMIT " + safeLimit);
         List<PromotionPending> pendings = promotionPendingMapper.selectList(wrapper);
         int success = 0;
         for (PromotionPending pending : pendings) {
