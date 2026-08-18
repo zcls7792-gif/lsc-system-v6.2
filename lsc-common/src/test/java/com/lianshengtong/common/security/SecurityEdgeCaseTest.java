@@ -101,7 +101,7 @@ class SecurityEdgeCaseTest {
             Map<String, String[]> params = new HashMap<>();
             params.put("name", new String[]{"<script>alert(1)</script>test"});
             when(request.getParameterMap()).thenReturn(params);
-            when(request.getHeader(anyString())).thenReturn(null);
+            lenient().when(request.getHeader(anyString())).thenReturn(null);
 
             XssRequestWrapper wrapper = new XssRequestWrapper(request);
             String val = wrapper.getParameter("name");
@@ -116,7 +116,7 @@ class SecurityEdgeCaseTest {
             Map<String, String[]> params = new HashMap<>();
             params.put("safeName", new String[]{"value"});
             when(request.getParameterMap()).thenReturn(params);
-            when(request.getHeader(anyString())).thenReturn(null);
+            lenient().when(request.getHeader(anyString())).thenReturn(null);
 
             XssRequestWrapper wrapper = new XssRequestWrapper(request);
             String val = wrapper.getParameter("<b>safeName</b>");
@@ -128,7 +128,7 @@ class SecurityEdgeCaseTest {
         void getParameter_missingParam_returnsNull() {
             Map<String, String[]> params = new HashMap<>();
             when(request.getParameterMap()).thenReturn(params);
-            when(request.getHeader(anyString())).thenReturn(null);
+            lenient().when(request.getHeader(anyString())).thenReturn(null);
 
             XssRequestWrapper wrapper = new XssRequestWrapper(request);
             assertNull(wrapper.getParameter("nonexistent"));
@@ -140,7 +140,7 @@ class SecurityEdgeCaseTest {
             Map<String, String[]> params = new HashMap<>();
             params.put("items", new String[]{"<img src=x>apple", "<b>banana</b>"});
             when(request.getParameterMap()).thenReturn(params);
-            when(request.getHeader(anyString())).thenReturn(null);
+            lenient().when(request.getHeader(anyString())).thenReturn(null);
 
             XssRequestWrapper wrapper = new XssRequestWrapper(request);
             String[] values = wrapper.getParameterValues("items");
@@ -155,7 +155,7 @@ class SecurityEdgeCaseTest {
         void getParameterValues_missing_returnsNull() {
             Map<String, String[]> params = new HashMap<>();
             when(request.getParameterMap()).thenReturn(params);
-            when(request.getHeader(anyString())).thenReturn(null);
+            lenient().when(request.getHeader(anyString())).thenReturn(null);
 
             XssRequestWrapper wrapper = new XssRequestWrapper(request);
             assertNull(wrapper.getParameterValues("nope"));
@@ -167,7 +167,7 @@ class SecurityEdgeCaseTest {
             Map<String, String[]> params = new HashMap<>();
             params.put("key", new String[]{"val"});
             when(request.getParameterMap()).thenReturn(params);
-            when(request.getHeader(anyString())).thenReturn(null);
+            lenient().when(request.getHeader(anyString())).thenReturn(null);
 
             XssRequestWrapper wrapper = new XssRequestWrapper(request);
             Map<String, String[]> map = wrapper.getParameterMap();
@@ -181,7 +181,7 @@ class SecurityEdgeCaseTest {
             params.put("a", new String[]{"1"});
             params.put("b", new String[]{"2"});
             when(request.getParameterMap()).thenReturn(params);
-            when(request.getHeader(anyString())).thenReturn(null);
+            lenient().when(request.getHeader(anyString())).thenReturn(null);
 
             XssRequestWrapper wrapper = new XssRequestWrapper(request);
             Enumeration<String> names = wrapper.getParameterNames();
@@ -248,7 +248,7 @@ class SecurityEdgeCaseTest {
         void constructor_emptyParams_works() {
             Map<String, String[]> params = new HashMap<>();
             when(request.getParameterMap()).thenReturn(params);
-            when(request.getHeader(anyString())).thenReturn(null);
+            lenient().when(request.getHeader(anyString())).thenReturn(null);
 
             XssRequestWrapper wrapper = new XssRequestWrapper(request);
             assertNotNull(wrapper);
@@ -271,7 +271,7 @@ class SecurityEdgeCaseTest {
         @BeforeEach
         void setUp() {
             csrfTokenManager = new CsrfTokenManager(stringRedisTemplate);
-            when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+            lenient().when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         }
 
         @Test

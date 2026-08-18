@@ -53,12 +53,12 @@ class IdempotentAspectTest {
 
     private void setupJoinPoint(String key, Object[] args) throws NoSuchMethodException {
         Method method = getTestMethod();
-        when(joinPoint.getSignature()).thenReturn(signature);
-        when(signature.getMethod()).thenReturn(method);
-        when(joinPoint.getArgs()).thenReturn(args);
-        when(idempotent.key()).thenReturn(key);
-        when(idempotent.expireSeconds()).thenReturn(300);
-        when(idempotent.message()).thenReturn("请勿重复提交");
+        lenient().when(joinPoint.getSignature()).thenReturn(signature);
+        lenient().when(signature.getMethod()).thenReturn(method);
+        lenient().when(joinPoint.getArgs()).thenReturn(args);
+        lenient().when(idempotent.key()).thenReturn(key);
+        lenient().when(idempotent.expireSeconds()).thenReturn(300);
+        lenient().when(idempotent.message()).thenReturn("请勿重复提交");
     }
 
     @Nested

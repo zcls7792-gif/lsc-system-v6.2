@@ -424,10 +424,10 @@ class CommonP2Test {
     }
 
     @Test
-    @DisplayName("XssProtectionFilter: 无参构造函数enabled默认为false(Spring管理时由@Value设为true)")
-    void xssFilter_defaultConstructor_defaultEnabledFalse() {
+    @DisplayName("XssProtectionFilter: 无参构造函数enabled默认为true(确保过滤器默认启用)")
+    void xssFilter_defaultConstructor_defaultEnabledTrue() {
         XssProtectionFilter filter = new XssProtectionFilter();
-        assertFalse(filter.getEnabled());
+        assertTrue(filter.getEnabled());
     }
 
     @Test

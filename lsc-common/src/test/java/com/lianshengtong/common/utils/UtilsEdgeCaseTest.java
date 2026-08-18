@@ -183,7 +183,8 @@ class UtilsEdgeCaseTest {
             assertNotNull(key);
             assertTrue(key.startsWith("ORDER_CREATE_1001_"));
             String[] parts = key.split("_");
-            assertEquals(4, parts.length);
+            // ORDER_CREATE_1001_{timestamp}_{random} 共 5 段(ORDER|CREATE|1001|ts|rand)
+            assertEquals(5, parts.length);
         }
 
         @Test
@@ -233,7 +234,8 @@ class UtilsEdgeCaseTest {
             assertNotNull(key);
             assertTrue(key.startsWith("SYS_DAILY_RELEASE_"));
             String[] parts = key.split("_");
-            assertEquals(4, parts.length);
+            // SYS_DAILY_RELEASE_{timestamp}_{random} 共 5 段(SYS|DAILY|RELEASE|ts|rand)
+            assertEquals(5, parts.length);
         }
 
         @Test

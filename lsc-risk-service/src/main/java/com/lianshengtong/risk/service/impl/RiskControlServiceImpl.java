@@ -238,7 +238,8 @@ public class RiskControlServiceImpl implements RiskControlService {
     @Override
     public Map<String, Object> dashboard() {
         Map<String, Object> result = new LinkedHashMap<>();
-        Long total = riskLogMapper.selectCount(null);
+        LambdaQueryWrapper<RiskLog> allWrapper = new LambdaQueryWrapper<>();
+        Long total = riskLogMapper.selectCount(allWrapper);
         result.put("total", total);
         // 按风险等级统计: 1低 2中 3高
         Map<String, Long> levelStats = new LinkedHashMap<>();
@@ -274,10 +275,15 @@ public class RiskControlServiceImpl implements RiskControlService {
 
     /** 滑动窗口计数自增 */
     private long incrWindow(String key, int windowSeconds) {
-        Long count = stringRedisTemplate.opsForValue().increment(key);
-        if (count != null && count == 1L) {
-            stringRedisTemplate.expire(key, Duration.ofSeconds(windowSeconds));
+        try {
+            Long count = stringRedisTemplate.opsForValue().increment(key);
+            if (count != null && count == 1L) {
+                stringRedisTemplate.expire(key, Duration.ofSeconds(windowSeconds));
+            }
+            return count == null ? 0 : count;
+        } catch (RuntimeException e) {
+            log.warn("[incrWindow] Redis计数异常 key={}，降级返回0", key, e);
+            return 0L;
         }
-        return count == null ? 0 : count;
     }
 }

@@ -97,6 +97,14 @@ public class WriteOffServiceImpl implements WriteOffService {
         Long merchantId = dto.getMerchantId();
         Long lscAmount = dto.getLscAmount();
 
+        // 基础参数校验
+        if (merchantId == null) {
+            throw new BizException("商家ID不能为空");
+        }
+        if (lscAmount == null || lscAmount <= 0) {
+            throw new BizException("核销LSC数量必须大于0");
+        }
+
         // 商家级分布式锁，防止同一商家并发核销(保障每日1次幂等)
         RLock lock = redissonClient.getLock(LOCK_PREFIX + merchantId);
         try {
@@ -373,7 +381,15 @@ public class WriteOffServiceImpl implements WriteOffService {
         if (val == null) {
             return 0L;
         }
-        return Long.parseLong(String.valueOf(val));
+        if (val instanceof Number) {
+            return ((Number) val).longValue();
+        }
+        try {
+            return Long.parseLong(String.valueOf(val));
+        } catch (NumberFormatException e) {
+            log.warn("[toLong] 数值转换异常 val={}", val);
+            return 0L;
+        }
     }
 
     /**

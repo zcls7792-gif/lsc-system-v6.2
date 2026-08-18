@@ -72,9 +72,16 @@ public class B2bOrderServiceImpl implements B2bOrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public B2bOrder createOrder(B2bOrderCreateDTO dto) {
+        // 空指针兜底
+        if (dto.getLscAmount() == null || dto.getTotalAmountRmb() == null) {
+            throw new BizException("LSC数量和人民币金额不能为空");
+        }
         // 校验 1:1 比例：LSC 数量须与人民币总金额一致
         if (dto.getLscAmount().compareTo(dto.getTotalAmountRmb().longValue()) != 0) {
             throw new BizException(ResultCode.B2B_AMOUNT_MISMATCH);
+        }
+        if (dto.getInitiatorId() == null || dto.getCounterpartyId() == null) {
+            throw new BizException("发起方与接收方不能为空");
         }
         if (dto.getInitiatorId().equals(dto.getCounterpartyId())) {
             throw new BizException("发起方与接收方不能为同一商家");
@@ -152,16 +159,22 @@ public class B2bOrderServiceImpl implements B2bOrderService {
     public B2bOrder executeTransfer(B2bOrderTransferDTO dto) {
         B2bOrder order = getByOrderNo(dto.getOrderNo());
         // 仅发起方可执行流转
+        if (dto.getOperatorId() == null) {
+            throw new BizException("操作人ID不能为空");
+        }
         if (!order.getInitiatorId().equals(dto.getOperatorId())) {
             throw new BizException(ResultCode.FORBIDDEN, "仅发起方可执行流转");
         }
         if (order.getStatus() != B2BOrderStatusEnum.CONFIRMED.getCode()) {
             throw new BizException(ResultCode.B2B_NOT_CONFIRMED);
         }
-        if (order.getExpireAt().isBefore(LocalDateTime.now())) {
+        if (order.getExpireAt() == null || order.getExpireAt().isBefore(LocalDateTime.now())) {
             throw new BizException("订单已过期，不可流转");
         }
         // 1:1 校验：LSC 数量须等于人民币总金额
+        if (order.getLscAmount() == null || order.getTotalAmountRmb() == null) {
+            throw new BizException("订单金额数据异常");
+        }
         if (order.getLscAmount().compareTo(order.getTotalAmountRmb().longValue()) != 0) {
             throw new BizException(ResultCode.B2B_AMOUNT_MISMATCH);
         }
@@ -298,10 +311,18 @@ public class B2bOrderServiceImpl implements B2bOrderService {
         Object resultVal = data.get("result");
         Object scoreVal = data.get("score");
         if (resultVal != null) {
-            update.setAiVerificationResult(Integer.parseInt(String.valueOf(resultVal)));
+            try {
+                update.setAiVerificationResult(Integer.parseInt(String.valueOf(resultVal)));
+            } catch (NumberFormatException e) {
+                log.warn("[getAiVerification] AI核验结果格式异常 resultVal={}", resultVal);
+            }
         }
         if (scoreVal != null) {
-            update.setAiVerificationScore(new BigDecimal(String.valueOf(scoreVal)));
+            try {
+                update.setAiVerificationScore(new BigDecimal(String.valueOf(scoreVal)));
+            } catch (NumberFormatException e) {
+                log.warn("[getAiVerification] AI核验评分格式异常 scoreVal={}", scoreVal);
+            }
         }
         Object riskTags = data.get("riskTags");
         if (riskTags != null) {

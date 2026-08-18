@@ -205,7 +205,7 @@ public class MerchantServiceImpl implements MerchantService {
         Map<String, Object> detail = new LinkedHashMap<>();
         detail.put("merchantId", ext.getMerchantId());
         detail.put("storeName", ext.getStoreName());
-        detail.put("creditScore", ext.getCreditScore());
+        detail.put("creditScore", ext.getCreditScore() == null ? 0 : ext.getCreditScore());
         detail.put("aiRiskScore", ext.getAiRiskScore());
         detail.put("penaltyStatus", ext.getPenaltyStatus());
         detail.put("penaltyDesc", MerchantPenaltyStatusEnum.fromCreditScore(

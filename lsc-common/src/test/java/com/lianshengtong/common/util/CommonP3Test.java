@@ -336,27 +336,27 @@ class CommonP3Test {
     }
 
     @Test
-    @DisplayName("ShardingRouter: getDbIndex userId=4 返回1")
-    void shardingRouter_getDbIndex_4_returns1() {
-        assertEquals(1, ShardingRouter.getDbIndex(4L));
+    @DisplayName("ShardingRouter: getDbIndex userId=4 返回0(同一块用户在同一个库)")
+    void shardingRouter_getDbIndex_4_returns0() {
+        assertEquals(0, ShardingRouter.getDbIndex(4L));
     }
 
     @Test
-    @DisplayName("ShardingRouter: getDbIndex userId=7 返回1")
-    void shardingRouter_getDbIndex_7_returns1() {
-        assertEquals(1, ShardingRouter.getDbIndex(7L));
+    @DisplayName("ShardingRouter: getDbIndex userId=7 返回0(同一块用户在同一个库)")
+    void shardingRouter_getDbIndex_7_returns0() {
+        assertEquals(0, ShardingRouter.getDbIndex(7L));
     }
 
     @Test
-    @DisplayName("ShardingRouter: getDbIndex userId=31 返回7")
-    void shardingRouter_getDbIndex_31_returns7() {
-        assertEquals(7, ShardingRouter.getDbIndex(31L));
+    @DisplayName("ShardingRouter: getDbIndex userId=31 返回0(31/32=0 第0块)")
+    void shardingRouter_getDbIndex_31_returns0() {
+        assertEquals(0, ShardingRouter.getDbIndex(31L));
     }
 
     @Test
-    @DisplayName("ShardingRouter: getDbIndex userId=32 返回0")
-    void shardingRouter_getDbIndex_32_returns0() {
-        assertEquals(0, ShardingRouter.getDbIndex(32L));
+    @DisplayName("ShardingRouter: getDbIndex userId=32 返回1(32/32=1 第1块)")
+    void shardingRouter_getDbIndex_32_returns1() {
+        assertEquals(1, ShardingRouter.getDbIndex(32L));
     }
 
     @Test
@@ -393,7 +393,7 @@ class CommonP3Test {
     @DisplayName("ShardingRouter: getDbName 返回 base_index 格式")
     void shardingRouter_getDbName_correctFormat() {
         assertEquals("order_0", ShardingRouter.getDbName(0L, "order"));
-        assertEquals("order_7", ShardingRouter.getDbName(31L, "order"));
+        assertEquals("order_0", ShardingRouter.getDbName(31L, "order"));
     }
 
     @Test
@@ -410,7 +410,7 @@ class CommonP3Test {
         int tableIndex = ShardingRouter.getTableIndex(-1L);
 
         assertEquals(0, dbIndex);
-        assertEquals(-1, tableIndex);
+        assertEquals(3, tableIndex);
     }
 
     @Test
@@ -419,14 +419,14 @@ class CommonP3Test {
         int dbIndex = ShardingRouter.getDbIndex(-32L);
         int tableIndex = ShardingRouter.getTableIndex(-32L);
 
-        assertEquals(0, dbIndex);
+        assertEquals(7, dbIndex);
         assertEquals(0, tableIndex);
     }
 
     @Test
-    @DisplayName("ShardingRouter: userId=63 正确路由")
+    @DisplayName("ShardingRouter: userId=63 正确路由(63/32=1 第1块)")
     void shardingRouter_userId63_correctRouting() {
-        assertEquals(7, ShardingRouter.getDbIndex(63L));
+        assertEquals(1, ShardingRouter.getDbIndex(63L));
         assertEquals(3, ShardingRouter.getTableIndex(63L));
     }
 

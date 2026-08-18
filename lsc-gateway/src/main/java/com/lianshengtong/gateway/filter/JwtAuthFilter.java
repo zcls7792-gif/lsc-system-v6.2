@@ -97,12 +97,15 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             return unauthorized(exchange, "缺少认证令牌");
         }
         String token = auth.substring(7);
+        if (token.isBlank()) {
+            return unauthorized(exchange, "认证令牌为空");
+        }
 
         // 3. 验签 (用户令牌 -> 管理员令牌)
         Claims claims;
         try {
             claims = parseToken(token);
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException e) {
             log.debug("JWT 验签失败 path={} reason={}", path, e.getMessage());
             return unauthorized(exchange, "认证令牌无效或已过期");
         }
@@ -164,8 +167,11 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         if (real != null && !real.isBlank()) {
             return real.trim();
         }
-        if (request.getRemoteAddress() != null) {
+        if (request.getRemoteAddress() != null && request.getRemoteAddress().getAddress() != null) {
             return request.getRemoteAddress().getAddress().getHostAddress();
+        }
+        if (request.getRemoteAddress() != null) {
+            return request.getRemoteAddress().getHostString();
         }
         return "unknown";
     }

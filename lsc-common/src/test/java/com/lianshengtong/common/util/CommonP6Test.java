@@ -298,23 +298,23 @@ class CommonP6Test {
     }
 
     @Test
-    @DisplayName("ShardingRouter: userId为31路由正确")
+    @DisplayName("ShardingRouter: userId为31路由正确(31/32=0 第0块)")
     void shardingRouter_userId31_routesCorrectly() {
-        assertEquals(7, ShardingRouter.getDbIndex(31L));
+        assertEquals(0, ShardingRouter.getDbIndex(31L));
         assertEquals(3, ShardingRouter.getTableIndex(31L));
     }
 
     @Test
-    @DisplayName("ShardingRouter: userId为32跨库路由")
+    @DisplayName("ShardingRouter: userId为32跨库路由(32/32=1 第1块)")
     void shardingRouter_userId32_crossDb() {
-        assertEquals(0, ShardingRouter.getDbIndex(32L));
+        assertEquals(1, ShardingRouter.getDbIndex(32L));
         assertEquals(0, ShardingRouter.getTableIndex(32L));
     }
 
     @Test
-    @DisplayName("ShardingRouter: userId为64跨库路由")
+    @DisplayName("ShardingRouter: userId为64跨库路由(64/32=2 第2块)")
     void shardingRouter_userId64_crossDb() {
-        assertEquals(0, ShardingRouter.getDbIndex(64L));
+        assertEquals(2, ShardingRouter.getDbIndex(64L));
         assertEquals(0, ShardingRouter.getTableIndex(64L));
     }
 
@@ -322,7 +322,7 @@ class CommonP6Test {
     @DisplayName("ShardingRouter: getDbName正确拼接库名")
     void shardingRouter_getDbName_concatenatesCorrectly() {
         assertEquals("order_0", ShardingRouter.getDbName(0L, "order"));
-        assertEquals("order_7", ShardingRouter.getDbName(31L, "order"));
+        assertEquals("order_0", ShardingRouter.getDbName(31L, "order"));
     }
 
     @Test

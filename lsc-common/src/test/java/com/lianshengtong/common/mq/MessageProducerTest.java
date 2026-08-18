@@ -103,7 +103,7 @@ class MessageProducerTest {
         MessagePostProcessor processor = mock(MessagePostProcessor.class);
         Message message = mock(Message.class);
         MessageProperties props = new MessageProperties();
-        when(message.getMessageProperties()).thenReturn(props);
+        lenient().when(message.getMessageProperties()).thenReturn(props);
         processor.postProcessMessage(message);
 
         messageProducer.sendEvidenceMessage(new EvidenceMessage("b", "t", "id", "h", "r"));

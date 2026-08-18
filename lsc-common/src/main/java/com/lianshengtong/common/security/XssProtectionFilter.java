@@ -45,7 +45,9 @@ public class XssProtectionFilter implements Filter {
     }
 
 
-    public XssProtectionFilter() {}
+    public XssProtectionFilter() {
+        this.enabled = true;
+    }
 
     public XssProtectionFilter(boolean enabled) {
         this.enabled = enabled;

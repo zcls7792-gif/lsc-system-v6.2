@@ -22,6 +22,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 地图定位服务实现
@@ -63,8 +64,8 @@ public class MapServiceImpl implements MapService {
     @Value("${lsc.map.cache-ttl-seconds:86400}")
     private long cacheTtlSeconds;
 
-    /** 高德故障标记 */
-    private volatile boolean amapDown = false;
+    /** 高德故障标记(原子变量，支持并发安全) */
+    private final AtomicBoolean amapDown = new AtomicBoolean(false);
 
     @Override
     public GeoResult geocode(String address, String city) {
@@ -77,12 +78,12 @@ public class MapServiceImpl implements MapService {
             return JSON.parseObject(cached, GeoResult.class);
         }
         GeoResult result;
-        if (!amapDown) {
+        if (!amapDown.get()) {
             try {
                 result = geocodeByAmap(address, city);
             } catch (RuntimeException e) {
                 log.warn("高德地理编码失败，切换百度 address={}", address, e);
-                amapDown = true;
+                amapDown.set(true);
                 result = geocodeByBaidu(address);
             }
         } else {
@@ -103,12 +104,12 @@ public class MapServiceImpl implements MapService {
             return JSON.parseObject(cached, GeoResult.class);
         }
         GeoResult result;
-        if (!amapDown) {
+        if (!amapDown.get()) {
             try {
                 result = reverseGeocodeByAmap(longitude, latitude);
             } catch (RuntimeException e) {
                 log.warn("高德逆地理编码失败，切换百度 lon={},lat={}", longitude, latitude, e);
-                amapDown = true;
+                amapDown.set(true);
                 result = reverseGeocodeByBaidu(longitude, latitude);
             }
         } else {
@@ -176,7 +177,13 @@ public class MapServiceImpl implements MapService {
         }
         JSONObject geo = json.getJSONArray("geocodes").getJSONObject(0);
         String location = geo.getString("location");
+        if (location == null || !location.contains(",")) {
+            throw new BizException("高德地理编码位置格式异常");
+        }
         String[] lonLat = location.split(",");
+        if (lonLat.length < 2) {
+            throw new BizException("高德地理编码位置数据不完整");
+        }
         return GeoResult.builder()
                 .longitude(Double.parseDouble(lonLat[0]))
                 .latitude(Double.parseDouble(lonLat[1]))
@@ -286,6 +293,10 @@ public class MapServiceImpl implements MapService {
             }
             com.alibaba.fastjson2.JSONObject resp = httpGetJson(
                     "https://restapi.amap.com/v3/place/text", params);
+            if (resp == null) {
+                log.warn("[searchPois] 高德POI搜索响应为空 keyword={} city={}", keyword, city);
+                return java.util.Collections.emptyList();
+            }
             java.util.List<GeoResult> result = new java.util.ArrayList<>();
             com.alibaba.fastjson2.JSONArray pois = resp.getJSONArray("pois");
             if (pois != null) {
@@ -316,10 +327,18 @@ public class MapServiceImpl implements MapService {
             params.put("ip", ip);
             com.alibaba.fastjson2.JSONObject resp = httpGetJson(
                     "https://restapi.amap.com/v3/ip", params);
+            if (resp == null) {
+                log.warn("[ipLocate] 高德IP定位响应为空 ip={}", ip);
+                return new GeoResult();
+            }
             GeoResult geo = new GeoResult();
-            geo.setProvince(resp.getString("province"));
-            geo.setCity(resp.getString("city"));
-            geo.setFormattedAddress(resp.getString("province") + resp.getString("city"));
+            String province = resp.getString("province");
+            String city = resp.getString("city");
+            geo.setProvince(province);
+            geo.setCity(city);
+            if (province != null || city != null) {
+                geo.setFormattedAddress((province == null ? "" : province) + (city == null ? "" : city));
+            }
             // 解析经纬度 rectangle 字段
             String rectangle = resp.getString("rectangle");
             if (rectangle != null && rectangle.contains(";")) {

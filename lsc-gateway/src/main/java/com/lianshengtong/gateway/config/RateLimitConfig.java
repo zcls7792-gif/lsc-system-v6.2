@@ -48,8 +48,11 @@ public class RateLimitConfig {
         if (real != null && !real.isBlank()) {
             return real.trim();
         }
-        if (request.getRemoteAddress() != null) {
+        if (request.getRemoteAddress() != null && request.getRemoteAddress().getAddress() != null) {
             return request.getRemoteAddress().getAddress().getHostAddress();
+        }
+        if (request.getRemoteAddress() != null) {
+            return request.getRemoteAddress().getHostString();
         }
         return "unknown";
     }

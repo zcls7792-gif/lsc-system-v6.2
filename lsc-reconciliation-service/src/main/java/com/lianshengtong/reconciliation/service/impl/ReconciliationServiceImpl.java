@@ -189,7 +189,7 @@ public class ReconciliationServiceImpl implements ReconciliationService {
             log.warn("拉取账本侧汇总失败 date={} err={}", date, e.getMessage());
         }
         Map<String, Object> empty = new HashMap<>();
-        empty.put("totalAmount", 0L);
+        empty.put("totalAmount", BigDecimal.ZERO);
         empty.put("totalCount", 0L);
         return empty;
     }

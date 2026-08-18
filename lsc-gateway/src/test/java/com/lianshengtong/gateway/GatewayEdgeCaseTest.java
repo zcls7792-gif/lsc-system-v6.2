@@ -1,5 +1,7 @@
 package com.lianshengtong.gateway;
 
+import com.lianshengtong.gateway.config.RateLimitConfig;
+import com.lianshengtong.gateway.filter.JwtAuthFilter;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -244,7 +246,8 @@ class GatewayEdgeCaseTest {
             ReflectionTestUtils.setField(testFilter, "whitelistStr", null);
             testFilter.init();
 
-            java.util.List<String> whitelist = ReflectionTestUtils.getField(testFilter, "whitelist");
+            @SuppressWarnings("unchecked")
+            java.util.List<String> whitelist = (java.util.List<String>) ReflectionTestUtils.getField(testFilter, "whitelist");
             assertThat(whitelist).isEmpty();
         }
 
@@ -259,7 +262,8 @@ class GatewayEdgeCaseTest {
             ReflectionTestUtils.setField(testFilter, "whitelistStr", "");
             testFilter.init();
 
-            java.util.List<String> whitelist = ReflectionTestUtils.getField(testFilter, "whitelist");
+            @SuppressWarnings("unchecked")
+            java.util.List<String> whitelist = (java.util.List<String>) ReflectionTestUtils.getField(testFilter, "whitelist");
             assertThat(whitelist).isEmpty();
         }
 
@@ -274,7 +278,8 @@ class GatewayEdgeCaseTest {
             ReflectionTestUtils.setField(testFilter, "whitelistStr", ",,,");
             testFilter.init();
 
-            java.util.List<String> whitelist = ReflectionTestUtils.getField(testFilter, "whitelist");
+            @SuppressWarnings("unchecked")
+            java.util.List<String> whitelist = (java.util.List<String>) ReflectionTestUtils.getField(testFilter, "whitelist");
             assertThat(whitelist).isEmpty();
         }
     }

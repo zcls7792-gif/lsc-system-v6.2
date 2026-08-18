@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.session.Configuration;
-import com.baomidou.mybatisplus.builder.MapperBuilderAssistant;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
 import com.lianshengtong.common.enums.MerchantPenaltyStatusEnum;
 import com.lianshengtong.common.enums.UserTypeEnum;
 import com.lianshengtong.common.exception.BizException;
@@ -502,7 +502,7 @@ class UserEdgeCaseTest {
                 a.setId(100L);
                 return 1;
             });
-            when(storeAddressMapper.updateById(any(StoreAddress.class))).thenReturn(1);
+            lenient().when(storeAddressMapper.updateById(any(StoreAddress.class))).thenReturn(1);
             when(merchantMapper.updateById(any(MerchantExtension.class))).thenReturn(1);
 
             StoreAddress addr = new StoreAddress();
