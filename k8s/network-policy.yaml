@@ -183,7 +183,9 @@ spec:
             - protocol: TCP
               port: 80
 ---
-# 允许所有服务访问数据库和 Redis
+# 允许所有服务访问数据层 (MySQL/Redis/Nacos/RabbitMQ/Seata)
+# 说明: 基础设施部署在 lsc-system 命名空间内;
+#   若基础设施独立部署在 infra 命名空间，请将 namespaceSelector 改为对应命名空间。
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -194,18 +196,43 @@ spec:
   policyTypes:
     - Egress
   egress:
+    # 同命名空间内数据层服务
     - to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: default
+              kubernetes.io/metadata.name: lsc-system
       ports:
         - protocol: TCP
-          port: 3306
+          port: 3306      # MySQL
         - protocol: TCP
-          port: 6379
+          port: 6379      # Redis (单节点)
         - protocol: TCP
-          port: 8848
+          port: 7000      # Redis 集群节点
         - protocol: TCP
-          port: 9092
+          port: 7001
         - protocol: TCP
-          port: 6380
+          port: 7002
+        - protocol: TCP
+          port: 7003
+        - protocol: TCP
+          port: 7004
+        - protocol: TCP
+          port: 7005
+        - protocol: TCP
+          port: 8848      # Nacos
+        - protocol: TCP
+          port: 9848      # Nacos gRPC
+        - protocol: TCP
+          port: 5672      # RabbitMQ
+        - protocol: TCP
+          port: 8091      # Seata
+    # DNS 解析 (kube-system)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

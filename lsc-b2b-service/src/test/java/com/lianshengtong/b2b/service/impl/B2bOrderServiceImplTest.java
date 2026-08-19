@@ -23,7 +23,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -739,6 +742,106 @@ class B2bOrderServiceImplTest {
 
         IPage<B2bOrder> result = b2bOrderService.listOrders(null, null, 100L, null,
                 null, null, null);
+
+        assertNotNull(result);
+        verify(b2bOrderMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
+    }
+
+    // ============== listOrders 补充测试 ==============
+
+    @Test
+    @DisplayName("listOrders: 正常查询返回订单记录列表")
+    void listOrders_normalQuery_returnsRecords() {
+        B2bOrder order1 = createMockOrder();
+        B2bOrder order2 = createMockOrder();
+        order2.setId(2L);
+        order2.setOrderNo("B2B20260806000002");
+        List<B2bOrder> records = Arrays.asList(order1, order2);
+
+        Page<B2bOrder> mockPage = new Page<>(1, 20);
+        mockPage.setRecords(records);
+        mockPage.setTotal(2);
+        when(b2bOrderMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+
+        IPage<B2bOrder> result = b2bOrderService.listOrders(1, 20, 100L,
+                B2BOrderStatusEnum.PENDING_CONFIRM.getCode(), null, null, null);
+
+        assertNotNull(result);
+        assertEquals(2, result.getRecords().size());
+        assertEquals(2L, result.getTotal());
+        assertEquals("B2B20260806000001", result.getRecords().get(0).getOrderNo());
+    }
+
+    @Test
+    @DisplayName("listOrders: 空结果查询返回空列表")
+    void listOrders_emptyResult() {
+        Page<B2bOrder> mockPage = new Page<>(1, 20);
+        mockPage.setRecords(Collections.emptyList());
+        mockPage.setTotal(0);
+        when(b2bOrderMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+
+        IPage<B2bOrder> result = b2bOrderService.listOrders(1, 20, null, null, null, null, null);
+
+        assertNotNull(result);
+        assertTrue(result.getRecords().isEmpty());
+        assertEquals(0L, result.getTotal());
+    }
+
+    @Test
+    @DisplayName("listOrders: 自定义分页大小查询（第2页，每页50条）")
+    void listOrders_customPageSize() {
+        Page<B2bOrder> mockPage = new Page<>(2, 50);
+        mockPage.setRecords(Collections.emptyList());
+        mockPage.setTotal(0);
+        when(b2bOrderMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+
+        IPage<B2bOrder> result = b2bOrderService.listOrders(2, 50, null, null, null, null, null);
+
+        assertNotNull(result);
+        assertEquals(50, result.getSize());
+        assertEquals(2, result.getCurrent());
+    }
+
+    @Test
+    @DisplayName("listOrders: 仅状态过滤查询")
+    void listOrders_statusOnlyFilter() {
+        Page<B2bOrder> mockPage = new Page<>(1, 20);
+        mockPage.setRecords(Collections.emptyList());
+        mockPage.setTotal(0);
+        when(b2bOrderMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+
+        IPage<B2bOrder> result = b2bOrderService.listOrders(1, 20, null,
+                B2BOrderStatusEnum.CONFIRMED.getCode(), null, null, null);
+
+        assertNotNull(result);
+        verify(b2bOrderMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
+    }
+
+    @Test
+    @DisplayName("listOrders: 简单重载方法（4参数）委托完整方法查询")
+    void listOrders_simpleOverload() {
+        Page<B2bOrder> mockPage = new Page<>(1, 20);
+        mockPage.setRecords(Collections.emptyList());
+        mockPage.setTotal(0);
+        when(b2bOrderMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+
+        IPage<B2bOrder> result = b2bOrderService.listOrders(1, 20, 100L,
+                B2BOrderStatusEnum.PENDING_CONFIRM.getCode());
+
+        assertNotNull(result);
+        verify(b2bOrderMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
+    }
+
+    @Test
+    @DisplayName("listOrders: userId和status组合过滤查询")
+    void listOrders_userIdAndStatusFilter() {
+        Page<B2bOrder> mockPage = new Page<>(1, 20);
+        mockPage.setRecords(Collections.emptyList());
+        mockPage.setTotal(0);
+        when(b2bOrderMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+
+        IPage<B2bOrder> result = b2bOrderService.listOrders(1, 20, 200L,
+                B2BOrderStatusEnum.TRANSFERRED.getCode(), null, null, null);
 
         assertNotNull(result);
         verify(b2bOrderMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));

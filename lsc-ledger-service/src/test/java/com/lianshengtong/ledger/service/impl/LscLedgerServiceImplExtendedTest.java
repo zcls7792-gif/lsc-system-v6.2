@@ -896,4 +896,133 @@ class LscLedgerServiceImplExtendedTest {
         assertNotNull(result);
         assertEquals(100L, result.getTotalLocked());
     }
+
+    // ==================== 26. payLscOptimistically 余额不足分支 ====================
+
+    @Test
+    @DisplayName("payLscOptimistically: 乐观锁模式下余额不足抛 LSC_BALANCE_INSUFFICIENT")
+    void payLscOptimistically_balanceInsufficient() {
+        ReflectionTestUtils.setField(ledgerService, "optimisticLockEnabled", true);
+        Long consumerId = 1001L;
+        Long merchantId = 2001L;
+
+        // 消费者可用余额 50 < 支付金额 80
+        LscAccount consumerAcc = buildAccount(consumerId, 0L, 50L);
+        LscAccount merchantAcc = buildAccount(merchantId, 0L, 0L);
+
+        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
+        when(accountService.getOrCreateAccount(eq(consumerId)))
+                .thenAnswer(inv -> buildAccount(consumerId, 0L, 50L));
+        when(accountService.getOrCreateAccount(eq(merchantId)))
+                .thenAnswer(inv -> buildAccount(merchantId, 0L, 0L));
+
+        BizException ex = assertThrows(BizException.class,
+                () -> ledgerService.payLsc(consumerId, merchantId, 80L, "PAY_OPT_INSUFF"));
+        assertEquals(ResultCode.LSC_BALANCE_INSUFFICIENT.getCode(), ex.getCode());
+    }
+
+    // ==================== 27. payLscOptimistically 商家更新失败触发 OptConflict ====================
+
+    @Test
+    @DisplayName("payLscOptimistically: 商家账户更新失败触发 OptConflict 重试后成功")
+    void payLscOptimistically_merchantUpdateFails() {
+        ReflectionTestUtils.setField(ledgerService, "optimisticLockEnabled", true);
+        Long consumerId = 1001L;
+        Long merchantId = 2001L;
+
+        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
+        when(accountService.getOrCreateAccount(eq(consumerId)))
+                .thenAnswer(inv -> buildAccount(consumerId, 0L, 200L));
+        when(accountService.getOrCreateAccount(eq(merchantId)))
+                .thenAnswer(inv -> buildAccount(merchantId, 0L, 50L));
+        // 消费者更新始终成功
+        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(consumerId))))
+                .thenReturn(1);
+        // 商家更新第一次失败（触发 OptConflict），第二次成功
+        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(merchantId))))
+                .thenReturn(0)
+                .thenReturn(1);
+        when(accountMapper.selectById(consumerId))
+                .thenReturn(buildAccount(consumerId, 0L, 120L));
+        when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
+        when(detailMapper.insert(any(AvailableLscDetail.class))).thenReturn(1);
+
+        LscAccount result = ledgerService.payLsc(consumerId, merchantId, 80L, "PAY_OPT_M_FAIL");
+
+        assertNotNull(result);
+        assertEquals(consumerId, result.getUserId());
+        // 验证商家更新被调用两次（第一次失败，第二次成功）
+        verify(accountMapper, times(2)).updateById(argThat(a -> a != null && a.getUserId().equals(merchantId)));
+    }
+
+    // ==================== 28. toLongFromObject String 类型转换分支 ====================
+
+    @Test
+    @DisplayName("toLongFromObject: String 类型值走 Long.parseLong 路径")
+    void toLongFromObject_stringValue() {
+        Map<String, Object> row = new HashMap<>();
+        row.put("totalAmount", "5000");
+        row.put("totalCount", "10");
+        when(transactionMapper.aggregateByTimeRange(any(), any(), any()))
+                .thenReturn(Collections.singletonList(row));
+
+        Map<String, Object> result = ledgerService.dailySummary(null, null);
+
+        assertEquals(5000L, result.get("totalAmount"));
+        assertEquals(10L, result.get("totalCount"));
+    }
+
+    // ==================== 29. nvl(Long) null 分支 ====================
+
+    @Test
+    @DisplayName("nvl(Long): 账户 totalLocked 和 totalAvailable 为 null 时返回 0")
+    void nvl_long_nullBranch() {
+        Long userId = 1001L;
+        // 构建账户，totalLocked 和 totalAvailable 均为 null
+        LscAccount acc = new LscAccount();
+        acc.setUserId(userId);
+        acc.setTotalLocked(null);
+        acc.setTotalAvailable(null);
+        acc.setVersion(1);
+
+        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
+        when(accountService.getOrCreateAccount(userId)).thenReturn(acc);
+        when(accountMapper.updateById(any(LscAccount.class))).thenReturn(1);
+        when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
+
+        // issueLsc: lockedDelta=200, availableDelta=0
+        // nvl(null)=0 -> beforeLocked=0, newLocked=0+200=200
+        // nvl(null)=0 -> beforeAvailable=0, newAvailable=0+0=0
+        LscAccount result = ledgerService.issueLsc(userId, 200L, "NVL_LONG_NULL");
+
+        assertNotNull(result);
+        assertEquals(200L, result.getTotalLocked());
+        assertEquals(0L, result.getTotalAvailable());
+    }
+
+    // ==================== 30. nvl(Integer) null 分支 ====================
+
+    @Test
+    @DisplayName("nvl(Integer): 账户 version 为 null 时返回 0")
+    void nvl_integer_nullBranch() {
+        Long userId = 1001L;
+        // 构建账户，version 为 null
+        LscAccount acc = new LscAccount();
+        acc.setUserId(userId);
+        acc.setTotalLocked(0L);
+        acc.setTotalAvailable(0L);
+        acc.setVersion(null);
+
+        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
+        when(accountService.getOrCreateAccount(userId)).thenReturn(acc);
+        when(accountMapper.updateById(any(LscAccount.class))).thenReturn(1);
+        when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
+
+        // applyAccountChange 调用 nvl(acc.getVersion()) -> nvl(null)=0 -> setVersion(0+1=1)
+        LscAccount result = ledgerService.issueLsc(userId, 200L, "NVL_INT_NULL");
+
+        assertNotNull(result);
+        // nvl(null) + 1 = 0 + 1 = 1
+        assertEquals(1, result.getVersion());
+    }
 }

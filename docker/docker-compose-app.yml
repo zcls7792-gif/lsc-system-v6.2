@@ -1,5 +1,20 @@
 version: '3.8'
 
+# ============================================================
+# 链盛通LSC系统 V6.2-AI - 应用服务编排
+# ============================================================
+#
+# 启动顺序:
+#   1. 先启动基础设施: docker compose -f docker-compose.yml up -d
+#      (创建 lsc-net 网络 + MySQL/Redis/Nacos 等依赖)
+#   2. 再启动应用服务: docker compose -f docker-compose-app.yml up -d
+#
+# 注意:
+#   - 本文件使用 external 网络 lsc-net，必须先启动 docker-compose.yml
+#   - 应用服务通过 Nacos 配置中心获取数据库/Redis 连接信息
+#   - 环境变量从 docker/.env 文件读取
+# ============================================================
+
 services:
   lsc-gateway:
     image: lsc/lsc-gateway:6.2.0

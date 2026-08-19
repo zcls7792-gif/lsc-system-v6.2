@@ -6,7 +6,7 @@
 #   --host       MySQL主机 (默认: localhost)
 #   --port       MySQL端口 (默认: 3306)
 #   --user       MySQL用户名 (默认: root)
-#   --password   MySQL密码 (默认: Lsc@2026#Secure)
+#   --password   MySQL密码 (从环境变量 MYSQL_PASSWORD 读取，无默认值)
 #   --database   目标数据库 (默认: lsc_system)
 #   --skip-wait  跳过等待MySQL就绪
 #   --help       显示帮助信息
@@ -34,7 +34,11 @@ log_error()   { echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} ${BOLD}[ERROR
 MYSQL_HOST="${MYSQL_HOST:-localhost}"
 MYSQL_PORT="${MYSQL_PORT:-3306}"
 MYSQL_USER="${MYSQL_USER:-root}"
-MYSQL_PASSWORD="${MYSQL_PASSWORD:-Lsc@2026#Secure}"
+if [ -z "${MYSQL_PASSWORD:-}" ]; then
+    log_error "MYSQL_PASSWORD 环境变量未设置，请先 source .env 或通过 --password 传入"
+    exit 1
+fi
+MYSQL_PASSWORD="${MYSQL_PASSWORD}"
 MYSQL_DATABASE="${MYSQL_DATABASE:-lsc_system}"
 SQL_DIR="${SQL_DIR:-/workspace/sql}"
 SKIP_WAIT=false
@@ -54,7 +58,7 @@ show_help() {
   --host=HOST       MySQL主机地址, 默认: localhost
   --port=PORT       MySQL端口, 默认: 3306
   --user=USER       MySQL用户名, 默认: root
-  --password=PASS   MySQL密码, 默认: Lsc@2026#Secure
+  --password=PASS   MySQL密码 (必填，或通过 MYSQL_PASSWORD 环境变量)
   --database=DB     目标数据库, 默认: lsc_system
   --sql-dir=DIR     SQL脚本目录, 默认: /workspace/sql
   --skip-wait       跳过等待MySQL就绪
@@ -64,9 +68,9 @@ show_help() {
   MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
 
 示例:
-  $0                                    # 使用默认配置
-  $0 --host=10.0.0.1 --password=MyPASS  # 指定MySQL连接
-  MYSQL_HOST=10.0.0.1 $0                # 通过环境变量指定
+  source docker/.env && $0                            # 通过 .env 读取密码
+  $0 --host=10.0.0.1 --password=\$MYSQL_PASSWORD     # 指定MySQL连接
+  MYSQL_HOST=10.0.0.1 MYSQL_PASSWORD=xxx $0           # 通过环境变量指定
 EOF
     exit 0
 }

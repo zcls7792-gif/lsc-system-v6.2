@@ -2,16 +2,21 @@
 # 前端Nginx Dockerfile
 # 支持多前端应用构建：admin / merchant / mobile
 # 使用方式：docker build --build-arg APP_TYPE=admin -f Dockerfile.frontend -t lsc-admin-web .
+#
+# BUILD_CMD: 构建命令 (默认: npm run build)
+#   - admin-web / merchant-web: npm run build
+#   - mobile-app (uni-app H5):  npm run build:h5
 # ============================================================
 FROM node:20-alpine AS builder
 
 ARG APP_TYPE=admin
 ARG PROJECT_DIR
+ARG BUILD_CMD="npm run build"
 WORKDIR /app
 
 COPY . /app
 
-RUN npm install --silent && npm run build
+RUN npm install --silent && ${BUILD_CMD}
 
 # ============================================================
 FROM nginx:1.25-alpine
