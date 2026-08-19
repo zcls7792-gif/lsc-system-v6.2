@@ -23,6 +23,14 @@ public class HybridPayServiceImpl implements HybridPayService {
         if (reqLsc < 0) {
             throw new BizException("LSC数量不能为负");
         }
+        // 负数或零总价直接返回0
+        if (totalPrice.signum() <= 0) {
+            return HybridPayDTO.builder()
+                    .lscAmount(0L)
+                    .rmbAmount(new BigDecimal("0.00"))
+                    .totalPrice(totalPrice)
+                    .build();
+        }
         // LSC 不超过总价(1:1，1 LSC = 1 元)
         long maxLscByPrice = totalPrice.setScale(0, RoundingMode.DOWN).longValue();
         long lscAmount = Math.min(reqLsc, maxLscByPrice);
@@ -37,7 +45,7 @@ public class HybridPayServiceImpl implements HybridPayService {
         BigDecimal rmbAmount = totalPrice.subtract(BigDecimal.valueOf(lscAmount))
                 .setScale(2, RoundingMode.HALF_UP);
         if (rmbAmount.signum() < 0) {
-            rmbAmount = BigDecimal.ZERO;
+            rmbAmount = new BigDecimal("0.00");
         }
         return HybridPayDTO.builder()
                 .lscAmount(lscAmount)

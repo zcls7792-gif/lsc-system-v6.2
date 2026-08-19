@@ -679,7 +679,7 @@ class MallServiceEdgeCaseTest {
     // ==================== HybridPayServiceImpl 边界场景 ====================
 
     @Test
-    @DisplayName("calc: totalPrice为0.01时LSC全部消费RMB=0")
+    @DisplayName("calc: totalPrice为0.01时LSC无法覆盖(1LSC=1元)全部RMB")
     void calc_minimumTotalPrice_allLsc() {
         HybridPayCalcDTO dto = new HybridPayCalcDTO();
         dto.setTotalPrice(new BigDecimal("0.01"));
@@ -687,12 +687,12 @@ class MallServiceEdgeCaseTest {
 
         HybridPayDTO result = hybridPayService.calc(dto);
 
-        assertEquals(1L, result.getLscAmount().longValue());
-        assertEquals(new BigDecimal("0.00"), result.getRmbAmount());
+        assertEquals(0L, result.getLscAmount().longValue());
+        assertEquals(new BigDecimal("0.01"), result.getRmbAmount());
     }
 
     @Test
-    @DisplayName("calc: totalPrice为0.99 LSC=1 RMB=0")
+    @DisplayName("calc: totalPrice为0.99 LSC无法覆盖(1LSC=1元)全部RMB")
     void calc_priceLessThanOne_partialLsc() {
         HybridPayCalcDTO dto = new HybridPayCalcDTO();
         dto.setTotalPrice(new BigDecimal("0.99"));
@@ -700,8 +700,8 @@ class MallServiceEdgeCaseTest {
 
         HybridPayDTO result = hybridPayService.calc(dto);
 
-        assertEquals(1L, result.getLscAmount().longValue());
-        assertEquals(new BigDecimal("0.00"), result.getRmbAmount());
+        assertEquals(0L, result.getLscAmount().longValue());
+        assertEquals(new BigDecimal("0.99"), result.getRmbAmount());
     }
 
     @Test

@@ -583,11 +583,10 @@ class RiskControlServiceImplTest {
     void testDashboard_returnsCorrectData() {
         // Reset the mock to override default stubbings
         reset(riskLogMapper);
-        // Set up specific null handling first, then general any
-        // Using distinct matchers to avoid conflict
-        doReturn(100L).when(riskLogMapper).selectCount(isNull());
-        lenient().when(riskLogMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
-        lenient().when(riskLogMapper.selectCount(any(Wrapper.class))).thenReturn(5L);
+        // dashboard() 先查 total(无条件LambdaQueryWrapper)，再查 byLevel(3次)、byStatus(5次)、highRiskPending(1次)
+        // 第1次返回100作为total，后续返回5
+        when(riskLogMapper.selectCount(any(LambdaQueryWrapper.class)))
+                .thenReturn(100L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L);
 
         var result = riskControlService.dashboard();
 

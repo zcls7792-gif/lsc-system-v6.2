@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build, Test & Coverage
 
 on:
   push:
@@ -8,9 +8,9 @@ on:
 
 jobs:
   build:
-    name: Build and Test (JDK 17)
+    name: Build, Test & Coverage (JDK 17)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -31,11 +31,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      - name: Build with Maven (skip tests for compile validation)
+      - name: Compile all modules
         run: mvn -B -ntp -T 1C clean compile -DskipTests
 
-      - name: Run unit tests
+      - name: Run unit tests with JaCoCo coverage
         run: mvn -B -ntp test
+
+      - name: Generate JaCoCo coverage report
+        run: mvn -B -ntp jacoco:report
 
       - name: Upload surefire reports
         if: always()
@@ -45,6 +48,28 @@ jobs:
           path: '**/target/surefire-reports/**'
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Upload JaCoCo coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-reports
+          path: '**/target/jacoco/**'
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload JaCoCo XML reports (for coverage badge services)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-xml
+          path: '**/target/site/jacoco/jacoco.xml'
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Check coverage thresholds
+        run: mvn -B -ntp jacoco:check
+        continue-on-error: true
 
       - name: Package without tests
         run: mvn -B -ntp -T 1C package -DskipTests
@@ -56,3 +81,18 @@ jobs:
           path: '**/target/lsc-*.jar'
           if-no-files-found: warn
           retention-days: 14
+
+  quality-gate:
+    name: Quality Gate Summary
+    runs-on: ubuntu-latest
+    needs: build
+    if: always()
+    steps:
+      - name: Check build status
+        run: |
+          echo "Build result: ${{ needs.build.result }}"
+          if [ "${{ needs.build.result }}" != "success" ]; then
+            echo "::warning::Build or tests failed. Check the build job logs for details."
+          else
+            echo "::notice::All builds and tests passed successfully."
+          fi

@@ -50,7 +50,7 @@ class MapServiceImplExtendedTest {
 
         mockHttpClient = mock(OkHttpClient.class);
         ReflectionTestUtils.setField(mapService, "httpClient", mockHttpClient);
-        ReflectionTestUtils.setField(mapService, "amapDown", false);
+        ReflectionTestUtils.setField(mapService, "amapDown", new java.util.concurrent.atomic.AtomicBoolean(false));
 
         lenient().when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
     }
@@ -73,7 +73,7 @@ class MapServiceImplExtendedTest {
     @Test
     @DisplayName("geocode: amapDown时直接走百度")
     void geocode_amapDown_usesBaidu() throws Exception {
-        ReflectionTestUtils.setField(mapService, "amapDown", true);
+        ReflectionTestUtils.setField(mapService, "amapDown", new java.util.concurrent.atomic.AtomicBoolean(true));
         String body = """
                 {"status":0,"result":{"location":{"lng":116.1,"lat":39.1},"precise":1}}""";
         setupMockCall(mockResponse(body));
@@ -109,7 +109,7 @@ class MapServiceImplExtendedTest {
     @Test
     @DisplayName("geocode: 百度返回非0状态抛异常")
     void geocode_baiduBadStatus_throwsBizException() throws Exception {
-        ReflectionTestUtils.setField(mapService, "amapDown", true);
+        ReflectionTestUtils.setField(mapService, "amapDown", new java.util.concurrent.atomic.AtomicBoolean(true));
         String body = """
                 {"status":1,"message":"INVALID"}""";
         setupMockCall(mockResponse(body));
@@ -136,7 +136,7 @@ class MapServiceImplExtendedTest {
     @Test
     @DisplayName("reverseGeocode: amapDown时直接走百度")
     void reverseGeocode_amapDown_usesBaidu() throws Exception {
-        ReflectionTestUtils.setField(mapService, "amapDown", true);
+        ReflectionTestUtils.setField(mapService, "amapDown", new java.util.concurrent.atomic.AtomicBoolean(true));
         String body = """
                 {"status":0,"result":{"formatted_address":"朝阳区"}}""";
         setupMockCall(mockResponse(body));
@@ -160,7 +160,7 @@ class MapServiceImplExtendedTest {
     @Test
     @DisplayName("reverseGeocode: 百度状态失败抛异常")
     void reverseGeocode_baiduBadStatus_throws() throws Exception {
-        ReflectionTestUtils.setField(mapService, "amapDown", true);
+        ReflectionTestUtils.setField(mapService, "amapDown", new java.util.concurrent.atomic.AtomicBoolean(true));
         String body = """
                 {"status":1}""";
         setupMockCall(mockResponse(body));

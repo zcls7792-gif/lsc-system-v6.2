@@ -109,13 +109,6 @@ class WriteOffServiceImplTest {
         dto.setMerchantId(null);
         dto.setLscAmount(100L);
 
-        when(redissonClient.getLock(anyString())).thenReturn(rLock);
-        try {
-            when(rLock.tryLock(anyLong(), anyLong(), eq(TimeUnit.MILLISECONDS))).thenReturn(true);
-        } catch (InterruptedException e) {
-            // 不会真实触发
-        }
-
         assertThrows(Exception.class, () -> writeOffService.applyWriteOff(dto));
     }
 
@@ -125,13 +118,6 @@ class WriteOffServiceImplTest {
         WriteOffApplyDTO dto = new WriteOffApplyDTO();
         dto.setMerchantId(1001L);
         dto.setLscAmount(0L);
-
-        when(redissonClient.getLock(anyString())).thenReturn(rLock);
-        try {
-            when(rLock.tryLock(anyLong(), anyLong(), eq(TimeUnit.MILLISECONDS))).thenReturn(true);
-        } catch (InterruptedException e) {
-            // 不会真实触发
-        }
 
         assertThrows(Exception.class, () -> writeOffService.applyWriteOff(dto));
     }
