@@ -15,6 +15,11 @@ metadata:
     app: lsc-promotion-service
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-promotion-service
@@ -81,6 +86,11 @@ metadata:
     app: lsc-mall-service
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-mall-service
@@ -147,6 +157,11 @@ metadata:
     app: lsc-risk-service
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-risk-service
@@ -213,6 +228,11 @@ metadata:
     app: lsc-reconciliation-service
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-reconciliation-service
@@ -279,6 +299,11 @@ metadata:
     app: lsc-media-service
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-media-service
@@ -345,6 +370,11 @@ metadata:
     app: lsc-map-service
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-map-service
@@ -411,6 +441,11 @@ metadata:
     app: lsc-evidence-service
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-evidence-service
@@ -479,6 +514,11 @@ metadata:
     app: lsc-merchant-web
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-merchant-web

@@ -13,6 +13,11 @@ metadata:
     app: lsc-gateway
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-gateway
@@ -79,6 +84,11 @@ metadata:
     app: lsc-user-service
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-user-service
@@ -145,6 +155,11 @@ metadata:
     app: lsc-ledger-service
 spec:
   replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-ledger-service
@@ -213,6 +228,11 @@ metadata:
     app: lsc-release-service
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-release-service
@@ -281,6 +301,11 @@ metadata:
     app: lsc-ai-gateway
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: lsc-ai-gateway
@@ -347,6 +372,11 @@ metadata:
   labels: { app: lsc-b2b-service }
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector: { matchLabels: { app: lsc-b2b-service } }
   template:
     metadata: { labels: { app: lsc-b2b-service } }
@@ -380,6 +410,11 @@ kind: Deployment
 metadata: { name: lsc-order-service, namespace: lsc-system, labels: { app: lsc-order-service } }
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector: { matchLabels: { app: lsc-order-service } }
   template:
     metadata: { labels: { app: lsc-order-service } }
@@ -413,6 +448,11 @@ kind: Deployment
 metadata: { name: lsc-writeoff-service, namespace: lsc-system, labels: { app: lsc-writeoff-service } }
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector: { matchLabels: { app: lsc-writeoff-service } }
   template:
     metadata: { labels: { app: lsc-writeoff-service } }
@@ -446,6 +486,11 @@ kind: Deployment
 metadata: { name: lsc-admin-service, namespace: lsc-system, labels: { app: lsc-admin-service } }
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector: { matchLabels: { app: lsc-admin-service } }
   template:
     metadata: { labels: { app: lsc-admin-service } }
