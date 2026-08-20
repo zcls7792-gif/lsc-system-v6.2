@@ -63,13 +63,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-xml
-          path: '**/target/site/jacoco/jacoco.xml'
+          path: '**/target/jacoco/jacoco.xml'
           if-no-files-found: ignore
           retention-days: 14
 
-      - name: Check coverage thresholds
+      - name: Check coverage thresholds (Quality Gate)
         run: mvn -B -ntp jacoco:check
-        continue-on-error: true
 
       - name: Package without tests
         run: mvn -B -ntp -T 1C package -DskipTests
@@ -88,11 +87,12 @@ jobs:
     needs: build
     if: always()
     steps:
-      - name: Check build status
+      - name: Enforce quality gate
         run: |
           echo "Build result: ${{ needs.build.result }}"
           if [ "${{ needs.build.result }}" != "success" ]; then
-            echo "::warning::Build or tests failed. Check the build job logs for details."
+            echo "::error::Build, tests, or coverage check failed. Quality gate NOT passed."
+            exit 1
           else
-            echo "::notice::All builds and tests passed successfully."
+            echo "::notice::Quality gate PASSED — all builds, tests, and coverage checks succeeded."
           fi
