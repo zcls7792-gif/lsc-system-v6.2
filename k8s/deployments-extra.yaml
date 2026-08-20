@@ -28,6 +28,7 @@ spec:
       labels:
         app: lsc-promotion-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-promotion-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/promotion-service:6.2.0
@@ -99,6 +100,7 @@ spec:
       labels:
         app: lsc-mall-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-mall-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/mall-service:6.2.0
@@ -170,6 +172,7 @@ spec:
       labels:
         app: lsc-risk-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-risk-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/risk-service:6.2.0
@@ -241,6 +244,7 @@ spec:
       labels:
         app: lsc-reconciliation-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-reconciliation-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/reconciliation-service:6.2.0
@@ -312,6 +316,7 @@ spec:
       labels:
         app: lsc-media-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-media-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/media-service:6.2.0
@@ -383,6 +388,7 @@ spec:
       labels:
         app: lsc-map-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-map-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/map-service:6.2.0
@@ -454,6 +460,7 @@ spec:
       labels:
         app: lsc-evidence-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-evidence-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/evidence-service:6.2.0
@@ -527,6 +534,7 @@ spec:
       labels:
         app: lsc-merchant-web
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-merchant-web
           image: nginx:1.27-alpine

@@ -26,6 +26,7 @@ spec:
       labels:
         app: lsc-gateway
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-gateway
           image: registry.cn-hangzhou.aliyuncs.com/lsc/gateway:6.2.0
@@ -97,6 +98,7 @@ spec:
       labels:
         app: lsc-user-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-user-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/user-service:6.2.0
@@ -168,6 +170,7 @@ spec:
       labels:
         app: lsc-ledger-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-ledger-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/ledger-service:6.2.0
@@ -241,6 +244,7 @@ spec:
       labels:
         app: lsc-release-service
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-release-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/release-service:6.2.0
@@ -314,6 +318,7 @@ spec:
       labels:
         app: lsc-ai-gateway
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-ai-gateway
           image: registry.cn-hangzhou.aliyuncs.com/lsc/ai-gateway:6.2.0
@@ -381,6 +386,7 @@ spec:
   template:
     metadata: { labels: { app: lsc-b2b-service } }
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-b2b-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/b2b-service:6.2.0
@@ -419,6 +425,7 @@ spec:
   template:
     metadata: { labels: { app: lsc-order-service } }
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-order-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/order-service:6.2.0
@@ -457,6 +464,7 @@ spec:
   template:
     metadata: { labels: { app: lsc-writeoff-service } }
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-writeoff-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/writeoff-service:6.2.0
@@ -495,6 +503,7 @@ spec:
   template:
     metadata: { labels: { app: lsc-admin-service } }
     spec:
+      terminationGracePeriodSeconds: 45
       containers:
         - name: lsc-admin-service
           image: registry.cn-hangzhou.aliyuncs.com/lsc/admin-service:6.2.0

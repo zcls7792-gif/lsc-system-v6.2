@@ -6,6 +6,7 @@
 
 server:
   port: 8113
+  shutdown: graceful
   servlet:
     context-path: /lsc-evidence
   # ============ HTTPS 配置 ============
@@ -27,6 +28,8 @@ server:
 spring:
   profiles:
     active: prod
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   application:
     name: lsc-evidence-service
   # ============ 数据源 (MySQL 8.0, 生产环境) ============

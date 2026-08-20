@@ -5,7 +5,11 @@ metadata:
   namespace: lsc-system
 data:
   application.yml: |
+    server:
+      shutdown: graceful
     spring:
+      lifecycle:
+        timeout-per-shutdown-phase: 30s
       cloud:
         nacos:
           discovery:
@@ -24,7 +28,7 @@ data:
             include: health,info,metrics,prometheus
       endpoint:
         health:
-          show-details: always
+          show-details: when_authorized
 
   datasource.yml: |
     spring:
