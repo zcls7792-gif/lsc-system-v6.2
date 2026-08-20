@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><title>LSC V6.2 覆盖率验证报告</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:#1f2330;background:#f6f7fb;margin:0;padding:24px}
+.header{max-width:1280px;margin:0 auto 20px;background:linear-gradient(135deg,#6d5cff 0%,#8a7bff 100%);color:#fff;border-radius:16px;padding:28px 32px}
+.header h1{margin:0 0 6px 0;font-size:24px}
+.header p{margin:0;opacity:.92;font-size:14px}
+.kpi-row{max-width:1280px;margin:0 auto 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.kpi{background:#fff;border:1px solid #e3e6ef;border-radius:12px;padding:20px;border-top:4px solid #6d5cff}
+.kpi.green{border-top-color:#22c55e}
+.kpi.blue{border-top-color:#0ea5e9}
+.kpi.amber{border-top-color:#f59e0b}
+.kpi .label{font-size:12px;color:#6b7280;margin-bottom:6px}
+.kpi .value{font-size:32px;font-weight:700;line-height:1.1}
+.kpi .sub{margin-top:8px;font-size:12px;color:#6b7280}
+.panel{max-width:1280px;margin:0 auto;background:#fff;border:1px solid #e3e6ef;border-radius:12px;padding:24px 28px;margin-bottom:20px}
+.panel h2{margin:0 0 16px 0;font-size:18px;display:flex;align-items:center;justify-content:space-between}
+.panel h2 .tag{font-size:12px;background:#ece9ff;color:#6d5cff;padding:2px 10px;border-radius:999px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:12px 10px;border-bottom:1px solid #eef0f7;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12px;color:#6b7280;background:#fafbff;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+tr:hover td{background:#fafbff}
+.footer{max-width:1280px;margin:20px auto 0;color:#6b7280;font-size:12px;text-align:center}
+.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:600}
+.badge.ok{background:#dcfce7;color:#166534}
+.badge.warn{background:#fef3c7;color:#92400e}
+.badge.fail{background:#fee2e2;color:#991b1b}
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>链盛通 LSC V6.2 (AI增强版) · JaCoCo 覆盖率验证报告</h1>
+    <p>构建日期：2026-08-19 17:23:41 · JDK 17 · JaCoCo · Maven 3.9 · BUILD SUCCESS (05:22 min)</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="label">测试总数 (Tests)</div>
+      <div class="value">2,551</div>
+      <div class="sub">17 模块 · 0 失败 · 0 错误 <span style="color:#22c55e;font-weight:700">●</span></div>
+    </div>
+    <div class="kpi green">
+      <div class="label">行覆盖率 (Line Coverage)</div>
+      <div class="value">96.61%</div>
+      <div class="sub">阈值 ≥ 95% <span class="badge ok">达标 ✓</span></div>
+    </div>
+    <div class="kpi blue">
+      <div class="label">指令覆盖率 (Instruction)</div>
+      <div class="value">96.95%</div>
+      <div class="sub">阈值 ≥ 95% <span class="badge ok">达标 ✓</span></div>
+    </div>
+    <div class="kpi amber">
+      <div class="label">分支覆盖率 (Branch)</div>
+      <div class="value">89.14%</div>
+      <div class="sub">阈值 ≥ 85% <span class="badge ok">达标 ✓</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>
+      17 模块覆盖率明细
+      <span class="tag">点击模块链接可查看源码级覆盖率详情</span>
+    </h2>
+    <table>
+      <thead>
+        <tr>
+          <th>模块（点击进入详情）</th>
+          <th style="min-width:70px">测试数</th>
+          <th style="min-width:260px">指令覆盖率</th>
+          <th style="min-width:260px">行覆盖率</th>
+          <th style="min-width:260px">分支覆盖率</th>
+          <th>方法 %</th>
+          <th>类 %</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+    <tr>
+      <td>✅ <a href="lsc-media-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-media-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">195</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:99.39%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">99.39%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:99.55%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">99.55%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.0%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.00%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-admin-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-admin-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">102</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:99.25%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">99.25%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.67%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.67%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:96.55%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">96.55%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-mall-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-mall-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">122</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:99.19%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">99.19%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:99.26%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">99.26%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.48%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.48%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-gateway/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-gateway</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">115</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:99.14%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">99.14%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.75%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.75%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:95.83%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">95.83%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">90.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-risk-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-risk-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">52</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.84%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.84%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:97.96%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">97.96%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:92.11%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">92.11%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-release-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-release-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">123</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.75%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.75%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.42%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.42%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:86.54%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">86.54%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">97.8%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-ai-gateway/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-ai-gateway</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">101</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.29%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.29%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.85%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.85%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:82.0%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#ef4444;min-width:60px;text-align:right">82.00%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-order-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-order-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">58</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.26%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.26%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:98.91%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">98.91%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:88.46%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">88.46%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-writeoff-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-writeoff-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">36</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:97.59%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">97.59%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:97.88%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">97.88%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:83.33%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#ef4444;min-width:60px;text-align:right">83.33%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-reconciliation-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-reconciliation-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">30</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:97.25%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">97.25%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:96.15%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">96.15%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:88.89%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">88.89%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-promotion-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-promotion-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">50</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:96.55%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">96.55%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:97.11%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">97.11%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:94.29%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">94.29%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-common/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-common</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">728</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:96.33%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">96.33%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:95.48%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">95.48%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:90.58%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">90.58%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">94.4%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-evidence-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-evidence-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">471</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:96.25%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">96.25%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:95.42%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">95.42%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:91.18%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">91.18%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">83.1%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-user-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-user-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">127</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:95.76%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">95.76%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:96.12%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">96.12%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:84.46%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#ef4444;min-width:60px;text-align:right">84.46%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">97.8%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>✅ <a href="lsc-ledger-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-ledger-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">127</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:95.06%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">95.06%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:94.03%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">94.03%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:90.31%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">90.31%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">78.7%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>⚠️ <a href="lsc-map-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-map-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">43</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:94.71%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">94.71%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:95.57%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#22c55e;min-width:60px;text-align:right">95.57%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:77.19%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#ef4444;min-width:60px;text-align:right">77.19%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+    <tr>
+      <td>⚠️ <a href="lsc-b2b-service/target/jacoco/index.html" style="color:#1f2330;font-family:monospace;font-size:13px">lsc-b2b-service</a></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">71</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:94.52%;height:100%;background:#6d5cff;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">94.52%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:93.14%;height:100%;background:#22c55e;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">93.14%</span></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100%;height:10px;background:#e3e6ef;border-radius:5px;overflow:hidden"><div style="width:85.09%;height:100%;background:#0ea5e9;border-radius:5px"></div></div><span style="font-weight:600;font-variant-numeric:tabular-nums;color:#f59e0b;min-width:60px;text-align:right">85.09%</span></div></div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">100.0%</td>
+    </tr>
+    
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>构建验证摘要 <span class="tag">Reactor Summary</span></h2>
+    <table>
+      <thead><tr><th>构建阶段</th><th>状态</th><th>详情</th></tr></thead>
+      <tbody>
+        <tr><td style="text-align:left">clean 清理</td><td style="color:#22c55e;font-weight:700">SUCCESS</td><td style="text-align:left">17 模块 target 清理完成</td></tr>
+        <tr><td style="text-align:left">compile 编译</td><td style="color:#22c55e;font-weight:700">SUCCESS</td><td style="text-align:left">Java 17 · 全部 17 模块编译通过</td></tr>
+        <tr><td style="text-align:left">test 单元测试</td><td style="color:#22c55e;font-weight:700">SUCCESS</td><td style="text-align:left">2551 tests · 0 failures · 0 errors</td></tr>
+        <tr><td style="text-align:left">jacoco:report 覆盖率报告</td><td style="color:#22c55e;font-weight:700">SUCCESS</td><td style="text-align:left">17 份 HTML/XML 报告生成</td></tr>
+        <tr><td style="text-align:left">总耗时</td><td style="color:#6d5cff;font-weight:700">05:22</td><td style="text-align:left">含证据服务 02:31 · 媒体服务 47.6s</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    链盛通 LSC V6.2 (AI增强版) · 生产级质量验证 · 本报告由 JaCoCo Maven Plugin 自动生成
+  </div>
+</body>
+</html>

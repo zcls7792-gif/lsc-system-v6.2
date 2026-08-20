@@ -1,0 +1,166 @@
+{
+  "summary": {
+    "total_tests": 2551,
+    "instruction": 96.95,
+    "line": 96.61,
+    "branch": 89.14,
+    "complexity": 85.13,
+    "method": 92.98,
+    "class": 100.0
+  },
+  "modules": [
+    {
+      "module": "lsc-media-service",
+      "tests": 195,
+      "instruction": 99.39,
+      "line": 99.55,
+      "branch": 98.0,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-admin-service",
+      "tests": 102,
+      "instruction": 99.25,
+      "line": 98.67,
+      "branch": 96.55,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-mall-service",
+      "tests": 122,
+      "instruction": 99.19,
+      "line": 99.26,
+      "branch": 98.48,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-gateway",
+      "tests": 115,
+      "instruction": 99.14,
+      "line": 98.75,
+      "branch": 95.83,
+      "method": 90.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-risk-service",
+      "tests": 52,
+      "instruction": 98.84,
+      "line": 97.96,
+      "branch": 92.11,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-release-service",
+      "tests": 123,
+      "instruction": 98.75,
+      "line": 98.42,
+      "branch": 86.54,
+      "method": 97.78,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-ai-gateway",
+      "tests": 101,
+      "instruction": 98.29,
+      "line": 98.85,
+      "branch": 82.0,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-order-service",
+      "tests": 58,
+      "instruction": 98.26,
+      "line": 98.91,
+      "branch": 88.46,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-writeoff-service",
+      "tests": 36,
+      "instruction": 97.59,
+      "line": 97.88,
+      "branch": 83.33,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-reconciliation-service",
+      "tests": 30,
+      "instruction": 97.25,
+      "line": 96.15,
+      "branch": 88.89,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-promotion-service",
+      "tests": 50,
+      "instruction": 96.55,
+      "line": 97.11,
+      "branch": 94.29,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-common",
+      "tests": 728,
+      "instruction": 96.33,
+      "line": 95.48,
+      "branch": 90.58,
+      "method": 94.38,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-evidence-service",
+      "tests": 471,
+      "instruction": 96.25,
+      "line": 95.42,
+      "branch": 91.18,
+      "method": 83.12,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-user-service",
+      "tests": 127,
+      "instruction": 95.76,
+      "line": 96.12,
+      "branch": 84.46,
+      "method": 97.78,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-ledger-service",
+      "tests": 127,
+      "instruction": 95.06,
+      "line": 94.03,
+      "branch": 90.31,
+      "method": 78.67,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-map-service",
+      "tests": 43,
+      "instruction": 94.71,
+      "line": 95.57,
+      "branch": 77.19,
+      "method": 100.0,
+      "class": 100.0
+    },
+    {
+      "module": "lsc-b2b-service",
+      "tests": 71,
+      "instruction": 94.52,
+      "line": 93.14,
+      "branch": 85.09,
+      "method": 100.0,
+      "class": 100.0
+    }
+  ]
+}

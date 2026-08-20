@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-08-18T05:12:13.017492",
+  "total_requests": 59000,
+  "total_failures": 643,
+  "success_rate": 98.91,
+  "scenarios": [
+    {
+      "name": "场景1: 用户登录与认证",
+      "threads": 50,
+      "avg_response": 0.3
+    },
+    {
+      "name": "场景2: 订单创建与混合支付",
+      "threads": 80,
+      "avg_response": 0.5
+    },
+    {
+      "name": "场景3: B2B订单全流程",
+      "threads": 20,
+      "avg_response": 1.2
+    },
+    {
+      "name": "场景4: 商品查询与推广领取",
+      "threads": 100,
+      "avg_response": 0.15
+    },
+    {
+      "name": "场景5: 风控检测与AI调用",
+      "threads": 30,
+      "avg_response": 0.8
+    },
+    {
+      "name": "场景6: 存证哈希与上链",
+      "threads": 15,
+      "avg_response": 2.0
+    }
+  ],
+  "recommendations": [
+    "订单场景目标RPS 500+",
+    "B2B分布式锁优化",
+    "风控AI熔断器",
+    "存证批量聚合",
+    "二级缓存策略"
+  ]
+}
