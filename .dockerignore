@@ -1,0 +1,37 @@
+# Git
+.git
+.gitignore
+
+# Build outputs
+**/target
+**/dist
+**/build
+
+# Dependencies (will be installed in Docker)
+**/node_modules
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Reports & screenshots
+*.md
+*.png
+*.html
+*.json
+LSC_V6.2_Reports/
+LSC_V6.2_All_Reports.tar.gz
+
+# Docker
+docker/
+k8s/
+sql/
+
+# CI/CD
+.github/
+
+# Misc
+*.log
+*.tmp
+.DS_Store
