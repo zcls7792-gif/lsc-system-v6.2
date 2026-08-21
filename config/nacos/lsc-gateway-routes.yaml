@@ -8,7 +8,9 @@ spring:
   cloud:
     gateway:
       routes:
-        # ---- API 路由 ----
+        # ---- API 路由（按业务重要性分级限流） ----
+
+        # 用户服务 — 高频，100 QPS
         - id: lsc-user-service
           uri: lb://lsc-user-service
           predicates:
@@ -20,103 +22,173 @@ spring:
                 redis-rate-limiter.replenishRate: 100
                 redis-rate-limiter.burstCapacity: 200
 
+        # 账本服务 — 核心交易，50 QPS
         - id: lsc-ledger-service
           uri: lb://lsc-ledger-service
           predicates:
             - Path=/api/ledger/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
 
+        # B2B交易 — 核心交易，30 QPS
         - id: lsc-b2b-service
           uri: lb://lsc-b2b-service
           predicates:
             - Path=/api/b2b/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
 
+        # 订单服务 — 核心交易，50 QPS
         - id: lsc-order-service
           uri: lb://lsc-order-service
           predicates:
             - Path=/api/order/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
 
+        # 核销服务 — 中频，30 QPS
         - id: lsc-writeoff-service
           uri: lb://lsc-writeoff-service
           predicates:
             - Path=/api/writeoff/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
 
+        # 释放服务 — 中频，30 QPS
         - id: lsc-release-service
           uri: lb://lsc-release-service
           predicates:
             - Path=/api/release/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
 
+        # 促销服务 — 中频，50 QPS
         - id: lsc-promotion-service
           uri: lb://lsc-promotion-service
           predicates:
             - Path=/api/promotion/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
 
+        # 商城服务 — 高频，100 QPS
         - id: lsc-mall-service
           uri: lb://lsc-mall-service
           predicates:
             - Path=/api/mall/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
 
+        # 风控服务 — 内部调用，20 QPS
         - id: lsc-risk-service
           uri: lb://lsc-risk-service
           predicates:
             - Path=/api/risk/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
 
+        # 媒体服务 — 文件上传，20 QPS
         - id: lsc-media-service
           uri: lb://lsc-media-service
           predicates:
             - Path=/api/media/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
 
+        # 地图服务 — 高频查询，100 QPS
         - id: lsc-map-service
           uri: lb://lsc-map-service
           predicates:
             - Path=/api/map/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
 
+        # 对账服务 — 低频，10 QPS
         - id: lsc-reconciliation-service
           uri: lb://lsc-reconciliation-service
           predicates:
             - Path=/api/reconciliation/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
 
+        # 存证服务 — 中频，30 QPS
         - id: lsc-evidence-service
           uri: lb://lsc-evidence-service
           predicates:
             - Path=/api/evidence/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
 
+        # 管理后台 — 低频，20 QPS
         - id: lsc-admin-service
           uri: lb://lsc-admin-service
           predicates:
             - Path=/api/admin/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
 
+        # AI网关 — 低频高耗时，10 QPS
         - id: lsc-ai-gateway
           uri: lb://lsc-ai-gateway
           predicates:
             - Path=/api/ai/**
           filters:
             - StripPrefix=2
+            - name: RateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
 
         # ---- 前端路由 ----
         - id: lsc-admin-web

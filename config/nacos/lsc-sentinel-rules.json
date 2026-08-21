@@ -1,0 +1,88 @@
+# ============================================================
+# Nacos共享配置 - Sentinel限流降级规则
+# Data ID: lsc-sentinel-rules.json
+# Group: LSC_GROUP
+#
+# 启用条件：服务需引入 spring-cloud-starter-alibaba-sentinel 依赖
+# 当前系统使用网关层 Redis RateLimiter 进行限流（见 lsc-gateway-routes.yaml）
+# 本文件为 Sentinel 规则模板，供后续服务级熔断降级使用
+# ============================================================
+
+[
+  {
+    "resource": "POST:/api/ledger/**",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 50,
+    "strategy": 0,
+    "controlBehavior": 0,
+    "clusterMode": false
+  },
+  {
+    "resource": "POST:/api/b2b/**",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 30,
+    "strategy": 0,
+    "controlBehavior": 0,
+    "clusterMode": false
+  },
+  {
+    "resource": "POST:/api/order/**",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 50,
+    "strategy": 0,
+    "controlBehavior": 0,
+    "clusterMode": false
+  },
+  {
+    "resource": "POST:/api/writeoff/**",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 30,
+    "strategy": 0,
+    "controlBehavior": 0,
+    "clusterMode": false
+  },
+  {
+    "resource": "POST:/api/evidence/**",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 30,
+    "strategy": 0,
+    "controlBehavior": 0,
+    "clusterMode": false
+  },
+  {
+    "resource": "POST:/api/ai/**",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 10,
+    "strategy": 0,
+    "controlBehavior": 2,
+    "clusterMode": false
+  },
+  {
+    "_comment": "降级规则 - AI网关响应慢时自动熔断",
+    "resource": "POST:/api/ai/**",
+    "limitApp": "default",
+    "grade": 0,
+    "count": 5000,
+    "strategy": 0,
+    "controlBehavior": 0,
+    "clusterMode": false,
+    "timeWindow": 10
+  },
+  {
+    "_comment": "降级规则 - 核销服务异常率过高时熔断",
+    "resource": "POST:/api/writeoff/**",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 0.5,
+    "strategy": 0,
+    "controlBehavior": 0,
+    "clusterMode": false,
+    "timeWindow": 30
+  }
+]
