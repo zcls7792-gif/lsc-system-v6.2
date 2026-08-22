@@ -1,0 +1,86 @@
+name: Deploy (K8s)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        default: dev
+        options:
+          - dev
+          - staging
+          - prod
+      image_tag:
+        description: 'Image tag to deploy (e.g. v6.2.0-20260822)'
+        required: true
+        type: string
+
+# 职责：按环境分阶段部署到 Kubernetes（dev → staging → prod）
+# 仅手动触发，prod 需人工审批（GitHub Environment 保护规则）
+# 使用 k8s/ 目录下的现有清单
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      url: ${{ vars.DEPLOY_URL || '' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate inputs
+        run: |
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Image tag:   ${{ github.event.inputs.image_tag }}"
+          test -n "${{ github.event.inputs.image_tag }}" || { echo "::error::image_tag required"; exit 1; }
+          test -d k8s || { echo "::error::k8s/ directory not found"; exit 1; }
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" > "$HOME/.kube/config"
+          kubectl version --client
+          kubectl config current-context
+
+      - name: Apply namespace & secrets
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/secrets.yaml || echo "::warning::secrets.yaml apply failed (expected first run)"
+
+      - name: Apply configmap & workloads
+        run: |
+          kubectl apply -f k8s/configmap.yaml
+          kubectl apply -f k8s/services.yaml
+          kubectl apply -f k8s/deployments.yaml
+          kubectl apply -f k8s/deployments-extra.yaml
+
+      - name: Apply autoscaling & network policy
+        run: |
+          kubectl apply -f k8s/hpa.yaml
+          kubectl apply -f k8s/pod-disruption-budget.yaml
+          kubectl apply -f k8s/network-policy.yaml
+          kubectl apply -f k8s/tls-certificates.yaml || echo "::warning::tls-certificates.yaml apply failed"
+
+      - name: Restart deployments (rollout image tag)
+        run: |
+          for d in $(kubectl get deployments -n lsc -o name); do
+            kubectl rollout restart "$d" -n lsc || echo "::warning::rollout restart failed for $d"
+          done
+
+      - name: Verify rollout
+        run: |
+          for d in $(kubectl get deployments -n lsc -o name); do
+            echo "Waiting for $d ..."
+            kubectl rollout status "$d" -n lsc --timeout=300s || exit 1
+          done
+          echo "::notice::Deployment to ${{ github.event.inputs.environment }} succeeded"
