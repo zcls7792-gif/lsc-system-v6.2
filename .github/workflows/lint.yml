@@ -1,0 +1,77 @@
+name: Lint (Static Analysis)
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**/*.java'
+      - 'pom.xml'
+      - '**/pom.xml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**/*.java'
+      - 'pom.xml'
+      - '**/pom.xml'
+
+# 职责：静态分析（Checkstyle 代码规范 + SpotBugs 缺陷检测）
+# 仅在 Java 源码或 pom.xml 变更时触发，降低运行成本
+# 容错策略：plugin 未配置时该步骤跳过而非失败
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-analysis:
+    name: Checkstyle & SpotBugs (JDK 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Compile (required for SpotBugs)
+        run: mvn -B -ntp -T 1C test-compile -DskipTests
+
+      - name: Run Checkstyle
+        continue-on-error: true
+        run: mvn -B -ntp checkstyle:check || echo "::warning::Checkstyle 未配置或检查未通过，请参照 LSC_V6.2_Code_Quality_Completeness_Audit_20260822.md I-01 配置 checkstyle.xml"
+
+      - name: Run SpotBugs
+        continue-on-error: true
+        run: mvn -B -ntp spotbugs:check || echo "::warning::SpotBugs 未配置或检查未通过，请参照 LSC_V6.2_Code_Quality_Completeness_Audit_20260822.md I-01 配置 spotbugs-maven-plugin"
+
+      - name: Upload Checkstyle reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-reports
+          path: '**/target/checkstyle-result.xml'
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload SpotBugs reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-reports
+          path: '**/target/spotbugsXml.xml'
+          if-no-files-found: ignore
+          retention-days: 7

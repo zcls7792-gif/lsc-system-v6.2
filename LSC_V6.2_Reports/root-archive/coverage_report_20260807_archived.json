@@ -1,0 +1,33 @@
+{
+  "_archive_metadata": {
+    "archived_at": "2026-08-22",
+    "archived_from": "LSC_V6.2_Reports/coverage_report.json",
+    "archived_by_audit": "LSC_V6.2_Code_Quality_Completeness_Audit_20260822.md (I-02)",
+    "reason": "Superseded by coverage_data.json (17 modules, 2551 tests). Original kept for audit traceability."
+  },
+  "_original_content": {
+    "timestamp": "2026-08-07T08:30:20.501236",
+    "total_tests": 1204,
+    "modules_with_tests": 15,
+    "total_modules": 15,
+    "avg_line_coverage": 94.0,
+    "avg_branch_coverage": 86.5,
+    "module_details": {
+      "lsc-release-service": 75,
+      "lsc-order-service": 58,
+      "lsc-ledger-service": 122,
+      "lsc-writeoff-service": 20,
+      "lsc-media-service": 31,
+      "lsc-risk-service": 31,
+      "lsc-promotion-service": 50,
+      "lsc-evidence-service": 85,
+      "lsc-user-service": 86,
+      "lsc-b2b-service": 65,
+      "lsc-reconciliation-service": 18,
+      "lsc-common": 463,
+      "lsc-map-service": 22,
+      "lsc-mall-service": 61,
+      "lsc-admin-service": 17
+    }
+  }
+}
