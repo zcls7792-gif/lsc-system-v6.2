@@ -454,7 +454,22 @@ CREATE TABLE IF NOT EXISTS `admins` (
     UNIQUE KEY `uk_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员表';
 
--- 预置超级管理员(密码: Admin@2026 的BCrypt哈希)
+-- =================================================================
+-- ⚠️  生产环境安全警告 (per I-09 / SECURITY_POSTINSTALL.md)
+-- -----------------------------------------------------------------
+-- 以下 INSERT 为**开发/演示用默认管理员账号**，密码「Admin@2026」
+-- 的 BCrypt 哈希已硬编码，仅供本地联调与 CI 使用。
+--
+-- 部署到任何非 dev 环境前，必须执行：
+--   1. 删除本 INSERT 语句，或手动把 username/password_hash
+--      替换为通过环境变量注入的强密码哈希；
+--   2. 首次登录后**立即**在管理后台重置所有 super_admin 密码；
+--   3. 如需重新生成 BCrypt，参考 docs/SECURITY_POSTINSTALL.md
+--      第 2 节「默认管理员密码轮换步骤」。
+--
+-- 若忽略以上步骤，可能导致后台被暴力破解或默认凭据入侵。
+-- =================================================================
+-- 预置超级管理员(开发/演示默认密码: Admin@2026 的BCrypt哈希)
 INSERT INTO `admins` (`id`, `username`, `password_hash`, `real_name`, `role`, `status`) VALUES
 (1000000000000000001, 'super_admin_01', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7pIWlQepXkqNjQgRJgJ5q8e', '超级管理员A', 'super_admin', 1),
 (1000000000000000002, 'super_admin_02', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7pIWlQepXkqNjQgRJgJ5q8e', '超级管理员B', 'super_admin', 1);

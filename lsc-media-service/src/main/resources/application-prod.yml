@@ -1,0 +1,35 @@
+server:
+  shutdown: graceful
+spring:
+  profiles:
+    include: ""
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+logging:
+  level:
+    root: WARN
+    com.lianshengtong.media: INFO
+    com.lianshengtong.common: WARN
+
+lsc:
+  cors:
+    allowed-origins: https://*.lianshengtong.com,https://*.chainshangtong.com
+
+knife4j:
+  enable: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus"
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true

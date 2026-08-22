@@ -76,3 +76,70 @@ sql/*.sql.bak
 
 # Trae specific
 .trae-html-share-packages/
+
+# ========== I-08 补充条目 ==========
+
+# Java heap / JFR / GC 转储
+*.hprof
+*.jfr
+*.gc.log*
+*.pid
+*.heapdump
+
+# JaCoCo / 覆盖率二进制
+*.exec
+jacoco.exec
+jacoco-*.exec
+
+# Maven Release Plugin 产物
+pom.xml.tag
+pom.xml.releaseBackup
+release.properties
+dependency-reduced-pom.xml
+build-number.properties
+flattened-pom.xml
+*.releaseBackup
+
+# Java 注解处理
+.apt_generated/
+.sts4-cache/
+*.springBeans
+
+# Spring Boot
+spring-shell.log
+native-image
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# 密钥 / 证书 / 密钥库
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.key
+*.crt
+*.pem
+secrets/
+.vault-token
+
+# UniApp / 小程序构建产物（lsc-mobile-app）
+unpackage/
+.hbuilderx/
+.uni_modules/
+
+# Node 额外
+.npm
+.eslintcache
+.stylelintcache
+.pnpm-store/
+.yarn/cache
+.yarn/install-state.gz
+
+# Python 虚拟环境
+.venv/
+venv/
+ENV/
+
+# JetBrains / 备份
+*.orig
+

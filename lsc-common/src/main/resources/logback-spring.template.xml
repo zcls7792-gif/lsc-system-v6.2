@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LSC V6.2 统一日志配置模板 (logback-spring.template.xml)
+  所属模块：lsc-common / 其他微服务可直接复制使用
+  关联审计项：audit_report.md I-10
+
+  使用说明：
+  1. 将本文件复制到目标服务 src/main/resources/logback-spring.xml
+  2. 把下方两个占位符替换成实际内容：
+       ${MODULE_NAME}        -> 例如 lsc-ledger-service (用于日志文件名前缀)
+       ${MODULE_PACKAGE}     -> 例如 com.lianshengtong.ledger  (用于模块级 DEBUG 日志)
+  3. 无需在 application.yml 中额外设置 logging.pattern，本配置已统一接管
+  4. SpringProfile 区分 dev / prod：
+       - dev：  CONSOLE + 文件全部级别，彩色
+       - prod：仅 INFO 及以上进滚动文件，CONSOLE 只输出 WARN 以上
+-->
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <property name="LOG_HOME" value="${LOG_HOME:-./logs}"/>
+    <property name="APP_NAME" value="${MODULE_NAME:-lsc-service}"/>
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%15.15thread] %-5level %40.40logger{39} [%X{traceId:-},%X{spanId:-}] - %msg%n"/>
+    <property name="CONSOLE_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%15.15thread]){faint} %clr(%-5level) %clr(%40.40logger{39}){cyan} %clr([%X{traceId:-},%X{spanId:-}]){faint} - %m%n"/>
+
+    <!-- ================== 控制台 Appender ================== -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ================== 业务滚动日志 Appender ================== -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${APP_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${APP_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ================== 错误单独滚动日志 Appender ================== -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${APP_NAME}-error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${APP_NAME}-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>20MB</maxFileSize>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ================== Dev Profile ================== -->
+    <springProfile name="dev | standalone">
+        <logger name="${MODULE_PACKAGE:-com.lianshengtong}" level="DEBUG"/>
+        <logger name="com.lianshengtong.common" level="INFO"/>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- ================== Prod Profile ================== -->
+    <springProfile name="prod">
+        <logger name="${MODULE_PACKAGE:-com.lianshengtong}" level="INFO"/>
+        <logger name="com.lianshengtong.common" level="WARN"/>
+        <logger name="com.baomidou.mybatisplus" level="WARN"/>
+        <logger name="org.springframework" level="WARN"/>
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+    </springProfile>
+
+</configuration>

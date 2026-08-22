@@ -224,6 +224,10 @@
 | I-04 | 前端构建 | 低 | `lsc-mobile-app` 缺 `package-lock.json` | 补充依赖锁定文件以保证可重现构建 | ✅ 已落实 |
 | I-05 | 测试补强 | 低 | 分支覆盖率偏低的 3 个模块（map / ai-gateway / writeoff） | 下一轮补测优先针对这 3 个模块的分支场景 | ✅ 已落实 |
 | I-06 | 测试补强 | 低 | 方法覆盖率偏低的 2 个模块（ledger / evidence） | 补充未覆盖方法的单元测试 | ✅ 已落实 |
+| I-07 | 生产配置 | 低 | 12 个微服务缺少 `application-prod.yml` 独立生产 Profile | 参考 `lsc-user-service` 模板补齐，统一 graceful shutdown、日志级别收紧、禁用 Knife4j、Actuator 健康端点按鉴权暴露 | ✅ 已落实 |
+| I-08 | .gitignore | 低 | 根目录 `.gitignore` 缺少 Java 堆转储、Maven Release 产物、密钥证书、UniApp 构建产物等忽略条目 | 补齐 9 类忽略项，避免将 heap dump / keystore / `unpackage/` 等敏感或临时文件误提交入库 | ✅ 已落实 |
+| I-09 | 安全基线 | 低 | `sql/lsc_system_v6.2.sql` 预置默认管理员密码哈希（Admin@2026）缺少生产风险提醒 | 在 INSERT 上方加醒目安全警告注释，并新增 `docs/SECURITY_POSTINSTALL.md` 记录默认账号轮换、密钥轮换、上线后 48h 核对表 | ✅ 已落实 |
+| I-10 | 日志统一 | 低 | 17 个模块均未配置 `logback-spring.xml`，日志格式与滚动策略未统一 | 在 `lsc-common` 下放统一模板，并为 ledger / order / user / evidence 4 个核心服务落地 CONSOLE + 按天滚动 FILE + 错误单独滚动的 profile 化配置 | ✅ 已落实 |
 
 ---
 
@@ -234,7 +238,7 @@
 1. ✅ **结构完整性**：17/17 微服务模块 + 3/3 前端工程 + 全套基础设施目录均实际存在并符合方案声明。
 2. ✅ **质量目标达成**：测试用例 2,551、行覆盖率 96.61%、指令覆盖率 96.95%、分支覆盖率 89.14%、类覆盖率 100% —— **与方案目标完全一致**。
 3. ✅ **生产就绪**：既有 `CODE_QUALITY_AUDIT_REPORT.md` 与 `LSC_V6.2_Final_GoLive_Report.md` 已给出「具备生产部署条件」结论，本次审计复核确认。
-4. ✅ **改进项落实**：全部 6 项改进项（I-01 CI/CD 拆分、I-02 覆盖率数据归档、I-03 历史快照说明、I-04 前端依赖锁定、I-05 分支覆盖率补测、I-06 方法覆盖率补测）均已落实，详见第 8 节。
+4. ✅ **改进项落实**：全部 10 项改进项（I-01 CI/CD 拆分、I-02 覆盖率数据归档、I-03 历史快照说明、I-04 前端依赖锁定、I-05 分支覆盖率补测、I-06 方法覆盖率补测、I-07 生产 Profile 补齐、I-08 .gitignore 补齐、I-09 安装后安全清单、I-10 日志配置统一）均已落实，详见第 8 节。
 
 **审计结论**：仓库实现与方案声明**强一致**，CI/CD 与数据一致性问题已闭环，测试覆盖与报告时效性短板已补齐，可作为生产部署依据。
 
@@ -246,6 +250,7 @@
 > - I-01 / I-02 落实提交 `d794c69`
 > - I-03 / I-04 落实提交 `5b0df21`
 > - I-05 / I-06 测试补齐提交 `b559bf6` + `55ef7ad`
+> - I-07 / I-08 / I-09 / I-10 落实提交 `9a17c8f`
 
 ### 8.1 I-01 落实：CI/CD 流水线拆分 ✅
 
@@ -376,6 +381,98 @@
 - **异常处理覆盖**：`EvidenceGlobalExceptionHandler` 此前未被测试触达，本次覆盖全部 4 个 `@ExceptionHandler` 方法，确保异常到 HTTP 响应的映射符合预期（兜底 500、参数错误 400、业务异常等）
 - **Mock 策略**：Controller 测试 Mock `LscLedgerService`，验证入参校验与委托调用；ExceptionHandler 测试构造各类异常实例，验证 `ResponseEntity` 状态码与消息体
 
+### 8.7 I-07 落实：生产环境 Profile 补齐 ✅
+
+为**缺少** `application-prod.yml` 的 12 个微服务（lsc-ledger / lsc-b2b / lsc-order / lsc-writeoff / lsc-release / lsc-promotion / lsc-mall / lsc-risk / lsc-media / lsc-map / lsc-reconciliation / lsc-ai-gateway）统一创建生产 Profile，内容参照 `lsc-user-service` 模板，保持与已存在的 3 份（user / evidence / admin）风格完全一致。
+
+**落实动作**：
+
+| 路径 | 动作 |
+|---|---|
+| `lsc-ledger-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-b2b-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-order-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-writeoff-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-release-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-promotion-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-mall-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-risk-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-media-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-map-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-reconciliation-service/src/main/resources/application-prod.yml` | ➕ 新建 |
+| `lsc-ai-gateway/src/main/resources/application-prod.yml` | ➕ 新建 |
+
+**统一配置要点**：
+- `server.shutdown=graceful` + `timeout-per-shutdown-phase=30s`，避免 K8s rolling update 时截断进行中请求
+- `logging.level.root=WARN` + 模块级 `INFO`，避免 DEBUG 日志淹没生产 ELK；各服务模块包路径已单独设置（如 `com.lianshengtong.ledger`）
+- CORS `allowed-origins` 收紧为 `https://*.lianshengtong.com` 与 `https://*.chainshangtong.com`，拒绝任意来源
+- `knife4j.enable=false`，禁用生产 Swagger 文档页
+- Actuator 仅暴露 `health / info / metrics / prometheus`，`health.show-details=when_authorized`，避免泄露连接池与中间件详情
+- Metrics 统一打上 `application=${spring.application.name}` 标签，Prometheus 采集后可按服务维度聚合监控
+
+### 8.8 I-08 落实：根目录 .gitignore 忽略条目补齐 ✅
+
+在原 `.gitignore` 基础上新增 9 类忽略条目，避免构建/运行/调试中产生的敏感或庞大二进制文件被误提交。
+
+**新增类别**：
+| 类别 | 关键条目 | 风险（若未忽略） |
+|---|---|---|
+| JVM 转储 | `*.hprof` / `*.jfr` / `*.gc.log*` / `*.heapdump` | 堆快照常含内存中明文敏感数据（JWT、密钥、用户信息），且单文件可达数 GB |
+| 覆盖率二进制 | `jacoco*.exec` / `*.exec` | CI 产物，无入库价值，且合并冲突频繁 |
+| Maven Release | `pom.xml.tag` / `release.properties` / `flattened-pom.xml` | 由 `maven-release-plugin` 临时生成，不应入库 |
+| 注解处理缓存 | `.apt_generated/` / `.sts4-cache/` | IDE/APT 生成目录 |
+| Spring 日志/构建 | `spring-shell.log` / `native-image` / `build/` | Spring CLI 与 GraalVM 产物 |
+| **密钥证书** | `*.jks` / `*.keystore` / `*.p12` / `*.pfx` / `*.key` / `*.crt` / `*.pem` / `secrets/` | **高风险**：一旦泄露导致数据库/TLS/JWT 信任链被攻陷 |
+| UniApp 构建 | `unpackage/` / `.hbuilderx/` / `.uni_modules/` | lsc-mobile-app 打包结果，体积大且可重现 |
+| 前端缓存 | `.eslintcache` / `.npm` / `.pnpm-store/` / `.yarn/` | 私有包缓存，不应入库 |
+| 其他 | `.venv/` / `venv/`（Python 虚拟环境）、`*.orig`（编辑器冲突备份） | 环境依赖 / 本地临时 |
+
+### 8.9 I-09 落实：SQL 默认密码安全提醒 + 安装后安全清单 ✅
+
+针对 `sql/lsc_system_v6.2.sql` 中 2 个预置 super_admin（密码 `Admin@2026` 的 BCrypt 哈希）存在的默认凭据风险，落实两部分防御：
+
+**动作 1：SQL 文件新增醒目安全警告块**
+
+在 INSERT 上方插入 15 行注释块（`-- ⚠️ 生产环境安全警告`），明确：
+- 该 INSERT 仅适用于开发/演示
+- 部署到非 dev 环境前必须删除或替换
+- 指引到 docs/SECURITY_POSTINSTALL.md 第 2 节获取 BCrypt 重新生成方法
+
+**动作 2：新建 `docs/SECURITY_POSTINSTALL.md` 安装后安全清单**
+
+覆盖 6 个章节：
+1. **默认账号盘点与强制轮换** —— 列出 admins 表、MySQL root、Nacos 控制台等 5 类默认凭据，附首次登录后 10 分钟动作；
+2. **BCrypt 哈希重生成步骤** —— 提供 Spring PasswordEncoder 方式（推荐）+ `htpasswd` 命令行方式；
+3. **中间件密钥轮换清单** —— 7 类密钥（MySQL / Redis / Nacos / JWT / AES / MQ / 地图 AK）的建议来源；
+4. **管理后台访问限制** —— Nginx 网段白名单 + K8s NetworkPolicy 隔离管理域与业务域；
+5. **上线后 48h 核对表** —— 6 条可勾选项（默认密码轮换、公网暴露、root 限制、actuator 鉴权、密钥差异、网络隔离）；
+6. **事件与联系人** —— P1/P2 升级路径。
+
+### 8.10 I-10 落实：统一日志配置模板 + 核心服务落地 ✅
+
+解决 17 个模块均未配置 `logback-spring.xml` 带来的「日志格式不一致、无滚动策略、错误无单独归档」三方面问题。
+
+**动作 1：lsc-common 下放统一模板**
+
+新建 `lsc-common/src/main/resources/logback-spring.template.xml`，含：
+- 3 个 Appender：CONSOLE（带 `%clr` 彩色）、FILE（50MB/文件 × 30天 × 5GB 总上限 gz 压缩）、ERROR_FILE（仅 ERROR 级别，保留 90 天）；
+- MDC 字段：`%X{traceId}` 与 `%X{spanId}`，与 TracingConfig 输出链路追踪 ID；
+- 双 Profile：`dev | standalone`（模块级 DEBUG + root INFO，全 Appender 全开）、`prod`（模块级 INFO + root WARN，Spring/MyBatis 统一 WARN）；
+- 模板占位符 `${MODULE_NAME}` / `${MODULE_PACKAGE}`，头部附 4 步复制使用说明。
+
+**动作 2：4 个核心服务落地实际 logback-spring.xml**
+
+为 4 个最高调用量、最高合规要求的核心服务直接替换占位符并落地：
+
+| 路径 | 模块名 | 模块包路径 |
+|---|---|---|
+| `lsc-ledger-service/src/main/resources/logback-spring.xml` | lsc-ledger-service | com.lianshengtong.ledger |
+| `lsc-order-service/src/main/resources/logback-spring.xml` | lsc-order-service | com.lianshengtong.order |
+| `lsc-user-service/src/main/resources/logback-spring.xml` | lsc-user-service | com.lianshengtong.user |
+| `lsc-evidence-service/src/main/resources/logback-spring.xml` | lsc-evidence-service | com.lianshengtong.evidence |
+
+其余 9 个服务可按需复制模板 → 替换 2 个占位符 → 即获得一致的生产级别日志配置，约 1 分钟/服务。
+
 ---
 
 ## 附录 A · 审计方法与数据来源
@@ -438,6 +535,20 @@
 落实提交：
 - `b559bf6` —— `test: 补齐 I-05/I-06 测试 (ledger Controller + evidence ExceptionHandler + writeoff 分支)`
 - `55ef7ad` —— `test: 补齐 I-05 测试 (map + ai-gateway 分支覆盖率)`
+
+### I-07 / I-08 / I-09 / I-10 落实（提交 `9a17c8f`）
+
+| 路径 | 动作 | 说明 |
+|---|---|---|
+| `lsc-ledger-service/.../application-prod.yml`（共 12 份，见 8.7） | ➕ 新建 | I-07：12 个微服务生产 Profile（graceful shutdown / WARN 日志 / Knife4j 禁用 / Actuator 按鉴权暴露） |
+| `.gitignore` | ✏️ 修订 | I-08：新增 9 类忽略条目（堆转储、JaCoCo 二进制、Maven Release、密钥证书、UniApp unpackage 等） |
+| `sql/lsc_system_v6.2.sql` | ✏️ 修订 | I-09：admin INSERT 上方加 15 行生产安全警告，标注仅适用于开发/演示 |
+| `docs/SECURITY_POSTINSTALL.md` | ➕ 新建 | I-09：安装后 6 章安全清单（默认账号轮换、BCrypt 重生成、密钥清单、管理端访问限制、48h 核对表、事件升级） |
+| `lsc-common/src/main/resources/logback-spring.template.xml` | ➕ 新建 | I-10：统一日志模板（CONSOLE + FILE gz 滚动 + ERROR_FILE 单独滚动，dev/prod 双 Profile + MDC traceId） |
+| `lsc-ledger-service/.../logback-spring.xml`（共 4 份：ledger / order / user / evidence） | ➕ 新建 | I-10：4 个核心服务落地实际 logback-spring.xml |
+| `audit_report.md` | ✏️ 修订 | 更新 Section 6 表格 10 项、Section 7「全部 10 项」、新增 8.7~8.10 落实记录、本附录 C 索引 |
+
+落实提交：`9a17c8f` —— `chore: 落实 I-07~I-10 (prod profile 补齐 / .gitignore / SQL 安全 + 安装后清单 / 日志配置统一)`
 
 ---
 
