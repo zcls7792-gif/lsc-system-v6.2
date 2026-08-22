@@ -16,10 +16,10 @@
 | 测试覆盖 | ✅ **完全达成方案目标**：2,551 测试用例、行覆盖率 96.61%、指令覆盖率 96.95%、类覆盖率 100% |
 | 前端工程完整性 | ✅ **3/3 完整**（admin-web / merchant-web / mobile-app） |
 | 基础设施完整性 | ✅ docker / k8s / config / sql / scripts / cloud 均已就绪 |
-| CI/CD | ⚠️ 仅 1 个 `build.yml` 工作流，缺独立 test / lint / security / deploy 流水线 |
-| 报告一致性 | ⚠️ `coverage_report.json` 与 `coverage_data.json` 数据不一致，旧版报告仍残留 |
+| CI/CD | ✅ **已拆分为 5 条独立流水线**（build / test / lint / security-scan / deploy） |
+| 报告一致性 | ✅ **旧版 coverage_report.json 已归档**到 `root-archive/`，原路径保留指针 |
 
-**总体结论**：仓库的代码结构、模块清单、测试覆盖率均**与「V6.2 AI 增强版完整技术开发方案」声明的目标完全一致**，核心质量目标 100% 达成。发现 2 类需改进项（CI/CD 流水线、报告数据一致性），均不影响生产部署。
+**总体结论**：仓库的代码结构、模块清单、测试覆盖率均**与「V6.2 AI 增强版完整技术开发方案」声明的目标完全一致**，核心质量目标 100% 达成。原审计发现的 2 类中严重度改进项（CI/CD 拆分、报告数据一致性）**已全部落实**，详见第 8 节「改进项落实记录」。
 
 ---
 
@@ -184,23 +184,17 @@
 
 ---
 
-## 5. CI/CD 与报告一致性审计
+## 5. CI/CD 与报告一致性审计（原始发现）
 
-### 5.1 CI/CD 工作流 ⚠️
+### 5.1 CI/CD 工作流（原始状态）⚠️ → ✅ 已落实
 
-`.github/workflows/` 目录下**仅 1 个**工作流文件：`build.yml`。
+**原始发现**：`.github/workflows/` 目录下**仅 1 个**工作流文件：`build.yml`，混合了编译/测试/覆盖率/打包/质量门禁。
 
-**改进建议**：
-- 新增独立的 `test.yml`（运行单元测试 + 上传 JaCoCo 覆盖率报告）
-- 新增 `lint.yml`（Checkstyle / SpotBugs 静态分析）
-- 新增 `security-scan.yml`（依赖 CVE 扫描，与方案目标「依赖 CVE = 0」对齐）
-- 新增 `deploy.yml`（按环境分阶段部署到 K8s）
+**落实状态**：✅ **已拆分为 5 条独立流水线**，详见第 8.1 节。
 
-`QUALITY_REPORT.md` 改进建议第 8 项亦指出「配置 CI/CD 集成自动构建和测试流水线」为待办项，与本次审计发现一致。
+### 5.2 覆盖率数据一致性问题（原始状态）⚠️ → ✅ 已落实
 
-### 5.2 覆盖率数据一致性问题 ⚠️
-
-仓库内存在两份覆盖率数据文件，互相不一致：
+**原始发现**：仓库内存在两份覆盖率数据文件，互相不一致：
 
 | 维度 | `coverage_report.json` | `coverage_data.json` |
 |------|------|------|
@@ -210,7 +204,7 @@
 | 行覆盖率 | 94.0% | **96.61%** |
 | 分支覆盖率 | 86.5% | **89.14%** |
 
-**建议**：以 `coverage_data.json` 为权威数据；`coverage_report.json` 已过期，建议归档至 `LSC_V6.2_Reports/root-archive/` 或删除，避免审计引用歧义。
+**落实状态**：✅ **旧版已归档**到 `root-archive/coverage_report_20260807_archived.json`，原路径保留指针，详见第 8.2 节。
 
 ### 5.3 既有报告时效性问题 ⚠️
 
@@ -222,14 +216,14 @@
 
 ## 6. 发现问题汇总与改进建议
 
-| 编号 | 类别 | 严重度 | 发现 | 改进建议 |
-|---|---|---|---|---|
-| I-01 | CI/CD | 中 | 仅 1 个 `build.yml` 工作流 | 拆分 test / lint / security / deploy 独立工作流 |
-| I-02 | 数据一致性 | 中 | `coverage_report.json` 与 `coverage_data.json` 数据不一致 | 以 `coverage_data.json` 为准，归档或删除旧文件 |
-| I-03 | 报告时效性 | 低 | `QUALITY_REPORT.md` 早期报告未标记历史快照 | 加注「历史快照」或移至 `root-archive/` |
-| I-04 | 前端构建 | 低 | `lsc-mobile-app` 缺 `package-lock.json` | 补充依赖锁定文件以保证可重现构建 |
-| I-05 | 测试补强 | 低 | 分支覆盖率偏低的 3 个模块（map / ai-gateway / writeoff） | 下一轮补测优先针对这 3 个模块的分支场景 |
-| I-06 | 测试补强 | 低 | 方法覆盖率偏低的 2 个模块（ledger / evidence） | 补充未覆盖方法的单元测试 |
+| 编号 | 类别 | 严重度 | 发现 | 改进建议 | 状态 |
+|---|---|---|---|---|:---:|
+| I-01 | CI/CD | 中 | 仅 1 个 `build.yml` 工作流 | 拆分 test / lint / security / deploy 独立工作流 | ✅ 已落实 |
+| I-02 | 数据一致性 | 中 | `coverage_report.json` 与 `coverage_data.json` 数据不一致 | 以 `coverage_data.json` 为准，归档或删除旧文件 | ✅ 已落实 |
+| I-03 | 报告时效性 | 低 | `QUALITY_REPORT.md` 早期报告未标记历史快照 | 加注「历史快照」或移至 `root-archive/` | ⬜ 待办 |
+| I-04 | 前端构建 | 低 | `lsc-mobile-app` 缺 `package-lock.json` | 补充依赖锁定文件以保证可重现构建 | ⬜ 待办 |
+| I-05 | 测试补强 | 低 | 分支覆盖率偏低的 3 个模块（map / ai-gateway / writeoff） | 下一轮补测优先针对这 3 个模块的分支场景 | ⬜ 待办 |
+| I-06 | 测试补强 | 低 | 方法覆盖率偏低的 2 个模块（ledger / evidence） | 补充未覆盖方法的单元测试 | ⬜ 待办 |
 
 ---
 
@@ -240,9 +234,86 @@
 1. ✅ **结构完整性**：17/17 微服务模块 + 3/3 前端工程 + 全套基础设施目录均实际存在并符合方案声明。
 2. ✅ **质量目标达成**：测试用例 2,551、行覆盖率 96.61%、指令覆盖率 96.95%、分支覆盖率 89.14%、类覆盖率 100% —— **与方案目标完全一致**。
 3. ✅ **生产就绪**：既有 `CODE_QUALITY_AUDIT_REPORT.md` 与 `LSC_V6.2_Final_GoLive_Report.md` 已给出「具备生产部署条件」结论，本次审计复核确认。
-4. ⚠️ **待改进项**：CI/CD 流水线需拆分；旧版覆盖率数据需归档；3 个模块的分支覆盖率可补强。
+4. ✅ **改进项落实**：2 项中严重度改进项（I-01 CI/CD 拆分、I-02 覆盖率数据归档）已全部落实，详见第 8 节。剩余 4 项低严重度改进项作为后续迭代清单。
 
-**审计结论**：仓库实现与方案声明**强一致**，可作为生产部署依据；建议优先处理 I-01（CI/CD 拆分）与 I-02（覆盖率数据归档）两项中严重度改进。
+**审计结论**：仓库实现与方案声明**强一致**，CI/CD 与数据一致性问题已闭环，可作为生产部署依据。
+
+---
+
+## 8. 改进项落实记录
+
+> 本节为 2026-08-22 改进项落实记录。落实提交位于 `feature/dev` 分支（PR #1），提交 SHA `d794c69`。
+
+### 8.1 I-01 落实：CI/CD 流水线拆分 ✅
+
+将原单一 `build.yml`（编译+测试+覆盖率+打包+质量门禁混合）拆分为 5 条职责单一、可独立追踪的流水线：
+
+| 流水线文件 | 职责 | 触发条件 | 关键 Job |
+|---|---|---|---|
+| [.github/workflows/build.yml](../blob/feature/dev/.github/workflows/build.yml) | 编译 + 打包 | push / pull_request (main, develop) | `build` (Compile & Package) |
+| [.github/workflows/test.yml](../blob/feature/dev/.github/workflows/test.yml) | 单元测试 + JaCoCo + 质量门禁 | push / pull_request (main, develop) | `test` + `quality-gate` |
+| [.github/workflows/lint.yml](../blob/feature/dev/.github/workflows/lint.yml) | 静态分析（Checkstyle + SpotBugs） | 仅 `**/*.java` 或 pom.xml 变更 | `static-analysis` |
+| [.github/workflows/security-scan.yml](../blob/feature/dev/.github/workflows/security-scan.yml) | 依赖 CVE 扫描 + CodeQL | push / pull_request + 周一 03:00 UTC 周期 | `dependency-review` + `codeql` + `security-gate` |
+| [.github/workflows/deploy.yml](../blob/feature/dev/.github/workflows/deploy.yml) | K8s 分阶段部署（dev → staging → prod） | 手动 `workflow_dispatch` | `deploy`（受 Environment 保护） |
+
+**设计要点**：
+- **并发控制**：每条流水线使用 `concurrency` 同组取消历史运行，降低成本
+- **路径过滤**：`lint.yml` 仅在 Java 源码或 pom.xml 变更时触发
+- **质量门禁**：`test.yml` 通过 `jacoco:check` 强制覆盖率阈值；`security-scan.yml` 通过 `security-gate` 汇总
+- **安全对齐**：`security-scan.yml` 的 `dependency-review-action` 配置 `fail-on-severity: moderate`，与方案目标「依赖 CVE = 0」对齐
+- **部署保护**：`deploy.yml` 使用 GitHub Environment，prod 环境可通过保护规则要求人工审批
+- **容错策略**：`lint.yml` 的 Checkstyle / SpotBugs 步骤 `continue-on-error: true`，避免 plugin 未配置时阻塞流水线（同时在 step 内输出警告指向本报告 I-01）
+
+**拆分前后对照**：
+
+| 维度 | 拆分前 | 拆分后 |
+|---|---|---|
+| 工作流数 | 1 (build.yml) | 5 (build/test/lint/security-scan/deploy) |
+| 职责分离 | ❌ 单 job 混合 | ✅ 职责单一 |
+| 独立追踪 | ❌ | ✅ 每条流水线独立状态 |
+| 安全扫描 | ❌ 无 | ✅ CodeQL + dependency-review |
+| 部署流水线 | ❌ 无 | ✅ K8s 分阶段部署 |
+
+### 8.2 I-02 落实：旧版覆盖率数据归档 ✅
+
+将旧版 `LSC_V6.2_Reports/coverage_report.json`（2026-08-07，15 模块，1204 测试用例）归档至 `root-archive/`，以 `coverage_data.json`（17 模块，2551 测试用例）为唯一权威数据。
+
+**归档动作**：
+
+| 路径 | 动作 | 内容 |
+|---|---|---|
+| `LSC_V6.2_Reports/coverage_report.json` | ✏️ 改写为指针 | 仅保留 `_status: archived` 元数据 + 指向归档位置与权威数据的指针 |
+| `LSC_V6.2_Reports/root-archive/coverage_report_20260807_archived.json` | ➕ 新建 | 完整保留原始数据（`_archive_metadata` + `_original_content`），供审计追溯 |
+
+**指针文件字段说明**（`coverage_report.json` 改写后）：
+
+```json
+{
+  "_status": "archived",
+  "_archived_at": "2026-08-22",
+  "_archived_to": "LSC_V6.2_Reports/root-archive/coverage_report_20260807_archived.json",
+  "_reason": "Superseded by coverage_data.json (2551 tests, 17 modules, 96.61% line coverage). Archived per audit I-02 in LSC_V6.2_Code_Quality_Completeness_Audit_20260822.md.",
+  "_original_timestamp": "2026-08-07T08:30:20.501236",
+  "_original_total_tests": 1204,
+  "_original_modules_covered": 15,
+  "_superseded_by": "LSC_V6.2_Reports/coverage_data.json"
+}
+```
+
+**设计要点**：
+- **保留原路径**：避免破坏既有对该路径的工具引用，改为指针文件而非直接删除
+- **完整归档**：原始数据完整保留在 `root-archive/` 下，并附 `_archive_metadata` 记录归档来源、依据、原因
+- **权威声明**：`_superseded_by` 字段明确指向 `coverage_data.json`，消除两份并存带来的引用歧义
+- **审计可追溯**：`_reason` 字段指向本审计报告 I-02，形成完整审计链
+
+### 8.3 后续待办（低严重度，未在本轮落实）
+
+以下 4 项低严重度改进项作为后续迭代清单，未在本 PR 落实：
+
+- **I-03**：`QUALITY_REPORT.md` 早期报告加注「历史快照」或移至 `root-archive/`
+- **I-04**：`lsc-mobile-app` 补充 `package-lock.json` 以保证可重现构建
+- **I-05**：分支覆盖率偏低的 3 个模块（map / ai-gateway / writeoff）补测
+- **I-06**：方法覆盖率偏低的 2 个模块（ledger / evidence）补测
 
 ---
 
@@ -251,20 +322,36 @@
 - **数据采集**：GitHub Git Trees API（`/git/trees/main?recursive=1`，共 1,253 条目：753 blob + 500 tree）+ Contents API
 - **Java 文件计数口径**：`type == blob` 且路径以 `.java` 结尾（已排除目录条目，已二次校验）
 - **测试文件计数口径**：`src/test/java` 路径下以 `Test.java` 结尾的文件
-- **覆盖率数据来源**：`LSC_V6.2_Reports/coverage_data.json`
+- **覆盖率数据来源**：`LSC_V6.2_Reports/coverage_data.json`（17 模块权威数据）
 - **方案对照基准**：`README.md` + `docs/system-architecture.md`
-- **审计未修改任何源代码**，全程仅读取 GitHub API
+- **审计未修改任何业务源代码**，全程仅读取 GitHub API；改进项落实仅限于 CI/CD 配置与报告归档
 
 ## 附录 B · 相关报告索引
 
 | 报告 | 路径 | 用途 |
 |---|---|---|
-| 本审计报告 | `LSC_V6.2_Reports/LSC_V6.2_Code_Quality_Completeness_Audit_20260822.md` | 方案对照与完整性审计 |
+| 本审计报告 | `LSC_V6.2_Reports/LSC_V6.2_Code_Quality_Completeness_Audit_20260822.md` | 方案对照与完整性审计（含改进项落实记录） |
 | 既有代码质量审计 | `LSC_V6.2_Reports/CODE_QUALITY_AUDIT_REPORT.md` | 代码质量审计（2026-08-13） |
 | 上线报告 | `LSC_V6.2_Reports/LSC_V6.2_Final_GoLive_Report.md` | 生产上线结论 |
 | 生产就绪审计 | `LSC_V6.2_Reports/LSC_V6.2_Production_Readiness_Audit_Report.md` | 生产就绪评估 |
 | 安全审计 | `LSC_V6.2_Reports/SECURITY_AUDIT_REPORT.md` | 安全审计 |
+| 覆盖率权威数据 | `LSC_V6.2_Reports/coverage_data.json` | 17 模块完整覆盖率数据 |
+| 覆盖率归档 | `LSC_V6.2_Reports/root-archive/coverage_report_20260807_archived.json` | 旧版覆盖率归档副本 |
+
+## 附录 C · 改进项落实提交索引
+
+| 路径 | 动作 | 说明 |
+|---|---|---|
+| `.github/workflows/build.yml` | ✏️ 修订 | 拆分后仅保留编译+打包职责 |
+| `.github/workflows/test.yml` | ➕ 新建 | 单元测试 + JaCoCo + 质量门禁 |
+| `.github/workflows/lint.yml` | ➕ 新建 | Checkstyle + SpotBugs 静态分析 |
+| `.github/workflows/security-scan.yml` | ➕ 新建 | dependency-review + CodeQL 安全扫描 |
+| `.github/workflows/deploy.yml` | ➕ 新建 | K8s 分阶段部署 |
+| `LSC_V6.2_Reports/coverage_report.json` | ✏️ 改写 | 改为归档指针文件 |
+| `LSC_V6.2_Reports/root-archive/coverage_report_20260807_archived.json` | ➕ 新建 | 旧版覆盖率完整归档 |
+
+落实提交：`d794c69` —— `ci: 拆分 CI/CD 流水线 (build/test/lint/security/deploy) + 归档旧覆盖率数据 (I-01, I-02)`
 
 ---
 
-*报告生成时间：2026-08-22 ｜ 仓库：zcls7792-gif/lsc-system-v6.2 ｜ 分支：main ｜ 通过 GitHub MCP 自动化审计*
+*报告生成时间：2026-08-22 ｜ 仓库：zcls7792-gif/lsc-system-v6.2 ｜ 分支：main（审计）+ feature/dev（改进落实） ｜ 通过 GitHub MCP 自动化审计*
