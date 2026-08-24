@@ -335,14 +335,28 @@ public class MediaServiceComprehensiveStressTest {
     @DisplayName("[内存] mediaKey生成GC友好")
     void memoryStress_mediaKeyGeneration() throws Exception {
         Runtime runtime = Runtime.getRuntime();
+        MultipartFile file = createMockFile("stress.jpg", "image/jpeg", 1024L);
+
+        // 预热反射调用和 UUID 生成，避免把类加载/JIT 开销计入被测路径。
+        for (int i = 0; i < 1000; i++) {
+            ReflectionTestUtils.invokeMethod(mediaService, "buildMediaKey", file);
+        }
+        clearInvocations(file);
+        runtime.gc();
         long memBefore = runtime.totalMemory() - runtime.freeMemory();
 
         int iterations = 50000;
+        String lastKey = null;
         for (int i = 0; i < iterations; i++) {
-            MultipartFile file = createMockFile("stress_" + i + ".jpg", "image/jpeg", 1024L);
-            ReflectionTestUtils.invokeMethod(mediaService, "buildMediaKey", file);
+            lastKey = ReflectionTestUtils.invokeMethod(mediaService, "buildMediaKey", file);
+            // Mockito 会保留每次调用记录；定期清理，避免测到测试框架自身的内存占用。
+            if ((i + 1) % 1000 == 0) {
+                clearInvocations(file);
+            }
         }
 
+        assertNotNull(lastKey);
+        runtime.gc();
         long memAfter = runtime.totalMemory() - runtime.freeMemory();
         long delta = memAfter - memBefore;
 
