@@ -126,11 +126,67 @@ async function main() {
     try { w.radarChart({ w:300, h:260, labels:['a','b','c','d'], series:[{ name:'s1', color:'var(--c-primary)', data:[0.3,0.5,0.7,0.2] }] }); passed++; console.log('  A13. radarChart OK'); }
     catch(e){ assert(false,'A13. radarChart err: '+e.message); }
     // 所有 render* 渲染函数,提高分支覆盖
-    const renders = ['renderDashboard','renderUsers','renderMerchant','renderOrders','renderWallet','renderLSC','renderB2B','renderAI','renderAIConfig','renderReports','renderSettings'];
+    const renders = ['renderDashboard','renderMerchant','renderProduct','renderB2B','renderRisk','renderCredit','renderRelease','renderReconcile','renderSystem','renderAI','renderNotifList'];
     for (const fn of renders) {
       if (typeof w[fn] !== 'function') continue;
       try { w[fn](); } catch(_) {}
     }
+    // ringChart 单独调用(不在页面里直接显式调用)
+    try { w.ringChart(0.73, 'var(--c-primary)'); passed++; console.log('  A14. ringChart OK'); }
+    catch(e){ assert(false,'A14. ringChart err: '+e.message); }
+    // barChart
+    try { w.barChart({ w:420, h:200, labels:['Q1','Q2','Q3','Q4'], data:[12,28,19,34], color:'var(--c-primary)' }); passed++; console.log('  A15. barChart OK'); }
+    catch(e){ assert(false,'A15. barChart err: '+e.message); }
+    // heatmap 更多参数: cmax/cmin 边界(含相等)、空行
+    try { w.heatmap({ w:400, h:160, rows:['R1'], cols:['C1','C2'], data:[[5,5]], cmax:5, cmin:5 }); passed++; console.log('  A16. heatmap(等值边界) OK'); }
+    catch(e){ assert(false,'A16. heatmap 等值边界 err: '+e.message); }
+    // radarChart 多系列 + 自定义 max
+    try { w.radarChart({ w:300, h:260, labels:['a','b','c','d','e'], max:10,
+      series:[
+        { name:'商家', color:'var(--c-primary)', data:[3,7,2,9,5] },
+        { name:'用户', color:'var(--c-accent)', data:[6,4,8,1,7] },
+      ]}); passed++; console.log('  A17. radarChart 多系列 OK'); }
+    catch(e){ assert(false,'A17. radarChart 多系列 err: '+e.message); }
+    // donutChart inner=0.35(窄)和 inner=0.7(宽) + unit
+    try { w.donutChart({ w:240, h:240, inner:0.35, unit:'万', data:[{label:'A',value:30,color:'var(--c-primary)'},{label:'B',value:70,color:'var(--c-available)'}] }); passed++; console.log('  A18. donutChart(inner=0.35) OK'); }
+    catch(e){ assert(false,'A18. donutChart narrow err: '+e.message); }
+    try { w.donutChart({ w:240, h:240, inner:0.7, unit:'LSC', data:[{label:'X',value:10,color:'var(--c-locked)'},{label:'Y',value:20,color:'var(--c-accent)'},{label:'Z',value:15,color:'var(--c-info)'}] }); passed++; console.log('  A19. donutChart(inner=0.7,3项) OK'); }
+    catch(e){ assert(false,'A19. donutChart wide err: '+e.message); }
+    // lineChart forecastFrom=0(首项开始预测)
+    try { w.lineChart({ w:300, h:150, labels:['0','1','2','3'], forecastFrom:0,
+      series:[{ data:[1,2,3,4], name:'p', color:'var(--c-primary)' }] }); passed++; console.log('  A20. lineChart forecastFrom=0 OK'); }
+    catch(e){ assert(false,'A20. lineChart forecastFrom=0 err: '+e.message); }
+    // 模态框/Toast: openModal + closeModal + resultModal + confirmModal
+    try {
+      w.openModal({ title:'T', body:'<p>hello</p>', footer:'<button id="__mb">OK</button>', size:'md' });
+      const mb = w.document.getElementById('__mb');
+      assert(!!mb, 'A21. openModal 渲染内容 OK');
+      w.closeModal();
+      const backdrop = w.document.querySelector('.modal-backdrop, [data-modal]');
+      passed++;
+      console.log('  A21. openModal/closeModal OK');
+    } catch(e){ assert(false,'A21. openModal/closeModal err: '+e.message); }
+    try {
+      w.resultModal('成功标题', '<div id="__r">OK内容</div>', 'success');
+      const r = w.document.getElementById('__r');
+      assert(!!r, 'A22. resultModal(success) 渲染内容');
+      // 其他 type: error/warning
+      w.resultModal('warn', 'msg', 'warning');
+      w.resultModal('err', 'msg', 'error');
+      passed++; console.log('  A22. resultModal 三种 type OK');
+    } catch(e){ assert(false,'A22. resultModal err: '+e.message); }
+    try {
+      let confirmed = false;
+      w.confirmModal('Q', 'Really?', () => { confirmed = true; }, { btnText:'OKConfirm' });
+      const okBtn = w.document.getElementById('confirm-yes');
+      assert(!!okBtn, 'A23. confirmModal confirm-yes 按钮存在');
+      if (okBtn) {
+        const ev = new w.Event('click', { bubbles:true });
+        okBtn.dispatchEvent(ev);
+      }
+      assert(confirmed === true, 'A23. confirmModal 点击确认触发回调');
+      passed++; console.log('  A23. confirmModal OK');
+    } catch(e){ assert(false,'A23. confirmModal err: '+e.message); }
     cleanupSession(sess);
   }
 
