@@ -89,6 +89,7 @@
 
 /* ---------- 重置 Reset ---------- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 html, body { height: 100%; }
 body {
   font-family: var(--ff-body);
@@ -173,6 +174,12 @@ img { max-width: 100%; display: block; }
   box-shadow: var(--sh-card);
   border: 1px solid var(--c-border-soft);
   overflow: hidden;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+.card-hover:hover {
+  box-shadow: var(--sh-lg);
+  transform: translateY(-2px);
+  border-color: var(--c-primary-soft, rgba(14,77,74,0.3));
 }
 .card-pad { padding: var(--sp-5); }
 .card-head {
@@ -444,11 +451,26 @@ img { max-width: 100%; display: block; }
 @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes glowPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(14,77,74,0); } 50% { box-shadow: 0 0 12px 2px rgba(14,77,74,0.15); } }
+@keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes dashFlow { to { stroke-dashoffset: -20; } }
 
 .fade-in { animation: fadeIn 0.3s ease both; }
 .slide-up { animation: slideUp 0.4s ease both; }
 .slide-right { animation: slideRight 0.3s ease both; }
+.scale-in { animation: scaleIn 0.25s ease both; }
 .spin { animation: spin 0.8s linear infinite; }
+
+/* 交错入场动画 (staggered reveal) */
+.stagger > *:nth-child(1) { animation: slideUp 0.4s ease 0.00s both; }
+.stagger > *:nth-child(2) { animation: slideUp 0.4s ease 0.06s both; }
+.stagger > *:nth-child(3) { animation: slideUp 0.4s ease 0.12s both; }
+.stagger > *:nth-child(4) { animation: slideUp 0.4s ease 0.18s both; }
+.stagger > *:nth-child(5) { animation: slideUp 0.4s ease 0.24s both; }
+.stagger > *:nth-child(6) { animation: slideUp 0.4s ease 0.30s both; }
+.stagger > *:nth-child(7) { animation: slideUp 0.4s ease 0.36s both; }
+.stagger > *:nth-child(8) { animation: slideUp 0.4s ease 0.42s both; }
 
 /* 骨架屏 */
 .skeleton {

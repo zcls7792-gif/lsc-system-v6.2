@@ -158,7 +158,8 @@
   .stat-card .stat-delta { font-size:12px; margin-top:8px; display:flex; align-items:center; gap:4px; }
 
   /* 图表容器 */
-  .chart-card { padding: 20px; }
+  .chart-card { padding: 20px; transition: box-shadow 0.25s ease, transform 0.25s ease; }
+  .chart-card:hover { box-shadow: var(--sh-lg); transform: translateY(-1px); }
   .chart-area { width:100%; height: 280px; }
 
   /* 双列布局 */
@@ -638,6 +639,119 @@ function ringChart(pct, color='var(--c-primary)') {
   <circle cx="55" cy="55" r="${r}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 55 55)"/></svg>`;
 }
 
+/* ============== 图表：环形/饼图 ============== */
+function donutChart(opts) {
+  // opts: { w, h, data:[{label,value,color}], inner=0.55, unit='' }
+  const { w=240, h=240, data, inner=0.55, unit='' } = opts;
+  const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 8, ir = r*inner;
+  const total = data.reduce((s,d)=>s+d.value, 0) || 1;
+  let acc = -Math.PI/2, arcs = '', labels = '';
+  data.forEach((d,i)=>{
+    const ang = (d.value/total) * Math.PI * 2;
+    const a0 = acc, a1 = acc + ang;
+    acc = a1;
+    const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    const xi0 = cx + ir*Math.cos(a0), yi0 = cy + ir*Math.sin(a0);
+    const xi1 = cx + ir*Math.cos(a1), yi1 = cy + ir*Math.sin(a1);
+    const large = ang > Math.PI ? 1 : 0;
+    arcs += `<path d="M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} L ${xi1} ${yi1} A ${ir} ${ir} 0 ${large} 0 ${xi0} ${yi0} Z" fill="${d.color}" opacity="0.92"/>`;
+    // 引线标签 (仅对占比>5%的扇区)
+    const pct = d.value/total;
+    if (pct > 0.05) {
+      const mid = (a0+a1)/2;
+      const lx = cx + (r+10)*Math.cos(mid), ly = cy + (r+10)*Math.sin(mid);
+      labels += `<text x="${lx}" y="${ly+3}" font-size="10" fill="var(--c-text-2)" text-anchor="${Math.cos(mid)<0?'end':'start'}" font-weight="600">${(pct*100).toFixed(1)}%</text>`;
+    }
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${arcs}${labels}
+    <text x="${cx}" y="${cy-4}" font-size="11" fill="var(--c-text-3)" text-anchor="middle">总计</text>
+    <text x="${cx}" y="${cy+14}" font-size="16" font-weight="700" fill="var(--c-text-1)" text-anchor="middle" font-family="var(--ff-mono)">${total>=10000?(total/10000).toFixed(1)+'万':total}${unit}</text>
+  </svg>`;
+}
+
+/* ============== 图表：热力图 ============== */
+function heatmap(opts) {
+  // opts: { w, h, rows:[labels], cols:[labels], data:[[val,...],...], colorBase }
+  const { w=680, h=200, rows, cols, data, colorBase='var(--c-primary)' } = opts;
+  const padL = 40, padT = 14, padB = 4, padR = 8;
+  const cw = (w - padL - padR) / cols.length;
+  const ch = (h - padT - padB) / rows.length;
+  const max = Math.max(...data.flat()) || 1;
+  let cells = '', xLabs = '', yLabs = '';
+  data.forEach((row, ri)=>{
+    row.forEach((v, ci)=>{
+      const x = padL + ci*cw, y = padT + ri*ch;
+      const op = v/max;
+      cells += `<rect x="${x+1}" y="${y+1}" width="${cw-2}" height="${ch-2}" rx="2" fill="${colorBase}" opacity="${0.08+op*0.92}"><title>${rows[ri]} ${cols[ci]}: ${v}</title></rect>`;
+      if (op > 0.5) cells += `<text x="${x+cw/2}" y="${y+ch/2+3}" font-size="9" fill="#fff" text-anchor="middle" font-weight="600">${v}</text>`;
+    });
+  });
+  rows.forEach((lb,i)=>{ yLabs += `<text x="${padL-6}" y="${padT+i*ch+ch/2+3}" font-size="10" fill="var(--c-text-3)" text-anchor="end">${lb}</text>`; });
+  cols.forEach((lb,i)=>{ if(i%3===0) xLabs += `<text x="${padL+i*cw+cw/2}" y="${h-padB+2}" font-size="9" fill="var(--c-text-3)" text-anchor="middle">${lb}</text>`; });
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${yLabs}${cells}${xLabs}</svg>`;
+}
+
+/* ============== 图表：堆叠柱状图 ============== */
+function stackedBar(opts) {
+  // opts: { w, h, labels, stacks:[{name,color,data:[]}], unit }
+  const { w=560, h=240, labels, stacks, unit='' } = opts;
+  const pad = { l: 44, r: 12, t: 16, b: 28 };
+  const iw = w-pad.l-pad.r, ih = h-pad.t-pad.b;
+  const n = labels.length;
+  const sums = labels.map((_,i)=>stacks.reduce((s,st)=>s+(st.data[i]||0),0));
+  const max = Math.max(...sums) || 1;
+  const gap = iw/n, bw = gap*0.6;
+  let bars = '', xLabs = '', legend = '';
+  labels.forEach((lb,i)=>{
+    const x = pad.l + i*gap + (gap-bw)/2;
+    let yBase = pad.t + ih;
+    stacks.forEach(st=>{
+      const v = st.data[i] || 0;
+      const bh = (v/max)*ih;
+      yBase -= bh;
+      bars += `<rect x="${x}" y="${yBase}" width="${bw}" height="${bh}" fill="${st.color}" opacity="0.88"><title>${st.name}: ${v}${unit}</title></rect>`;
+    });
+    if(i%Math.ceil(n/8)===0) xLabs += `<text x="${x+bw/2}" y="${h-pad.b+16}" font-size="10" fill="var(--c-text-3)" text-anchor="middle">${lb}</text>`;
+  });
+  stacks.forEach((st,i)=>{ legend += `<span class="tag tag-dot" style="background:${st.color};color:#fff;font-size:10px;">${st.name}</span> `; });
+  return { svg: `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabs}</svg>`, legend };
+}
+
+/* ============== 图表：雷达图 ============== */
+function radarChart(opts) {
+  // opts: { w, h, labels:[], series:[{name,color,data:[0-1,...]}], max=1 }
+  const { w=280, h=280, labels, series, max=1 } = opts;
+  const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 36;
+  const n = labels.length;
+  const ang = i => -Math.PI/2 + (i/n) * Math.PI * 2;
+  const pt = (val, i) => [cx + (val/max)*r*Math.cos(ang(i)), cy + (val/max)*r*Math.sin(ang(i))];
+  // 网格圈 (4层)
+  let grid = '', axis = '', axisLabels = '';
+  for(let g=1; g<=4; g++){
+    const rr = r*g/4;
+    let pts = '';
+    for(let i=0;i<n;i++) pts += `${cx+rr*Math.cos(ang(i))},${cy+rr*Math.sin(ang(i))} `;
+    grid += `<polygon points="${pts}" fill="none" stroke="var(--c-divider)" stroke-width="1" opacity="${0.3+g*0.15}"/>`;
+  }
+  labels.forEach((lb,i)=>{
+    const [x,y] = pt(max*1.12, i);
+    axis += `<line x1="${cx}" y1="${cy}" x2="${cx+r*Math.cos(ang(i))}" y2="${cy+r*Math.sin(ang(i))}" stroke="var(--c-divider)" stroke-width="1"/>`;
+    axisLabels += `<text x="${x}" y="${y+3}" font-size="10" fill="var(--c-text-2)" text-anchor="middle" font-weight="600">${lb}</text>`;
+  });
+  // 数据多边形
+  let polys = '';
+  series.forEach(s=>{
+    let pts = s.data.map((v,i)=>pt(v,i).join(',')).join(' ');
+    polys += `<polygon points="${pts}" fill="${s.color}" fill-opacity="0.12" stroke="${s.color}" stroke-width="2"/>`;
+    s.data.forEach((v,i)=>{
+      const [x,y] = pt(v,i);
+      polys += `<circle cx="${x}" cy="${y}" r="3" fill="${s.color}"/>`;
+    });
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${grid}${axis}${polys}${axisLabels}</svg>`;
+}
+
 /* ============== 仪表盘 ============== */
 function renderDashboard() {
   const d = MOCK.dashboard;
@@ -648,7 +762,7 @@ function renderDashboard() {
     <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="export"></span>导出日报</button>
   `) + `
   <!-- 核心指标 -->
-  <div class="stat-grid mb-5">
+  <div class="stat-grid mb-5 stagger">
     <div class="stat-card locked">
       <div class="stat-icon-bg"><span class="icon" data-i="lock"></span></div>
       <div class="stat-label">全网锁定池总量</div>
@@ -779,6 +893,172 @@ function renderDashboard() {
         <span>累计商家 ${LSC.fmtNum(d.merchantCount)}</span>
         <span>系统在线 99.98%</span>
       </div>
+    </div>
+  </div>
+
+  <!-- 分布图表：商家类别 / B2B订单状态 / 风险等级 -->
+  <div class="grid-3 mb-5 stagger">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 8px;">
+        <div><div class="card-title">商家类别分布</div><div class="card-sub">按行业类型统计</div></div>
+      </div>
+      ${(() => {
+        const typeMap = {};
+        MOCK.merchants.forEach(m=>{ typeMap[m.type] = (typeMap[m.type]||0)+1; });
+        const colors = ['var(--c-primary)','var(--c-accent)','var(--c-available)','var(--c-warning)','var(--c-info)','var(--c-danger)','var(--c-primary-soft)'];
+        const data = Object.entries(typeMap).map(([k,v],i)=>({label:k,value:v,color:colors[i%colors.length]}));
+        return `<div style="height:180px;">${donutChart({w:240,h:240,data})}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${data.map(d=>`<span class="tag tag-dot" style="background:${d.color};color:#fff;font-size:10px;">${d.label} ${d.value}</span>`).join('')}</div>`;
+      })()}
+    </div>
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 8px;">
+        <div><div class="card-title">B2B订单状态分布</div><div class="card-sub">今日订单状态</div></div>
+      </div>
+      ${(() => {
+        const sMap = { confirmed:'待确认', completed:'已完成', pending:'进行中', await_verify:'AI核验中', rejected:'已拒绝' };
+        const sColor = { confirmed:'var(--c-warning)', completed:'var(--c-available)', pending:'var(--c-info)', await_verify:'var(--c-accent)', rejected:'var(--c-danger)' };
+        const cMap = {};
+        MOCK.b2bOrders.forEach(o=>{ cMap[o.status] = (cMap[o.status]||0)+1; });
+        const data = Object.entries(cMap).map(([k,v])=>({label:sMap[k]||k,value:v,color:sColor[k]||'var(--c-text-3)'}));
+        return `<div style="height:180px;">${donutChart({w:240,h:240,data,unit:'单'})}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${data.map(d=>`<span class="tag tag-dot" style="background:${d.color};color:#fff;font-size:10px;">${d.label} ${d.value}</span>`).join('')}</div>`;
+      })()}
+    </div>
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 8px;">
+        <div><div class="card-title">风控事件等级分布</div><div class="card-sub">AI Agent 自动拦截</div></div>
+      </div>
+      ${(() => {
+        const lMap = {};
+        MOCK.riskLogs.forEach(r=>{ lMap[r.level] = (lMap[r.level]||0)+1; });
+        const lColor = { high:'var(--c-danger)', medium:'var(--c-warning)', low:'var(--c-available)' };
+        const lName = { high:'高危', medium:'中危', low:'低危' };
+        const data = Object.entries(lMap).map(([k,v])=>({label:lName[k]||k,value:v,color:lColor[k]||'var(--c-text-3)'}));
+        return `<div style="height:180px;">${donutChart({w:240,h:240,data,unit:'件'})}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${data.map(d=>`<span class="tag tag-dot" style="background:${d.color};color:#fff;font-size:10px;">${d.label} ${d.value}</span>`).join('')}</div>`;
+      })()}
+    </div>
+  </div>
+
+  <!-- 活跃度热力图 + LSC流水构成 -->
+  <div class="grid-2 mb-5">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">消费活跃度热力图</div><div class="card-sub">近7天 × 24小时 · 颜色越深交易越密集</div></div>
+      </div>
+      <div class="chart-area">${heatmap({
+        w: 680, h: 200,
+        rows: ['周一','周二','周三','周四','周五','周六','周日'],
+        cols: Array.from({length:24},(_,i)=>i+'时'),
+        data: (() => {
+          const rows = [];
+          for(let d=0; d<7; d++){
+            const row = [];
+            for(let h=0; h<24; h++){
+              let v = 0;
+              if(h>=11 && h<=13) v += 60+Math.random()*40; // 午餐高峰
+              if(h>=17 && h<=20) v += 70+Math.random()*50; // 晚餐高峰
+              if(h>=8 && h<=22) v += 10+Math.random()*30;
+              if(d>=5) v *= 1.3; // 周末
+              row.push(Math.round(v));
+            }
+            rows.push(row);
+          }
+          return rows;
+        })(),
+        colorBase: 'var(--c-primary)'
+      })}</div>
+      <div style="font-size:11px;color:var(--c-text-3);margin-top:8px;display:flex;align-items:center;gap:8px;">
+        <span>低</span>
+        <div style="width:120px;height:10px;border-radius:5px;background:linear-gradient(to right,rgba(14,77,74,0.08),rgba(14,77,74,1));"></div>
+        <span>高</span>
+        <span style="margin-left:auto;color:var(--c-accent-deep);">高峰: 周六 18-20时</span>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">LSC流水构成趋势</div><div class="card-sub">近7天 · 消费发行/核销/B2B流转堆叠</div></div>
+      </div>
+      <div class="chart-area">${(() => {
+        const sb = stackedBar({
+          w: 560, h: 260, unit: ' LSC',
+          labels: ['D-6','D-5','D-4','D-3','D-2','D-1','今日'],
+          stacks: [
+            { name:'消费发行', color:'var(--c-locked)', data:[2100,2250,2180,2320,2280,2350,2340].map(v=>v*1000) },
+            { name:'商家核销', color:'var(--c-available)', data:[1080,1120,1150,1180,1210,1220,1240].map(v=>v*1000) },
+            { name:'B2B流转', color:'var(--c-accent)', data:[720,810,780,830,890,910,856].map(v=>v*1000) },
+          ]
+        });
+        return sb.svg + `<div style="margin-top:8px;">${sb.legend}</div>`;
+      })()}</div>
+    </div>
+  </div>
+
+  <!-- LSC 凭证流转链路图 -->
+  <div class="card chart-card mb-5">
+    <div class="card-head" style="border:none;padding:0 0 12px;">
+      <div><div class="card-title">LSC凭证流转链路全景</div><div class="card-sub">双池循环 · 消费→锁定→释放→核销/流转 闭环</div></div>
+      <span class="tag tag-dot tag-accent">实时</span>
+    </div>
+    <div style="overflow-x:auto;">
+    <svg viewBox="0 0 960 280" style="width:100%;min-width:720px;height:auto;">
+      <defs>
+        <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="var(--c-text-3)"/>
+        </marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="var(--c-accent)"/>
+        </marker>
+      </defs>
+      <!-- 节点: 消费者消费 -->
+      <rect x="20" y="110" width="120" height="60" rx="12" fill="var(--c-primary-tint)" stroke="var(--c-primary)" stroke-width="1.5"/>
+      <text x="80" y="135" font-size="13" font-weight="700" fill="var(--c-primary)" text-anchor="middle">消费者消费</text>
+      <text x="80" y="152" font-size="10" fill="var(--c-text-3)" text-anchor="middle">¥支付 → 发行LSC</text>
+      <!-- 节点: 锁定池 -->
+      <rect x="220" y="80" width="140" height="70" rx="12" fill="var(--c-locked-tint,rgba(255,177,61,0.12))" stroke="var(--c-warning)" stroke-width="2"/>
+      <text x="290" y="108" font-size="14" font-weight="700" fill="var(--c-warning)" text-anchor="middle">🔒 锁定池</text>
+      <text x="290" y="128" font-size="11" fill="var(--c-text-2)" text-anchor="middle" font-family="var(--ff-mono)">${LSC.fmtNum(d.lockedTotal)}</text>
+      <text x="290" y="142" font-size="9" fill="var(--c-text-3)" text-anchor="middle">每日 ${((d.currentRate)*100).toFixed(3)}% 缓释</text>
+      <!-- 节点: 可用池 -->
+      <rect x="440" y="80" width="140" height="70" rx="12" fill="var(--c-available-tint,rgba(45,179,128,0.12))" stroke="var(--c-available)" stroke-width="2"/>
+      <text x="510" y="108" font-size="14" font-weight="700" fill="var(--c-available)" text-anchor="middle">✓ 可用池</text>
+      <text x="510" y="128" font-size="11" fill="var(--c-text-2)" text-anchor="middle" font-family="var(--ff-mono)">${LSC.fmtNum(d.availableTotal)}</text>
+      <text x="510" y="142" font-size="9" fill="var(--c-text-3)" text-anchor="middle">可消费/流转/核销</text>
+      <!-- 节点: 商家核销 -->
+      <rect x="660" y="40" width="120" height="55" rx="12" fill="var(--c-primary-tint)" stroke="var(--c-primary)" stroke-width="1.5"/>
+      <text x="720" y="65" font-size="13" font-weight="700" fill="var(--c-primary)" text-anchor="middle">商家核销</text>
+      <text x="720" y="82" font-size="10" fill="var(--c-text-3)" text-anchor="middle">14%→监管账户</text>
+      <!-- 节点: B2B流转 -->
+      <rect x="660" y="130" width="120" height="55" rx="12" fill="var(--c-accent-tint,rgba(200,162,75,0.12))" stroke="var(--c-accent)" stroke-width="1.5"/>
+      <text x="720" y="155" font-size="13" font-weight="700" fill="var(--c-accent-deep)" text-anchor="middle">B2B流转</text>
+      <text x="720" y="172" font-size="10" fill="var(--c-text-3)" text-anchor="middle">商家间凭证转移</text>
+      <!-- 节点: 熔断/风控 -->
+      <rect x="660" y="210" width="120" height="50" rx="12" fill="rgba(239,68,68,0.08)" stroke="var(--c-danger)" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="720" y="232" font-size="12" font-weight="700" fill="var(--c-danger)" text-anchor="middle">风控拦截</text>
+      <text x="720" y="248" font-size="9" fill="var(--c-text-3)" text-anchor="middle">AI实时监控</text>
+      <!-- 节点: 释放执行 -->
+      <rect x="830" y="80" width="110" height="70" rx="12" fill="var(--c-bg-soft)" stroke="var(--c-text-3)" stroke-width="1"/>
+      <text x="885" y="108" font-size="12" font-weight="600" fill="var(--c-text-2)" text-anchor="middle">释放引擎</text>
+      <text x="885" y="125" font-size="10" fill="var(--c-text-3)" text-anchor="middle">每日02:00</text>
+      <text x="885" y="140" font-size="10" fill="var(--c-available)" text-anchor="middle" font-weight="600">86/86 ✓</text>
+      <!-- 箭头连线 -->
+      <line x1="140" y1="140" x2="218" y2="115" stroke="var(--c-primary)" stroke-width="2" marker-end="url(#arrow-flow)"/>
+      <text x="175" y="120" font-size="9" fill="var(--c-primary)" font-weight="600">1:1发行</text>
+      <line x1="360" y1="115" x2="438" y2="115" stroke="var(--c-accent)" stroke-width="2.5" marker-end="url(#arrow-accent)"/>
+      <text x="395" y="108" font-size="9" fill="var(--c-accent-deep)" font-weight="600">动态释放</text>
+      <line x1="580" y1="100" x2="658" y2="67" stroke="var(--c-primary)" stroke-width="2" marker-end="url(#arrow-flow)"/>
+      <text x="615" y="78" font-size="9" fill="var(--c-primary)" font-weight="600">核销</text>
+      <line x1="580" y1="130" x2="658" y2="155" stroke="var(--c-accent)" stroke-width="2" marker-end="url(#arrow-accent)"/>
+      <text x="615" y="148" font-size="9" fill="var(--c-accent-deep)" font-weight="600">流转</text>
+      <line x1="580" y1="150" x2="658" y2="230" stroke="var(--c-danger)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow-flow)"/>
+      <text x="600" y="200" font-size="9" fill="var(--c-danger)" font-weight="600">异常拦截</text>
+      <line x1="360" y1="150" x2="828" y2="100" stroke="var(--c-text-3)" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arrow-flow)" opacity="0.5"/>
+      <text x="600" y="240" font-size="9" fill="var(--c-text-3)" text-anchor="middle">释放引擎从锁定池批量划拨至可用池</text>
+      <!-- 循环回流箭头 -->
+      <path d="M 720 95 Q 720 20 290 20 Q 80 20 80 108" fill="none" stroke="var(--c-available)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.5" marker-end="url(#arrow-flow)"/>
+      <text x="400" y="14" font-size="9" fill="var(--c-available)" font-weight="600" opacity="0.7">核销资金回流 → 新消费循环</text>
+    </svg>
     </div>
   </div>
   `;
@@ -956,6 +1236,66 @@ function renderB2B() {
     <div class="stat-card"><div class="stat-label">AI核验通过率</div><div class="stat-value" style="font-size:20px;color:var(--c-available);">94.2%</div><div class="text-xs text-muted">本月</div></div>
     <div class="stat-card"><div class="stat-label">异常订单</div><div class="stat-value" style="font-size:20px;color:var(--c-danger);">1</div><div class="text-xs text-muted">人工虚假</div></div>
   </div>
+
+  <!-- B2B 订单状态机 -->
+  <div class="card mb-5">
+    <div class="card-head"><div class="card-title">B2B订单生命周期状态机</div><div class="card-sub">全状态流转路径 · 绿色=正常 · 红色=异常终止</div></div>
+    <div style="overflow-x:auto;">
+    <svg viewBox="0 0 920 160" style="width:100%;min-width:680px;height:auto;">
+      <defs>
+        <marker id="sm-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--c-text-3)"/></marker>
+        <marker id="sm-arrow-ok" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--c-available)"/></marker>
+        <marker id="sm-arrow-dng" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--c-danger)"/></marker>
+      </defs>
+      <!-- 状态节点 -->
+      <rect x="10" y="50" width="110" height="50" rx="8" fill="var(--c-bg-soft)" stroke="var(--c-text-3)" stroke-width="1.5"/>
+      <text x="65" y="72" font-size="12" font-weight="700" fill="var(--c-text-2)" text-anchor="middle">创建订单</text>
+      <text x="65" y="88" font-size="9" fill="var(--c-text-3)" text-anchor="middle">await_verify</text>
+
+      <rect x="170" y="50" width="110" height="50" rx="8" fill="var(--c-info-tint,rgba(59,130,246,0.1))" stroke="var(--c-info)" stroke-width="1.5"/>
+      <text x="225" y="72" font-size="12" font-weight="700" fill="var(--c-info)" text-anchor="middle">AI核验中</text>
+      <text x="225" y="88" font-size="9" fill="var(--c-text-3)" text-anchor="middle">OCR+多模态</text>
+
+      <rect x="330" y="50" width="110" height="50" rx="8" fill="var(--c-warning-tint,rgba(255,177,61,0.1))" stroke="var(--c-warning)" stroke-width="1.5"/>
+      <text x="385" y="72" font-size="12" font-weight="700" fill="var(--c-warning)" text-anchor="middle">对手方确认</text>
+      <text x="385" y="88" font-size="9" fill="var(--c-text-3)" text-anchor="middle">pending</text>
+
+      <rect x="490" y="50" width="110" height="50" rx="8" fill="var(--c-available-tint,rgba(45,179,128,0.1))" stroke="var(--c-available)" stroke-width="1.5"/>
+      <text x="545" y="72" font-size="12" font-weight="700" fill="var(--c-available)" text-anchor="middle">LSC流转</text>
+      <text x="545" y="88" font-size="9" fill="var(--c-text-3)" text-anchor="middle">confirmed</text>
+
+      <rect x="650" y="50" width="110" height="50" rx="8" fill="var(--c-available-tint,rgba(45,179,128,0.1))" stroke="var(--c-available)" stroke-width="2"/>
+      <text x="705" y="72" font-size="12" font-weight="700" fill="var(--c-available)" text-anchor="middle">已完成</text>
+      <text x="705" y="88" font-size="9" fill="var(--c-text-3)" text-anchor="middle">completed ✓</text>
+
+      <rect x="330" y="120" width="110" height="36" rx="8" fill="rgba(239,68,68,0.08)" stroke="var(--c-danger)" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="385" y="142" font-size="11" font-weight="700" fill="var(--c-danger)" text-anchor="middle">已驳回 rejected</text>
+
+      <rect x="170" y="120" width="110" height="36" rx="8" fill="rgba(239,68,68,0.08)" stroke="var(--c-danger)" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="225" y="142" font-size="11" font-weight="700" fill="var(--c-danger)" text-anchor="middle">人工虚假 rejected</text>
+
+      <!-- 正常流转箭头 -->
+      <line x1="120" y1="75" x2="168" y2="75" stroke="var(--c-text-3)" stroke-width="1.5" marker-end="url(#sm-arrow)"/>
+      <line x1="280" y1="75" x2="328" y2="75" stroke="var(--c-available)" stroke-width="2" marker-end="url(#sm-arrow-ok)"/>
+      <text x="304" y="68" font-size="9" fill="var(--c-available)" font-weight="600" text-anchor="middle">核验通过</text>
+      <line x1="440" y1="75" x2="488" y2="75" stroke="var(--c-available)" stroke-width="2" marker-end="url(#sm-arrow-ok)"/>
+      <text x="464" y="68" font-size="9" fill="var(--c-available)" font-weight="600" text-anchor="middle">确认</text>
+      <line x1="600" y1="75" x2="648" y2="75" stroke="var(--c-available)" stroke-width="2" marker-end="url(#sm-arrow-ok)"/>
+      <text x="624" y="68" font-size="9" fill="var(--c-available)" font-weight="600" text-anchor="middle">链上存证</text>
+
+      <!-- 异常分支箭头 -->
+      <path d="M 225 100 Q 225 120 280 120 L 328 120" fill="none" stroke="var(--c-danger)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#sm-arrow-dng)"/>
+      <text x="265" y="114" font-size="9" fill="var(--c-danger)" font-weight="600">匹配度&lt;50%</text>
+      <path d="M 385 100 Q 385 130 385 120" fill="none" stroke="var(--c-danger)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#sm-arrow-dng)"/>
+      <text x="420" y="114" font-size="9" fill="var(--c-danger)" font-weight="600">对手方拒绝</text>
+
+      <!-- 风控旁路 -->
+      <path d="M 545 50 Q 545 20 385 20 Q 225 20 225 50" fill="none" stroke="var(--c-danger)" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.5" marker-end="url(#sm-arrow-dng)"/>
+      <text x="385" y="14" font-size="9" fill="var(--c-danger)" font-weight="600" text-anchor="middle">风控熔断 → 回退核验</text>
+    </svg>
+    </div>
+  </div>
+
   <div class="card">
     <div style="overflow-x:auto;">
     <table class="table">
@@ -1260,10 +1600,10 @@ function renderAI() {
   <div class="alert alert-info mb-5"><span class="icon icon-sm" data-i="ai"></span><div><b>AI安全准则:</b> 所有AI服务仅具备数据库只读权限，无写权限。所有AIGC内容标注"AI生成"标识。AI接口限流单IP 20请求/秒，推理超时10秒自动降级为人工审核模式。</div></div>
 
   <div class="mb-3 text-sm font-bold" style="color:var(--c-text-1);">运营层 AI Agent (8个)</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;" class="mb-6">${cards}</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;" class="mb-6 stagger">${cards}</div>
 
   <div class="mb-3 text-sm font-bold" style="color:var(--c-accent-deep);">高级决策 AI Agent (3个) · 仅展示供参考</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">${advCards}</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;" class="stagger">${advCards}</div>
 
   <div class="card mt-6">
     <div class="card-head"><div class="card-title">AI网关服务状态</div><div class="tag tag-success tag-dot">运行中</div></div>
@@ -1277,6 +1617,97 @@ function renderAI() {
         <div class="task-card"><div class="stat-label">降级触发</div><div class="stat-value" style="font-size:18px;color:var(--c-available);">0</div><div class="text-xs text-muted">本月</div></div>
       </div>
     </div>
+  </div>
+
+  <!-- AI 风险雷达 + 实时数据流 -->
+  <div class="grid-2 mb-5">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">商家AI风险雷达图</div><div class="card-sub">多维风险评分对比 · 鼎盛物流(M20004) vs 御品茶业(M20005)</div></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="flex:1;height:260px;">${radarChart({
+          w: 300, h: 300, max: 100,
+          labels: ['信用分','核销异常','地址核验','商品合规','设备风险','流水异常'],
+          series: [
+            { name:'鼎盛物流', color:'var(--c-danger)', data:[64,72,88,55,68,80] },
+            { name:'御品茶业', color:'var(--c-available)', data:[96,8,95,98,5,10] },
+          ]
+        })}</div>
+        <div style="width:140px;flex-shrink:0;">
+          <div style="margin-bottom:12px;">
+            <div class="text-xs text-muted">鼎盛物流 M20004</div>
+            <div style="font-size:24px;font-weight:700;color:var(--c-danger);font-family:var(--ff-mono);">68<span style="font-size:12px;">分</span></div>
+            <div class="ai-score-bar" style="margin-top:4px;"><div style="width:68%;background:var(--c-danger);"></div></div>
+            <span class="tag tag-danger tag-dot" style="margin-top:4px;">处罚中</span>
+          </div>
+          <div>
+            <div class="text-xs text-muted">御品茶业 M20005</div>
+            <div style="font-size:24px;font-weight:700;color:var(--c-available);font-family:var(--ff-mono);">8<span style="font-size:12px;">分</span></div>
+            <div class="ai-score-bar" style="margin-top:4px;"><div style="width:8%;background:var(--c-available);"></div></div>
+            <span class="tag tag-success tag-dot" style="margin-top:4px;">正常</span>
+          </div>
+        </div>
+      </div>
+      <div class="alert alert-warning mt-3" style="font-size:12px;"><span class="icon icon-sm" data-i="warning"></span>AI建议: 鼎盛物流"地址核验"与"流水异常"维度得分过低,建议继续限制核销额度并加强审核。</div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">释放速率实时数据流</div><div class="card-sub">k值 × rate 联动 · 近24小时</div></div>
+        <span class="tag tag-dot tag-accent" id="ai-stream-live">● LIVE</span>
+      </div>
+      <div class="chart-area">${lineChart({
+        w: 560, h: 220,
+        labels: Array.from({length:24},(_,i)=>(i+1)+':00'),
+        series: [
+          { data: Array.from({length:24},(_,i)=>0.0060+Math.sin(i/4)*0.0008+Math.random()*0.0003), color:'var(--c-locked)', name:'k值(×100)', area:true },
+          { data: Array.from({length:24},(_,i)=>0.0035+Math.sin(i/4+1)*0.0005+Math.random()*0.0002), color:'var(--c-accent)', name:'rate(×100)', dash:true },
+        ],
+      })}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
+        <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
+          <div class="text-xs text-muted">当前 k 值</div>
+          <div style="font-size:16px;font-weight:700;color:var(--c-warning);font-family:var(--ff-mono);">0.72%</div>
+        </div>
+        <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
+          <div class="text-xs text-muted">当前 rate</div>
+          <div style="font-size:16px;font-weight:700;color:var(--c-accent-deep);font-family:var(--ff-mono);">0.0385%</div>
+        </div>
+        <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
+          <div class="text-xs text-muted">预测趋势</div>
+          <div style="font-size:16px;font-weight:700;color:var(--c-available);font-family:var(--ff-mono);">↗ 上升</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Agent 实时活动流 -->
+  <div class="card chart-card">
+    <div class="card-head" style="border:none;padding:0 0 12px;">
+      <div><div class="card-title">AI Agent 实时活动流</div><div class="card-sub">各Agent最近执行任务 · 自动刷新</div></div>
+      <span class="tag tag-success tag-dot">运行中</span>
+    </div>
+    <div id="ai-activity-feed" style="max-height:280px;overflow-y:auto;">
+      ${[
+        { agent:'用户风控Agent', task:'U10086 批量注册检测 → 限制登录', time:'刚刚', level:'danger' },
+        { agent:'商品审核Agent', task:'P5006 智能蓝牙耳机Pro3 → 通过(95%)', time:'12秒前', level:'success' },
+        { agent:'B2B OCR核验Agent', task:'B2B20260824002 OCR提取完成 → 匹配度98%', time:'35秒前', level:'success' },
+        { agent:'异常核销分析Agent', task:'M20004 核销率8.2% → 触发风控阈值', time:'1分钟前', level:'warning' },
+        { agent:'商家风控Agent', task:'M20008 AI风险评分75 → 生成处罚建议', time:'2分钟前', level:'danger' },
+        { agent:'地址核验Agent', task:'M20005 御品茶业 → 地址匹配通过', time:'3分钟前', level:'success' },
+        { agent:'AI客服Agent', task:'用户咨询"LSC释放规则" → RAG检索回答', time:'4分钟前', level:'info' },
+        { agent:'管理员助手Agent', task:'林总 NL2SQL查询 → 返回信用分<60商家列表', time:'6分钟前', level:'info' },
+      ].map(a=>`
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--c-divider);">
+          <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;background:${a.level==='danger'?'var(--c-danger)':a.level==='warning'?'var(--c-warning)':a.level==='success'?'var(--c-available)':'var(--c-info)'};${a.level==='danger'||a.level==='warning'?'box-shadow:0 0 6px currentColor;':''}"></div>
+          <div style="flex:1;">
+            <div style="font-size:13px;"><b style="color:var(--c-primary);">${a.agent}</b> <span style="color:var(--c-text-2);">${a.task}</span></div>
+          </div>
+          <div class="text-xs text-muted" style="flex-shrink:0;">${a.time}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="text-align:center;padding:10px;font-size:11px;color:var(--c-text-3);">— 实时流由AI网关推送 · 仅展示最近20条 —</div>
   </div>
   `;
   setView(html);
