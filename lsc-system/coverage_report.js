@@ -17,9 +17,20 @@ const fs   = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;
-const COV_DIR = path.join(ROOT, 'coverage');
-const LCOV    = path.join(COV_DIR, 'lcov.info');
-const OUT     = path.join(ROOT, '覆盖率报告_P0-图表逻辑_20260827.html');
+// 允许通过环境变量切换到按 commit 归档的子目录(CI 场景)
+const C8_REPORT_DIR = process.env.C8_REPORT_DIR || process.env.COVERAGE_DIR || process.env.COV_DIR || null;
+const COV_DIR = C8_REPORT_DIR
+  ? (path.isAbsolute(C8_REPORT_DIR) ? C8_REPORT_DIR : path.resolve(ROOT, C8_REPORT_DIR))
+  : path.join(ROOT, 'coverage');
+const LCOV    = process.env.LCOV
+  ? (path.isAbsolute(process.env.LCOV) ? process.env.LCOV : path.resolve(ROOT, process.env.LCOV))
+  : path.join(COV_DIR, 'lcov.info');
+const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+const OUT_DEFAULT = path.join(ROOT, `覆盖率报告_P0-图表逻辑_${today}.html`);
+// CI: 优先把总览报告和 c8 产物放在同一子目录,便于一次性归档
+const OUT = C8_REPORT_DIR ? path.join(COV_DIR, '总览报告.html') : OUT_DEFAULT;
+// 同时保留一份与文件名匹配的"根目录快捷入口"(CI 归档时 CI yml 会再 mv)
+const OUT_LEGACY = C8_REPORT_DIR ? OUT_DEFAULT : null;
 
 /* --------------- 1. 解析 c8 的 text-summary / lcov.info(优先 lcov) --------------- */
 function parseLcov(lcovPath) {
@@ -359,7 +370,7 @@ function renderHotspots(recs, n=12) {
 /* --------------- 4. 组装输出 --------------- */
 function main() {
   if (!fs.existsSync(LCOV)) {
-    console.error('[coverage_report] 找不到 lcov.info,请先跑: npm run coverage');
+    console.error('[coverage_report] 找不到 lcov.info: '+LCOV+'\n请先跑: npm run coverage');
     process.exit(1);
   }
   const recs = parseLcov(LCOV);
@@ -367,8 +378,8 @@ function main() {
   const js = recs.filter(r => /\.js$/i.test(r.file));
   const stat = covStat(js);
 
-  // c8 HTML 索引链接
-  const c8Index = 'coverage/index.html';
+  // c8 HTML 索引链接:优先按 COV_DIR 的相对 ROOT 路径,点击跳转准确
+  const c8Index = path.relative(ROOT, path.join(COV_DIR, 'index.html'));
   const today = new Date().toISOString().slice(0,10);
 
   const html = `<!doctype html>
@@ -424,11 +435,17 @@ $ node verify_p0.js                # 再保证 4 应用 22 断言全绿</pre>
 </div>
 
 <div class="footer">
-  链盛通 LSC V6.2-AI · 项目路径: <code>${esc(ROOT)}</code> · 本报告由 <code>coverage_report.js</code> 自动生成 · 数据来源 <code>coverage/lcov.info</code>
+  链盛通 LSC V6.2-AI · 项目路径: <code>${esc(ROOT)}</code> · 本报告由 <code>coverage_report.js</code> 自动生成 · 数据来源 <code>${esc(path.relative(ROOT, LCOV)||LCOV)}</code>${C8_REPORT_DIR?` · 归档目录:<code>${esc(path.relative(ROOT,COV_DIR))}</code>`:''}
 </div>
 </body></html>`;
+  fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, html, 'utf8');
+  // 如果启用了 CI 子目录,根目录再复制一份老命名风格的快捷入口
+  if (OUT_LEGACY && OUT_LEGACY !== OUT) {
+    try { fs.writeFileSync(OUT_LEGACY, html, 'utf8'); } catch(_) {}
+  }
   console.log('[覆盖率报告] 已生成: '+OUT);
+  if (OUT_LEGACY && OUT_LEGACY!==OUT) console.log('                  副本:   '+OUT_LEGACY);
   console.log('  总览: 语句 '+stat.stmts.toFixed(2)+'%  分支 '+stat.branch.toFixed(2)+'%  函数 '+stat.funcs.toFixed(2)+'%  行 '+stat.lines.toFixed(2)+'%');
   console.log('  逐行 HTML: '+path.relative(ROOT, path.join(COV_DIR, 'index.html')));
 }
