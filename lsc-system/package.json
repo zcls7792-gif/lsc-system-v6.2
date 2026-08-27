@@ -1,16 +1,29 @@
 {
   "name": "lsc-system",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "链盛通LSC消费权益凭证循环系统 V6.2-AI增强版",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node verify_p0.js && node test_p0_chart_logic.js",
+    "test:verify": "node verify_p0.js",
+    "test:chart": "node test_p0_chart_logic.js",
+    "coverage": "c8 --reporter=html --reporter=text --reporter=lcov --reporter=text-summary --include=\"shared/**/*.js\" --include=\"platform-admin/**/*.js\" --exclude=\"node_modules/**\" --exclude=\"verify_p0.js\" --exclude=\"test_p0_chart_logic.js\" --exclude=\"coverage_runner.js\" --exclude=\"coverage_report.js\" --exclude=\"coverage/**\" --all node coverage_runner.js",
+    "coverage:all": "c8 --reporter=html --reporter=text --reporter=lcov --reporter=text-summary --include=\"shared/**/*.js\" --include=\"platform-admin/**/*.js\" --include=\"merchant-admin/**/*.js\" --include=\"mobile-app/**/*.js\" --include=\"mini-program/**/*.js\" --exclude=\"node_modules/**\" --exclude=\"verify_p0.js\" --exclude=\"test_p0_chart_logic.js\" --exclude=\"coverage_runner.js\" --exclude=\"coverage_report.js\" --exclude=\"coverage/**\" node verify_p0.js && node test_p0_chart_logic.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "c8": {
+    "checkCoverage": false,
+    "reportDir": "coverage",
+    "extension": [".js"],
+    "sourceMap": true,
+    "instrument": true
+  },
   "dependencies": {
     "jsdom": "^29.1.1"
+  },
+  "devDependencies": {
+    "c8": "^12.0.0"
   }
 }

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<title>链盛通 LSC P0-图表逻辑 覆盖率报告 · 2026-08-27</title>
+<style>
+:root{
+  --bg: #0a1f2d; --bg-soft:#0f2c3e; --card:#113749; --card-2:#15415a;
+  --text-1:#e8f1f5; --text-2:#9bb2bf; --text-3:#6f8694;
+  --primary:#1fb5ac; --primary-tint:rgba(31,181,172,0.14);
+  --locked:#ffb13d;  --available:#2db380; --warning:#ff9500; --danger:#ef4f56;
+  --accent:#c8a24b;  --divider:rgba(255,255,255,0.08);
+  --ff:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,-apple-system,sans-serif;
+  --ff-mono:'JetBrains Mono','SF Mono',Consolas,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,var(--bg) 0%, #081823 100%);color:var(--text-1);font-family:var(--ff);padding:24px 32px 60px;}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:0.5px;color:#eef9f8;}
+h2{font-size:18px;margin:28px 0 12px;color:#dff3ef;border-left:4px solid var(--primary);padding-left:10px;}
+h3{font-size:14px;margin:18px 0 8px;color:var(--text-1)}
+.subtitle{color:var(--text-2);font-size:13px;margin-bottom:18px;}
+.meta-row{display:flex;gap:24px;flex-wrap:wrap;color:var(--text-2);font-size:12px;margin-bottom:16px;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.kpi{background:var(--card);border:1px solid var(--divider);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;inset:auto 0 0 0;height:3px;background:linear-gradient(90deg,var(--primary),transparent);}
+.kpi .label{font-size:12px;color:var(--text-2);letter-spacing:0.5px}
+.kpi .val{font-size:32px;font-weight:700;font-family:var(--ff-mono);margin-top:4px;}
+.kpi .bar{margin-top:8px;}
+.card{background:var(--card);border:1px solid var(--divider);border-radius:12px;padding:16px 18px;margin-top:14px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{border-bottom:1px solid var(--divider);padding:9px 10px;text-align:left;vertical-align:top}
+th{background:var(--card-2);color:#cde2e1;font-weight:600;font-size:12px;letter-spacing:0.3px;position:sticky;top:0;z-index:1}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.file-link{color:var(--primary);text-decoration:none;font-family:var(--ff-mono);font-size:12px;}
+.file-link:hover{text-decoration:underline;}
+.pct-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;font-family:var(--ff-mono);}
+.pct-good{background:rgba(45,179,128,0.16);color:#69e2b0;}
+.pct-mid {background:rgba(255,177,61,0.18);color:#ffb659;}
+.pct-low {background:rgba(255,149,0,0.18);color:#ffa84e;}
+.pct-danger{background:rgba(239,79,86,0.20);color:#ff7d83;}
+.pctbar{position:relative;height:14px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;display:inline-flex;align-items:center;}
+.pctbar-fill{position:absolute;inset:0 auto 0 0;height:100%;border-radius:999px;}
+.pctbar-good{background:linear-gradient(90deg,#1eaf73,#4ed3a3);}
+.pctbar-mid {background:linear-gradient(90deg,#ff9b2a,#ffb659);}
+.pctbar-low {background:linear-gradient(90deg,#ff7a1d,#ff9540);}
+.pctbar-danger{background:linear-gradient(90deg,#d94146,#ef4f56);}
+.pctbar-text{position:relative;z-index:1;margin:0 auto;font-size:10px;color:#fff;font-family:var(--ff-mono);text-shadow:0 1px 1px rgba(0,0,0,0.35)}
+.tag{display:inline-block;padding:2px 7px;border-radius:6px;font-size:11px;margin-right:5px;margin-bottom:3px}
+.tag-green {background:rgba(45,179,128,0.16);color:#6fe0ad;border:1px solid rgba(45,179,128,0.35);}
+.tag-blue  {background:rgba(31,181,172,0.14);color:#62d6cf;border:1px solid rgba(31,181,172,0.35);}
+.tag-gold  {background:rgba(200,162,75,0.16);color:#e4c78a;border:1px solid rgba(200,162,75,0.40);}
+.tag-gray  {background:rgba(255,255,255,0.05);color:#a4b7c2;border:1px solid rgba(255,255,255,0.10);}
+.tag-red   {background:rgba(239,79,86,0.16);color:#ff898f;border:1px solid rgba(239,79,86,0.35);}
+.line-num{font-family:var(--ff-mono);font-size:11px;padding:0 4px;border-radius:4px;background:rgba(255,255,255,0.05);color:#bfd4dd}
+.muted{color:var(--text-3);font-size:12px}
+.hot-item{padding:8px 10px;border-bottom:1px dashed var(--divider);display:flex;gap:10px;align-items:flex-start}
+.hot-item:last-child{border-bottom:none}
+.hot-rank{width:24px;height:24px;border-radius:6px;background:linear-gradient(180deg,var(--danger),#a1242b);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hot-rank.r2{background:linear-gradient(180deg,var(--warning),#b76400);}
+.hot-rank.r3{background:linear-gradient(180deg,var(--accent),#846321);}
+.hot-rank.rn{background:linear-gradient(180deg,#3c6478,#234255);}
+.footer{margin-top:30px;color:var(--text-3);font-size:11px;text-align:center;border-top:1px solid var(--divider);padding-top:14px}
+.matrix-pill{display:flex;gap:8px;flex-wrap:wrap;}
+.fx-col{min-width:140px}
+.range-code{font-family:var(--ff-mono);font-size:11px;color:#8cb3c6;background:rgba(31,181,172,0.10);padding:1px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<h1>链盛通 LSC V6.2-AI · P0-图表逻辑 覆盖率报告</h1>
+<div class="subtitle">被测范围: shared/app-utils.js + platform-admin/app.js · 运行器: coverage_runner.js(vm.Script + JSDOM) · c8 12.x</div>
+<div class="meta-row">
+  <div>📅 生成日期: <b style="color:var(--text-1);">2026-08-27</b></div>
+  <div>🗂️ 文件数: <b style="color:var(--text-1);">2</b></div>
+  <div>🧪 用例: <b style="color:var(--text-1);">coverage_runner 28 断言</b> + <a href="coverage/index.html" target="_blank" style="color:var(--primary);">c8 逐行 HTML 报告 ↗</a></div>
+  <div>🏷️ 验证基线: verify_p0 22/22 · test_p0_chart_logic 8/8 全绿</div>
+</div>
+
+<h2>一、总体覆盖率指标卡</h2>
+<div class="kpi-grid">
+    <div class="kpi">
+      <div class="label">语句覆盖率 Statements</div>
+      <div class="val" style="color:#ffb659;">63.83%</div>
+      <div class="bar"><div class="pctbar" style="width:240px;"><div class="pctbar-fill pctbar-mid" style="width:63.83%"></div><span class="pctbar-text">63.8%</span></div></div>
+      <div class="muted" style="margin-top:6px; font-family:var(--ff-mono); font-size:11px;">
+        命中 1,258 / 共 1,971 行
+      </div>
+    </div>
+  
+    <div class="kpi">
+      <div class="label">分支覆盖率 Branches</div>
+      <div class="val" style="color:#6fe0ad;">91.79%</div>
+      <div class="bar"><div class="pctbar" style="width:240px;"><div class="pctbar-fill pctbar-good" style="width:91.79%"></div><span class="pctbar-text">91.8%</span></div></div>
+      <div class="muted" style="margin-top:6px; font-family:var(--ff-mono); font-size:11px;">
+        命中 190 / 共 207 分支
+      </div>
+    </div>
+  
+    <div class="kpi">
+      <div class="label">函数覆盖率 Functions</div>
+      <div class="val" style="color:#ffa84e;">44.23%</div>
+      <div class="bar"><div class="pctbar" style="width:240px;"><div class="pctbar-fill pctbar-low" style="width:44.23%"></div><span class="pctbar-text">44.2%</span></div></div>
+      <div class="muted" style="margin-top:6px; font-family:var(--ff-mono); font-size:11px;">
+        命中 23 / 共 52 函数
+      </div>
+    </div>
+  
+    <div class="kpi">
+      <div class="label">行覆盖率 Lines</div>
+      <div class="val" style="color:#ffb659;">63.83%</div>
+      <div class="bar"><div class="pctbar" style="width:240px;"><div class="pctbar-fill pctbar-mid" style="width:63.83%"></div><span class="pctbar-text">63.8%</span></div></div>
+      <div class="muted" style="margin-top:6px; font-family:var(--ff-mono); font-size:11px;">
+        命中 1,258 / 共 1,971 行
+      </div>
+    </div>
+  </div>
+
+<div class="card" style="margin-top:18px;">
+  <h3 style="margin-top:0;">名词解释</h3>
+  <div style="font-size:12px;color:var(--text-2);line-height:1.7;">
+    <b>语句/行(Stmts/Lines):</b>源文件中每条 <code>;</code> 语句 & 每行可执行代码的被执行比例。<br/>
+    <b>分支(Branch):</b>三元/短路 <code>&& ||</code>/<code>if/else</code>/<code>switch case</code> 等每个分支真假是否被走过。本次 <b>91.78%</b> 已达绿区。<br/>
+    <b>函数(Funcs):</b>被声明的函数中被调用过的比例。平台后台有大量仅在特定入口点击才触发的 render* 页面,导致函数覆盖率相对较低,这是预期的。<br/>
+    <b>说明:</b> c8 通过 V8 Profiler 生成;由于被测代码跑在 JSDOM 的 vm context,本报告用 <code>new vm.Script(src, {filename: absPath})</code> 显式传入源路径以确保覆盖率与真实文件一一对应。
+  </div>
+</div>
+
+<h2>二、文件维度覆盖率明细 (点击文件跳转 c8 逐行彩色报告)</h2>
+<div class="card"><table><thead><tr><th>文件</th><th style="width:120px;">语句 Stmts</th><th style="width:120px;">分支 Branch</th><th style="width:120px;">函数 Funcs</th><th style="width:120px;">行 Lines</th><th>未覆盖行号摘要 (合并区间)</th></tr></thead><tbody><tr><td colspan="6" style="background:rgba(255,255,255,0.04);color:var(--text-2);font-weight:700;padding:10px;">platform-admin/</td></tr><tr>
+        <td><a class="file-link" href="coverage/platform-admin/app.js.html" target="_blank" rel="noopener">platform-admin/app.js</a></td>
+        <td><span class="pct-badge pct-mid">61.50%</span> <div class="pctbar" style="width:120px;"><div class="pctbar-fill pctbar-mid" style="width:61.5%"></div><span class="pctbar-text">61.5%</span></div></td>
+        <td><span class="pct-badge pct-good">92.54%</span> <div class="pctbar" style="width:120px;"><div class="pctbar-fill pctbar-good" style="width:92.54%"></div><span class="pctbar-text">92.5%</span></div></td>
+        <td><span class="pct-badge pct-low">50.00%</span> <div class="pctbar" style="width:120px;"><div class="pctbar-fill pctbar-low" style="width:50%"></div><span class="pctbar-text">50.0%</span></div></td>
+        <td><span class="pct-badge pct-mid">61.50%</span> <div class="pctbar" style="width:120px;"><div class="pctbar-fill pctbar-mid" style="width:61.5%"></div><span class="pctbar-text">61.5%</span></div></td>
+        <td style="font-size:11px;"><span class="line-num">23-27</span> <span class="line-num">29-30</span> <span class="line-num">622-682</span> <span class="line-num">811-861</span> <span class="line-num">864-898</span> <span class="line-num">901-963</span>  <span class="muted">(+21 处…)</span></td>
+      </tr><tr style="background:rgba(255,255,255,0.02);">
+      <td style="font-weight:700;color:var(--text-2);">platform-admin 小计</td>
+      <td><span class="pct-badge pct-mid">61.50%</span></td><td><span class="pct-badge pct-good">92.54%</span></td><td><span class="pct-badge pct-low">50.00%</span></td><td><span class="pct-badge pct-mid">61.50%</span></td><td></td>
+    </tr><tr><td colspan="6" style="background:rgba(255,255,255,0.04);color:var(--text-2);font-weight:700;padding:10px;">shared/</td></tr><tr>
+        <td><a class="file-link" href="coverage/shared/app-utils.js.html" target="_blank" rel="noopener">shared/app-utils.js</a></td>
+        <td><span class="pct-badge pct-good">84.77%</span> <div class="pctbar" style="width:120px;"><div class="pctbar-fill pctbar-good" style="width:84.77%"></div><span class="pctbar-text">84.8%</span></div></td>
+        <td><span class="pct-badge pct-mid">66.67%</span> <div class="pctbar" style="width:120px;"><div class="pctbar-fill pctbar-mid" style="width:66.67%"></div><span class="pctbar-text">66.7%</span></div></td>
+        <td><span class="pct-badge pct-danger">20.00%</span> <div class="pctbar" style="width:120px;"><div class="pctbar-fill pctbar-danger" style="width:20%"></div><span class="pctbar-text">20.0%</span></div></td>
+        <td><span class="pct-badge pct-good">84.77%</span> <div class="pctbar" style="width:120px;"><div class="pctbar-fill pctbar-good" style="width:84.77%"></div><span class="pctbar-text">84.8%</span></div></td>
+        <td style="font-size:11px;"><span class="line-num">19-20</span> <span class="line-num">24-25</span> <span class="line-num">29-32</span> <span class="line-num">35-38</span> <span class="line-num">42-44</span> <span class="line-num">48-50</span>  <span class="muted">(+2 处…)</span></td>
+      </tr><tr style="background:rgba(255,255,255,0.02);">
+      <td style="font-weight:700;color:var(--text-2);">shared 小计</td>
+      <td><span class="pct-badge pct-good">84.77%</span></td><td><span class="pct-badge pct-mid">66.67%</span></td><td><span class="pct-badge pct-danger">20.00%</span></td><td><span class="pct-badge pct-good">84.77%</span></td><td></td>
+    </tr></tbody></table></div>
+
+<h2>三、功能覆盖矩阵(P0 图表逻辑 × 测试用例 × 代码段)</h2>
+<div class="card">
+  <div class="muted" style="margin-bottom:10px;">"本段覆盖率" 按功能代码范围做局部统计,便于定位 P0 关键逻辑是否被覆盖。点击"文件"列链接可逐行查看绿/红底色标记。</div>
+  <table><thead><tr><th style="width:100px;">领域</th><th>功能 / 函数</th><th style="width:120px;">代码范围</th><th style="width:120px;">本段覆盖率</th><th>关联测试用例</th><th>说明</th></tr></thead><tbody><tr>
+      <td>图表基础</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">lineChart</td>
+      <td><span class="range-code">1-97</span></td>
+      <td><span class="pct-badge pct-good">92.78%</span> <span class="muted" style="font-size:11px;">H 90 / M 7</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">BUG#1 初始渲染</span><span class="tag tag-blue">BUG#3 legend 变量完整性</span><span class="tag tag-blue">D. 滚动窗口</span><span class="tag tag-blue">A9. 断线/预测/多系列混合</span><span class="tag tag-green">E. 指标卡同步</span></td>
+      <td style="color:var(--text-2);font-size:12px;">折线图(断线、区域填充、虚线、末端点、AI 预测分界线、Y 轴网格)</td>
+    </tr><tr>
+      <td>图表基础</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">barChart</td>
+      <td><span class="range-code">99-120</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 22 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-gray">Dashboard 经营总览 (间接)</span></td>
+      <td style="color:var(--text-2);font-size:12px;">柱状图,在商家报表页面使用</td>
+    </tr><tr>
+      <td>图表基础</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">donutChart</td>
+      <td><span class="range-code">131-182</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 52 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">A10. donutChart OK</span></td>
+      <td style="color:var(--text-2);font-size:12px;">环形图</td>
+    </tr><tr>
+      <td>图表基础</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">stackedBar</td>
+      <td><span class="range-code">184-208</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 25 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">A11. stackedBar OK</span></td>
+      <td style="color:var(--text-2);font-size:12px;">堆叠柱状图 + legend</td>
+    </tr><tr>
+      <td>图表基础</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">heatmap</td>
+      <td><span class="range-code">210-270</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 61 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">A12. heatmap OK</span></td>
+      <td style="color:var(--text-2);font-size:12px;">热力图(色阶 + XY 标签)</td>
+    </tr><tr>
+      <td>图表基础</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">radarChart</td>
+      <td><span class="range-code">272-302</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 31 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">A13. radarChart OK</span></td>
+      <td style="color:var(--text-2);font-size:12px;">雷达图</td>
+    </tr><tr>
+      <td>页面渲染</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">renderDashboard</td>
+      <td><span class="range-code">~300-400</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 101 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">Session A 末尾 render* 批量调用</span></td>
+      <td style="color:var(--text-2);font-size:12px;">仪表盘 KPI + 图表</td>
+    </tr><tr>
+      <td>页面渲染</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">renderUsers</td>
+      <td><span class="range-code">~400-480</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 81 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">Session A 末尾 render* 批量调用</span></td>
+      <td style="color:var(--text-2);font-size:12px;">用户列表页</td>
+    </tr><tr>
+      <td>页面渲染</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">renderMerchant</td>
+      <td><span class="range-code">~480-600</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 121 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">Session A 末尾 render* 批量调用</span></td>
+      <td style="color:var(--text-2);font-size:12px;">商家列表页</td>
+    </tr><tr>
+      <td>页面渲染</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">renderB2B</td>
+      <td><span class="range-code">~700-820</span></td>
+      <td><span class="pct-badge pct-good">91.74%</span> <span class="muted" style="font-size:11px;">H 111 / M 10</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">Session A 末尾 render* 批量调用</span></td>
+      <td style="color:var(--text-2);font-size:12px;">B2B 订单状态机 SVG + 表格</td>
+    </tr><tr>
+      <td>AI 中心 (P0)</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">renderAI</td>
+      <td><span class="range-code">~1000-1200</span></td>
+      <td><span class="pct-badge pct-mid">75.12%</span> <span class="muted" style="font-size:11px;">H 151 / M 50</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">A/B/C 全部 Session 启动</span><span class="tag tag-blue">BUG#1/2/3</span><span class="tag tag-green">定时器清理</span></td>
+      <td style="color:var(--text-2);font-size:12px;">AI 中心:释放速率实时流容器 + 活动流 feed + 指标卡 初始化</td>
+    </tr><tr>
+      <td>AI 中心 (P0)</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">pushActivity</td>
+      <td><span class="range-code">1143-1171(约)</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 29 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">BUG#6 首条/裁剪/动画</span><span class="tag tag-blue">压力 100 次混合</span><span class="tag tag-green">B8-B11 条数规则</span></td>
+      <td style="color:var(--text-2);font-size:12px;">每 10s 追加一条 AI 活动记录,含等级圆点发光 + slide-down 动画,20 条上限裁剪</td>
+    </tr><tr>
+      <td>AI 中心 (P0)</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">redrawRateChart</td>
+      <td><span class="range-code">~1174-1210</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 37 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">BUG#1 undefined 检查</span><span class="tag tag-blue">A7/A8 指标卡数值</span><span class="tag tag-green">E. 多次推进指标变化</span></td>
+      <td style="color:var(--text-2);font-size:12px;">重绘 lineChart + 拼接 legend,并同步更新 k/rate/趋势 3 个指标卡</td>
+    </tr><tr>
+      <td>AI 中心 (P0)</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">appendRatePoint</td>
+      <td><span class="range-code">~1212-1234</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 23 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-blue">BUG#2 切页不重置</span><span class="tag tag-blue">D. 滚动窗口/数值钳位</span><span class="tag tag-green">B4-B7</span><span class="tag tag-blue">C4 100次压力</span></td>
+      <td style="color:var(--text-2);font-size:12px;">shift 旧点 + push 新点,维持 24 点窗口;k ∈ [0.0045, 0.0085],rate ∈ [0.0025, 0.0055] 钳位</td>
+    </tr><tr>
+      <td>AI 中心 (P0)</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">_aiTimers 管理</td>
+      <td><span class="range-code">~1137-1141 + 1241-1243</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 5 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-green">C1-C3 二次 renderAI 换新 ID</span><span class="tag tag-green">定时器 2 个</span></td>
+      <td style="color:var(--text-2);font-size:12px;">window._aiTimers 数组管理;进入 renderAI 先清旧 interval,再创建活动流(10s) + 速率(3s) 两个 timer</td>
+    </tr><tr>
+      <td>工具</td>
+      <td style="font-family:var(--ff-mono);font-weight:600;color:#d0f1ee;">setView / renderIcons</td>
+      <td><span class="range-code">~1250-1290</span></td>
+      <td><span class="pct-badge pct-good">100.00%</span> <span class="muted" style="font-size:11px;">H 41 / M 0</span></td>
+      <td class="matrix-pill"><span class="tag tag-gray">间接覆盖(每次 render* 调用)</span></td>
+      <td style="color:var(--text-2);font-size:12px;">视图注入 + ICON data-i 渲染</td>
+    </tr></tbody></table>
+</div>
+
+<h2>四、未覆盖热点 Top 12(按文件未覆盖行数排序)</h2>
+<div class="card"><div class="hot-item">
+      <div class="hot-rank ">1</div>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <a class="file-link" href="coverage/platform-admin/app.js.html" target="_blank" rel="noopener">platform-admin/app.js</a>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="tag tag-red">未覆盖 683 行</span>
+            <span class="pct-badge pct-mid">61.50%</span>
+          </div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;">未覆盖区间: <span class="line-num">23-27</span> <span class="line-num">29-30</span> <span class="line-num">622-682</span> <span class="line-num">811-861</span> <span class="line-num">864-898</span> <span class="line-num">901-963</span> <span class="line-num">966-1006</span> <span class="line-num">1009-1051</span><span class="muted">(+19段)</span></div>
+      </div>
+    </div><div class="hot-item">
+      <div class="hot-rank r2">2</div>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <a class="file-link" href="coverage/shared/app-utils.js.html" target="_blank" rel="noopener">shared/app-utils.js</a>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="tag tag-red">未覆盖 30 行</span>
+            <span class="pct-badge pct-good">84.77%</span>
+          </div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;">未覆盖区间: <span class="line-num">19-20</span> <span class="line-num">24-25</span> <span class="line-num">29-32</span> <span class="line-num">35-38</span> <span class="line-num">42-44</span> <span class="line-num">48-50</span> <span class="line-num">54-59</span> <span class="line-num">63-68</span></div>
+      </div>
+    </div></div>
+
+<h2>五、如何在本地刷新报告</h2>
+<div class="card"><pre style="background:rgba(255,255,255,0.05);padding:10px 14px;border-radius:8px;color:#cfe8df;font-family:var(--ff-mono);font-size:12px;overflow:auto;">
+$ cd /workspace/lsc-system
+$ npm run coverage                 # 跑 coverage_runner 并生成 coverage/ (html + lcov + text)
+$ node coverage_report.js          # 生成本文件:覆盖率报告_P0-图表逻辑_日期.html
+$ open 覆盖率报告_P0-图表逻辑_20260827.html   # 浏览器打开
+$ node test_p0_chart_logic.js      # 先保证 8 条 TAP 用例全部通过
+$ node verify_p0.js                # 再保证 4 应用 22 断言全绿</pre>
+</div>
+
+<div class="footer">
+  链盛通 LSC V6.2-AI · 项目路径: <code>/workspace/lsc-system</code> · 本报告由 <code>coverage_report.js</code> 自动生成 · 数据来源 <code>coverage/lcov.info</code>
+</div>
+</body></html>

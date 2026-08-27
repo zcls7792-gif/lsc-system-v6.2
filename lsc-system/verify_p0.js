@@ -87,9 +87,12 @@ async function runVerify() {
 
     const htmlPath = path.join(ROOT, app.url);
     const html = fs.readFileSync(htmlPath, 'utf8');
-    // 注入共享脚本,手动读取并拼接在 <head> 开头
+    // 注入共享脚本和对应应用的外置脚本(如 platform-admin/app.js),手动读取并拼接在 <head> 开头
     const utilsJs = fs.readFileSync(path.join(ROOT, 'shared/app-utils.js'),'utf8');
-    const injected = html.replace('<head>', `<head><script>${utilsJs}<\/script>`);
+    let inject = `<script>${utilsJs}<\/script>`;
+    const appJsPath = path.join(ROOT, app.folder, 'app.js');
+    if (fs.existsSync(appJsPath)) inject += `<script>${fs.readFileSync(appJsPath,'utf8')}<\/script>`;
+    const injected = html.replace('<head>', `<head>${inject}`);
     const dom = new JSDOM(injected, {
       url: 'http://localhost/'+app.url,
       runScripts: 'dangerously',
