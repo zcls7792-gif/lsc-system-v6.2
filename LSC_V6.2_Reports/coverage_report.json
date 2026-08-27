@@ -1,25 +1,10 @@
 {
-  "timestamp": "2026-08-07T08:30:20.501236",
-  "total_tests": 1204,
-  "modules_with_tests": 15,
-  "total_modules": 15,
-  "avg_line_coverage": 94.0,
-  "avg_branch_coverage": 86.5,
-  "module_details": {
-    "lsc-release-service": 75,
-    "lsc-order-service": 58,
-    "lsc-ledger-service": 122,
-    "lsc-writeoff-service": 20,
-    "lsc-media-service": 31,
-    "lsc-risk-service": 31,
-    "lsc-promotion-service": 50,
-    "lsc-evidence-service": 85,
-    "lsc-user-service": 86,
-    "lsc-b2b-service": 65,
-    "lsc-reconciliation-service": 18,
-    "lsc-common": 463,
-    "lsc-map-service": 22,
-    "lsc-mall-service": 61,
-    "lsc-admin-service": 17
-  }
+  "_status": "archived",
+  "_archived_at": "2026-08-22",
+  "_archived_to": "LSC_V6.2_Reports/root-archive/coverage_report_20260807_archived.json",
+  "_reason": "Superseded by coverage_data.json (2551 tests, 17 modules, 96.61% line coverage). Archived per audit I-02 in LSC_V6.2_Code_Quality_Completeness_Audit_20260822.md.",
+  "_original_timestamp": "2026-08-07T08:30:20.501236",
+  "_original_total_tests": 1204,
+  "_original_modules_covered": 15,
+  "_superseded_by": "LSC_V6.2_Reports/coverage_data.json"
 }
