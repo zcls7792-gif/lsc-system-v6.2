@@ -1657,7 +1657,7 @@ function renderAI() {
         <span class="tag tag-dot tag-accent" id="ai-stream-live">● LIVE</span>
       </div>
       <div class="chart-area" id="rate-realtime-chart">${(()=>{
-        const {svg,legend} = lineChart({
+        const _svg = lineChart({
           w: 560, h: 220,
           labels: Array.from({length:24},(_,i)=>(i+1)+':00'),
           series: [
@@ -1665,7 +1665,10 @@ function renderAI() {
             { data: Array.from({length:24},(_,i)=>0.0035+Math.sin(i/4+1)*0.0005+(Math.random()-0.5)*0.00025), color:'var(--c-accent)', name:'rate(×100)', dash:true },
           ],
         });
-        return svg+'<div id="rate-realtime-legend" style="margin-top:8px;">'+legend+'</div>';
+        return _svg + '<div id="rate-realtime-legend" style="margin-top:8px;">'+
+          '<span class="tag tag-dot" style="background:var(--c-locked);color:#fff;font-size:10px;">k值(×100)</span> '+
+          '<span class="tag tag-dot" style="background:var(--c-accent);color:#fff;font-size:10px;">rate(×100)</span>'+
+          '</div>';
       })()}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
         <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
@@ -1756,7 +1759,7 @@ function renderAI() {
 
   // P0-4: 释放速率数据流每3秒追加一个新采样点,旧点左滑 (保持24小时的滚动窗口)
   // 我们为 k / rate 两个系列维护可追加的全局状态
-  if (!window._rateData) {
+  if (!window._rateSeries) {
     // 初始化 24 个数据点
     window._rateLabels = Array.from({length:24},(_,i)=>(i+1)+':00');
     window._rateSeries = {
@@ -1780,7 +1783,7 @@ function renderAI() {
     };
     chartEl.innerHTML = lineChart({ w, h, labels, series }) +
       '<div id="rate-realtime-legend" style="margin-top:8px;">'+
-      series.map(s=>`<span class="tag tag-dot" style="background:${s.color.replace('var(--c-','var(--c-')};color:#fff;font-size:10px;">${s.name}</span>`).join(' ')+
+      series.map(s=>`<span class="tag tag-dot" style="background:${s.color};color:#fff;font-size:10px;">${s.name}</span>`).join(' ')+
       '</div>';
     // 更新指标卡
     const lastK = window._rateSeries.k[window._rateSeries.k.length-1];
