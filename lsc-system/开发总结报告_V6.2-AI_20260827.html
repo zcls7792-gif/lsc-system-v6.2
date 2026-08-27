@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>链盛通LSC V6.2-AI · 开发总结报告</title>
+<style>
+:root {
+  --c-bg: #f4f6f7;
+  --c-bg-card: #ffffff;
+  --c-text-1: #0b2e2c;
+  --c-text-2: #446168;
+  --c-text-3: #8ea1a3;
+  --c-primary: #0e4d4a;
+  --c-primary-soft: rgba(14,77,74,0.28);
+  --c-accent: #c8a24b;
+  --c-accent-deep: #a8852d;
+  --c-available: #2db380;
+  --c-warning: #ffb13d;
+  --c-danger: #ef4444;
+  --c-info: #3b82f6;
+  --c-border: #e5eaeb;
+  --c-divider: rgba(14,77,74,0.08);
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 20px;
+  --sh-card: 0 2px 8px rgba(14,77,74,0.06);
+  --sh-lg: 0 8px 24px rgba(14,77,74,0.10);
+  --ff-mono: 'SF Mono', 'Consolas', 'Roboto Mono', monospace;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:28px; --sp-8:36px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text-1);
+  line-height: 1.7;
+  padding: 40px 24px 80px;
+}
+.wrap { max-width: 960px; margin: 0 auto; }
+
+/* 封面 */
+.cover {
+  background: linear-gradient(135deg, var(--c-primary) 0%, #0a3a38 55%, #052423 100%);
+  color: #fff;
+  border-radius: var(--r-xl);
+  padding: 48px 40px;
+  margin-bottom: 36px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--sh-lg);
+}
+.cover::before {
+  content: ''; position: absolute; top: -60px; right: -60px;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,162,75,0.18), transparent 65%);
+}
+.cover::after {
+  content: ''; position: absolute; bottom: -40px; left: -40px;
+  width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(45,179,128,0.15), transparent 65%);
+}
+.cover-tag {
+  display: inline-block; background: rgba(200,162,75,0.2);
+  color: var(--c-accent); border: 1px solid rgba(200,162,75,0.35);
+  padding: 4px 14px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+  margin-bottom: 18px;
+}
+.cover h1 { font-size: 32px; font-weight: 800; margin-bottom: 10px; letter-spacing: 1px; }
+.cover h2 { font-size: 15px; font-weight: 400; color: rgba(255,255,255,0.7); margin-bottom: 36px; }
+.cover-meta {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);
+}
+.cover-meta div span { display: block; font-size: 11px; color: rgba(255,255,255,0.55); margin-bottom: 4px; }
+.cover-meta div b { font-size: 16px; color: #fff; font-family: var(--ff-mono); }
+
+/* 节标题 */
+section { margin-bottom: 40px; }
+.sec-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px; padding-bottom: 12px;
+  border-bottom: 2px solid var(--c-divider);
+}
+.sec-no {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: var(--c-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; font-family: var(--ff-mono);
+}
+.sec-title { font-size: 20px; font-weight: 700; }
+.sec-sub { margin-left: auto; font-size: 12px; color: var(--c-text-3); }
+
+/* 卡片 */
+.card {
+  background: var(--c-bg-card);
+  border-radius: var(--r-lg);
+  padding: 22px 24px;
+  box-shadow: var(--sh-card);
+  border: 1px solid var(--c-border);
+  margin-bottom: 16px;
+}
+.card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--c-primary); }
+.card h3 .num {
+  display: inline-block; width: 22px; height: 22px; border-radius: 6px;
+  background: var(--c-primary); color: #fff; font-size: 12px; line-height: 22px;
+  text-align: center; margin-right: 8px; font-family: var(--ff-mono);
+}
+.card h4 { font-size: 13px; font-weight: 600; margin: 14px 0 6px; color: var(--c-text-1); }
+.card p { font-size: 13.5px; color: var(--c-text-2); margin-bottom: 8px; }
+.card ul { padding-left: 20px; }
+.card ul li { font-size: 13.5px; color: var(--c-text-2); margin-bottom: 5px; }
+.card ul li b { color: var(--c-text-1); }
+
+/* 标签 */
+.tag {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+}
+.tag-primary { background: rgba(14,77,74,0.1); color: var(--c-primary); }
+.tag-accent { background: rgba(200,162,75,0.14); color: var(--c-accent-deep); }
+.tag-success { background: rgba(45,179,128,0.12); color: #1c8f66; }
+.tag-warning { background: rgba(255,177,61,0.14); color: #c4831c; }
+.tag-danger { background: rgba(239,68,68,0.1); color: var(--c-danger); }
+.tag-info { background: rgba(59,130,246,0.1); color: var(--c-info); }
+
+/* 高亮区块 */
+.highlight {
+  background: linear-gradient(135deg, rgba(14,77,74,0.04), rgba(200,162,75,0.06));
+  border-left: 3px solid var(--c-accent);
+  padding: 14px 18px; border-radius: 0 var(--r-md) var(--r-md) 0;
+  margin: 12px 0;
+}
+.highlight b { color: var(--c-accent-deep); }
+
+/* 代码块 */
+.code-block {
+  background: #062322; color: #c9e0dc;
+  border-radius: var(--r-md); padding: 16px 18px;
+  font-family: var(--ff-mono); font-size: 12.5px; line-height: 1.75;
+  overflow-x: auto; margin: 12px 0;
+  border: 1px solid rgba(14,77,74,0.3);
+}
+.code-block .c-key { color: var(--c-accent); }
+.code-block .c-str { color: var(--c-available); }
+.code-block .c-num { color: #ff9f7a; }
+.code-block .c-cmt { color: #6b8f8c; font-style: italic; }
+
+/* 表格 */
+.tbl {
+  width: 100%; border-collapse: collapse;
+  margin: 14px 0; font-size: 13px;
+  background: #fff; border-radius: var(--r-md); overflow: hidden;
+  box-shadow: var(--sh-card);
+}
+.tbl th {
+  background: var(--c-primary); color: #fff;
+  padding: 10px 14px; text-align: left; font-weight: 600; font-size: 12.5px;
+}
+.tbl td {
+  padding: 10px 14px; border-bottom: 1px solid var(--c-divider);
+  color: var(--c-text-2);
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(14,77,74,0.02); }
+.tbl td b { color: var(--c-text-1); }
+.status-ok { color: var(--c-available); font-weight: 700; }
+.status-ok::before { content: '✓ '; }
+.status-warn { color: var(--c-warning); font-weight: 700; }
+
+/* 目录 */
+.toc {
+  background: var(--c-bg-card);
+  border-radius: var(--r-lg);
+  padding: 20px 28px;
+  box-shadow: var(--sh-card);
+  border: 1px solid var(--c-border);
+  margin-bottom: 36px;
+}
+.toc h3 { font-size: 13px; color: var(--c-text-3); margin-bottom: 12px; letter-spacing: 1px; }
+.toc-list { list-style: none; padding-left: 0; }
+.toc-list > li {
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--c-divider);
+  font-size: 13.5px;
+}
+.toc-list > li:last-child { border-bottom: none; }
+.toc-list > li a {
+  color: var(--c-text-1); text-decoration: none;
+  display: flex; align-items: center;
+}
+.toc-list > li a:hover { color: var(--c-primary); }
+.toc-list > li a .tno {
+  width: 22px; height: 22px; margin-right: 10px;
+  border-radius: 6px; background: rgba(14,77,74,0.08);
+  color: var(--c-primary); font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ff-mono); flex-shrink: 0;
+}
+.toc-list > li a .tdot { margin-left: auto; font-size: 11px; color: var(--c-text-3); }
+
+/* 指标栅格 */
+.metric-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin: 16px 0;
+}
+.metric {
+  background: linear-gradient(135deg, rgba(14,77,74,0.03), rgba(200,162,75,0.05));
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md); padding: 12px 14px;
+}
+.metric span { display: block; font-size: 11px; color: var(--c-text-3); margin-bottom: 4px; }
+.metric b { font-size: 20px; font-weight: 700; font-family: var(--ff-mono); color: var(--c-primary); }
+
+/* 文件链接 */
+.file-link {
+  display: inline-block; background: rgba(14,77,74,0.06);
+  color: var(--c-primary); padding: 2px 10px; border-radius: 6px;
+  font-family: var(--ff-mono); font-size: 12px; font-weight: 600;
+  text-decoration: none; border: 1px solid rgba(14,77,74,0.15);
+}
+.file-link:hover { background: var(--c-primary); color: #fff; }
+
+/* 流程图简易可视化 (SVG container) */
+.svg-wrap {
+  background: var(--c-bg); border-radius: var(--r-md);
+  padding: 16px; border: 1px dashed var(--c-border);
+  margin: 12px 0;
+}
+
+/* 打印样式 */
+@media print {
+  body { padding: 0; background: #fff; }
+  .cover { box-shadow: none; break-after: page; }
+  section { break-inside: avoid; }
+  .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ===== 封面 ===== -->
+<div class="cover">
+  <span class="cover-tag">DEVELOPMENT SUMMARY REPORT</span>
+  <h1>链盛通 LSC · 消费权益凭证循环系统</h1>
+  <h2>V6.2-AI 增强版 · 开发总结报告 · 四大方向完善交付</h2>
+  <div class="cover-meta">
+    <div><span>版本标识</span><b>V6.2-AI-FullStack</b></div>
+    <div><span>编制日期</span><b>2026-08-27</b></div>
+    <div><span>覆盖应用</span><b>4 个前端</b></div>
+    <div><span>报告状态</span><b class="status-ok">已验证通过</b></div>
+  </div>
+</div>
+
+<!-- ===== 目录 ===== -->
+<div class="toc">
+  <h3>目 录 · CONTENTS</h3>
+  <ul class="toc-list">
+    <li><a href="#s0"><span class="tno">0</span>项目概述与交付范围<span class="tdot">01</span></a></li>
+    <li><a href="#s1"><span class="tno">1</span>方向一 · 数据图表与看板丰富<span class="tdot">02</span></a></li>
+    <li><a href="#s2"><span class="tno">2</span>方向二 · AI功能展示深化<span class="tdot">04</span></a></li>
+    <li><a href="#s3"><span class="tno">3</span>方向三 · 业务流程闭环可视化<span class="tdot">06</span></a></li>
+    <li><a href="#s4"><span class="tno">4</span>方向四 · UI视觉与交互打磨<span class="tdot">08</span></a></li>
+    <li><a href="#s5"><span class="tno">5</span>新增核心API与代码说明<span class="tdot">09</span></a></li>
+    <li><a href="#s6"><span class="tno">6</span>全应用验证结果<span class="tdot">13</span></a></li>
+    <li><a href="#s7"><span class="tno">7</span>后续改进与规划建议<span class="tdot">14</span></a></li>
+  </ul>
+</div>
+
+<!-- ===== 0. 项目概述 ===== -->
+<section id="s0">
+  <div class="sec-head">
+    <span class="sec-no">0</span>
+    <div class="sec-title">项目概述与交付范围</div>
+    <span class="sec-sub">Overview &amp; Scope</span>
+  </div>
+  <div class="card">
+    <h3><span class="num">01</span>项目背景</h3>
+    <p>链盛通LSC消费权益凭证循环系统 V6.2-AI 是一套"人民币消费 → 等额LSC凭证发行 → 双池动态释放 → 多场景消费/流转/核销"的闭环系统,支持8大运营AI Agent、双重审核、风险熔断等高级特性。</p>
+    <h3><span class="num">02</span>本轮交付范围</h3>
+    <p>在完成四端HTML前端初版开发与模态框系统替换后,本轮用户选择"全方向",四大增强方向同步落地:</p>
+    <div class="metric-grid">
+      <div class="metric"><span>数据图表与看板</span><b>4 新图表</b></div>
+      <div class="metric"><span>AI展示深化</span><b>3 新模块</b></div>
+      <div class="metric"><span>业务流程闭环</span><b>2 张流程图</b></div>
+      <div class="metric"><span>UI视觉打磨</span><b>7 新动画</b></div>
+    </div>
+    <h3><span class="num">03</span>涉及文件</h3>
+    <ul>
+      <li><a class="file-link" href="platform-admin/index.html">platform-admin/index.html</a> &nbsp;平台管理后台 · 图表函数、看板、AI中心、B2B状态机</li>
+      <li><a class="file-link" href="shared/design-system.css">shared/design-system.css</a> &nbsp;共享设计系统 · 动画增强、卡片动效、交错入场</li>
+      <li><a class="file-link" href="mobile-app/index.html">mobile-app/index.html</a> &nbsp;移动端APP · 商品详情动态化、Toast提示(本轮前完成)</li>
+      <li><a class="file-link" href="mini-program/index.html">mini-program/index.html</a> &nbsp;微信小程序 · 商品详情动态化(本轮前完成)</li>
+      <li><a class="file-link" href="merchant-admin/index.html">merchant-admin/index.html</a> &nbsp;商家管理后台 · alert替换为modal(本轮前完成)</li>
+    </ul>
+    <div class="highlight">
+      <b>技术栈:</b> 纯 HTML5 + CSS3 + 原生 JavaScript(ES6+) · 零构建工具 · SVG 图表 · CSS 变量 · 高兼容性自适应 · 可直接静态部署
+    </div>
+  </div>
+</section>
+
+<!-- ===== 1. 方向一 ===== -->
+<section id="s1">
+  <div class="sec-head">
+    <span class="sec-no">1</span>
+    <div class="sec-title">方向一 · 数据图表与看板丰富</div>
+    <span class="sec-sub">Data Visualization</span>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">1.1</span>新增图表函数一览</h3>
+    <table class="tbl">
+      <thead><tr><th>图表类型</th><th>函数名</th><th>代码位置</th><th>应用场景</th></tr></thead>
+      <tbody>
+        <tr><td>环形/饼图 (Donut)</td><td><code>donutChart(opts)</code></td><td><a class="file-link" href="platform-admin/index.html#L643-L673">L643-L673</a></td><td>商家类别分布、订单状态分布、风险等级分布</td></tr>
+        <tr><td>热力图 (Heatmap)</td><td><code>heatmap(opts)</code></td><td><a class="file-link" href="platform-admin/index.html#L674-L695">L674-L695</a></td><td>近7天×24小时消费活跃度,高峰时段可视化</td></tr>
+        <tr><td>堆叠柱状图</td><td><code>stackedBar(opts)</code></td><td><a class="file-link" href="platform-admin/index.html#L696-L721">L696-L721</a></td><td>LSC流水构成趋势(发行/核销/B2B三轴叠加)</td></tr>
+        <tr><td>雷达图 (Radar)</td><td><code>radarChart(opts)</code></td><td><a class="file-link" href="platform-admin/index.html#L722-L754">L722-L754</a></td><td>商家多维风险评分多系列对比</td></tr>
+        <tr><td><i>已有</i> 折线图</td><td><code>lineChart(opts)</code></td><td><a class="file-link" href="platform-admin/index.html#L554-L615">L554-L615</a></td><td>核销率趋势、释放速率数据流</td></tr>
+        <tr><td><i>已有</i> 柱状图</td><td><code>barChart(opts)</code></td><td><a class="file-link" href="platform-admin/index.html#L616-L635">L616-L635</a></td><td>每日释放总量</td></tr>
+      </tbody>
+    </table>
+    <div class="highlight"><b>统一特性:</b> 全部纯 SVG 绘制,零依赖、像素级清晰、支持 title 悬浮提示,色值与设计系统 CSS 变量对齐。</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">1.2</span>看板新增可视化区域</h3>
+    <h4>① 分布三图 (grid-3)</h4>
+    <p>看板核心指标下方新增一排3张环形图(<a class="file-link" href="platform-admin/index.html#L902-L942">L902-L942</a>):</p>
+    <ul>
+      <li><b>商家类别分布</b> — 统计 MOCK.merchants 中 type 字段,餐饮/茶酒/数码/生鲜等 7 类分色</li>
+      <li><b>B2B订单状态分布</b> — confirmed/completed/pending/await_verify/rejected 状态汇总</li>
+      <li><b>风控事件等级分布</b> — 高危/中危/低危,从 MOCK.riskLogs 动态聚合</li>
+    </ul>
+    <h4>② 消费活跃度热力图 + LSC流水堆叠 (<a class="file-link" href="platform-admin/index.html#L944-L999">L944-L999</a>)</h4>
+    <ul>
+      <li>热力图:7行(周一~周日) × 24列(0~23时),模拟早午晚高峰分布,周末×1.3放大,高值格内显示数值</li>
+      <li>堆叠柱状图:D-6到今日 7天 × 消费发行/商家核销/B2B流转 三层堆叠,附图例标签</li>
+    </ul>
+    <h4>③ LSC凭证流转链路全景图 (<a class="file-link" href="platform-admin/index.html#L1001-L1100">L1001-L1100</a>)</h4>
+    <p>960×280 SVG 流程图,展示双池循环完整链路,详见方向三。</p>
+  </div>
+</section>
+
+<!-- ===== 2. 方向二 ===== -->
+<section id="s2">
+  <div class="sec-head">
+    <span class="sec-no">2</span>
+    <div class="sec-title">方向二 · AI 功能展示深化</div>
+    <span class="sec-sub">AI Feature Visualization</span>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2.1</span>商家AI风险雷达图</h3>
+    <p>位置:<a class="file-link" href="platform-admin/index.html#L1624-L1654">L1624-L1654</a>,AI中心页面首屏左侧。</p>
+    <ul>
+      <li><b>对比维度:</b>信用分 / 核销异常 / 地址核验 / 商品合规 / 设备风险 / 流水异常 (6轴)</li>
+      <li><b>对比对象:</b>鼎盛物流(M20004,处罚中) vs 御品茶业(M20005,正常)</li>
+      <li><b>双色对比:</b>红色多边形=高分高风险,绿色多边形=低风险</li>
+      <li><b>AI建议条:</b>下方 alert-warning 给出具体维度的风控建议</li>
+    </ul>
+    <h3><span class="num">2.2</span>释放速率实时数据流</h3>
+    <p>位置:<a class="file-link" href="platform-admin/index.html#L1655-L1683">L1655-L1683</a>,AI中心页面首屏右侧。</p>
+    <ul>
+      <li><b>双折线图:</b>24小时 k值(核销率) 与 rate(动态释放率) 联动曲线,正弦波+随机噪声模拟真实波动</li>
+      <li><b>LIVE 标签:</b>右上角脉动圆点标识"实时"</li>
+      <li><b>三指标卡:</b>当前k值 / 当前rate / 预测趋势</li>
+    </ul>
+    <h3><span class="num">2.3</span>AI Agent 实时活动流</h3>
+    <p>位置:<a class="file-link" href="platform-admin/index.html#L1684-L1719">L1684-L1719</a>,AI中心页面底部。</p>
+    <ul>
+      <li><b>8个Agent任务记录:</b>用户风控 / 商品审核 / B2B OCR核验 / 异常核销分析 / 商家风控 / 地址核验 / AI客服 / 管理员助手</li>
+      <li><b>风险色分级点:</b>danger(高危红)/warning(中危黄)/success(通过绿)/info(信息蓝)</li>
+      <li><b>危险等级发光效果:</b>高/中危任务使用 box-shadow 脉动光晕</li>
+    </ul>
+    <div class="highlight"><b>设计意图:</b> 让非技术管理员可直观"看见"AI Agent 在持续工作,建立对AI自动化运营的信任感。</div>
+  </div>
+</section>
+
+<!-- ===== 3. 方向三 ===== -->
+<section id="s3">
+  <div class="sec-head">
+    <span class="sec-no">3</span>
+    <div class="sec-title">方向三 · 业务流程闭环可视化</div>
+    <span class="sec-sub">Business Flow Closure</span>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3.1</span>LSC凭证流转链路全景图</h3>
+    <p>位置:<a class="file-link" href="platform-admin/index.html#L1001-L1100">L1001-L1100</a>,dashboard页尾。</p>
+    <p>SVG 960×280 完整闭环流程图,覆盖 6 个核心节点 + 释放引擎节点 + 循环回流箭头:</p>
+    <table class="tbl">
+      <thead><tr><th>节点名称</th><th>状态</th><th>位置</th><th>出口流转</th></tr></thead>
+      <tbody>
+        <tr><td>消费者消费</td><td><span class="tag tag-primary">入口</span></td><td>左上</td><td>→ 1:1发行 → 锁定池</td></tr>
+        <tr><td>🔒 锁定池</td><td><span class="tag tag-warning">核心</span></td><td>中上左</td><td>→ 每日动态释放(虚线)→ 可用池 &amp; 释放引擎</td></tr>
+        <tr><td>✓ 可用池</td><td><span class="tag tag-success">核心</span></td><td>中上右</td><td>分三路 → 核销/B2B/风控拦截</td></tr>
+        <tr><td>商家核销</td><td><span class="tag tag-primary">出口</span></td><td>右上</td><td>14%监管账户划拨,回流新消费循环(绿虚线)</td></tr>
+        <tr><td>B2B流转</td><td><span class="tag tag-accent">出口</span></td><td>右中</td><td>商家间凭证转移</td></tr>
+        <tr><td>风控拦截</td><td><span class="tag tag-danger">异常</span></td><td>右下</td><td>异常LSC拦截,AI实时监控</td></tr>
+        <tr><td>释放引擎</td><td><span class="tag tag-info">机制</span></td><td>最右</td><td>每日02:00,86/86任务成功</td></tr>
+      </tbody>
+    </table>
+    <div class="highlight"><b>闭环体现:</b> 核销出口 → 资金回流 → 新消费循环的绿色虚线箭头,从右下顶部绕回起点,直观呈现"循环经济"。</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3.2</span>B2B订单生命周期状态机</h3>
+    <p>位置:<a class="file-link" href="platform-admin/index.html#L1242-L1320">L1242-L1320</a>,B2B订单页顶部。</p>
+    <p>SVG 920×160 有限状态机可视化:</p>
+    <ul>
+      <li><b>5 个正常状态(绿色实线箭头):</b>创建订单 → AI核验中 → 对手方确认 → LSC流转 → 已完成</li>
+      <li><b>2 个异常终止(红色虚线节点):</b>
+        <ul>
+          <li>匹配度 &lt; 50% → "人工虚假"拒绝回退</li>
+          <li>对手方拒绝 → "已驳回"分支</li>
+        </ul>
+      </li>
+      <li><b>风控熔断旁路(灰色虚线路径):</b>LSC流转阶段若触发风控,可退回AI核验中重新校验</li>
+      <li><b>状态标签色:</b>蓝=处理中、黄=待确认、绿=完成、红=异常(虚线描边区分)</li>
+    </ul>
+    <div class="highlight"><b>合规价值:</b> 状态机图示为订单纠纷追溯与审计提供了直观参照,明确"哪些操作会导致什么状态变化"。</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3.3</span>释放管理页既有流程</h3>
+    <p>释放管理页面已提供 5 步任务步骤条流程(发布任务 → 引擎执行 → 数据校验 → 账本同步 → 完成/失败),本轮无需重复,与上述流程形成互补。</p>
+  </div>
+</section>
+
+<!-- ===== 4. 方向四 ===== -->
+<section id="s4">
+  <div class="sec-head">
+    <span class="sec-no">4</span>
+    <div class="sec-title">方向四 · UI视觉与交互打磨</div>
+    <span class="sec-sub">Visual &amp; Interaction Polish</span>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4.1</span>设计系统动画增强</h3>
+    <p>文件:<a class="file-link" href="shared/design-system.css#L447-L475">L447-L475</a></p>
+    <table class="tbl">
+      <thead><tr><th>新增关键帧</th><th>效果</th><th>应用</th></tr></thead>
+      <tbody>
+        <tr><td><code>scaleIn</code></td><td>缩放入场 0.96→1</td><td>模态框、卡片浮现</td></tr>
+        <tr><td><code>glowPulse</code></td><td>外发光脉动</td><td>活动流高危任务、状态指示灯</td></tr>
+        <tr><td><code>barGrow</code></td><td>柱状图纵向生长</td><td>柱状/堆叠图进场</td></tr>
+        <tr><td><code>dashFlow</code></td><td>虚线流动</td><td>数据流连线、风控旁路</td></tr>
+        <tr><td>已有:fadeIn/slideUp/slideRight/pulse/spin/shimmer/float</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="num">4.2</span>Stagger 交错入场动画</h3>
+    <p>CSS 工具类 <code>.stagger</code>(<a class="file-link" href="shared/design-system.css#L466-L475">L466-L475</a>):对第1-8个子元素依次延迟 60ms 触发 slideUp。</p>
+    <p>应用位置:</p>
+    <ul>
+      <li>平台看板 <code>.stat-grid</code> — 6 张指标卡依次浮出</li>
+      <li>分布三图 <code>.grid-3</code> — 3 张环形图依次浮出</li>
+      <li>AI中心 Agent卡片 grid — 8+3 个Agent卡片依次浮出</li>
+    </ul>
+
+    <h3><span class="num">4.3</span>卡片悬停微交互</h3>
+    <ul>
+      <li><code>.card-hover:hover</code> — <a class="file-link" href="shared/design-system.css#L179-L183">L179-L183</a>:上浮 2px + 阴影加深 + 边框转主题色</li>
+      <li><code>.chart-card:hover</code> — <a class="file-link" href="platform-admin/index.html#L131">L131</a>:上浮 1px + 阴影加深</li>
+      <li><code>.card 基础类 transition</code> — 所有卡片统一 0.25s 过渡时长</li>
+    </ul>
+
+    <h3><span class="num">4.4</span>其他全局优化</h3>
+    <ul>
+      <li><b>平滑滚动:</b>html 根元素 scroll-behavior:smooth (<a class="file-link" href="shared/design-system.css#L92">L92</a>)</li>
+      <li><b>移动端/小程序 Toast:</b>showTip(msg) + addToCart(idx) 统一 toast 替代 alert</li>
+      <li><b>商家后台 4 处 alert → modal:</b>视频上传、凭证上传、核销申请、保存草稿/B2B提交全部变为模态框</li>
+      <li><b>商品详情动态化:</b>PRODUCT_LIST 共享数据,openProduct(idx) 按索引渲染,不再硬编码单商品</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 5. 核心API与代码 ===== -->
+<section id="s5">
+  <div class="sec-head">
+    <span class="sec-no">5</span>
+    <div class="sec-title">新增核心 API 与代码说明</div>
+    <span class="sec-sub">API &amp; Code Reference</span>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">5.1</span>图表函数签名</h3>
+    <div class="code-block">
+<span class="c-cmt">// 环形图 (支持引线标签 + 中心总计)</span>
+<span class="c-key">function</span> donutChart({ w, h, data:[{label,value,color}], inner=<span class="c-num">0.55</span>, unit=<span class="c-str">''</span> }) <span class="c-cmt">→ SVG string</span>
+
+<span class="c-cmt">// 热力图 (单元格渐变透明度 + 高值显示数字)</span>
+<span class="c-key">function</span> heatmap({ w, h, rows, cols, data:[[v],...], colorBase }) <span class="c-cmt">→ SVG string</span>
+
+<span class="c-cmt">// 堆叠柱状图 (返回 {svg, legend} 两部分以便独立布局)</span>
+<span class="c-key">function</span> stackedBar({ w, h, labels, stacks:[{name,color,data:[]}], unit }) <span class="c-cmt">→ Object</span>
+
+<span class="c-cmt">// 雷达图 (多系列对比 + 4层同心圆网格)</span>
+<span class="c-key">function</span> radarChart({ w, h, labels, series:[{name,color,data:[]}], max=<span class="c-num">1</span> }) <span class="c-cmt">→ SVG string</span>
+
+<span class="c-cmt">// 进度环 (单个百分比指标)</span>
+<span class="c-key">function</span> ringChart(pct, color) <span class="c-cmt">→ SVG string</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">5.2</span>移动端/小程序新增函数</h3>
+    <div class="code-block">
+<span class="c-cmt">// 共享商品数据 (6 项完整商品,含AI评分/库存/描述)</span>
+<span class="c-key">const</span> PRODUCT_LIST = [{ name, price, tag, merchant, sales, cat, aiScore, stock, desc }, ...]
+
+<span class="c-cmt">// 打开指定商品详情 → 切屏</span>
+<span class="c-key">function</span> openProduct(idx) <span class="c-cmt">→ 调用 renderProduct(idx) + showScreen('product')</span>
+
+<span class="c-cmt">// 按索引渲染商品详情页 (价格/库存/AI评分双卡/描述/加购/购买)</span>
+<span class="c-key">function</span> renderProduct(idx) <span class="c-cmt">→ 填充 #screen-product</span>
+
+<span class="c-cmt">// Toast 轻提示 (中心位置,2.2s 自动消失)</span>
+<span class="c-key">function</span> showTip(msg) <span class="c-cmt">→ DOM 插入 #app-tip,带淡入淡出</span>
+
+<span class="c-cmt">// 加入购物车 → 触发带商品名的 Toast</span>
+<span class="c-key">function</span> addToCart(idx)
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">5.3</span>模态框系统 (四端统一)</h3>
+    <table class="tbl">
+      <thead><tr><th>函数</th><th>用途</th><th>典型场景</th></tr></thead>
+      <tbody>
+        <tr><td><code>openModal({title, body, footer, danger, onClose})</code></td><td>通用弹窗底层</td><td>详情页、配置表单</td></tr>
+        <tr><td><code>closeModal()</code></td><td>关闭全局弹窗</td><td>按钮/遮罩/关闭图标</td></tr>
+        <tr><td><code>resultModal(title, body, level)</code></td><td>操作结果提示</td><td>视频上传、保存草稿、凭证上传</td></tr>
+        <tr><td><code>confirmModal(title, desc, onConfirm, opts)</code></td><td>二次确认</td><td>核销申请、B2B订单提交</td></tr>
+        <tr><td><code>dualApprovalModal(title, body, onApproved)</code></td><td>双重审批(双人)</td><td>参数调整、处罚执行(平台)</td></tr>
+      </tbody>
+    </table>
+    <div class="highlight"><b>零 alert 原则:</b> 本轮完成后,4 个前端应用代码中 alert() 调用点为 0,全部替换为模态框或 Toast。</div>
+  </div>
+</section>
+
+<!-- ===== 6. 验证结果 ===== -->
+<section id="s6">
+  <div class="sec-head">
+    <span class="sec-no">6</span>
+    <div class="sec-title">全应用验证结果</div>
+    <span class="sec-sub">Verification Results</span>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">6.1</span>验证方法</h3>
+    <ul>
+      <li><b>静态语法检查:</b>Node.js 下 <code>new Function(inline-js)</code> 解析 4 个应用内联脚本</li>
+      <li><b>运行时模拟:</b>jsdom 通过 HTTP 加载页面(含外部共享脚本),捕获 console.error / onerror</li>
+      <li><b>功能断言:</b>逐个调用关键渲染函数与交互函数,检查 DOM 输出</li>
+    </ul>
+    <h3><span class="num">6.2</span>结果总表</h3>
+    <table class="tbl">
+      <thead><tr><th>检查项</th><th>平台后台</th><th>商家后台</th><th>移动APP</th><th>小程序</th></tr></thead>
+      <tbody>
+        <tr><td>JS语法检查</td><td class="status-ok">通过</td><td class="status-ok">通过</td><td class="status-ok">通过</td><td class="status-ok">通过</td></tr>
+        <tr><td>alert() 调用点</td><td class="status-ok">0</td><td class="status-ok">0</td><td class="status-ok">0</td><td class="status-ok">0</td></tr>
+        <tr><td>运行时错误</td><td class="status-ok">无</td><td class="status-ok">无</td><td class="status-ok">无</td><td class="status-ok">无</td></tr>
+        <tr><td>模态框系统 resultModal()</td><td class="status-ok">OK</td><td class="status-ok">OK</td><td>—</td><td>—</td></tr>
+        <tr><td>看板 环形图/热力图/链路图</td><td class="status-ok">渲染</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>AI中心 雷达图/活动流</td><td class="status-ok">渲染</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>B2B 状态机</td><td class="status-ok">渲染</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>openProduct(idx) 动态详情</td><td>—</td><td>—</td><td class="status-ok">耳机✔</td><td class="status-ok">套餐✔</td></tr>
+      </tbody>
+    </table>
+    <div class="highlight"><b>最终结论:</b> 19 项检查全部通过 ✅ &nbsp;无告警、无失败、无降级。</div>
+  </div>
+</section>
+
+<!-- ===== 7. 后续建议 ===== -->
+<section id="s7">
+  <div class="sec-head">
+    <span class="sec-no">7</span>
+    <div class="sec-title">后续改进与规划建议</div>
+    <span class="sec-sub">Roadmap &amp; Recommendations</span>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">7.1</span>短期可扩展 (P0 · 1-2 天)</h3>
+    <ul>
+      <li><b>商家后台图表补齐:</b>将平台后台的 donutChart/stackedBar 复用至商家后台,增加商家个人核销趋势、商品销售分布等专属图表</li>
+      <li><b>C端LSC流转可视化:</b>移动APP/小程序的"我的钱包"页,为单个用户绘制迷你流转链路(消费→锁定池→释放记录→消费抵扣)</li>
+      <li><b>活动流自动刷新动画:</b>AI Agent活动流用 setInterval 每10秒追加一条随机新记录,顶部插入带 slideDown 动画,模拟真实推送</li>
+      <li><b>释放速率图表真·实时:</b>用 window.setInterval 每 3 秒 append 新采样点到 lineChart series,旧点左滑出视野</li>
+    </ul>
+    <h3><span class="num">7.2</span>中期功能 (P1 · 3-5 天)</h3>
+    <ul>
+      <li><b>订单生命周期单条追踪页:</b>点击B2B订单行打开详情,以时间轴+状态机联动方式显示该订单的完整流转记录(谁/何时/做了什么操作)</li>
+      <li><b>双池资金溯源 Sankey 图:</b>将 donutChart 改为桑基图,展示锁定池→可用池→核销/B2B/过期 的资金流量分配</li>
+      <li><b>图表导出:</b>SVG→PNG,增加"导出看板截图"一键功能(可借助 canvas.toDataURL 纯前端实现,无需后端)</li>
+      <li><b>深色模式:</b>CSS 变量增加 [data-theme="dark"] 配色,通过切换属性切换主题,图表颜色自适应</li>
+    </ul>
+    <h3><span class="num">7.3</span>长期演进 (P2 · 超过1周)</h3>
+    <ul>
+      <li><b>接入真实后端数据:</b>将 MOCK 对象替换为 fetch('/api/...') 调用,增加数据加载 skeleton 骨架屏占位</li>
+      <li><b>WebSocket 实时推送:</b>活动流、订单状态变更、风险告警替换为服务端推送,而非前端 setInterval 轮询</li>
+      <li><b>多角色权限:</b>超级管理员/运营/商家/用户四级角色控制可见菜单与操作按钮,避免硬编码 UI</li>
+      <li><b>单元测试:</b>图表函数、模态框、状态机逻辑抽象为模块,补充 Vitest/Jest 单元测试 + jsdom 断言</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 页脚 ===== -->
+<div style="text-align:center;padding:32px 0 0;font-size:11px;color:var(--c-text-3);border-top:1px solid var(--c-divider);">
+  <div style="margin-bottom:4px;">链盛通 LSC 消费权益凭证循环系统 · V6.2-AI · 开发总结报告</div>
+  <div>编制单位:链盛通项目组 · 文档可直接在浏览器打印为 PDF (Ctrl/⌘ + P)</div>
+</div>
+
+</div>
+</body>
+</html>
