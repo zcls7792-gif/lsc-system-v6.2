@@ -20,10 +20,77 @@ const ROOT = __dirname;
 const GREEN = '\x1b[32m', RED='\x1b[31m', YELLOW='\x1b[33m', CYAN='\x1b[36m', RESET='\x1b[0m', BOLD='\x1b[1m', DIM='\x1b[2m';
 const hr = (n=80,w='─')=> w.repeat(n);
 
+// CI 环境下: logs/ 独立落盘,并按 $LSC_REPORT_SUBDIR(=CI_COMMIT_SHORT_SHA)归档 c8
+const IS_CI = process.env.GITLAB_CI === 'true' || process.env.CI === 'true';
+const LOG_DIR = path.join(ROOT, 'logs');
+const CI_SUBDIR = process.env.LSC_REPORT_SUBDIR || process.env.CI_COMMIT_SHORT_SHA || null;
+if (IS_CI) {
+  fs.mkdirSync(LOG_DIR, { recursive: true });
+  if (CI_SUBDIR) {
+    const dir = path.join(ROOT, 'coverage', CI_SUBDIR);
+    fs.mkdirSync(dir, { recursive: true });
+    // 给 npm run coverage 注入 c8 --report-dir (再覆盖一次 package.json 的默认 coverage/)
+    // 方式:通过环境变量读给后续 shell
+    process.env.C8_REPORT_DIR = dir;
+    console.log(`${DIM}[CI] 覆盖率归档目录: coverage/${CI_SUBDIR}/${RESET}`);
+  }
+}
+
+// 小工具:把子进程输出同步捕获后"同时写终端 + 写 logs/",不依赖 bash/PIPESTATUS
+// (alpine /bin/sh = ash,不认 PIPESTATUS,会 Bad substitution;GitLab 的 shell executor 默认 bash,
+// 但 node:alpine 镜像没有 bash,为两套环境都稳,用 Node 原生 pipe+捕获最稳)
+function spawnWithTee(label, stepIndex, cmd, args, opts) {
+  const useShell = process.platform === 'win32' || opts.useShell;
+  // 非 CI: 直接 inherit,省内存/IO,与历史行为一致
+  if (!IS_CI) {
+    return spawnSync(cmd, args, {
+      cwd: ROOT, encoding: 'utf8',
+      stdio: ['ignore', 'inherit', 'inherit'],
+      shell: useShell,
+      env: process.env,
+    });
+  }
+  const safeName = label.replace(/[^\w\u4e00-\u9fa5.-]+/g,'_').slice(0,80);
+  const logPath = path.join(LOG_DIR, `step-${String(stepIndex).padStart(2,'0')}-${safeName}.log`);
+  const header = [
+    `# Step ${stepIndex}: ${label}`,
+    `# Command: ${cmd} ${args.map(a=>/[\s"]/.test(a)?JSON.stringify(a):a).join(' ')}`,
+    `# Started: ${new Date().toISOString()}`,
+    `# PWD: ${ROOT}`,
+    `# CI_JOB_ID=${process.env.CI_JOB_ID||''}  CI_COMMIT_SHORT_SHA=${process.env.CI_COMMIT_SHORT_SHA||''}`,
+    `# useShell=${useShell}`,
+    '',
+  ].join('\n');
+  let res;
+  try {
+    res = spawnSync(cmd, args, {
+      cwd: ROOT, encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],    // 同时 pipe,拿到完整 stdout/stderr
+      shell: useShell,
+      env: process.env,
+      maxBuffer: 50 * 1024 * 1024,          // 50MB,够 coverage 文本
+    });
+  } catch (err) {
+    const text = header + '\n# SPAWN ERROR: ' + (err && err.stack || err) + '\n';
+    fs.writeFileSync(logPath, text);
+    return { status: 127, error: err, pid: 0, stdout: '', stderr: '' };
+  }
+  // 写终端 + 落日志(带分割线清晰分开 stdout/stderr)
+  if (res.stdout) process.stdout.write(res.stdout);
+  if (res.stderr) process.stderr.write(res.stderr);
+  const body =
+      (res.stdout || '') +
+      (res.stderr ? (res.stdout && !res.stdout.endsWith('\n') ? '\n' : '') + '----- STDERR -----\n' + res.stderr : '') +
+      `\n\n# Step finished: status=${res.status} ok=${res.status===0} error=${res.error?res.error.message:''}\n# Ended: ${new Date().toISOString()}\n`;
+  fs.writeFileSync(logPath, header + body);
+  return res;
+}
+
 function runStep(label, cmd, args, opts={}) {
+  const idx = runStep._i = (runStep._i||0) + 1;
   const t0 = Date.now();
   console.log(`\n${BOLD}${CYAN}▶▶ STEP ${label}${RESET}${DIM}  ${cmd} ${args.join(' ')}${RESET}\n${hr(60,'·')}`);
-  const res = spawnSync(cmd, args, { cwd: ROOT, encoding:'utf8', stdio:['ignore','inherit','inherit'], shell: process.platform==='win32' || opts.useShell });
+  const res = spawnWithTee(label, idx, cmd, args, opts);
   const dt = ((Date.now()-t0)/1000).toFixed(2)+'s';
   const ok = res.status === 0 && (res.error == null);
   console.log(`${hr(60,'·')}\n${ok?GREEN+'✔ PASS':RED+'✗ FAIL'}${RESET}  ${label}  ${BOLD}exit=${res.status}${RESET}  ${DIM}elapsed=${dt}${RESET}`);
