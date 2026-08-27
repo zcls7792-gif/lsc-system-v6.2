@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>链盛通LSC系统 V6.2-AI · 四端入口</title>
+<link rel="stylesheet" href="shared/design-system.css">
+<style>
+  body {
+    background:
+      radial-gradient(circle at 15% 10%, rgba(14,77,74,0.1), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(200,162,75,0.12), transparent 45%),
+      var(--c-bg);
+    min-height: 100vh; padding: 40px 20px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  .hero { text-align:center; margin-bottom: 50px; }
+  .hero-logo {
+    width: 72px; height: 72px; border-radius: 18px;
+    background: linear-gradient(135deg, var(--c-primary-deep), var(--c-primary-soft));
+    margin: 0 auto 20px; display:flex; align-items:center; justify-content:center;
+    color: var(--c-accent); font-size: 32px; font-weight: 800;
+    font-family: var(--ff-display);
+    box-shadow: 0 12px 30px rgba(14,77,74,0.3);
+  }
+  .hero h1 { font-size: 30px; font-weight: 700; color: var(--c-text-1); letter-spacing: 1px; }
+  .hero .ver { font-size: 13px; color: var(--c-accent-deep); font-weight: 600; letter-spacing: 2px; margin-top: 6px; }
+  .hero .desc { font-size: 14px; color: var(--c-text-3); margin-top: 14px; max-width: 600px; margin-left:auto;margin-right:auto; line-height:1.7; }
+  .grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .app-card {
+    background: var(--c-bg-card); border-radius: 20px; overflow:hidden;
+    border: 1px solid var(--c-border-soft); box-shadow: var(--sh-md);
+    transition: all 0.25s; cursor: pointer; text-decoration:none; color:inherit;
+    display: flex; flex-direction: column;
+  }
+  .app-card:hover { transform: translateY(-4px); box-shadow: var(--sh-lg); }
+  .app-banner {
+    height: 130px; display:flex; align-items:center; justify-content:center;
+    position: relative; overflow: hidden;
+  }
+  .app-banner .ab-icon { width: 56px; height: 56px; color: rgba(255,255,255,0.95); }
+  .app-banner .ab-deco {
+    position: absolute; font-size: 80px; font-weight: 900; color: rgba(255,255,255,0.08);
+    letter-spacing: -4px; font-family: var(--ff-display);
+  }
+  .b-platform { background: linear-gradient(135deg, var(--c-primary-deep), var(--c-primary-soft)); }
+  .b-merchant { background: linear-gradient(135deg, #2d2515, var(--c-accent-deep)); }
+  .b-mobile { background: linear-gradient(135deg, var(--c-primary-deep), var(--c-primary)); }
+  .b-wxapp { background: linear-gradient(135deg, #064d3a, #07C160); }
+  .app-body { padding: 22px; flex:1; display:flex; flex-direction:column; }
+  .app-title { font-size: 19px; font-weight: 700; color: var(--c-text-1); display:flex; align-items:center; gap:10px; }
+  .app-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .app-desc { font-size: 13px; color: var(--c-text-2); margin-top: 8px; line-height: 1.6; flex:1; }
+  .app-meta { display:flex; gap: 14px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--c-divider); font-size: 11px; color: var(--c-text-3); }
+  .app-meta span { display:flex; align-items:center; gap: 4px; }
+  .app-go {
+    margin-top: 14px; display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  }
+  .go-platform { background: var(--c-primary-tint); color: var(--c-primary); }
+  .go-merchant { background: var(--c-accent-soft); color: var(--c-accent-deep); }
+  .go-mobile { background: var(--c-primary-tint); color: var(--c-primary); }
+  .go-wxapp { background: var(--c-wx-green-tint, #e6f7ee); color: #06ad56; }
+  :root { --c-wx-green-tint: #e6f7ee; }
+  .features { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .features .tag { font-size: 10px; }
+  .foot { text-align:center; margin-top: 50px; color: var(--c-text-3); font-size: 12px; line-height: 1.8; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-logo">链</div>
+    <h1>链盛通 LSC 消费权益凭证循环系统</h1>
+    <div class="ver">V6.2-AI-FullStack · 全栈技术开发方案</div>
+    <div class="desc">混合架构(微服务核心+联盟链哈希存证) · 8库32表分片 · Seata AT分布式事务 · 8大运营AI Agent · 锁定池/可用池双池循环 · 每日动态释放</div>
+  </div>
+
+  <div class="grid">
+    <a class="app-card" href="platform-admin/index.html">
+      <div class="app-banner b-platform">
+        <div class="ab-deco">平台</div>
+        <svg class="ab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      </div>
+      <div class="app-body">
+        <div class="app-title">平台管理后台 <span class="app-tag" style="background:var(--c-primary-tint);color:var(--c-primary);">Web</span></div>
+        <div class="app-desc">运营管理员/超级管理员使用。覆盖仪表盘、商家管理、商品审核、B2B订单、风控、信用、释放管理、对账、系统、AI中心共10大模块。</div>
+        <div class="features"><span class="tag tag-locked">锁定池</span><span class="tag tag-available">可用池</span><span class="tag tag-accent">AI简报</span><span class="tag tag-info">双人审批</span><span class="tag tag-warning">熔断</span></div>
+        <div class="app-meta"><span>· 仪表盘</span><span>· 释放算法</span><span>· AI中心</span></div>
+        <div class="app-go go-platform"><span>进入平台后台</span><span class="icon" data-i="arrowRight" style="width:16px;height:16px;"></span></div>
+      </div>
+    </a>
+
+    <a class="app-card" href="merchant-admin/index.html">
+      <div class="app-banner b-merchant">
+        <div class="ab-deco">商家</div>
+        <svg class="ab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M9 14h6"/></svg>
+      </div>
+      <div class="app-body">
+        <div class="app-title">商家管理后台 <span class="app-tag" style="background:var(--c-accent-soft);color:var(--c-accent-deep);">Web</span></div>
+        <div class="app-desc">商家会员使用。店铺管理、商品管理(1:1定价)、LSC账户、核销管理(×0.87结算)、B2B交易、推广、信用中心、AI助手共8大模块。</div>
+        <div class="features"><span class="tag tag-accent">收款码</span><span class="tag tag-available">核销</span><span class="tag tag-info">B2B流转</span><span class="tag tag-locked">1:1定价</span></div>
+        <div class="app-meta"><span>· 店铺</span><span>· 核销申请</span><span>· AI客服</span></div>
+        <div class="app-go go-merchant"><span>进入商家后台</span><span class="icon" data-i="arrowRight" style="width:16px;height:16px;"></span></div>
+      </div>
+    </a>
+
+    <a class="app-card" href="mobile-app/index.html">
+      <div class="app-banner b-mobile">
+        <div class="ab-deco">APP</div>
+        <svg class="ab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+      </div>
+      <div class="app-body">
+        <div class="app-title">消费者移动端APP <span class="app-tag" style="background:var(--c-primary-tint);color:var(--c-primary);">iOS/Android</span></div>
+        <div class="app-desc">消费者会员使用,uni-app原生APP。首页、商城、扫码消费、LSC钱包、推广中心、订单、AI客服、个人中心,支持混合支付滑块。</div>
+        <div class="features"><span class="tag tag-available">LSC钱包</span><span class="tag tag-accent">混合支付</span><span class="tag tag-info">扫码</span><span class="tag tag-locked">动态付款码</span></div>
+        <div class="app-meta"><span>· 扫码获LSC</span><span>· 付款码</span><span>· 推广裂变</span></div>
+        <div class="app-go go-mobile"><span>进入移动APP</span><span class="icon" data-i="arrowRight" style="width:16px;height:16px;"></span></div>
+      </div>
+    </a>
+
+    <a class="app-card" href="mini-program/index.html">
+      <div class="app-banner b-wxapp">
+        <div class="ab-deco">微信</div>
+        <svg class="ab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 4C5 4 2 6.5 2 10c0 1.8 1 3.4 2.5 4.5L4 17l2.5-1.3c.8.2 1.6.3 2.5.3"/><path d="M15 9c-3.3 0-6 2.2-6 5s2.7 5 6 5c.7 0 1.4-.1 2-.3l2 1-.5-1.7c1.5-.9 2.5-2.3 2.5-4 0-2.8-2.7-5-6-5z"/></svg>
+      </div>
+      <div class="app-body">
+        <div class="app-title">微信小程序 <span class="app-tag" style="background:#e6f7ee;color:#06ad56;">WeChat</span></div>
+        <div class="app-desc">消费者会员使用,微信原生组件。首页、商城、扫一扫、钱包、我的,支持微信支付、微信登录、订阅消息推送、地理位置授权、分享裂变。</div>
+        <div class="features"><span class="tag tag-success">微信支付</span><span class="tag tag-info">订阅消息</span><span class="tag tag-accent">分享卡片</span><span class="tag tag-warning">地理授权</span></div>
+        <div class="app-meta"><span>· 微信原生</span><span>· 胶囊导航</span><span>· 分享裂变</span></div>
+        <div class="app-go go-wxapp"><span>进入微信小程序</span><span class="icon" data-i="arrowRight" style="width:16px;height:16px;"></span></div>
+      </div>
+    </a>
+  </div>
+
+  <div class="foot">
+    链盛通LSC V6.2-AI-FullStack · 编制日期 2026年8月24日<br>
+    深海金融美学设计系统 · 锁定池(藏青)/可用池(翡翠)/鎏金强调 · 兼容性HTML+CSS+JS
+  </div>
+</div>
+<script src="shared/app-utils.js"></script>
+<script>document.querySelectorAll('.icon[data-i]').forEach(el=>{const k=el.getAttribute('data-i');if(ICONS[k])el.innerHTML=ICONS[k];});</script>
+</body>
+</html>

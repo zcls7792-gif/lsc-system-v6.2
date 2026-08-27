@@ -71,6 +71,10 @@ coverage/
 *.backup
 *.old
 
+# LSC generated deliverables (可从 npm run report 重新生成)
+lsc-system/覆盖率报告_*.html
+lsc-system/开发总结报告_*.html
+
 # Large binary data
 sql/*.sql.bak
 
