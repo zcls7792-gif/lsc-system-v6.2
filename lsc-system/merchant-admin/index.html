@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>链盛通LSC · 商家管理后台 V6.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="../shared/design-system.css">
+<style>
+  body { background: var(--c-bg); overflow: hidden; }
+  .app-shell { display: flex; height: 100vh; width: 100%; }
+
+  /* 侧边栏 - 商家版采用鎏金主题 */
+  .sidebar {
+    width: 232px;
+    background: linear-gradient(180deg, #1a1a1a 0%, #2d2515 100%);
+    color: #fff;
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+    position: relative; z-index: 30;
+  }
+  .sidebar::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(200,162,75,0.18), transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba(200,162,75,0.06), transparent 40%);
+    pointer-events:none;
+  }
+  .brand {
+    padding: 22px 22px 18px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(200,162,75,0.15);
+    position: relative;
+  }
+  .brand-logo {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--c-accent), var(--c-accent-deep));
+    border-radius: 10px;
+    display:flex; align-items:center; justify-content:center;
+    color: #fff; font-weight: 800; font-size: 16px;
+    box-shadow: 0 4px 14px rgba(200,162,75,0.45);
+    font-family: var(--ff-display);
+  }
+  .brand-text { line-height: 1.2; }
+  .brand-name { font-size: 15px; font-weight: 700; letter-spacing: 1px; }
+  .brand-sub { font-size: 10px; opacity: 0.5; letter-spacing: 2px; color: var(--c-accent-soft); }
+
+  /* 余额速览卡(侧边栏内) */
+  .balance-mini {
+    margin: 14px 14px 6px; padding: 14px;
+    background: linear-gradient(135deg, rgba(200,162,75,0.12), rgba(200,162,75,0.04));
+    border: 1px solid rgba(200,162,75,0.2);
+    border-radius: 12px;
+    position: relative;
+  }
+  .balance-mini .bm-label { font-size: 10px; opacity: 0.6; letter-spacing: 1px; }
+  .balance-mini .bm-val { font-size: 20px; font-weight: 700; font-family: var(--ff-mono); color: var(--c-accent); margin-top: 2px; }
+  .balance-mini .bm-sub { font-size: 11px; opacity: 0.6; margin-top: 4px; display:flex; justify-content:space-between; }
+
+  .nav { flex:1; overflow-y:auto; padding: 8px 12px; position:relative; }
+  .nav-section { font-size: 10px; opacity:0.4; letter-spacing:2px; padding:12px 12px 6px; text-transform:uppercase; }
+  .nav-item {
+    display:flex; align-items:center; gap:12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.65);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 2px;
+    position: relative;
+  }
+  .nav-item:hover { background: rgba(200,162,75,0.08); color: #fff; }
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(200,162,75,0.22), rgba(200,162,75,0.05));
+    color: #fff;
+    box-shadow: inset 3px 0 0 var(--c-accent);
+  }
+  .nav-item .icon { width:18px; height:18px; opacity:0.85; }
+  .nav-item.active .icon { opacity:1; color: var(--c-accent); }
+  .nav-badge {
+    margin-left:auto; background: var(--c-accent); color:#1a1a1a;
+    font-size:10px; padding:1px 6px; border-radius:10px; font-weight:700;
+  }
+  .sidebar-foot {
+    padding: 14px; border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 11px; opacity:0.5; position:relative;
+    display:flex; align-items:center; gap:8px;
+  }
+  .dot-live { width:6px; height:6px; border-radius:50%; background: var(--c-available-soft); box-shadow:0 0 8px var(--c-available-soft); animation: pulse 1.6s infinite; }
+
+  /* 主区域 */
+  .main { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .topbar {
+    height: 64px;
+    background: var(--c-bg-card);
+    border-bottom: 1px solid var(--c-border-soft);
+    display:flex; align-items:center; padding: 0 28px;
+    gap: 20px; flex-shrink:0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    position: relative; z-index: 20;
+  }
+  .breadcrumb { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--c-text-3); }
+  .breadcrumb .cur { color: var(--c-text-1); font-weight:600; }
+  .search-box {
+    margin-left: auto;
+    display:flex; align-items:center; gap:8px;
+    background: var(--c-bg-soft);
+    border:1px solid var(--c-border-soft);
+    border-radius: 20px;
+    padding: 7px 14px;
+    width: 260px;
+  }
+  .search-box:focus-within { border-color: var(--c-accent); background:#fff; box-shadow:0 0 0 3px rgba(200,162,75,0.12); }
+  .search-box input { border:none; background:transparent; outline:none; flex:1; font-size:13px; }
+  .topbar-actions { display:flex; align-items:center; gap:14px; }
+  .icon-btn {
+    width:38px; height:38px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--c-text-2); cursor:pointer; transition: all 0.2s; position:relative;
+  }
+  .icon-btn:hover { background: var(--c-bg-soft); color: var(--c-accent-deep); }
+  .user-chip {
+    display:flex; align-items:center; gap:10px;
+    padding: 5px 12px 5px 5px; border-radius: 20px;
+    cursor:pointer; transition: background 0.2s;
+  }
+  .user-chip:hover { background: var(--c-bg-soft); }
+
+  .content { flex:1; overflow-y:auto; padding: 24px 28px 40px; background: var(--c-bg); }
+
+  /* LSC 凭证大卡 */
+  .lsc-hero {
+    border-radius: var(--r-xl);
+    padding: 26px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--c-primary-deep) 0%, var(--c-primary) 55%, var(--c-primary-soft) 100%);
+    box-shadow: 0 14px 30px rgba(8,46,44,0.3);
+    position: relative; overflow: hidden;
+  }
+  .lsc-hero::before {
+    content:''; position:absolute; top:-40px; right:-20px;
+    width: 280px; height:280px; border-radius:50%;
+    background: radial-gradient(circle, rgba(200,162,75,0.3), transparent 60%);
+  }
+  .lsc-hero::after {
+    content:'LSC · 链盛通凭证'; position:absolute;
+    right: 22px; top: 50%; transform: translateY(-50%) rotate(-90deg);
+    transform-origin: right center;
+    font-size: 11px; letter-spacing: 8px; color: rgba(255,255,255,0.12);
+    font-weight: 700; pointer-events:none;
+  }
+  .lsc-hero .hero-label { font-size: 12px; opacity: 0.7; letter-spacing: 2px; }
+  .lsc-hero .hero-val { font-size: 36px; font-weight: 700; font-family: var(--ff-mono); margin-top: 4px; letter-spacing: -1px; }
+  .lsc-hero .hero-unit { font-size: 14px; opacity: 0.8; margin-left: 6px; font-weight: 500; }
+  .lsc-hero .hero-foot { display:flex; gap: 32px; margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.15); }
+  .lsc-hero .hero-foot .hf-item { }
+  .lsc-hero .hero-foot .hf-label { font-size: 11px; opacity: 0.65; }
+  .lsc-hero .hero-foot .hf-val { font-size: 18px; font-weight: 600; font-family: var(--ff-mono); margin-top: 2px; }
+
+  /* 统计卡 */
+  .stat-grid { display:grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  .stat-card {
+    background: var(--c-bg-card);
+    border-radius: var(--r-lg);
+    padding: 18px; box-shadow: var(--sh-card);
+    border:1px solid var(--c-border-soft);
+    position: relative; overflow: hidden;
+  }
+  .stat-card .sc-icon {
+    width:36px; height:36px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--c-primary-tint); color: var(--c-primary); margin-bottom: 12px;
+  }
+  .stat-card.gold .sc-icon { background: var(--c-accent-soft); color: var(--c-accent-deep); }
+  .stat-card.green .sc-icon { background: var(--c-available-tint); color: var(--c-available); }
+  .stat-card .stat-label { font-size: 12px; color: var(--c-text-3); }
+  .stat-card .stat-value { font-size: 24px; font-weight: 700; font-family: var(--ff-mono); margin-top: 4px; }
+
+  .grid-2 { display:grid; grid-template-columns: 1.6fr 1fr; gap:16px; }
+  .grid-2-eq { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  .grid-3 { display:grid; grid-template-columns: repeat(3,1fr); gap:16px; }
+
+  /* 进度条增强 */
+  .progress-bar-gold { background: linear-gradient(90deg, var(--c-accent), #E6C879); }
+
+  /* 表格操作按钮 */
+  .row-btn {
+    padding:4px 10px; border-radius:6px; font-size:12px;
+    background: var(--c-primary-tint); color: var(--c-primary);
+    cursor:pointer; transition: all 0.15s; white-space:nowrap;
+    display:inline-flex; align-items:center; gap:4px;
+  }
+  .row-btn:hover { background: var(--c-primary); color:#fff; }
+  .row-btn.gold { background: var(--c-accent-soft); color: var(--c-accent-deep); }
+  .row-btn.gold:hover { background: var(--c-accent); color:#fff; }
+  .row-btn.danger { background:#FCE6E4; color: var(--c-danger); }
+  .row-btn.danger:hover { background: var(--c-danger); color:#fff; }
+  .row-btn.warn { background:#FEF3E2; color: var(--c-warning); }
+  .row-btn.warn:hover { background: var(--c-warning); color:#fff; }
+
+  /* 工具条 */
+  .toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .seg { display:flex; background: var(--c-bg-soft); border-radius: 8px; padding:3px; gap:2px; }
+  .seg-item { padding:6px 14px; font-size:13px; color:var(--c-text-2); border-radius:6px; cursor:pointer; transition: all 0.15s; }
+  .seg-item.active { background:#fff; color: var(--c-accent-deep); font-weight:600; box-shadow: var(--sh-sm); }
+
+  /* 商品网格 */
+  .product-card {
+    background:#fff; border-radius: var(--r-lg); overflow:hidden;
+    border:1px solid var(--c-border-soft); transition: all 0.2s;
+  }
+  .product-card:hover { box-shadow: var(--sh-md); transform: translateY(-2px); }
+  .product-img {
+    height: 140px; background: linear-gradient(135deg, var(--c-primary-tint), var(--c-bg-soft));
+    display:flex; align-items:center; justify-content:center; position: relative;
+  }
+  .product-body { padding: 14px; }
+
+  /* B2B 状态步骤条 */
+  .steps { display:flex; align-items:center; gap: 0; margin: 16px 0; }
+  .step { flex:1; display:flex; flex-direction:column; align-items:center; position: relative; }
+  .step::before {
+    content:''; position:absolute; top:14px; left:-50%; width:100%; height:2px; background: var(--c-border-soft); z-index:0;
+  }
+  .step:first-child::before { display:none; }
+  .step.active::before, .step.done::before { background: var(--c-accent); }
+  .step-circle {
+    width:30px; height:30px; border-radius:50%;
+    background:#fff; border:2px solid var(--c-border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:600; color: var(--c-text-3);
+    position: relative; z-index:1;
+  }
+  .step.done .step-circle { background: var(--c-accent); border-color: var(--c-accent); color:#fff; }
+  .step.active .step-circle { background:#fff; border-color: var(--c-accent); color: var(--c-accent-deep); box-shadow: 0 0 0 4px rgba(200,162,75,0.15);}
+  .step-label { font-size: 11px; color: var(--c-text-3); margin-top:6px; }
+  .step.active .step-label, .step.done .step-label { color: var(--c-text-1); font-weight: 500; }
+
+  /* 收款码 */
+  .qr-display {
+    width: 220px; height: 220px;
+    background: #fff; border-radius: var(--r-lg);
+    padding: 16px; margin: 0 auto;
+    box-shadow: var(--sh-md);
+    position: relative;
+  }
+  .qr-grid {
+    width:100%; height:100%;
+    background-image:
+      linear-gradient(var(--c-text-1) 1px, transparent 1px),
+      linear-gradient(90deg, var(--c-text-1) 1px, transparent 1px);
+    background-size: 8px 8px;
+    position: relative;
+  }
+  /* QR 三个定位角 */
+  .qr-corner { position:absolute; width:36px; height:36px; background: var(--c-text-1); }
+  .qr-corner::after { content:''; position:absolute; inset:6px; background:#fff; }
+  .qr-corner::before { content:''; position:absolute; inset:12px; background: var(--c-text-1); z-index:1;}
+  .qr-tl { top:8px; left:8px; }
+  .qr-tr { top:8px; right:8px; }
+  .qr-bl { bottom:8px; left:8px; }
+
+  /* 地图占位 */
+  .map-box {
+    height: 280px; border-radius: var(--r-lg);
+    background:
+      linear-gradient(135deg, var(--c-primary-tint), var(--c-bg-soft)),
+      repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(14,77,74,0.06) 30px, rgba(14,77,74,0.06) 31px),
+      repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(14,77,74,0.06) 30px, rgba(14,77,74,0.06) 31px);
+    background-blend-mode: multiply;
+    position: relative; overflow: hidden;
+    border: 1px solid var(--c-border-soft);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .map-pin {
+    position: absolute; top:45%; left:50%;
+    transform: translate(-50%,-100%);
+    color: var(--c-danger);
+  }
+  .map-pin-circle {
+    position: absolute; top:45%; left:50%;
+    transform: translate(-50%,-50%);
+    width: 60px; height:60px; border-radius:50%;
+    border: 2px solid var(--c-danger);
+    opacity: 0.3;
+    animation: pulse 2s infinite;
+  }
+
+  /* 信用仪表盘 */
+  .credit-ring { width: 140px; height: 140px; position: relative; margin: 0 auto; }
+  .credit-ring .cr-text {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+
+  /* AI助手对话气泡 */
+  .chat-bubble {
+    max-width: 75%; padding: 10px 14px; border-radius: 14px;
+    font-size: 13px; line-height: 1.5;
+  }
+  .chat-ai { background: var(--c-primary-tint); color: var(--c-text-1); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .chat-me { background: var(--c-primary); color:#fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+
+  /* 响应式 */
+  @media (max-width: 1100px) {
+    .stat-grid { grid-template-columns: repeat(2,1fr); }
+    .grid-2, .grid-2-eq { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    .sidebar { width: 64px; }
+    .brand-text, .nav-item span, .nav-section, .sidebar-foot span, .balance-mini { display:none; }
+    .nav-item { justify-content:center; }
+    .search-box { width:140px; }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- ===== 侧边栏 ===== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">商</div>
+      <div class="brand-text">
+        <div class="brand-name">锦华商家后台</div>
+        <div class="brand-sub">MERCHANT · V6.2</div>
+      </div>
+    </div>
+    <div class="balance-mini">
+      <div class="bm-label">可用 LSC 余额</div>
+      <div class="bm-val">186,420.50</div>
+      <div class="bm-sub"><span>锁定 385,200</span><span>信用 92分</span></div>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="nav-section">经营</div>
+      <div class="nav-item active" data-view="shop"><span class="icon" data-i="shop"></span><span>店铺管理</span></div>
+      <div class="nav-item" data-view="product"><span class="icon" data-i="product"></span><span>商品管理</span><span class="nav-badge">3</span></div>
+      <div class="nav-item" data-view="wallet"><span class="icon" data-i="wallet"></span><span>LSC账户</span></div>
+      <div class="nav-section">凭证流转</div>
+      <div class="nav-item" data-view="nh"><span class="icon" data-i="release"></span><span>核销管理</span></div>
+      <div class="nav-item" data-view="b2b"><span class="icon" data-i="b2b"></span><span>B2B交易</span><span class="nav-badge">2</span></div>
+      <div class="nav-section">增长</div>
+      <div class="nav-item" data-view="promotion"><span class="icon" data-i="promotion"></span><span>推广管理</span></div>
+      <div class="nav-item" data-view="credit"><span class="icon" data-i="credit"></span><span>信用中心</span></div>
+      <div class="nav-item" data-view="ai"><span class="icon" data-i="ai"></span><span>AI助手</span></div>
+    </nav>
+    <div class="sidebar-foot">
+      <span class="dot-live"></span><span>店铺在线 · 营业中</span>
+    </div>
+  </aside>
+
+  <!-- ===== 主区域 ===== -->
+  <div class="main">
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span>商家管理后台</span>
+        <span>/</span>
+        <span class="cur" id="crumb">店铺管理</span>
+      </div>
+      <div class="search-box">
+        <span class="icon icon-sm" data-i="search" style="color:var(--c-text-3)"></span>
+        <input placeholder="搜索商品/订单/流水...">
+      </div>
+      <div class="topbar-actions">
+        <div class="icon-btn" title="生成收款码" onclick="navTo('nh')"><span class="icon" data-i="qr"></span></div>
+        <div class="icon-btn" title="通知"><span class="icon" data-i="bell"></span><span class="badge">3</span></div>
+        <div class="user-chip">
+          <div class="avatar avatar-gold">锦</div>
+          <div><div style="font-size:13px;font-weight:600;">锦华餐饮连锁</div><div style="font-size:11px;color:var(--c-text-3);">M20001 · A档商家</div></div>
+        </div>
+      </div>
+    </header>
+    <div class="content" id="view"></div>
+  </div>
+</div>
+
+<script src="../shared/app-utils.js"></script>
+<script>
+/* 渲染图标 */
+document.querySelectorAll('.icon[data-i]').forEach(el=>{
+  const key = el.getAttribute('data-i');
+  if (ICONS[key]) el.innerHTML = ICONS[key];
+});
+
+const crumbMap = { shop:'店铺管理', product:'商品管理', wallet:'LSC账户', nh:'核销管理', b2b:'B2B交易', promotion:'推广管理', credit:'信用中心', ai:'AI助手' };
+const views = { shop: renderShop, product: renderProduct, wallet: renderWallet, nh: renderNH, b2b: renderB2B, promotion: renderPromotion, credit: renderCredit, ai: renderAI };
+
+function navTo(view) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
+  document.getElementById('crumb').textContent = crumbMap[view];
+  views[view]();
+}
+document.getElementById('nav').addEventListener('click', e=>{
+  const item = e.target.closest('.nav-item');
+  if (item) navTo(item.dataset.view);
+});
+
+function pageHead(title, desc, extra='') {
+  return `<div class="flex items-center justify-between mb-5">
+    <div><div style="font-size:20px;font-weight:700;">${title}</div><div style="font-size:13px;color:var(--c-text-3);margin-top:4px;">${desc}</div></div>
+    <div class="flex gap-3">${extra}</div>
+  </div>`;
+}
+function setView(html) {
+  const v = document.getElementById('view');
+  v.innerHTML = html;
+  v.querySelectorAll('.icon[data-i]').forEach(el=>{
+    const key = el.getAttribute('data-i');
+    if (ICONS[key]) el.innerHTML = ICONS[key];
+  });
+}
+
+/* 环形进度 */
+function ringChart(pct, color='var(--c-accent)', size=140, stroke=12) {
+  const r = (size-stroke)/2, c = 2*Math.PI*r, off = c*(1-pct);
+  return `<svg width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--c-border-soft)" stroke-width="${stroke}"/>
+  <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${size/2} ${size/2})"/></svg>`;
+}
+
+/* ============== 店铺管理 ============== */
+function renderShop() {
+  const html = pageHead('店铺管理', '门店信息维护 · 线下地址管理(高德/百度地图选点) · AI地址核验', `
+    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="export"></span>保存修改</button>
+  `) + `
+  <div class="grid-2-eq mb-5">
+    <div class="card">
+      <div class="card-head"><div class="card-title">门店基本信息</div><span class="tag tag-success tag-dot">营业中</span></div>
+      <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div><label class="field-label">门店名称</label><input class="input" value="锦华餐饮连锁·总店"></div>
+        <div><label class="field-label">联系电话</label><input class="input" value="021-58881234"></div>
+        <div><label class="field-label">商家类型</label><input class="input" value="餐饮" readonly></div>
+        <div><label class="field-label">营业时间</label><input class="input" value="09:00 - 22:00"></div>
+        <div style="grid-column:1/3;"><label class="field-label">营业执照号</label><input class="input" value="91310115MA1K3P2X8Q" readonly></div>
+        <div style="grid-column:1/3;"><label class="field-label">监管账户号</label><input class="input" value="CUST-62284804029876" readonly></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">经营资质</div><span class="tag tag-success">已核验</span></div>
+      <div class="card-body">
+        <div class="flex items-center justify-between" style="padding:10px 0;border-bottom:1px solid var(--c-divider);">
+          <div class="flex items-center gap-3"><span class="icon" data-i="doc" style="color:var(--c-available);"></span><div><div style="font-size:13px;font-weight:500;">营业执照</div><div class="text-xs text-muted">已上传 · 已核验</div></div></div>
+          <span class="tag tag-success">有效</span>
+        </div>
+        <div class="flex items-center justify-between" style="padding:10px 0;border-bottom:1px solid var(--c-divider);">
+          <div class="flex items-center gap-3"><span class="icon" data-i="doc" style="color:var(--c-available);"></span><div><div style="font-size:13px;font-weight:500;">食品经营许可证</div><div class="text-xs text-muted">已上传 · 已核验</div></div></div>
+          <span class="tag tag-success">有效</span>
+        </div>
+        <div class="flex items-center justify-between" style="padding:10px 0;border-bottom:1px solid var(--c-divider);">
+          <div class="flex items-center gap-3"><span class="icon" data-i="doc" style="color:var(--c-available);"></span><div><div style="font-size:13px;font-weight:500;">监管协议</div><div class="text-xs text-muted">已签署</div></div></div>
+          <span class="tag tag-success">已签</span>
+        </div>
+        <div class="flex items-center justify-between" style="padding:10px 0;">
+          <div class="flex items-center gap-3"><span class="icon" data-i="doc" style="color:var(--c-warning);"></span><div><div style="font-size:13px;font-weight:500;">消防合格证</div><div class="text-xs text-muted">即将到期 30天</div></div></div>
+          <span class="row-btn warn">更新</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-5">
+    <div class="card-head"><div class="card-title">线下门店地址 · AI地址核验</div><span class="tag tag-success tag-dot">核验通过</span></div>
+    <div class="card-body">
+      <div class="grid-2-eq" style="gap:20px;">
+        <div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div><label class="field-label">省/市/区</label><input class="input" value="上海市/浦东新区/世纪大道"></div>
+            <div><label class="field-label">详细地址</label><input class="input" value="世纪大道100号环陆家嘴中心"></div>
+          </div>
+          <div style="margin-bottom:12px;"><label class="field-label">经纬度</label><input class="input" value="121.5066, 31.2399" readonly></div>
+          <div class="alert alert-info" style="font-size:12px;">
+            <span class="icon icon-sm" data-i="ai"></span>
+            <div><b>AI 地址核验结果:</b> 注册地址与工商信息一致，实景地图比对匹配度 96%，核验通过。今日地址修改次数: 0/3。</div>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button class="btn btn-soft btn-sm">高德地图选点</button>
+            <button class="btn btn-outline btn-sm">百度地图选点</button>
+          </div>
+        </div>
+        <div class="map-box">
+          <div class="map-pin-circle"></div>
+          <span class="map-pin icon icon-xl" data-i="location" style="width:36px;height:36px;"></span>
+          <div style="position:absolute;bottom:12px;left:12px;background:#fff;padding:6px 12px;border-radius:8px;font-size:12px;box-shadow:var(--sh-sm);">
+            <span class="text-available font-bold">●</span> 锦华餐饮·总店<br><span class="text-muted">世纪大道100号</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="release"></span></div><div class="stat-label">今日核销额度</div><div class="stat-value">¥50,000</div><div class="text-xs text-muted mt-2">A档 · 已用 ¥18,200</div></div>
+    <div class="stat-card green"><div class="sc-icon"><span class="icon" data-i="unlock"></span></div><div class="stat-label">监管账户余额</div><div class="stat-value">¥86,400</div><div class="text-xs text-muted mt-2">14% 暂扣 · 可核销释放</div></div>
+    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="merchant"></span></div><div class="stat-label">本月营业额</div><div class="stat-value">¥385,000</div><div class="text-xs text-available mt-2">+12.4% 环比</div></div>
+    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="promotion"></span></div><div class="stat-label">推荐用户数</div><div class="stat-value">248</div><div class="text-xs text-muted mt-2">活跃 186</div></div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 商品管理 ============== */
+function renderProduct() {
+  const products = [
+    { name:'精品双人套餐·周末限定', price:399, stock:500, status:'on', sales:1280, ai:'pass' },
+    { name:'招牌全家福套餐', price:588, stock:300, status:'on', sales:860, ai:'pass' },
+    { name:'下午茶双人组合', price:168, stock:200, status:'review', sales:0, ai:'review' },
+    { name:'季节限定·蟹粉小笼礼盒', price:288, stock:150, status:'on', sales:540, ai:'pass' },
+    { name:'商务宴请8人桌', price:2680, stock:50, status:'off', sales:42, ai:'pass' },
+  ];
+  const cards = products.map(p=>`
+    <div class="product-card">
+      <div class="product-img">
+        <span class="icon icon-xl" data-i="product" style="color:var(--c-primary);opacity:0.5;width:48px;height:48px;"></span>
+        <span class="tag ${p.status==='on'?'tag-success':p.status==='review'?'tag-warning':'tag-info'}" style="position:absolute;top:10px;left:10px;">${p.status==='on'?'上架中':p.status==='review'?'AI审核中':'已下架'}</span>
+      </div>
+      <div class="product-body">
+        <div style="font-weight:600;font-size:14px;margin-bottom:6px;line-height:1.4;">${p.name}</div>
+        <div class="flex items-center justify-between mb-2">
+          <span style="font-size:18px;font-weight:700;color:var(--c-accent-deep);font-family:var(--ff-mono);">¥${p.price}</span>
+          <span class="text-xs text-muted">= ${p.price} LSC</span>
+        </div>
+        <div class="flex items-center justify-between text-xs text-muted mb-3">
+          <span>库存 ${p.stock}</span><span>已售 ${p.sales}</span>
+        </div>
+        <div class="flex gap-2">
+          ${p.status==='review'
+            ? '<span class="row-btn warn" style="flex:1;justify-content:center;">审核中</span>'
+            : `<span class="row-btn" style="flex:1;justify-content:center;">编辑</span><span class="row-btn ${p.status==='on'?'gold':''}" style="flex:1;justify-content:center;">${p.status==='on'?'下架':'上架'}</span>`}
+        </div>
+      </div>
+    </div>`).join('');
+
+  const html = pageHead('商品管理', '商品发布/编辑/上下架 · 强制1:1定价校验 · AI图片视频审核', `
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="product"></span>发布商品</button>
+  `) + `
+  <div class="card mb-5">
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <label class="field-label field-required">商品名称</label>
+          <input class="input" placeholder="例: 精品双人套餐">
+        </div>
+        <div>
+          <label class="field-label field-required">商品类目</label>
+          <select class="select"><option>餐饮·套餐</option><option>餐饮·单品</option><option>餐饮·礼盒</option></select>
+        </div>
+        <div>
+          <label class="field-label field-required">人民币价格 (元)</label>
+          <div class="input-group"><span style="color:var(--c-accent-deep);font-weight:700;">¥</span><input class="input" id="rmb-price" placeholder="输入人民币金额" oninput="document.getElementById('lsc-price').value=this.value"></div>
+          <div class="text-xs text-muted mt-1">1元 = 1 LSC · 强制1:1对应</div>
+        </div>
+        <div>
+          <label class="field-label">LSC 价格 (自动填充)</label>
+          <div class="input-group"><span style="color:var(--c-primary);font-weight:700;">L</span><input class="input" id="lsc-price" placeholder="自动同步" readonly style="background:var(--c-bg-soft);"></div>
+        </div>
+        <div>
+          <label class="field-label">库存数量</label>
+          <input class="input" type="number" placeholder="例: 500">
+        </div>
+        <div>
+          <label class="field-label">商品视频 (选填)</label>
+          <div style="border:1px dashed var(--c-border);border-radius:8px;padding:18px;text-align:center;color:var(--c-text-3);font-size:12px;cursor:pointer;" onclick="alert('调用视频上传·AI审核')">
+            <span class="icon" data-i="eye"></span> 点击上传视频 · AI自动审核
+          </div>
+        </div>
+      </div>
+      <div class="alert alert-info mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="ai"></span>商品发布后, AI将自动审核图片/视频/文本, 审核结果实时推送给您。违规内容将自动驳回。</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="seg">
+      <span class="seg-item active">全部 ${products.length}</span>
+      <span class="seg-item">上架中 3</span>
+      <span class="seg-item">审核中 1</span>
+      <span class="seg-item">已下架 1</span>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">${cards}</div>
+  `;
+  setView(html);
+}
+
+/* ============== LSC账户 ============== */
+function renderWallet() {
+  const txTypes = {
+    1:{tag:'tag-locked',label:'消费发行'},
+    2:{tag:'tag-available',label:'每日释放'},
+    3:{tag:'tag-accent',label:'推广奖励'},
+    4:{tag:'tag-info',label:'权益商城'},
+    5:{tag:'tag-info',label:'线下消费'},
+    6:{tag:'tag-warning',label:'过期转回'},
+    7:{tag:'tag-success',label:'商家核销'},
+    8:{tag:'tag-info',label:'B2B流转'},
+    9:{tag:'tag-warning',label:'退款退回'},
+  };
+  const txs = [
+    {type:2, amount:385.20, lockedBefore:385585, lockedAfter:385200, availBefore:186035, availAfter:186420, orderId:'REL20260827002', ts:Date.now()-3600000},
+    {type:7, amount:5000, lockedBefore:385585, lockedAfter:385585, availBefore:191035, availAfter:186035, orderId:'NH20260824001', ts:Date.now()-86400000},
+    {type:1, amount:880, lockedBefore:384705, lockedAfter:385585, availBefore:186915, availAfter:186035, orderId:'ORD20260824008', ts:Date.now()-90000000},
+    {type:3, amount:88, lockedBefore:384705, lockedAfter:384705, availBefore:186827, availAfter:186915, orderId:'PROMO20260824005', ts:Date.now()-172800000},
+    {type:8, amount:12000, lockedBefore:384705, lockedAfter:384705, availBefore:174827, availAfter:186827, orderId:'B2B20260822003', ts:Date.now()-259200000},
+  ];
+  const rows = txs.map(t=>{
+    const ty = txTypes[t.type];
+    const isIn = [2,3,8,9].includes(t.type);
+    return `<tr>
+      <td><span class="tag ${ty.tag}">${ty.label}</span></td>
+      <td><span style="font-family:var(--ff-mono);font-weight:600;color:${isIn?'var(--c-available)':'var(--c-danger)'};">${isIn?'+':'-'}${LSC.fmtNum(t.amount,2)}</span> LSC</td>
+      <td class="text-xs text-muted">锁定 ${LSC.fmtNum(t.lockedBefore)} → ${LSC.fmtNum(t.lockedAfter)}</td>
+      <td class="text-xs text-muted">可用 ${LSC.fmtNum(t.availBefore)} → ${LSC.fmtNum(t.availAfter)}</td>
+      <td><span style="font-family:var(--ff-mono);font-size:11px;">${t.orderId}</span></td>
+      <td class="text-xs text-muted">${LSC.fmtTime(t.ts)}</td>
+    </tr>`;
+  }).join('');
+
+  const html = pageHead('LSC 账户', '可用余额 · 锁定余额 · 流水明细 · 释放记录 · 有效期管理', `
+    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="export"></span>导出流水</button>
+  `) + `
+  <div class="lsc-hero mb-5">
+    <div class="flex justify-between items-start">
+      <div>
+        <div class="hero-label">可用 LSC 余额 (AVAILABLE)</div>
+        <div><span class="hero-val">186,420.50</span><span class="hero-unit">LSC</span></div>
+      </div>
+      <span class="tag tag-accent" style="background:rgba(200,162,75,0.25);color:var(--c-accent-soft);">A档商家</span>
+    </div>
+    <div class="hero-foot">
+      <div class="hf-item"><div class="hf-label">锁定池余额</div><div class="hf-val">385,200.00 LSC</div></div>
+      <div class="hf-item"><div class="hf-label">总余额</div><div class="hf-val">571,620.50 LSC</div></div>
+      <div class="hf-item"><div class="hf-label">今日释放</div><div class="hf-val" style="color:var(--c-accent-soft);">+385.20</div></div>
+      <div class="hf-item"><div class="hf-label">监管账户</div><div class="hf-val">¥86,400</div></div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-5">
+    <div class="card">
+      <div class="card-head"><div class="card-title">可用 LSC 明细 · 有效期</div><span class="tag tag-info">8条</span></div>
+      <div class="card-body" style="padding:0;">
+        <table class="table">
+          <thead><tr><th>来源</th><th>金额</th><th>到期日</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td>每日释放</td><td><b>385.20</b></td><td class="text-warning">2027-08-27</td><td><span class="tag tag-success">有效</span></td></tr>
+            <tr><td>B2B流转</td><td><b>12,000.00</b></td><td>2027-08-24</td><td><span class="tag tag-success">有效</span></td></tr>
+            <tr><td>推广奖励</td><td><b>88.00</b></td><td>2027-08-24</td><td><span class="tag tag-success">有效</span></td></tr>
+            <tr><td>每日释放</td><td><b>380.00</b></td><td class="text-danger">2026-08-30</td><td><span class="tag tag-warning">即将过期</span></td></tr>
+            <tr><td>消费发行</td><td><b>2,400.00</b></td><td>2027-08-20</td><td><span class="tag tag-success">有效</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">近7日释放趋势</div></div>
+      <div class="card-body">
+        <div style="height:200px;">${(()=>{
+          const data = [348,360,372,365,380,385,385];
+          const w=320,h=200,pad={l:30,r:10,t:10,b:24},iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+          const max=Math.max(...data),min=Math.min(...data),range=max-min||1;
+          const xAt=i=>pad.l+i*iw/(data.length-1);
+          const yAt=v=>pad.t+ih-((v-min)/range)*ih;
+          const pts=data.map((v,i)=>`${xAt(i)},${yAt(v)}`).join(' ');
+          return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
+            <polyline points="${pts}" fill="none" stroke="var(--c-available)" stroke-width="2.5"/>
+            <polygon points="${pad.l},${pad.t+ih} ${pts} ${xAt(data.length-1)},${pad.t+ih}" fill="var(--c-available)" opacity="0.12"/>
+            ${data.map((v,i)=>`<circle cx="${xAt(i)}" cy="${yAt(v)}" r="3" fill="var(--c-available)"/>`).join('')}
+            ${data.map((v,i)=>`<text x="${xAt(i)}" y="${h-pad.b+14}" font-size="9" fill="var(--c-text-3)" text-anchor="middle">D-${data.length-i}</text>`).join('')}
+          </svg>`;
+        })()}</div>
+        <div class="flex justify-between text-xs text-muted mt-3"><span>本周累计释放</span><b style="color:var(--c-available);">+2,595.20 LSC</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">LSC 流水明细</div><div class="seg"><span class="seg-item active">全部</span><span class="seg-item">释放</span><span class="seg-item">核销</span><span class="seg-item">B2B</span></div></div>
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr><th>流水类型</th><th>变动金额</th><th>锁定池变动</th><th>可用池变动</th><th>订单号</th><th>时间</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 核销管理 ============== */
+function renderNH() {
+  const html = pageHead('核销管理', '核销申请 · 现金结算(×0.87) · 核销记录 · 限额查询 · 收款码生成', `
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="release"></span>申请核销</button>
+  `) + `
+  <div class="stat-grid mb-5">
+    <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="release"></span></div><div class="stat-label">今日已核销</div><div class="stat-value">¥18,200</div><div class="text-xs text-muted mt-1">LSC 20,919 · ×0.87结算</div></div>
+    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="unlock"></span></div><div class="stat-label">剩余额度</div><div class="stat-value">¥31,800</div><div class="progress mt-2"><div class="progress-bar-gold progress-bar" style="width:36.4%;"></div></div></div>
+    <div class="stat-card green"><div class="sc-icon"><span class="icon" data-i="wallet"></span></div><div class="stat-label">监管账户余额</div><div class="stat-value">¥86,400</div><div class="text-xs text-muted mt-1">14%暂扣 · 可核销释放</div></div>
+    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="credit"></span></div><div class="stat-label">核销档位</div><div class="stat-value">A档</div><div class="text-xs text-available mt-1">额度 ¥50,000/日</div></div>
+  </div>
+
+  <div class="grid-2-eq mb-5">
+    <div class="card">
+      <div class="card-head"><div class="card-title">商家专属收款码</div><span class="tag tag-success tag-dot">动态刷新</span></div>
+      <div class="card-body" style="text-align:center;">
+        <div class="qr-display">
+          <div class="qr-grid">
+            <div class="qr-corner qr-tl"></div>
+            <div class="qr-corner qr-tr"></div>
+            <div class="qr-corner qr-bl"></div>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:var(--c-accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;">锦</div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div style="font-size:15px;font-weight:600;">锦华餐饮连锁·总店</div>
+          <div class="text-xs text-muted mt-1">M20001 · 扫码即付 LSC</div>
+          <div class="text-xs text-accent mt-2">⏱ 30秒后自动刷新 · 含防伪签名</div>
+        </div>
+        <div class="flex gap-2 justify-center mt-4">
+          <button class="btn btn-outline btn-sm">下载打印</button>
+          <button class="btn btn-soft btn-sm">刷新二维码</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">核销申请</div><span class="tag tag-info">需校验资格</span></div>
+      <div class="card-body">
+        <div class="alert alert-success mb-3" style="font-size:12px;"><span class="icon icon-sm" data-i="check"></span>核销资格校验通过: 监管协议已签 · 信用92分 · 监管账户正常</div>
+        <div class="mb-3"><label class="field-label field-required">核销 LSC 金额</label><div class="input-group"><span style="color:var(--c-primary);font-weight:700;">L</span><input class="input" id="nh-amount" placeholder="输入核销LSC数量" value="10000" oninput="calcNH()"></div></div>
+        <div class="mb-3" style="padding:14px;background:var(--c-bg-soft);border-radius:10px;">
+          <div class="flex justify-between text-sm mb-2"><span class="text-muted">核销 LSC 数量</span><b id="nh-lsc" style="font-family:var(--ff-mono);">10,000.00 LSC</b></div>
+          <div class="flex justify-between text-sm mb-2"><span class="text-muted">现金结算 (×0.87)</span><b id="nh-cash" style="font-family:var(--ff-mono);color:var(--c-accent-deep);">¥8,700.00</b></div>
+          <div class="flex justify-between text-sm mb-2"><span class="text-muted">扣减可用 LSC</span><b style="color:var(--c-danger);">-10,000.00</b></div>
+          <div class="flex justify-between text-sm"><span class="text-muted">监管账户→主账户</span><b style="color:var(--c-available);">+¥8,700.00</b></div>
+        </div>
+        <div class="alert alert-info mb-3" style="font-size:11px;"><span class="icon icon-sm" data-i="info"></span>核销资金来源: 商家14%监管账户划拨至主账户。平台2%技术服务费已在消费分账时由支付机构直接清分, 与核销资金无关。</div>
+        <button class="btn btn-primary btn-block" onclick="alert('核销申请提交, 采用订单号+版本号乐观锁双重幂等校验')">提交核销申请</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">核销记录</div><span class="text-xs text-muted">订单号+幂等键双重校验</span></div>
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr><th>核销单号</th><th>核销LSC</th><th>现金结算</th><th>核销前可用</th><th>核销后可用</th><th>状态</th><th>时间</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">NH20260827008</td><td><b>5,000.00</b></td><td style="color:var(--c-accent-deep);font-weight:600;">¥4,350.00</td><td>191,420</td><td>186,420</td><td><span class="tag tag-success">已完成</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-3600000)}</td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">NH20260824001</td><td><b>5,000.00</b></td><td style="color:var(--c-accent-deep);font-weight:600;">¥4,350.00</td><td>196,035</td><td>191,035</td><td><span class="tag tag-success">已完成</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-86400000)}</td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">NH20260820003</td><td><b>8,000.00</b></td><td style="color:var(--c-accent-deep);font-weight:600;">¥6,960.00</td><td>204,035</td><td>196,035</td><td><span class="tag tag-success">已完成</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-7*86400000)}</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+  setView(html);
+  if (!window.calcNH) {
+    window.calcNH = function() {
+      const v = parseFloat(document.getElementById('nh-amount').value) || 0;
+      document.getElementById('nh-lsc').textContent = v.toFixed(2) + ' LSC';
+      document.getElementById('nh-cash').textContent = '¥' + (v * 0.87).toFixed(2);
+    };
+  }
+}
+
+/* ============== B2B交易 ============== */
+function renderB2B() {
+  const html = pageHead('B2B交易', '商家间LSC流转 · 必须绑定真实B2B订单 · AI核验贸易凭证 · 1:1金额对应', `
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="b2b"></span>创建B2B订单</button>
+  `) + `
+  <div class="card mb-5">
+    <div class="card-head"><div class="card-title">创建 B2B 流转订单</div><span class="tag tag-warning">流转有效期365天重置</span></div>
+    <div class="card-body">
+      <div class="steps">
+        <div class="step done"><div class="step-circle"><span class="icon icon-sm" data-i="check"></span></div><div class="step-label">创建订单</div></div>
+        <div class="step active"><div class="step-circle">2</div><div class="step-label">对手方确认</div></div>
+        <div class="step"><div class="step-circle">3</div><div class="step-label">AI核验凭证</div></div>
+        <div class="step"><div class="step-circle">4</div><div class="step-label">LSC流转</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div><label class="field-label field-required">对手方商家</label>
+          <select class="select"><option>御品茶业工坊 (M20005)</option><option>恒通建材批发中心 (M20002)</option><option>海纳科技公司 (M20007)</option></select>
+        </div>
+        <div><label class="field-label field-required">交易描述</label><input class="input" value="高端茶叶季度供应"></div>
+        <div><label class="field-label field-required">人民币金额</label><div class="input-group"><span style="color:var(--c-accent-deep);font-weight:700;">¥</span><input class="input" value="96000" oninput="this.parentElement.parentElement.nextElementSibling.querySelector('input').value=this.value"></div></div>
+        <div><label class="field-label">LSC金额 (1:1自动)</label><div class="input-group"><span style="color:var(--c-primary);font-weight:700;">L</span><input class="input" value="96000" readonly style="background:var(--c-bg-soft);"></div></div>
+        <div><label class="field-label">合同编号</label><input class="input" value="HT-2026-0824-2"></div>
+        <div><label class="field-label">过期时间</label><input class="input" type="date" value="2026-09-24"></div>
+        <div style="grid-column:1/3;"><label class="field-label">贸易凭证 (合同/发票/物流单)</label>
+          <div style="border:1px dashed var(--c-border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;" onclick="alert('上传凭证后AI自动核验')">
+            <span class="icon icon-lg" data-i="doc" style="color:var(--c-text-3);"></span>
+            <div class="text-sm text-muted mt-2">点击上传贸易凭证图片 (支持多张)</div>
+            <div class="text-xs text-accent mt-1">AI将提取合同编号/金额并与订单匹配</div>
+          </div>
+        </div>
+      </div>
+      <div class="alert alert-warning mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="warning"></span>消费者会员间禁止LSC流转 · 消费者→商家支付允许 · 商家→消费者反向流转禁止。流转后接收方LSC有效期重置为365天。</div>
+      <div class="flex justify-end gap-3 mt-3"><button class="btn btn-outline btn-sm">保存草稿</button><button class="btn btn-primary btn-sm" onclick="alert('订单已提交, 等待对手方确认')">提交并等待确认</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">B2B 订单记录</div></div>
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr><th>订单号</th><th>对手方</th><th>描述</th><th>金额</th><th>AI核验</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">B2B20260824002</td><td>御品茶业工坊</td><td>高端茶叶季度供应</td><td><b>¥96,000</b><br><span class="text-xs text-available">96,000 LSC</span></td><td><span class="tag tag-success tag-dot">真实 98%</span></td><td><span class="tag tag-success">已完成</span></td><td><span class="row-btn">详情</span></td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">B2B20260822003</td><td>恒通建材批发中心</td><td>装修材料采购</td><td><b>¥12,000</b><br><span class="text-xs text-available">12,000 LSC</span></td><td><span class="tag tag-success tag-dot">真实 94%</span></td><td><span class="tag tag-success">已完成</span></td><td><span class="row-btn">详情</span></td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">B2B20260827009</td><td>海纳科技公司</td><td>智能点餐系统采购</td><td><b>¥45,000</b><br><span class="text-xs text-available">45,000 LSC</span></td><td><span class="tag tag-info">待核验</span></td><td><span class="tag tag-warning">待确认</span></td><td><span class="row-btn gold">催办</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 推广管理 ============== */
+function renderPromotion() {
+  const html = pageHead('推广管理', '推荐关系 · 首单10%奖励 · 推广二维码 · 奖励记录', `
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="qr"></span>生成推广码</button>
+  `) + `
+  <div class="stat-grid mb-5">
+    <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="promotion"></span></div><div class="stat-label">累计推荐用户</div><div class="stat-value">248</div><div class="text-xs text-available mt-1">活跃 186</div></div>
+    <div class="stat-card green"><div class="sc-icon"><span class="icon" data-i="wallet"></span></div><div class="stat-label">累计推广奖励</div><div class="stat-value">3,820</div><div class="text-xs text-muted mt-1">LSC · 首单10%</div></div>
+    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="promotion"></span></div><div class="stat-label">本月新增</div><div class="stat-value">28</div><div class="text-xs text-available mt-1">+12.4%</div></div>
+    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="order"></span></div><div class="stat-label">本月奖励</div><div class="stat-value">486</div><div class="text-xs text-muted mt-1">LSC</div></div>
+  </div>
+
+  <div class="grid-2-eq mb-5">
+    <div class="card" style="text-align:center;">
+      <div class="card-head" style="justify-content:center;"><div class="card-title">我的推广二维码</div></div>
+      <div class="card-body">
+        <div class="qr-display" style="width:180px;height:180px;">
+          <div class="qr-grid" style="background-size:6px 6px;">
+            <div class="qr-corner qr-tl" style="width:28px;height:28px;"></div>
+            <div class="qr-corner qr-tr" style="width:28px;height:28px;"></div>
+            <div class="qr-corner qr-bl" style="width:28px;height:28px;"></div>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32px;height:32px;background:var(--c-primary);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;">推</div>
+          </div>
+        </div>
+        <div class="mt-3"><div style="font-weight:600;">锦华餐饮专属推广码</div><div class="text-xs text-muted mt-1">好友首单消费 · 您获10%奖励</div></div>
+        <div class="flex gap-2 justify-center mt-3"><button class="btn btn-outline btn-sm">复制链接</button><button class="btn btn-soft btn-sm">保存图片</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">推广规则说明</div></div>
+      <div class="card-body">
+        <ul style="line-height:2;font-size:13px;color:var(--c-text-2);">
+          <li><span style="color:var(--c-accent);">▸</span> 首单定义: 用户实名认证后第一笔有效消费(金额≥1元且未全额退款)</li>
+          <li><span style="color:var(--c-accent);">▸</span> 奖励数量 = 首单消费金额 × 10%, 从您的锁定池划转至可用池</li>
+          <li><span style="color:var(--c-accent);">▸</span> 写入流水类型3 (推广奖励释放)</li>
+          <li><span style="color:var(--c-accent);">▸</span> 首单全额退款时, 已释放奖励从可用余额扣回锁定池</li>
+          <li><span style="color:var(--c-accent);">▸</span> 余额不足生成欠款记录, 挂账自动补发</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">推广奖励记录</div></div>
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr><th>被推荐人</th><th>首单金额</th><th>奖励LSC</th><th>状态</th><th>时间</th></tr></thead>
+      <tbody>
+        <tr><td>U10386 (李**)</td><td>¥880.00</td><td><b style="color:var(--c-accent-deep);">+88.00</b></td><td><span class="tag tag-success">已发放</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-86400000)}</td></tr>
+        <tr><td>U10392 (王**)</td><td>¥560.00</td><td><b style="color:var(--c-accent-deep);">+56.00</b></td><td><span class="tag tag-success">已发放</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-2*86400000)}</td></tr>
+        <tr><td>U10401 (张**)</td><td>¥1,280.00</td><td><b style="color:var(--c-accent-deep);">+128.00</b></td><td><span class="tag tag-warning">挂账补发</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-3*86400000)}</td></tr>
+        <tr><td>U10415 (陈**)</td><td>¥320.00</td><td><b style="color:var(--c-danger);">-32.00</b></td><td><span class="tag tag-danger">退款扣回</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-5*86400000)}</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 信用中心 ============== */
+function renderCredit() {
+  const html = pageHead('信用中心', '商家信用分 · 违规记录 · 处罚状态 · 信用分影响核销档位', '') + `
+  <div class="grid-2-eq mb-5">
+    <div class="card" style="text-align:center;">
+      <div class="card-head" style="justify-content:center;"><div class="card-title">当前信用分</div></div>
+      <div class="card-body">
+        <div class="credit-ring">
+          ${ringChart(0.92, 'var(--c-available)', 140, 12)}
+          <div class="cr-text">
+            <div style="font-size:36px;font-weight:700;font-family:var(--ff-mono);color:var(--c-available);">92</div>
+            <div style="font-size:11px;color:var(--c-text-3);">满分100 · A档</div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <span class="tag tag-success tag-dot" style="font-size:13px;padding:5px 14px;">信用优秀</span>
+        </div>
+        <div class="text-xs text-muted mt-3">信用分≥80 → A档 (5万/日核销) · 60-79 → B档 · &lt;60 → C档</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">信用分构成</div></div>
+      <div class="card-body">
+        <div style="padding:10px 0;"><div class="flex justify-between mb-1"><span class="text-sm">合规经营</span><b class="text-available">30/30</b></div><div class="progress"><div class="progress-bar progress-bar-available" style="width:100%;"></div></div></div>
+        <div style="padding:10px 0;"><div class="flex justify-between mb-1"><span class="text-sm">AI风险评分</span><b class="text-available">26/30</b></div><div class="progress"><div class="progress-bar progress-bar-available" style="width:87%;"></div></div></div>
+        <div style="padding:10px 0;"><div class="flex justify-between mb-1"><span class="text-sm">核销健康度</span><b class="text-available">18/20</b></div><div class="progress"><div class="progress-bar progress-bar-available" style="width:90%;"></div></div></div>
+        <div style="padding:10px 0;"><div class="flex justify-between mb-1"><span class="text-sm">用户评价</span><b class="text-available">18/20</b></div><div class="progress"><div class="progress-bar progress-bar-available" style="width:90%;"></div></div></div>
+        <div class="divider"></div>
+        <div class="flex justify-between"><span class="text-sm font-semibold">总分</span><b class="text-available" style="font-size:20px;font-family:var(--ff-mono);">92/100</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">违规与处罚记录</div><span class="tag tag-success">无在处处罚</span></div>
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr><th>记录ID</th><th>违规类型</th><th>描述</th><th>扣分</th><th>处罚</th><th>期间</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">V25018</td><td><span class="tag tag-warning">延迟发货</span></td><td>3笔订单超48小时未发货</td><td><span class="tag tag-danger">-5</span></td><td>警告</td><td>2026-05-10 ~ 2026-05-17</td><td><span class="tag tag-info">已解除</span></td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">V25002</td><td><span class="tag tag-warning">商品描述不符</span></td><td>1笔订单退款投诉成立</td><td><span class="tag tag-danger">-3</span></td><td>警告</td><td>2026-02-15 ~ 2026-02-22</td><td><span class="tag tag-info">已解除</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== AI助手 ============== */
+function renderAI() {
+  const html = pageHead('AI 助手', '商家智能客服 · RAG规则检索 · 操作指导 · 转人工', '') + `
+  <div class="card" style="height:560px;display:flex;flex-direction:column;">
+    <div class="card-head" style="background:linear-gradient(90deg,var(--c-primary-tint),#fff);">
+      <div class="flex items-center gap-3">
+        <div class="avatar avatar-sm avatar-gold">AI</div>
+        <div><div style="font-weight:600;">锦华商家智能助手</div><div class="text-xs text-available">● 在线 · RAG + 操作指导</div></div>
+      </div>
+      <span class="tag tag-info">商家助手Agent</span>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;background:var(--c-bg-soft);">
+      <div class="chat-bubble chat-ai">您好, 锦华商家! 我是您的智能助手。可以帮您查询流水、解释规则、指导核销操作。请问有什么可以帮您?</div>
+      <div class="chat-bubble chat-me">核销的现金是怎么结算的?</div>
+      <div class="chat-bubble chat-ai">核销结算规则如下:<br><br>1️⃣ 现金结算金额 = 核销LSC金额 × <b>0.87</b><br>2️⃣ 资金来源: 从您14%监管账户划拨至主账户<br>3️⃣ 同时扣减您自身可用LSC余额<br>4️⃣ 平台2%技术服务费已在消费分账时由支付机构清分, 与核销资金无关<br><br>例如: 核销 10,000 LSC → 现金结算 ¥8,700 到主账户。</div>
+      <div class="chat-bubble chat-me">我的信用分为什么是92?</div>
+      <div class="chat-bubble chat-ai">您的信用分92分构成:<br>• 合规经营 30/30<br>• AI风险评分 26/30<br>• 核销健康度 18/20<br>• 用户评价 18/20<br><br>主要扣分项: AI风险评分中, 您上月有2笔B2B订单匹配度略低, 影响了2分。保持稳定交易即可恢复。</div>
+      <div class="chat-bubble chat-ai">💡 您可以问我: "今日还能核销多少"、"如何创建B2B订单"、"推广奖励怎么算"</div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--c-divider);display:flex;gap:8px;background:#fff;">
+      <input class="input" placeholder="输入您的问题..." style="flex:1;">
+      <button class="btn btn-outline btn-sm">转人工</button>
+      <button class="btn btn-primary btn-sm">发送</button>
+    </div>
+  </div>
+
+  <div class="grid-3 mt-5">
+    <div class="card chart-card"><div class="sc-icon" style="width:36px;height:36px;border-radius:10px;background:var(--c-accent-soft);color:var(--c-accent-deep);display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><span class="icon" data-i="chat"></span></div><div style="font-weight:600;">智能问答</div><div class="text-xs text-muted mt-1">基于规则文档RAG检索, 准确率88.7%</div></div>
+    <div class="card chart-card"><div class="sc-icon" style="width:36px;height:36px;border-radius:10px;background:var(--c-primary-tint);color:var(--c-primary);display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><span class="icon" data-i="doc"></span></div><div style="font-weight:600;">操作指导</div><div class="text-xs text-muted mt-1">商品发布/核销/B2B 流程引导</div></div>
+    <div class="card chart-card"><div class="sc-icon" style="width:36px;height:36px;border-radius:10px;background:var(--c-available-tint);color:var(--c-available);display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><span class="icon" data-i="user"></span></div><div style="font-weight:600;">转人工客服</div><div class="text-xs text-muted mt-1">复杂问题无缝转接人工</div></div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* 启动 */
+renderShop();
+</script>
+</body>
+</html>

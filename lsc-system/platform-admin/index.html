@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>链盛通LSC系统 · 平台管理后台 V6.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="../shared/design-system.css">
+<style>
+  /* ===== 平台后台专属样式 ===== */
+  body { background: var(--c-bg); overflow: hidden; }
+  .app-shell { display: flex; height: 100vh; width: 100%; }
+
+  /* 侧边栏 */
+  .sidebar {
+    width: 248px;
+    background: var(--c-primary-deep);
+    color: #fff;
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 30;
+  }
+  .sidebar::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(200,162,75,0.08), transparent 40%),
+      radial-gradient(circle at 100% 100%, rgba(26,103,100,0.4), transparent 50%);
+    pointer-events:none;
+  }
+  .brand {
+    padding: 22px 24px 18px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+  }
+  .brand-logo {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--c-accent), var(--c-accent-deep));
+    border-radius: 10px;
+    display:flex; align-items:center; justify-content:center;
+    color: #fff; font-weight: 800; font-size: 16px;
+    box-shadow: 0 4px 12px rgba(200,162,75,0.4);
+    font-family: var(--ff-display);
+  }
+  .brand-text { line-height: 1.2; }
+  .brand-name { font-size: 16px; font-weight: 700; letter-spacing: 1px; }
+  .brand-sub { font-size: 10px; opacity: 0.6; letter-spacing: 2px; }
+
+  .nav { flex:1; overflow-y:auto; padding: 16px 12px; position:relative; }
+  .nav::-webkit-scrollbar { width:4px; }
+  .nav-section { font-size: 10px; opacity:0.4; letter-spacing:2px; padding:14px 12px 6px; text-transform:uppercase; }
+  .nav-item {
+    display:flex; align-items:center; gap:12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 2px;
+    position: relative;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(200,162,75,0.2), rgba(200,162,75,0.05));
+    color: #fff;
+    box-shadow: inset 3px 0 0 var(--c-accent);
+  }
+  .nav-item .icon { width:18px; height:18px; opacity:0.85; }
+  .nav-item.active .icon { opacity:1; color: var(--c-accent); }
+  .nav-badge {
+    margin-left:auto; background: var(--c-danger); color:#fff;
+    font-size:10px; padding:1px 6px; border-radius:10px; font-weight:600;
+  }
+  .sidebar-foot {
+    padding: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 11px; opacity:0.5; position:relative;
+    display:flex; align-items:center; gap:8px;
+  }
+  .dot-live {
+    width:6px; height:6px; border-radius:50%; background: var(--c-available-soft);
+    box-shadow:0 0 8px var(--c-available-soft);
+    animation: pulse 1.6s infinite;
+  }
+
+  /* 主区域 */
+  .main { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .topbar {
+    height: 64px;
+    background: var(--c-bg-card);
+    border-bottom: 1px solid var(--c-border-soft);
+    display:flex; align-items:center; padding: 0 28px;
+    gap: 20px; flex-shrink:0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    position: relative; z-index: 20;
+  }
+  .breadcrumb { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--c-text-3); }
+  .breadcrumb .cur { color: var(--c-text-1); font-weight:600; }
+  .search-box {
+    margin-left: auto;
+    display:flex; align-items:center; gap:8px;
+    background: var(--c-bg-soft);
+    border:1px solid var(--c-border-soft);
+    border-radius: 20px;
+    padding: 7px 14px;
+    width: 280px;
+    transition: all 0.2s;
+  }
+  .search-box:focus-within { border-color: var(--c-primary-soft); background:#fff; box-shadow:0 0 0 3px rgba(26,103,100,0.1); }
+  .search-box input { border:none; background:transparent; outline:none; flex:1; font-size:13px; }
+  .topbar-actions { display:flex; align-items:center; gap:14px; }
+  .icon-btn {
+    width:38px; height:38px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--c-text-2);
+    cursor:pointer; transition: all 0.2s;
+    position:relative;
+  }
+  .icon-btn:hover { background: var(--c-bg-soft); color: var(--c-primary); }
+  .user-chip {
+    display:flex; align-items:center; gap:10px;
+    padding: 5px 12px 5px 5px; border-radius: 20px;
+    cursor:pointer; transition: background 0.2s;
+  }
+  .user-chip:hover { background: var(--c-bg-soft); }
+  .user-name { font-size:13px; font-weight:600; }
+  .user-role { font-size:11px; color: var(--c-text-3); }
+
+  .content { flex:1; overflow-y:auto; padding: 24px 28px 40px; background: var(--c-bg); }
+  .content::-webkit-scrollbar { width:8px; }
+
+  /* 数据看板网格 */
+  .stat-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat-card {
+    background: var(--c-bg-card);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    box-shadow: var(--sh-card);
+    border:1px solid var(--c-border-soft);
+    position:relative;
+    overflow:hidden;
+  }
+  .stat-card .stat-icon-bg {
+    position:absolute; right:-8px; top:-8px;
+    width: 64px; height:64px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0.08; color: var(--c-primary);
+  }
+  .stat-card.locked .stat-icon-bg { color: var(--c-locked); }
+  .stat-card.available .stat-icon-bg { color: var(--c-available); }
+  .stat-card.accent .stat-icon-bg { color: var(--c-accent); }
+  .stat-card .stat-icon-bg .icon { width:32px; height:32px; }
+  .stat-card .stat-label { font-size:12px; color: var(--c-text-3); margin-bottom:8px; letter-spacing:0.4px; }
+  .stat-card .stat-value { font-size:26px; font-weight:700; font-family: var(--ff-mono); color: var(--c-text-1); letter-spacing:-0.5px; line-height:1.1; }
+  .stat-card .stat-unit { font-size:13px; color:var(--c-text-3); font-family:var(--ff-body); margin-left:4px; font-weight:500;}
+  .stat-card .stat-delta { font-size:12px; margin-top:8px; display:flex; align-items:center; gap:4px; }
+
+  /* 图表容器 */
+  .chart-card { padding: 20px; }
+  .chart-area { width:100%; height: 280px; }
+
+  /* 双列布局 */
+  .grid-2 { display:grid; grid-template-columns: 1.6fr 1fr; gap:16px; }
+  .grid-3 { display:grid; grid-template-columns: repeat(3,1fr); gap:16px; }
+  .grid-2-1 { display:grid; grid-template-columns: 2fr 1fr; gap:16px; }
+
+  /* AI辅助面板 */
+  .ai-panel {
+    background: linear-gradient(135deg, #fff, #FAF8F2);
+    border:1px solid var(--c-accent-soft);
+    border-radius: var(--r-lg);
+    padding: 18px;
+    position:relative; overflow:hidden;
+  }
+  .ai-panel::before {
+    content:''; position:absolute; right:-30px; top:-30px;
+    width:120px; height:120px; border-radius:50%;
+    background: radial-gradient(circle, rgba(200,162,75,0.12), transparent 70%);
+  }
+  .ai-tag {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 10px; border-radius:var(--r-pill);
+    background: var(--c-accent-soft); color: var(--c-accent-deep);
+    font-size:11px; font-weight:600; letter-spacing:0.5px;
+  }
+  .ai-tag .ai-dot { width:6px; height:6px; border-radius:50%; background: var(--c-accent); animation: pulse 1.6s infinite; }
+  .ai-panel-title { font-size:15px; font-weight:600; margin: 10px 0 8px; display:flex; align-items:center; gap:8px; }
+  .ai-panel ul { margin-top:10px; }
+  .ai-panel li {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--c-border-soft);
+    font-size:13px; color:var(--c-text-2);
+    display:flex; gap:8px; align-items:flex-start;
+  }
+  .ai-panel li:last-child { border-bottom:none; }
+  .ai-panel li .ai-li-dot { color: var(--c-accent); font-weight:700; flex-shrink:0; }
+  .ai-score-bar {
+    height:6px; border-radius:3px; background: var(--c-border-soft); overflow:hidden; margin-top:4px;
+  }
+  .ai-score-bar > div { height:100%; background: linear-gradient(90deg, var(--c-available), var(--c-accent)); }
+
+  /* 表格操作按钮 */
+  .row-actions { display:flex; gap:6px; }
+  .row-btn {
+    padding:4px 10px; border-radius:6px; font-size:12px;
+    background: var(--c-primary-tint); color: var(--c-primary);
+    cursor:pointer; transition: all 0.15s; white-space:nowrap;
+  }
+  .row-btn:hover { background: var(--c-primary); color:#fff; }
+  .row-btn.danger { background:#FCE6E4; color: var(--c-danger); }
+  .row-btn.danger:hover { background: var(--c-danger); color:#fff; }
+  .row-btn.warn { background:#FEF3E2; color: var(--c-warning); }
+  .row-btn.warn:hover { background: var(--c-warning); color:#fff; }
+
+  /* 筛选条 */
+  .toolbar {
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .toolbar .seg {
+    display:flex; background: var(--c-bg-soft); border-radius: 8px; padding:3px; gap:2px;
+  }
+  .seg-item { padding:6px 14px; font-size:13px; color:var(--c-text-2); border-radius:6px; cursor:pointer; transition: all 0.15s; }
+  .seg-item.active { background:#fff; color: var(--c-primary); font-weight:600; box-shadow: var(--sh-sm); }
+
+  /* 双池可视化 */
+  .pool-vis { display:flex; gap:0; height:200px; border-radius: var(--r-lg); overflow:hidden; box-shadow: var(--sh-card); }
+  .pool-half {
+    flex:1; padding:20px; color:#fff; position:relative; overflow:hidden;
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .pool-half.locked { background: linear-gradient(135deg, #1A2D5C, var(--c-locked)); }
+  .pool-half.available { background: linear-gradient(135deg, #1A4D38, var(--c-available)); }
+  .pool-half .pool-wave {
+    position:absolute; bottom:0; left:0; right:0; height:50%;
+    background: radial-gradient(ellipse at top, rgba(255,255,255,0.15), transparent 70%);
+  }
+  .pool-half .pool-label { font-size:12px; opacity:0.8; letter-spacing:2px; }
+  .pool-half .pool-value { font-size:28px; font-weight:700; font-family:var(--ff-mono); }
+  .pool-half .pool-pct { font-size:13px; opacity:0.9; }
+
+  /* 双人审批 */
+  .dual-approval { display:flex; gap:16px; }
+  .dual-approval .field { flex:1; }
+
+  /* 状态徽章增强 */
+  .status-pill {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 10px; border-radius:var(--r-pill);
+    font-size:12px; font-weight:500;
+  }
+
+  /* AI中心 agent 卡片 */
+  .agent-card {
+    background:#fff; border-radius: var(--r-lg); padding:18px;
+    border:1px solid var(--c-border-soft); position:relative; overflow:hidden;
+    transition: all 0.2s;
+  }
+  .agent-card:hover { box-shadow: var(--sh-md); transform: translateY(-2px); }
+  .agent-icon {
+    width:44px; height:44px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(135deg, var(--c-primary-tint), #fff);
+    color: var(--c-primary); margin-bottom:12px;
+    border:1px solid var(--c-border-soft);
+  }
+  .agent-card.gold .agent-icon { background: linear-gradient(135deg, var(--c-accent-soft), #fff); color: var(--c-accent-deep); }
+  .agent-name { font-size:15px; font-weight:600; margin-bottom:4px; }
+  .agent-desc { font-size:12px; color:var(--c-text-3); line-height:1.5; min-height:36px; }
+  .agent-stat { display:flex; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px dashed var(--c-border-soft); font-size:11px; }
+  .agent-stat .v { font-weight:700; color: var(--c-text-1); }
+
+  /* 参数配置项 */
+  .param-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 0; border-bottom: 1px solid var(--c-divider);
+  }
+  .param-row:last-child { border-bottom:none; }
+  .param-key { font-size:14px; font-weight:600; color:var(--c-text-1); }
+  .param-desc { font-size:12px; color: var(--c-text-3); margin-top:2px; }
+  .param-val {
+    font-family: var(--ff-mono); font-size:16px; font-weight:700;
+    padding: 5px 14px; background: var(--c-bg-soft); border-radius:8px;
+    color: var(--c-primary);
+  }
+  .param-val.locked-param { background: var(--c-locked-tint); color: var(--c-locked); }
+  .param-val i { font-style:normal; font-size:11px; opacity:0.6; margin-left:4px; font-family: var(--ff-body); font-weight:500; }
+
+  /* 释放任务进度 */
+  .task-card { padding: 16px; background: var(--c-bg-soft); border-radius: var(--r-md); border-left: 3px solid var(--c-primary); }
+  .task-step { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px; }
+  .task-step .step-dot { width:10px; height:10px; border-radius:50%; background: var(--c-border); flex-shrink:0; }
+  .task-step.done .step-dot { background: var(--c-available); }
+  .task-step.doing .step-dot { background: var(--c-accent); animation: pulse 1.2s infinite; }
+  .task-step.todo .step-dot { background: var(--c-border); }
+
+  /* 进度环 */
+  .ring { width: 110px; height:110px; position:relative; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .ring-text {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+
+  /* 响应式 */
+  @media (max-width: 1280px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-2-1 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    .sidebar { width: 64px; }
+    .brand-text, .nav-item span, .nav-section, .sidebar-foot span { display:none; }
+    .nav-item { justify-content:center; }
+    .search-box { width:160px; }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- ===== 侧边栏 ===== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">链</div>
+      <div class="brand-text">
+        <div class="brand-name">链盛通</div>
+        <div class="brand-sub">LSC · V6.2 AI</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="nav-section">运营管理</div>
+      <div class="nav-item active" data-view="dashboard"><span class="icon" data-i="dashboard"></span><span>仪表盘</span></div>
+      <div class="nav-item" data-view="merchant"><span class="icon" data-i="merchant"></span><span>商家管理</span><span class="nav-badge">12</span></div>
+      <div class="nav-item" data-view="product"><span class="icon" data-i="product"></span><span>商品审核</span><span class="nav-badge">5</span></div>
+      <div class="nav-item" data-view="b2b"><span class="icon" data-i="b2b"></span><span>B2B订单</span></div>
+      <div class="nav-item" data-view="risk"><span class="icon" data-i="risk"></span><span>风控管理</span></div>
+      <div class="nav-item" data-view="credit"><span class="icon" data-i="credit"></span><span>信用管理</span></div>
+      <div class="nav-section">系统监控</div>
+      <div class="nav-item" data-view="release"><span class="icon" data-i="release"></span><span>释放管理</span></div>
+      <div class="nav-item" data-view="reconcile"><span class="icon" data-i="reconcile"></span><span>对账管理</span></div>
+      <div class="nav-item" data-view="system"><span class="icon" data-i="system"></span><span>系统管理</span></div>
+      <div class="nav-item" data-view="ai"><span class="icon" data-i="ai"></span><span>AI中心</span></div>
+    </nav>
+    <div class="sidebar-foot">
+      <span class="dot-live"></span><span>系统运行正常 · 99.98%</span>
+    </div>
+  </aside>
+
+  <!-- ===== 主区域 ===== -->
+  <div class="main">
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span>平台管理后台</span>
+        <span>/</span>
+        <span class="cur" id="crumb">仪表盘</span>
+      </div>
+      <div class="search-box">
+        <span class="icon icon-sm" style="color:var(--c-text-3)"></span>
+        <span id="search-icon"></span>
+        <input placeholder="搜索商家/订单/用户ID..." id="search-input">
+      </div>
+      <div class="topbar-actions">
+        <div class="icon-btn" id="ai-toggle" title="AI助手"><span class="icon" data-i="ai"></span></div>
+        <div class="icon-btn" title="通知"><span class="icon" data-i="bell"></span><span class="badge">3</span></div>
+        <div class="user-chip">
+          <div class="avatar avatar-gold">林</div>
+          <div>
+            <div class="user-name">林总</div>
+            <div class="user-role">超级管理员</div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="content" id="view"></div>
+  </div>
+</div>
+
+<!-- ===== AI 助手浮窗 ===== -->
+<div class="modal-mask hidden" id="ai-mask" style="align-items:flex-end;justify-content:flex-end;background:rgba(8,46,44,0.2);">
+  <div class="modal" style="width:380px;max-width:380px;height:560px;max-height:560px;border-radius:14px 0 0 14px;display:flex;flex-direction:column;">
+    <div class="modal-head" style="background:linear-gradient(135deg,var(--c-primary-deep),var(--c-primary));color:#fff;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="avatar avatar-sm avatar-gold">AI</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;">管理员智能助手</div>
+          <div style="font-size:11px;opacity:0.7;">NL2SQL · RAG · 实时在线</div>
+        </div>
+      </div>
+      <span class="icon" data-i="close" id="ai-close" style="cursor:pointer;"></span>
+    </div>
+    <div class="modal-body" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+      <div style="background:var(--c-primary-tint);padding:10px 12px;border-radius:10px;font-size:13px;color:var(--c-text-2);align-self:flex-start;max-width:85%;">
+        您好林总，今日系统运行正常。我已为您准备智能简报：今日核销率k=0.72%，处于健康区间；预测未来7天k值将稳步上升至0.82%，建议关注B2B流转量是否同步增长。
+      </div>
+      <div style="background:#fff;border:1px solid var(--c-border-soft);padding:10px 12px;border-radius:10px;font-size:13px;align-self:flex-end;max-width:85%;color:var(--c-primary);">
+        查询昨日信用分低于60的商家
+      </div>
+      <div style="background:var(--c-primary-tint);padding:10px 12px;border-radius:10px;font-size:13px;color:var(--c-text-2);align-self:flex-start;max-width:85%;">
+        已执行NL2SQL查询，结果如下：<br>• 鼎盛物流仓储(M20004) 信用分 64<br>• 云裳服饰有限公司(M20008) 信用分 55<br>共2家商家信用分低于60阈值，建议核查。
+      </div>
+    </div>
+    <div style="padding:12px;border-top:1px solid var(--c-divider);display:flex;gap:8px;">
+      <input class="input" placeholder="自然语言提问 / 查询指令..." style="flex:1;">
+      <button class="btn btn-primary btn-sm">发送</button>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/app-utils.js"></script>
+<script>
+/* ============== 图标渲染 ============== */
+document.querySelectorAll('.icon[data-i]').forEach(el=>{
+  const key = el.getAttribute('data-i');
+  if (ICONS[key]) el.innerHTML = ICONS[key];
+});
+document.getElementById('search-icon').innerHTML = ICONS.search;
+
+/* ============== 视图路由 ============== */
+const views = {
+  dashboard: renderDashboard,
+  merchant: renderMerchant,
+  product: renderProduct,
+  b2b: renderB2B,
+  risk: renderRisk,
+  credit: renderCredit,
+  release: renderRelease,
+  reconcile: renderReconcile,
+  system: renderSystem,
+  ai: renderAI,
+};
+const crumbMap = { dashboard:'仪表盘',merchant:'商家管理',product:'商品审核',b2b:'B2B订单管理',risk:'风控管理',credit:'信用管理',release:'释放管理',reconcile:'对账管理',system:'系统管理',ai:'AI中心' };
+
+function navTo(view) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
+  document.getElementById('crumb').textContent = crumbMap[view] || view;
+  views[view]();
+}
+document.getElementById('nav').addEventListener('click', e=>{
+  const item = e.target.closest('.nav-item');
+  if (item) navTo(item.dataset.view);
+});
+
+/* ============== 通用 HTML 片段 ============== */
+function pageHead(title, desc, extra='') {
+  return `<div class="page-head flex items-center justify-between">
+    <div><div class="page-title">${title}</div><div class="page-desc">${desc}</div></div>
+    <div class="flex gap-3">${extra}</div>
+  </div>`;
+}
+
+/* ============== 图表：折线/区域 ============== */
+function lineChart(opts) {
+  // opts: { w, h, series:[{data:[],color,name,area?}], labels:[], forecastFrom?:idx }
+  // data 支持 null/undefined 跳过(断线)
+  const { w=600, h=240, series, labels, forecastFrom } = opts;
+  const pad = { l: 44, r: 16, t: 16, b: 28 };
+  const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const allVals = series.flatMap(s=>s.data).filter(v=>v!=null && !isNaN(v));
+  const min = Math.min(...allVals), max = Math.max(...allVals);
+  const range = max - min || 1;
+  const n = labels.length;
+  const xStep = iw / Math.max(1, n-1);
+  const yScale = v => pad.t + ih - ((v - min)/range)*ih;
+  const xAt = i => pad.l + i * xStep;
+
+  const yTicks = 4;
+  let grid = '';
+  for (let i=0;i<=yTicks;i++){
+    const v = min + (range*i/yTicks);
+    const y = yScale(v);
+    grid += `<line x1="${pad.l}" y1="${y}" x2="${w-pad.r}" y2="${y}" stroke="var(--c-divider)" stroke-width="1" stroke-dasharray="3 3"/>`;
+    grid += `<text x="${pad.l-6}" y="${y+3}" font-size="10" fill="var(--c-text-3)" text-anchor="end">${v.toFixed(4)}</text>`;
+  }
+  let xLabels = '';
+  const labelStep = Math.ceil(n/8);
+  labels.forEach((lb,i)=>{ if(i%labelStep===0) xLabels += `<text x="${xAt(i)}" y="${h-pad.b+16}" font-size="10" fill="var(--c-text-3)" text-anchor="middle">${lb}</text>`; });
+
+  let paths = '';
+  series.forEach(s=>{
+    // 构建连续段(遇到null断开)
+    const segs = [];
+    let cur = [];
+    s.data.forEach((v,i)=>{
+      if (v==null || isNaN(v)) { if(cur.length){segs.push(cur);cur=[];} }
+      else cur.push({i,v});
+    });
+    if (cur.length) segs.push(cur);
+
+    segs.forEach(seg=>{
+      const pts = seg.map(p=>`${xAt(p.i)},${yScale(p.v)}`).join(' ');
+      if (s.area && seg===segs[0]) {
+        const areaPts = `${xAt(seg[0].i)},${pad.t+ih} `+pts+` ${xAt(seg[seg.length-1].i)},${pad.t+ih}`;
+        paths += `<polygon points="${areaPts}" fill="${s.color}" opacity="0.12"/>`;
+      }
+      paths += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="${s.dash?2:2.2}" stroke-linejoin="round" ${s.dash?'stroke-dasharray="5 4"':''}/>`;
+      // 末端点
+      const last = seg[seg.length-1];
+      if (seg===segs[segs.length-1] && s.lastDot!==false) paths += `<circle cx="${xAt(last.i)}" cy="${yScale(last.v)}" r="3" fill="${s.color}"/>`;
+    });
+  });
+  // 预测分界线
+  let fcLine = '';
+  if (forecastFrom!=null) {
+    const x = xAt(forecastFrom);
+    fcLine = `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t+ih}" stroke="var(--c-accent)" stroke-width="1" stroke-dasharray="4 4"/>
+    <text x="${x+4}" y="${pad.t+12}" font-size="10" fill="var(--c-accent-deep)" font-weight="600">AI预测</text>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
+    ${grid}${paths}${fcLine}${xLabels}
+  </svg>`;
+}
+
+/* 柱状图 */
+function barChart(opts) {
+  const { w=600, h=240, data, labels, color='var(--c-primary)' } = opts;
+  const pad = { l: 44, r: 12, t: 16, b: 28 };
+  const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const max = Math.max(...data);
+  const n = data.length;
+  const bw = iw / n * 0.6;
+  const gap = iw / n;
+  let bars = '', xLabels = '';
+  data.forEach((v,i)=>{
+    const bh = (v/max)*ih;
+    const x = pad.l + i*gap + (gap-bw)/2;
+    const y = pad.t + ih - bh;
+    bars += `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3" fill="${color}" opacity="${0.6+0.4*(i/n)}"/>`;
+    if (i%Math.ceil(n/8)===0) xLabels += `<text x="${x+bw/2}" y="${h-pad.b+16}" font-size="10" fill="var(--c-text-3)" text-anchor="middle">${labels[i]}</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabels}</svg>`;
+}
+
+/* 进度环 */
+function ringChart(pct, color='var(--c-primary)') {
+  const r = 44, c = 2*Math.PI*r, off = c*(1-pct);
+  return `<svg width="110" height="110"><circle cx="55" cy="55" r="${r}" fill="none" stroke="var(--c-border-soft)" stroke-width="8"/>
+  <circle cx="55" cy="55" r="${r}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 55 55)"/></svg>`;
+}
+
+/* ============== 仪表盘 ============== */
+function renderDashboard() {
+  const d = MOCK.dashboard;
+  const lockedPct = d.lockedTotal/(d.lockedTotal+d.availableTotal);
+  const availPct = 1-lockedPct;
+  const html = pageHead('运营仪表盘', '链盛通LSC凭证循环系统 · 全网实时态势', `
+    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="refresh"></span>刷新</button>
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="export"></span>导出日报</button>
+  `) + `
+  <!-- 核心指标 -->
+  <div class="stat-grid mb-5">
+    <div class="stat-card locked">
+      <div class="stat-icon-bg"><span class="icon" data-i="lock"></span></div>
+      <div class="stat-label">全网锁定池总量</div>
+      <div><span class="stat-value">${(d.lockedTotal/1e6).toFixed(2)}</span><span class="stat-unit">百万 LSC</span></div>
+      <div class="stat-delta stat-delta-up"><span class="icon icon-sm" data-i="arrowUp"></span>较昨日 +0.42%</div>
+    </div>
+    <div class="stat-card available">
+      <div class="stat-icon-bg"><span class="icon" data-i="unlock"></span></div>
+      <div class="stat-label">全网可用池总量</div>
+      <div><span class="stat-value">${(d.availableTotal/1e6).toFixed(2)}</span><span class="stat-unit">百万 LSC</span></div>
+      <div class="stat-delta stat-delta-up"><span class="icon icon-sm" data-i="arrowUp"></span>较昨日 +1.18%</div>
+    </div>
+    <div class="stat-card accent">
+      <div class="stat-icon-bg"><span class="icon" data-i="release"></span></div>
+      <div class="stat-label">当日释放总量</div>
+      <div><span class="stat-value">${LSC.fmtNum(d.todayRelease)}</span><span class="stat-unit">LSC</span></div>
+      <div class="stat-delta stat-delta-up"><span class="icon icon-sm" data-i="arrowUp"></span>批次 86 / 86 成功</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon-bg"><span class="icon" data-i="merchant"></span></div>
+      <div class="stat-label">当日核销总额</div>
+      <div><span class="stat-value">${LSC.fmtNum(d.todayNHTotal)}</span><span class="stat-unit">LSC</span></div>
+      <div class="stat-delta stat-delta-down"><span class="icon icon-sm" data-i="arrowDown"></span>核销率 k=0.72%</div>
+    </div>
+  </div>
+
+  <!-- 双池可视化 + 核销率环 -->
+  <div class="grid-2 mb-5">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">锁定池 / 可用池 资金分布</div><div class="card-sub">全网LSC凭证双池实时状态</div></div>
+      </div>
+      <div class="pool-vis">
+        <div class="pool-half locked">
+          <div><div class="pool-label">LOCKED POOL · 锁定池</div><div class="pool-value">${LSC.fmtNum(d.lockedTotal)}</div></div>
+          <div class="pool-pct">占比 ${(lockedPct*100).toFixed(1)}% · 动态缓释中</div>
+          <div class="pool-wave"></div>
+        </div>
+        <div class="pool-half available">
+          <div><div class="pool-label">AVAILABLE POOL · 可用池</div><div class="pool-value">${LSC.fmtNum(d.availableTotal)}</div></div>
+          <div class="pool-pct">占比 ${(availPct*100).toFixed(1)}% · 可消费/流转/核销</div>
+          <div class="pool-wave"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card chart-card flex-col items-center" style="text-align:center;">
+      <div class="card-title mb-3">当前核销率 k</div>
+      <div class="ring" style="margin: 8px 0;">
+        ${ringChart(d.currentK/0.01, 'var(--c-accent)')}
+        <div class="ring-text">
+          <div style="font-size:24px;font-weight:700;font-family:var(--ff-mono);color:var(--c-accent-deep);">${(d.currentK*100).toFixed(2)}%</div>
+          <div style="font-size:11px;color:var(--c-text-3);">健康区间</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--c-text-3);">释放速率 rate = <b style="color:var(--c-primary);font-family:var(--ff-mono);">${(d.currentRate*10000).toFixed(3)}‱</b></div>
+      <div class="alert alert-info mt-3" style="width:100%;font-size:12px;">k值处于0.50%-1.0%健康区间，按公式 rate = 0.075% - 0.05×k 动态计算</div>
+    </div>
+  </div>
+
+  <!-- 趋势图 + AI 预测 -->
+  <div class="grid-2-1 mb-5">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">核销率 k 值趋势与AI预测</div><div class="card-sub">近30天历史 + 未来7天AI预测</div></div>
+        <div class="flex gap-3 text-xs">
+          <span class="tag tag-dot tag-info">历史</span>
+          <span class="tag tag-dot tag-accent">AI预测</span>
+        </div>
+      </div>
+      <div class="chart-area">${lineChart({
+        w:760, h:280,
+        labels: (() => {
+          const labels = [];
+          for(let i=29;i>=0;i--) labels.push('D-'+i);
+          for(let i=1;i<=7;i++) labels.push('F+'+i);
+          return labels;
+        })(),
+        series: [
+          { data: [...MOCK.kHistory, ...Array(7).fill(null)], color: 'var(--c-locked)', name:'历史k值', area:true },
+          { data: [...Array(29).fill(null), MOCK.kHistory[MOCK.kHistory.length-1], ...MOCK.kForecast7], color: 'var(--c-accent)', name:'AI预测', dash:true }
+        ],
+        forecastFrom: 30
+      })}</div>
+    </div>
+    <div class="ai-panel">
+      <span class="ai-tag"><span class="ai-dot"></span>AI 智能简报</span>
+      <div class="ai-panel-title"><span class="icon icon-sm" data-i="ai"></span>今日运营洞察</div>
+      <ul>
+        <li><span class="ai-li-dot">▸</span><div>核销率 k=<b>0.72%</b>，处于健康区间，预计7天内升至0.82%，<b style="color:var(--c-available)">无需干预</b>。</div></li>
+        <li><span class="ai-li-dot">▸</span><div>B2B流转量较昨日下降8.3%，建议关注恒通建材、海纳科技订单。</div></li>
+        <li><span class="ai-li-dot">▸</span><div>检测到 <b style="color:var(--c-danger)">2家</b>商家信用分异常，AI已生成处罚建议。</div></li>
+        <li><span class="ai-li-dot">▸</span><div>释放批次执行成功率100%，资金零误差，链上存证已完成。</div></li>
+      </ul>
+      <div style="margin-top:14px;">
+        <div style="font-size:11px;color:var(--c-text-3);margin-bottom:4px;">AI综合健康度</div>
+        <div class="ai-score-bar"><div style="width:92%;"></div></div>
+        <div style="font-size:11px;color:var(--c-available);font-weight:600;margin-top:4px;">优秀 · 92分</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 实时交易 + 释放趋势 -->
+  <div class="grid-2">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">每日释放总量趋势</div><div class="card-sub">近30天释放量(LSC)</div></div>
+      </div>
+      <div class="chart-area">${barChart({
+        w:560, h:260,
+        data: MOCK.releaseTrend,
+        labels: MOCK.releaseTrend.map((_,i)=>'D'+(i+1)),
+        color: 'var(--c-primary-soft)'
+      })}</div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">核心业务实时数据</div><div class="card-sub">今日累计</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="task-card" style="border-left-color:var(--c-locked);"><div class="stat-label">消费发行</div><div class="stat-value" style="font-size:20px;">${LSC.fmtNum(d.todayConsume)}</div><div class="text-xs text-muted">LSC · 流水类型1</div></div>
+        <div class="task-card" style="border-left-color:var(--c-available);"><div class="stat-label">商家核销</div><div class="stat-value" style="font-size:20px;">${LSC.fmtNum(d.todayNHTotal)}</div><div class="text-xs text-muted">LSC · 流水类型7</div></div>
+        <div class="task-card" style="border-left-color:var(--c-accent);"><div class="stat-label">B2B流转</div><div class="stat-value" style="font-size:20px;">${LSC.fmtNum(d.todayB2B)}</div><div class="text-xs text-muted">LSC · 流水类型8</div></div>
+        <div class="task-card" style="border-left-color:var(--c-warning);"><div class="stat-label">新增用户</div><div class="stat-value" style="font-size:20px;">${LSC.fmtNum(d.todayNewUser)}</div><div class="text-xs text-muted">人 · 含商家 ${d.todayNewMerchant}</div></div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:12px;color:var(--c-text-3);display:flex;justify-content:space-between;">
+        <span>累计用户 ${LSC.fmtNum(d.userCount)}</span>
+        <span>累计商家 ${LSC.fmtNum(d.merchantCount)}</span>
+        <span>系统在线 99.98%</span>
+      </div>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 商家管理 ============== */
+function renderMerchant() {
+  const rows = MOCK.merchants.map(m=>`
+    <tr>
+      <td><div style="font-weight:600;color:var(--c-primary);">${m.id}</div></td>
+      <td>
+        <div style="font-weight:500;">${m.name}</div>
+        <div class="text-xs text-muted">${m.type} · ${m.addr}</div>
+      </td>
+      <td><span class="status-pill ${m.status==='normal'?'tag-success':m.status==='warning'?'tag-warning':'tag-danger'} tag-dot">${m.status==='normal'?'正常':m.status==='warning'?'预警':'处罚中'}</span></td>
+      <td><b style="color:${m.credit>=80?'var(--c-available)':m.credit>=60?'var(--c-warning)':'var(--c-danger)'};font-family:var(--ff-mono);">${m.credit}</b></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="ai-score-bar" style="width:60px;margin:0;"><div style="width:${m.aiRisk}%;background:${m.aiRisk>60?'var(--c-danger)':m.aiRisk>30?'var(--c-warning)':'var(--c-available)'};"></div></div>
+          <span class="text-xs">${m.aiRisk}</span>
+        </div>
+      </td>
+      <td>${LSC.fmtMoney(m.monthRevenue)}</td>
+      <td><span class="tag ${m.nhLevel==='A'?'tag-success':m.nhLevel==='B'?'tag-warning':'tag-danger'}">${m.nhLevel}档</span> <span class="text-xs text-muted">/日${LSC.fmtNum(m.nhLimitDaily)}</span></td>
+      <td><span class="tag ${m.aiAddr==='pass'?'tag-success':m.aiAddr==='suspect'?'tag-warning':'tag-danger'} tag-dot">${m.aiAddr==='pass'?'核验通过':'核验可疑'}</span></td>
+      <td><div class="row-actions">
+        <span class="row-btn" onclick="alert('查看 ${m.id} 资质详情')">资质</span>
+        <span class="row-btn warn" onclick="alert('调整核销额度')">调额</span>
+        <span class="row-btn danger" onclick="alert('处罚 ${m.name}')">处罚</span>
+      </div></td>
+    </tr>`).join('');
+  const html = pageHead('商家管理', '商家入驻审核、资质管理、核销额度调整与信用监控', `
+    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="filter"></span>高级筛选</button>
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="export"></span>导出</button>
+  `) + `
+  <div class="toolbar">
+    <div class="seg">
+      <span class="seg-item active">全部 ${MOCK.merchants.length}</span>
+      <span class="seg-item">待审核 12</span>
+      <span class="seg-item">正常 8</span>
+      <span class="seg-item">预警 3</span>
+      <span class="seg-item">处罚 2</span>
+    </div>
+    <div class="input-group" style="margin-left:auto;">
+      <input class="input" placeholder="搜索商家ID/名称/手机号" style="width:240px;">
+      <button class="btn btn-soft btn-sm">搜索</button>
+    </div>
+  </div>
+  <div class="card">
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr>
+        <th>商家ID</th><th>商家信息</th><th>状态</th><th>信用分</th><th>AI风险</th><th>月营业额</th><th>核销档位</th><th>地址核验</th><th>操作</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+    <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--c-divider);">
+      <span class="text-xs text-muted">共 ${MOCK.merchants.length} 条记录 · 8物理库分片存储</span>
+      <div class="flex gap-2 items-center">
+        <button class="btn btn-ghost btn-sm">上一页</button>
+        <span class="tag tag-info">1 / 12</span>
+        <button class="btn btn-soft btn-sm">下一页</button>
+      </div>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 商品审核 ============== */
+function renderProduct() {
+  const statusMap = {
+    ai_pass: { tag:'tag-success', label:'AI通过' },
+    ai_suspect: { tag:'tag-warning', label:'AI存疑' },
+    ai_reject: { tag:'tag-danger', label:'AI驳回' },
+    manual_review: { tag:'tag-info', label:'人工复核' },
+  };
+  const cards = MOCK.products.map(p=>{
+    const s = statusMap[p.status];
+    return `<div class="card" style="overflow:hidden;">
+      <div style="height:140px;background:linear-gradient(135deg,var(--c-primary-tint),var(--c-bg-soft));display:flex;align-items:center;justify-content:center;position:relative;">
+        <span class="icon icon-xl" data-i="product" style="color:var(--c-primary);opacity:0.5;width:48px;height:48px;"></span>
+        <span class="tag ${s.tag}" style="position:absolute;top:10px;left:10px;">${s.label}</span>
+        ${p.video==='ok'?'<span class="tag tag-info" style="position:absolute;top:10px;right:10px;"><span class="icon icon-sm" data-i="eye"></span> 视频</span>':''}
+        ${p.video==='reject'?'<span class="tag tag-danger" style="position:absolute;top:10px;right:10px;">视频违规</span>':''}
+      </div>
+      <div style="padding:14px;">
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;line-height:1.4;">${p.name}</div>
+        <div class="text-xs text-muted mb-3">${p.merchant} · ${LSC.fmtMoney(p.price)} · 库存 ${p.stock}</div>
+        <div class="mb-3">
+          <div class="text-xs text-muted mb-1">AI审核置信度</div>
+          <div class="flex items-center gap-2">
+            <div class="ai-score-bar" style="flex:1;margin:0;"><div style="width:${p.aiScore*100}%;background:${p.aiScore>0.8?'var(--c-available)':p.aiScore>0.5?'var(--c-warning)':'var(--c-danger)'};"></div></div>
+            <span class="text-sm font-bold" style="color:${p.aiScore>0.8?'var(--c-available)':p.aiScore>0.5?'var(--c-warning)':'var(--c-danger)'};">${(p.aiScore*100).toFixed(0)}%</span>
+          </div>
+        </div>
+        <div class="flex gap-2 mb-3 flex-wrap">${p.aiTags.map(t=>`<span class="tag ${t.includes('违规')||t.includes('假冒')||t.includes('疑似')?'tag-danger':t.includes('需')?'tag-warning':'tag-success'}">${t}</span>`).join('')}</div>
+        <div class="row-actions">
+          ${p.status==='ai_reject'?'<span class="row-btn danger">已驳回</span>':''}
+          ${p.status==='manual_review'?'<span class="row-btn" onclick="alert(\'通过商品\')">通过</span><span class="row-btn danger" onclick="alert(\'驳回商品\')">驳回</span>':''}
+          ${p.status==='ai_pass'?'<span class="row-btn">详情</span><span class="row-btn warn">下架</span>':''}
+          ${p.status==='ai_suspect'?'<span class="row-btn" onclick="alert(\'人工复核\')">复核</span><span class="row-btn danger">驳回</span>':''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  const html = pageHead('商品审核', 'AI智能审核商品图片/视频/文本，人工复核存疑商品，强制校验1:1定价', `
+    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="refresh"></span>刷新队列</button>
+  `) + `
+  <div class="toolbar">
+    <div class="seg">
+      <span class="seg-item active">全部 ${MOCK.products.length}</span>
+      <span class="seg-item tag-success">AI通过 3</span>
+      <span class="seg-item tag-warning">AI存疑 1</span>
+      <span class="seg-item tag-danger">AI驳回 1</span>
+      <span class="seg-item tag-info">待复核 1</span>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">${cards}</div>
+  <div class="ai-panel mt-6">
+    <span class="ai-tag"><span class="ai-dot"></span>AI 商品审核 Agent</span>
+    <div class="ai-panel-title"><span class="icon icon-sm" data-i="ai"></span>审核模型运行状态</div>
+    <div class="grid-3" style="margin-top:12px;">
+      <div><div class="stat-label">图像审核 ResNet</div><div class="font-bold" style="color:var(--c-available);">准确率 96.2%</div></div>
+      <div><div class="stat-label">视频审核 多模态</div><div class="font-bold" style="color:var(--c-available);">准确率 94.8%</div></div>
+      <div><div class="stat-label">文本分类 BERT</div><div class="font-bold" style="color:var(--c-available);">准确率 97.1%</div></div>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== B2B订单 ============== */
+function renderB2B() {
+  const verifyMap = {
+    0: { tag:'tag-info', label:'待核验' },
+    1: { tag:'tag-success', label:'AI真实' },
+    2: { tag:'tag-warning', label:'AI可疑' },
+    3: { tag:'tag-success', label:'人工确认' },
+    4: { tag:'tag-danger', label:'人工虚假' },
+  };
+  const statusMap = {
+    await_verify: { tag:'tag-info', label:'待AI核验' },
+    pending: { tag:'tag-warning', label:'对手方待确认' },
+    confirmed: { tag:'tag-success', label:'已确认流转' },
+    completed: { tag:'tag-success', label:'已完成' },
+    rejected: { tag:'tag-danger', label:'已驳回' },
+  };
+  const rows = MOCK.b2bOrders.map(o=>{
+    const v = verifyMap[o.aiVerify], s = statusMap[o.status];
+    return `<tr>
+      <td><div style="font-weight:600;font-family:var(--ff-mono);font-size:12px;">${o.id}</div></td>
+      <td><div><b>${o.from}</b></div><div class="text-xs text-muted">→ ${o.to}</div></td>
+      <td><div style="font-size:13px;">${o.desc}</div><div class="text-xs text-muted">合同: ${o.contract}</div></td>
+      <td><div style="font-family:var(--ff-mono);font-weight:600;">${LSC.fmtMoney(o.rmb)}</div><div class="text-xs text-available">≈ ${LSC.fmtNum(o.lsc)} LSC</div></td>
+      <td><span class="tag ${v.tag} tag-dot">${v.label}</span><div class="text-xs text-muted mt-1">匹配度 ${(o.aiMatch*100).toFixed(0)}%</div></td>
+      <td><span class="tag ${s.tag}">${s.label}</span></td>
+      <td><div class="row-actions">
+        ${o.status==='await_verify'?'<span class="row-btn" onclick="alert(\'触发AI核验\')">核验</span>':''}
+        ${o.status==='pending'?'<span class="row-btn" onclick="alert(\'查看凭证\')">凭证</span>':''}
+        ${o.status==='rejected'?'<span class="row-btn danger" onclick="alert(\'查看驳回原因\')">原因</span>':''}
+        ${o.status==='confirmed'||o.status==='completed'?'<span class="row-btn">链上</span>':''}
+        <span class="row-btn warn">详情</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const html = pageHead('B2B订单管理', '商家间LSC流转订单全生命周期管理 · AI核验贸易凭证 · 1:1金额对应校验', `
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="export"></span>导出</button>
+  `) + `
+  <div class="stat-grid mb-5" style="grid-template-columns:repeat(4,1fr);">
+    <div class="stat-card"><div class="stat-label">今日B2B流转</div><div class="stat-value" style="font-size:20px;">${LSC.fmtNum(MOCK.dashboard.todayB2B)}</div><div class="text-xs text-muted">LSC</div></div>
+    <div class="stat-card"><div class="stat-label">待核验订单</div><div class="stat-value" style="font-size:20px;color:var(--c-warning);">1</div><div class="text-xs text-muted">笔</div></div>
+    <div class="stat-card"><div class="stat-label">AI核验通过率</div><div class="stat-value" style="font-size:20px;color:var(--c-available);">94.2%</div><div class="text-xs text-muted">本月</div></div>
+    <div class="stat-card"><div class="stat-label">异常订单</div><div class="stat-value" style="font-size:20px;color:var(--c-danger);">1</div><div class="text-xs text-muted">人工虚假</div></div>
+  </div>
+  <div class="card">
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr>
+        <th>订单号</th><th>发起方 → 对手方</th><th>交易描述</th><th>人民币/LSC</th><th>AI核验</th><th>状态</th><th>操作</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  </div>
+  <div class="ai-panel mt-5">
+    <span class="ai-tag"><span class="ai-dot"></span>B2B OCR 核验 Agent</span>
+    <div class="ai-panel-title"><span class="icon icon-sm" data-i="ai"></span>智能凭证核验引擎</div>
+    <ul>
+      <li><span class="ai-li-dot">▸</span>OCR提取合同编号、金额、双方信息，与订单字段自动匹配</li>
+      <li><span class="ai-li-dot">▸</span>多模态模型识别贸易凭证真伪，标注可疑区域供人工复核</li>
+      <li><span class="ai-li-dot">▸</span>强制校验 LSC数量与人民币金额 1:1 对应，越界自动拦截</li>
+    </ul>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 风控管理 ============== */
+function renderRisk() {
+  const levelMap = { high:{tag:'tag-danger',label:'高风险'}, medium:{tag:'tag-warning',label:'中风险'}, low:{tag:'tag-info',label:'低风险'} };
+  const rows = MOCK.riskLogs.map(r=>{
+    const l = levelMap[r.level];
+    return `<tr>
+      <td><span style="font-family:var(--ff-mono);font-size:12px;">${r.id}</span></td>
+      <td><span style="font-family:var(--ff-mono);">${r.user}</span></td>
+      <td><span class="tag tag-info">${r.type}</span></td>
+      <td>${r.detail}</td>
+      <td><span class="tag ${l.tag} tag-dot">${l.label}</span></td>
+      <td><div class="flex items-center gap-2"><div class="ai-score-bar" style="width:50px;margin:0;"><div style="width:${r.score*100}%;background:${r.score>0.7?'var(--c-danger)':r.score>0.4?'var(--c-warning)':'var(--c-available)'};"></div></div><span class="text-xs font-bold">${(r.score*100).toFixed(0)}</span></div></td>
+      <td><span class="tag ${r.action.includes('封禁')||r.action.includes('冻结')||r.action.includes('限制')?'tag-danger':r.action.includes('复核')?'tag-warning':'tag-success'}">${r.action}</span></td>
+      <td class="text-xs text-muted">${r.op}</td>
+      <td class="text-xs text-muted">${LSC.fmtTime(r.ts)}</td>
+    </tr>`;
+  }).join('');
+  const html = pageHead('风控管理', 'AI动态风控 + 固定规则风控双引擎 · 用户行为序列分析 · 实时风险评分', `
+    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="system"></span>规则配置</button>
+  `) + `
+  <div class="grid-2-1 mb-5">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;"><div class="card-title">风控规则引擎</div><div class="card-sub">固定规则 + AI动态评分双引擎</div></div>
+      <div class="param-row"><div><div class="param-key">单IP注册限频</div><div class="param-desc">同IP 24小时内注册不得超过3个账号</div></div><div class="param-val">3 <i>个/日</i></div></div>
+      <div class="param-row"><div><div class="param-key">异常核销时段</div><div class="param-desc">凌晨0-6点连续核销≥5笔触发风控</div></div><div class="param-val">5 <i>笔</i></div></div>
+      <div class="param-row"><div><div class="param-key">LSC聚集阈值</div><div class="param-desc">4+账户LSC集中转给1商家触发人工复核</div></div><div class="param-val">4 <i>账户</i></div></div>
+      <div class="param-row"><div><div class="param-key">AI风险评分阈值</div><div class="param-desc">评分≥0.7自动处置，0.4-0.7人工复核</div></div><div class="param-val">0.70</div></div>
+      <div class="param-row"><div><div class="param-key">设备指纹识别</div><div class="param-desc">同设备登录账号不得超过2个</div></div><div class="param-val">2 <i>个</i></div></div>
+    </div>
+    <div class="ai-panel">
+      <span class="ai-tag"><span class="ai-dot"></span>用户风控 Agent</span>
+      <div class="ai-panel-title"><span class="icon icon-sm" data-i="ai"></span>实时风控态势</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+        <div class="task-card"><div class="stat-label">今日拦截</div><div class="stat-value" style="font-size:22px;color:var(--c-danger);">28</div><div class="text-xs text-muted">起</div></div>
+        <div class="task-card"><div class="stat-label">人工复核</div><div class="stat-value" style="font-size:22px;color:var(--c-warning);">12</div><div class="text-xs text-muted">起</div></div>
+        <div class="task-card"><div class="stat-label">误判率</div><div class="stat-value" style="font-size:22px;color:var(--c-available);">2.1%</div><div class="text-xs text-muted">本月</div></div>
+        <div class="task-card"><div class="stat-label">模型准确率</div><div class="stat-value" style="font-size:22px;color:var(--c-available);">97.9%</div><div class="text-xs text-muted">XGBoost</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">用户风控日志</div><div class="card-sub">实时风控处置记录</div></div>
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr><th>日志ID</th><th>用户ID</th><th>风控类型</th><th>详情</th><th>风险等级</th><th>AI评分</th><th>处置动作</th><th>操作人</th><th>时间</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 信用管理 ============== */
+function renderCredit() {
+  const rows = MOCK.violations.map(v=>`
+    <tr>
+      <td><span style="font-family:var(--ff-mono);font-size:12px;">${v.id}</span></td>
+      <td><span style="font-family:var(--ff-mono);">${v.merchant}</span></td>
+      <td><span class="tag tag-warning">${v.type}</span></td>
+      <td>${v.detail}</td>
+      <td><span class="tag tag-danger">-${v.deduct}</span></td>
+      <td>${v.measure}</td>
+      <td>${v.aiFound?'<span class="tag tag-accent tag-dot">AI发现</span>':'<span class="tag tag-info">人工</span>'}</td>
+      <td class="text-xs text-muted">${LSC.fmtDate(v.start)} ~ ${LSC.fmtDate(v.end)}</td>
+      <td class="text-xs text-muted">${v.op}</td>
+      <td><span class="row-btn danger" onclick="alert('撤销处罚需双人审批')">撤销</span></td>
+    </tr>`).join('');
+  const html = pageHead('信用管理', '商家信用分查询 · 违规记录追溯 · AI发现的违规自动留痕 · 处罚双人审批', `
+    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="export"></span>导出</button>
+  `) + `
+  <div class="grid-3 mb-5">
+    <div class="stat-card"><div class="stat-label">A档信用商家</div><div class="stat-value" style="color:var(--c-available);">3</div><div class="text-xs text-muted">≥80分 · 5万/日核销</div></div>
+    <div class="stat-card"><div class="stat-label">B档信用商家</div><div class="stat-value" style="color:var(--c-warning);">3</div><div class="text-xs text-muted">60-79分 · 3万/日核销</div></div>
+    <div class="stat-card"><div class="stat-label">C档/处罚中</div><div class="stat-value" style="color:var(--c-danger);">2</div><div class="text-xs text-muted">&lt;60分 · 1万/日或暂停</div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">商家违规记录</div><div class="card-sub">违规追溯 · 扣分留痕 · 处罚执行</div></div>
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr><th>记录ID</th><th>商家ID</th><th>违规类型</th><th>违规描述</th><th>扣分</th><th>处罚措施</th><th>发现来源</th><th>处罚期间</th><th>操作人</th><th>操作</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  </div>
+  <div class="alert alert-warning mt-5"><span class="icon icon-sm" data-i="warning"></span>所有处罚执行操作均需<b>双人审批</b>签名验证，自动记录审计日志并上链存证。</div>
+  `;
+  setView(html);
+}
+
+/* ============== 释放管理 ============== */
+function renderRelease() {
+  const d = MOCK.dashboard;
+  const html = pageHead('释放管理', '每日动态释放算法参数配置 · 任务监控 · AI趋势预测 · 人工熔断', `
+    <button class="btn btn-danger btn-sm" onclick="alert('熔断操作需双人审批，将暂停当日释放任务')"><span class="icon icon-sm" data-i="warning"></span>人工熔断</button>
+  `) + `
+  <div class="grid-2-1 mb-5">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">释放速率 rate 与核销率 k 关系曲线</div><div class="card-sub">rate = 0.075% - 0.05×k (k∈[0.5%,1.0%])</div></div>
+      </div>
+      <div class="chart-area">${lineChart({
+        w:560, h:280,
+        labels: Array.from({length:21},(_,i)=>((0.5+i*0.025)*100).toFixed(2)+'%'),
+        series: [{
+          data: Array.from({length:21},(_,i)=>{ const k=0.005+i*0.00025; return LSC.calcRate(k); }),
+          color: 'var(--c-primary)', name:'rate', area:true
+        }]
+      })}</div>
+    </div>
+    <div class="ai-panel">
+      <span class="ai-tag"><span class="ai-dot"></span>释放趋势预测 Agent</span>
+      <div class="ai-panel-title"><span class="icon icon-sm" data-i="ai"></span>LSTM 预测模型</div>
+      <div style="margin-top:10px;">
+        <div class="text-xs text-muted mb-2">未来7天 k 值预测</div>
+        ${MOCK.kForecast7.map((k,i)=>`<div class="flex items-center justify-between text-sm" style="padding:4px 0;border-bottom:1px dashed var(--c-border-soft);"><span class="text-muted">D+${i+1}</span><b style="font-family:var(--ff-mono);color:var(--c-accent-deep);">${(k*100).toFixed(2)}%</b></div>`).join('')}
+      </div>
+      <div class="alert alert-info mt-3" style="font-size:12px;">预测7天内k值将稳步上升，建议保持当前参数，无需调整 k_min/k_max。</div>
+    </div>
+  </div>
+
+  <div class="card mb-5">
+    <div class="card-head"><div class="card-title">释放算法参数配置</div><div class="card-sub">rate_max/rate_min 不可编辑 · 其余参数可编辑(需双人审批)</div></div>
+    <div class="card-body">
+      <div class="param-row"><div><div class="param-key">rate_max <span class="tag" style="font-size:10px;">不可编辑</span></div><div class="param-desc">释放速率上限 · k≤0.50%时启用</div></div><div class="param-val locked-param">0.05% <i>‱</i></div></div>
+      <div class="param-row"><div><div class="param-key">rate_min <span class="tag" style="font-size:10px;">不可编辑</span></div><div class="param-desc">释放速率下限 · k≥1.0%时启用</div></div><div class="param-val locked-param">0.03% <i>‱</i></div></div>
+      <div class="param-row"><div><div class="param-key">k_min <span class="tag tag-info" style="font-size:10px;">可编辑</span></div><div class="param-desc">健康核销率下限 · 低于此值启用rate_max</div></div><div class="param-val">0.50% <i>当前</i></div></div>
+      <div class="param-row"><div><div class="param-key">k_max <span class="tag tag-info" style="font-size:10px;">可编辑</span></div><div class="param-desc">健康核销率上限 · 高于此值启用rate_min</div></div><div class="param-val">1.0% <i>当前</i></div></div>
+      <div class="param-row"><div><div class="param-key">alpha <span class="tag tag-info" style="font-size:10px;">可编辑</span></div><div class="param-desc">动态加权平滑系数</div></div><div class="param-val">0.05 <i>当前</i></div></div>
+      <div class="flex justify-end gap-3 mt-4"><button class="btn btn-outline btn-sm">AI仿真推演</button><button class="btn btn-primary btn-sm" onclick="alert('参数修改需双人审批，已弹出审批表单')">提交修改</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">今日释放任务监控</div><div class="tag tag-success tag-dot">执行成功</div></div>
+    <div class="card-body">
+      <div class="grid-3 mb-4">
+        <div class="task-card"><div class="stat-label">全网锁定总量</div><div class="stat-value" style="font-size:22px;">${LSC.fmtNum(d.lockedTotal)}</div><div class="text-xs text-muted">LSC</div></div>
+        <div class="task-card"><div class="stat-label">当日应释放</div><div class="stat-value" style="font-size:22px;color:var(--c-accent-deep);">${LSC.fmtNum(d.todayRelease)}</div><div class="text-xs text-muted">rate × 锁定总量</div></div>
+        <div class="task-card"><div class="stat-label">实际释放</div><div class="stat-value" style="font-size:22px;color:var(--c-available);">${LSC.fmtNum(d.todayRelease)}</div><div class="text-xs text-available">零误差 ✓</div></div>
+      </div>
+      <div class="task-step done"><span class="step-dot"></span>02:00 任务启动 (XXL-JOB集群单实例)</div>
+      <div class="task-step done"><span class="step-dot"></span>02:01 计算 N_total / M_total → k=0.72%</div>
+      <div class="task-step done"><span class="step-dot"></span>02:01 分段计算 rate=0.0385% (0.075%-0.05×0.0072)</div>
+      <div class="task-step done"><span class="step-dot"></span>02:02 二次校验 rate ∈ [0.03%,0.05%] ✓</div>
+      <div class="task-step done"><span class="step-dot"></span>02:03 批量执行 86 批次 (每批10万条) 全部成功</div>
+      <div class="task-step done"><span class="step-dot"></span>02:08 汇总校验 实际=应释放 零误差</div>
+      <div class="task-step done"><span class="step-dot"></span>02:09 链上存证 SHA-256哈希已上链 Fabric</div>
+      <div class="alert alert-success mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="check"></span>任务完成 · 用时 9分12秒 · 链上交易ID: 0x8a3f...e291</div>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 对账管理 ============== */
+function renderReconcile() {
+  const html = pageHead('对账管理', '支付机构资金流水对账 · 链上存证校验 · 异常自动诊断', `
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="refresh"></span>生成今日对账</button>
+  `) + `
+  <div class="grid-2 mb-5">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;"><div class="card-title">支付机构资金流水对账</div><div class="card-sub">2026-08-27</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="task-card"><div class="stat-label">平台流水</div><div class="stat-value" style="font-size:20px;">${LSC.fmtMoney(MOCK.dashboard.todayConsume)}</div></div>
+        <div class="task-card"><div class="stat-label">机构流水</div><div class="stat-value" style="font-size:20px;">${LSC.fmtMoney(MOCK.dashboard.todayConsume)}</div></div>
+        <div class="task-card" style="border-left-color:var(--c-available);"><div class="stat-label">差异</div><div class="stat-value" style="font-size:20px;color:var(--c-available);">¥0.00</div></div>
+        <div class="task-card" style="border-left-color:var(--c-available);"><div class="stat-label">对账状态</div><div class="stat-value" style="font-size:20px;color:var(--c-available);">平账</div></div>
+      </div>
+      <div class="alert alert-success mt-4" style="font-size:12px;">支付机构流水与平台账务完全一致，平台2%技术服务费已由支付机构直接清分。</div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;"><div class="card-title">链上存证校验</div><div class="card-sub">Hyperledger Fabric 2.5</div></div>
+      <div class="task-step done"><span class="step-dot"></span>关键操作流水哈希存证 (1248条)</div>
+      <div class="task-step done"><span class="step-dot"></span>每日快照哈希上链 (D-1)</div>
+      <div class="task-step done"><span class="step-dot"></span>链上数据完整性校验 通过</div>
+      <div class="task-step done"><span class="step-dot"></span>双人审批操作存证 (8条)</div>
+      <div class="task-step done"><span class="step-dot"></span>熔断操作存证 (0条)</div>
+      <div class="alert alert-info mt-4" style="font-size:12px;">存证合约仅开放写入/查询方法，禁止修改删除。哈希序列化: 字段升序+SHA-256。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">分布式事务异常日志</div><div class="card-sub">Seata AT 回滚失败记录 · AI自动诊断</div></div>
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr><th>记录ID</th><th>全局事务ID</th><th>业务类型</th><th>业务单号</th><th>异常内容</th><th>AI诊断</th><th>状态</th><th>处理人</th></tr></thead>
+      <tbody>
+        <tr><td>TX001</td><td style="font-family:var(--ff-mono);font-size:11px;">192.168.1.10-8623</td><td>LSC发行</td><td>ORD20260827001</td><td>分支事务回滚超时</td><td><span class="tag tag-accent">网络抖动</span></td><td><span class="tag tag-success">已处理</span></td><td>运维·自动</td></tr>
+        <tr><td>TX002</td><td style="font-family:var(--ff-mono);font-size:11px;">192.168.1.12-9821</td><td>核销</td><td>NH20260827008</td><td>乐观锁冲突3次</td><td><span class="tag tag-accent">并发竞争</span></td><td><span class="tag tag-warning">处理中</span></td><td>运维·张工</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 系统管理 ============== */
+function renderSystem() {
+  const rows = MOCK.auditLogs.map(a=>`
+    <tr>
+      <td><span style="font-family:var(--ff-mono);font-size:12px;">${a.id}</span></td>
+      <td><div style="font-weight:500;">${a.admin}</div><div class="text-xs text-muted">${a.role}</div></td>
+      <td><span class="tag tag-info">${a.op}</span></td>
+      <td>${a.detail}</td>
+      <td class="text-xs text-muted" style="font-family:var(--ff-mono);">${a.ip}</td>
+      <td class="text-xs text-muted">${a.device}</td>
+      <td>${a.aiFlag?'<span class="tag tag-accent tag-dot">AI异常</span>':'<span class="tag tag-success">正常</span>'}</td>
+      <td class="text-xs text-muted">${LSC.fmtTime(a.ts)}</td>
+    </tr>`).join('');
+  const html = pageHead('系统管理', '管理员账号 · 角色权限 · 双人审批 · 操作审计日志', `
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="user"></span>新增管理员</button>
+  `) + `
+  <div class="grid-3 mb-5">
+    <div class="card chart-card"><div class="stat-label">超级管理员</div><div class="stat-value" style="font-size:24px;">2</div><div class="text-xs text-muted">林总 / 王董</div></div>
+    <div class="card chart-card"><div class="stat-label">运营管理员</div><div class="stat-value" style="font-size:24px;">8</div><div class="text-xs text-muted">运营/财务/风控</div></div>
+    <div class="card chart-card"><div class="stat-label">今日审计</div><div class="stat-value" style="font-size:24px;color:var(--c-accent-deep);">${MOCK.auditLogs.length}</div><div class="text-xs text-muted">条 · 含1条AI异常</div></div>
+  </div>
+  <div class="card mb-5">
+    <div class="card-head"><div class="card-title">管理员操作审计日志</div><div class="card-sub">所有关键操作 · IP+设备指纹 · AI异常检测</div></div>
+    <div style="overflow-x:auto;">
+    <table class="table">
+      <thead><tr><th>记录ID</th><th>操作人</th><th>操作类型</th><th>操作详情</th><th>IP地址</th><th>设备</th><th>AI标记</th><th>时间</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">双人审批签名验证</div><div class="card-sub">参数修改 / 处罚执行 必须双人签名</div></div>
+    <div class="card-body">
+      <div class="dual-approval">
+        <div class="field"><label class="field-label field-required">第一管理员签名</label><input class="input" placeholder="输入管理员账号"></div>
+        <div class="field"><label class="field-label field-required">第二管理员签名</label><input class="input" placeholder="输入管理员账号"></div>
+      </div>
+      <div class="alert alert-warning mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="lock"></span>签名验证: verifyDualApproval(sig1, sig2, payload) 需两位管理员<b>不同</b>且各自签名通过。所有签名操作记录审计并上链存证。</div>
+      <div class="flex justify-end mt-3"><button class="btn btn-primary btn-sm">验证并执行</button></div>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== AI中心 ============== */
+function renderAI() {
+  const agents = [
+    {name:'商品审核Agent', desc:'图片/视频/文本审核 + AIGC文案生成', icon:'product', gold:false, calls:'12,860', acc:'96.2%'},
+    {name:'B2B OCR核验Agent', desc:'提取合同信息并与订单匹配校验', icon:'doc', gold:false, calls:'8,420', acc:'94.8%'},
+    {name:'地址核验Agent', desc:'地图实景与工商信息比对', icon:'location', gold:false, calls:'3,210', acc:'92.1%'},
+    {name:'用户风控Agent', desc:'行为序列分析输出风险评分', icon:'risk', gold:false, calls:'48,920', acc:'97.9%'},
+    {name:'商家风控Agent', desc:'综合指标评分与预警', icon:'merchant', gold:false, calls:'12,856', acc:'95.6%'},
+    {name:'异常核销分析Agent', desc:'k值波动分析与异常核销识别', icon:'chart', gold:false, calls:'5,640', acc:'93.4%'},
+    {name:'AI客服Agent', desc:'RAG从规则文档检索答案', icon:'chat', gold:false, calls:'86,420', acc:'88.7%'},
+    {name:'管理员助手Agent', desc:'NL2SQL自然语言查询数据库', icon:'ai', gold:true, calls:'2,180', acc:'91.2%'},
+  ];
+  const cards = agents.map(a=>`
+    <div class="agent-card ${a.gold?'gold':''}">
+      <div class="agent-icon"><span class="icon icon-lg" data-i="${a.icon}"></span></div>
+      <div class="agent-name">${a.name}</div>
+      <div class="agent-desc">${a.desc}</div>
+      <div class="agent-stat"><span>调用次数(今日)<br><span class="v">${a.calls}</span></span><span>准确率<br><span class="v" style="color:var(--c-available);">${a.acc}</span></span></div>
+    </div>`).join('');
+  const advAgents = [
+    {name:'释放趋势预测Agent', desc:'LSTM输入历史k值/B2B/消费趋势，预测7-30天核销率', icon:'release'},
+    {name:'参数仿真Agent', desc:'蒙特卡洛模拟修改k_min/k_max/alpha后系统表现', icon:'system'},
+    {name:'供应链匹配Agent', desc:'图神经网络推荐上下游商家', icon:'flow'},
+  ];
+  const advCards = advAgents.map(a=>`
+    <div class="agent-card gold">
+      <div class="agent-icon"><span class="icon icon-lg" data-i="${a.icon}"></span></div>
+      <div class="agent-name">${a.name}</div>
+      <div class="agent-desc">${a.desc}</div>
+      <div class="agent-stat"><span>输出形式<br><span class="v">仪表盘/报告</span></span><span>权限<br><span class="v" style="color:var(--c-text-3);">仅建议</span></span></div>
+    </div>`).join('');
+
+  const html = pageHead('AI中心', '8大运营Agent + 3大高级决策Agent · 统一AI网关 · 限流降级 · 仅建议无写权限', `
+    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="refresh"></span>刷新状态</button>
+  `) + `
+  <div class="alert alert-info mb-5"><span class="icon icon-sm" data-i="ai"></span><div><b>AI安全准则:</b> 所有AI服务仅具备数据库只读权限，无写权限。所有AIGC内容标注"AI生成"标识。AI接口限流单IP 20请求/秒，推理超时10秒自动降级为人工审核模式。</div></div>
+
+  <div class="mb-3 text-sm font-bold" style="color:var(--c-text-1);">运营层 AI Agent (8个)</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;" class="mb-6">${cards}</div>
+
+  <div class="mb-3 text-sm font-bold" style="color:var(--c-accent-deep);">高级决策 AI Agent (3个) · 仅展示供参考</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">${advCards}</div>
+
+  <div class="card mt-6">
+    <div class="card-head"><div class="card-title">AI网关服务状态</div><div class="tag tag-success tag-dot">运行中</div></div>
+    <div class="card-body">
+      <div class="grid-3">
+        <div class="task-card"><div class="stat-label">QPS限流</div><div class="stat-value" style="font-size:18px;">20/s</div><div class="text-xs text-muted">单IP</div></div>
+        <div class="task-card"><div class="stat-label">推理超时</div><div class="stat-value" style="font-size:18px;">10s</div><div class="text-xs text-muted">自动降级</div></div>
+        <div class="task-card"><div class="stat-label">缓存命中率</div><div class="stat-value" style="font-size:18px;color:var(--c-available);">68.4%</div><div class="text-xs text-muted">推理结果缓存</div></div>
+        <div class="task-card"><div class="stat-label">模型版本</div><div class="stat-value" style="font-size:18px;">v6.2</div><div class="text-xs text-muted">灰度10%</div></div>
+        <div class="task-card"><div class="stat-label">GPU利用率</div><div class="stat-value" style="font-size:18px;color:var(--c-warning);">72%</div><div class="text-xs text-muted">T4 × 2</div></div>
+        <div class="task-card"><div class="stat-label">降级触发</div><div class="stat-value" style="font-size:18px;color:var(--c-available);">0</div><div class="text-xs text-muted">本月</div></div>
+      </div>
+    </div>
+  </div>
+  `;
+  setView(html);
+}
+
+/* ============== 工具 ============== */
+function setView(html) {
+  const v = document.getElementById('view');
+  v.innerHTML = html;
+  // 重新渲染图标
+  v.querySelectorAll('.icon[data-i]').forEach(el=>{
+    const key = el.getAttribute('data-i');
+    if (ICONS[key]) el.innerHTML = ICONS[key];
+  });
+  v.querySelectorAll('.icon:not([data-i])').forEach(el=>{
+    if (!el.innerHTML.trim()) {
+      const parent = el.closest('[data-i]') || el.parentElement;
+    }
+  });
+}
+
+/* ============== AI助手浮窗 ============== */
+document.getElementById('ai-toggle').addEventListener('click', ()=>{
+  document.getElementById('ai-mask').classList.remove('hidden');
+});
+document.getElementById('ai-close').addEventListener('click', ()=>{
+  document.getElementById('ai-mask').classList.add('hidden');
+});
+document.getElementById('ai-mask').addEventListener('click', e=>{
+  if (e.target.id==='ai-mask') e.target.classList.add('hidden');
+});
+
+/* ============== 启动 ============== */
+renderDashboard();
+</script>
+</body>
+</html>
