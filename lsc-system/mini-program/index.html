@@ -624,6 +624,45 @@ function renderWallet() {
     <div class="wx-wallet-tab">消费</div>
     <div class="wx-wallet-tab">推广</div>
   </div>
+  <!-- 个人LSC流转链路图 -->
+  <div class="wx-card" style="margin-top:10px;padding:10px 12px;">
+    <div style="font-size:12px;font-weight:600;color:var(--c-wx-green-deep);margin-bottom:6px;display:flex;align-items:center;gap:5px;">
+      <span class="icon icon-sm" data-i="flow" style="color:var(--c-wx-green-deep);"></span>我的LSC流转链路
+    </div>
+    <div style="overflow-x:auto;">
+    <svg viewBox="0 0 520 160" style="width:100%;min-width:480px;height:130px;">
+      <defs>
+        <marker id="wx-a1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#576b95"/></marker>
+        <marker id="wx-a2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--c-wx-green-deep)"/></marker>
+        <marker id="wx-a3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9500"/></marker>
+      </defs>
+      <rect x="4" y="54" width="86" height="52" rx="10" fill="rgba(87,107,149,0.08)" stroke="#576b95" stroke-width="1.5"/>
+      <text x="47" y="76" font-size="10" font-weight="700" fill="#576b95" text-anchor="middle">消费发行</text>
+      <text x="47" y="92" font-size="9" fill="#666" text-anchor="middle">+24,800</text>
+      <rect x="140" y="46" width="86" height="68" rx="10" fill="rgba(255,177,61,0.10)" stroke="#ff9500" stroke-width="2"/>
+      <text x="183" y="70" font-size="11" font-weight="700" fill="#ff9500" text-anchor="middle">🔒 锁定池</text>
+      <text x="183" y="88" font-size="10" fill="#1a1a1a" text-anchor="middle">15,200</text>
+      <text x="183" y="102" font-size="8" fill="#999" text-anchor="middle">日释 0.038%</text>
+      <rect x="276" y="46" width="86" height="68" rx="10" fill="rgba(7,193,96,0.10)" stroke="var(--c-wx-green-deep)" stroke-width="2"/>
+      <text x="319" y="70" font-size="11" font-weight="700" fill="var(--c-wx-green-deep)" text-anchor="middle">✓ 可用池</text>
+      <text x="319" y="88" font-size="10" fill="#1a1a1a" text-anchor="middle">8,640</text>
+      <text x="319" y="102" font-size="8" fill="#999" text-anchor="middle">可消费/转账</text>
+      <rect x="412" y="12" width="90" height="46" rx="10" fill="rgba(255,149,0,0.10)" stroke="#ff9500" stroke-width="1.5"/>
+      <text x="457" y="32" font-size="10" font-weight="700" fill="#ff9500" text-anchor="middle">扫码消费</text>
+      <text x="457" y="48" font-size="9" fill="#999" text-anchor="middle">-6,400</text>
+      <rect x="412" y="96" width="90" height="46" rx="10" fill="rgba(200,162,75,0.14)" stroke="var(--c-accent-deep)" stroke-width="1.5"/>
+      <text x="457" y="116" font-size="10" font-weight="700" fill="var(--c-accent-deep)" text-anchor="middle">推广奖励</text>
+      <text x="457" y="132" font-size="9" fill="#999" text-anchor="middle">+320</text>
+      <line x1="90" y1="80" x2="138" y2="80" stroke="#576b95" stroke-width="2" marker-end="url(#wx-a1)"/>
+      <text x="114" y="75" font-size="8" fill="#576b95" font-weight="600" text-anchor="middle">1:1</text>
+      <line x1="226" y1="80" x2="274" y2="80" stroke="var(--c-wx-green-deep)" stroke-width="2.5" marker-end="url(#wx-a2)"/>
+      <text x="250" y="75" font-size="8" fill="var(--c-wx-green-deep)" font-weight="600" text-anchor="middle">缓释</text>
+      <path d="M 340 66 Q 400 40 410 34" fill="none" stroke="#ff9500" stroke-width="2" marker-end="url(#wx-a3)"/>
+      <text x="375" y="40" font-size="8" fill="#ff9500" font-weight="600" text-anchor="middle">抵扣</text>
+      <path d="M 457 96 Q 457 84 360 84 Q 330 84 330 80" fill="none" stroke="var(--c-accent-deep)" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#wx-a2)"/>
+    </svg>
+    </div>
+  </div>
   <div class="wx-card" style="margin-top:10px;">
     <div style="padding:0 14px;">${txs.map(t=>`
       <div class="wx-tx">

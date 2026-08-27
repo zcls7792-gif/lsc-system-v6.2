@@ -1656,26 +1656,29 @@ function renderAI() {
         <div><div class="card-title">释放速率实时数据流</div><div class="card-sub">k值 × rate 联动 · 近24小时</div></div>
         <span class="tag tag-dot tag-accent" id="ai-stream-live">● LIVE</span>
       </div>
-      <div class="chart-area">${lineChart({
-        w: 560, h: 220,
-        labels: Array.from({length:24},(_,i)=>(i+1)+':00'),
-        series: [
-          { data: Array.from({length:24},(_,i)=>0.0060+Math.sin(i/4)*0.0008+Math.random()*0.0003), color:'var(--c-locked)', name:'k值(×100)', area:true },
-          { data: Array.from({length:24},(_,i)=>0.0035+Math.sin(i/4+1)*0.0005+Math.random()*0.0002), color:'var(--c-accent)', name:'rate(×100)', dash:true },
-        ],
-      })}</div>
+      <div class="chart-area" id="rate-realtime-chart">${(()=>{
+        const {svg,legend} = lineChart({
+          w: 560, h: 220,
+          labels: Array.from({length:24},(_,i)=>(i+1)+':00'),
+          series: [
+            { data: Array.from({length:24},(_,i)=>0.0060+Math.sin(i/4)*0.0008+(Math.random()-0.5)*0.0004), color:'var(--c-locked)', name:'k值(×100)', area:true, width:2.5 },
+            { data: Array.from({length:24},(_,i)=>0.0035+Math.sin(i/4+1)*0.0005+(Math.random()-0.5)*0.00025), color:'var(--c-accent)', name:'rate(×100)', dash:true },
+          ],
+        });
+        return svg+'<div id="rate-realtime-legend" style="margin-top:8px;">'+legend+'</div>';
+      })()}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
         <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
           <div class="text-xs text-muted">当前 k 值</div>
-          <div style="font-size:16px;font-weight:700;color:var(--c-warning);font-family:var(--ff-mono);">0.72%</div>
+          <div id="rate-k-val" style="font-size:16px;font-weight:700;color:var(--c-warning);font-family:var(--ff-mono);">0.72%</div>
         </div>
         <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
           <div class="text-xs text-muted">当前 rate</div>
-          <div style="font-size:16px;font-weight:700;color:var(--c-accent-deep);font-family:var(--ff-mono);">0.0385%</div>
+          <div id="rate-rate-val" style="font-size:16px;font-weight:700;color:var(--c-accent-deep);font-family:var(--ff-mono);">0.0385%</div>
         </div>
         <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
           <div class="text-xs text-muted">预测趋势</div>
-          <div style="font-size:16px;font-weight:700;color:var(--c-available);font-family:var(--ff-mono);">↗ 上升</div>
+          <div id="rate-trend" style="font-size:16px;font-weight:700;color:var(--c-available);font-family:var(--ff-mono);">↗ 上升</div>
         </div>
       </div>
     </div>
@@ -1711,6 +1714,110 @@ function renderAI() {
   </div>
   `;
   setView(html);
+  // ===== P0: AI 中心实时刷新 (清除旧定时器后重新创建) =====
+  if (window._aiTimers) { window._aiTimers.forEach(t=>clearInterval(t)); window._aiTimers = []; }
+  window._aiTimers = [];
+
+  // P0-3: 活动流每10秒插入一条新记录 (slide-down 动画)
+  const ACT_AGENTS = [
+    { agent:'用户风控Agent', tasks:['可疑设备指纹检测 → 临时冻结','批量注册拦截 → 限制登录','同IP多号 → 触发二次验证','异常时段登录 → 邮件通知','异地登录 → 强制改密'] },
+    { agent:'商品审核Agent', tasks:['图片AI鉴黄 → 拒绝','AI生成标题 → 人工复核','类目匹配 → 自动修正','防伪码校验 → 已通过','禁售关键词检测 → 拦截'] },
+    { agent:'B2B OCR核验Agent', tasks:['凭证OCR提取完成 → 匹配97%','手写合同识别 → 待复核','发票核验 → 税号一致','印章真伪 → 已通过','合同一致性对比 → 差异3处'] },
+    { agent:'异常核销分析Agent', tasks:['核销率0.3% → 告警','短时高并发核销 → 限流','凌晨批量核销 → 待人工','同款高频核销 → 触发熔断'] },
+    { agent:'商家风控Agent', tasks:['风险评分82 → 生成处罚建议','流水突增50% → 核查','连续3日低核销 → 提醒','执照到期提醒 → 已推送'] },
+    { agent:'地址核验Agent', tasks:['门店坐标比对 → 通过','经营地址搬迁 → 更新','虚拟地址检测 → 拒绝','地图POI匹配 → 一致'] },
+    { agent:'AI客服Agent', tasks:['用户咨询"LSC释放规则" → 已回答','投诉工单分类 → 售后组','退款政策解读 → 已推送','常见问题Q&A → 推荐'] },
+    { agent:'管理员助手Agent', tasks:['NL2SQL查询 → 信用分<60商家','运营周报摘要 → 已发送','参数变更审计 → 已归档','告警趋势分析 → 5项下降'] },
+  ];
+  const LEVEL_COLORS = { danger:'var(--c-danger)', warning:'var(--c-warning)', success:'var(--c-available)', info:'var(--c-info)' };
+  function pushActivity() {
+    const feed = document.getElementById('ai-activity-feed');
+    if (!feed) return;
+    const a = ACT_AGENTS[Math.floor(Math.random()*ACT_AGENTS.length)];
+    const taskText = a.tasks[Math.floor(Math.random()*a.tasks.length)];
+    const now = new Date();
+    const time = '刚刚';
+    const level = Math.random()<0.2 ? 'danger' : Math.random()<0.35 ? 'warning' : Math.random()<0.7 ? 'success' : 'info';
+    const dotGlow = (level==='danger'||level==='warning') ? 'box-shadow:0 0 6px currentColor;' : '';
+    const entry = document.createElement('div');
+    entry.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--c-divider);opacity:0;transform:translateY(-8px);transition:opacity 0.35s ease,transform 0.35s ease;';
+    entry.innerHTML = `
+      <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;background:${LEVEL_COLORS[level]};color:${LEVEL_COLORS[level]};${dotGlow}"></div>
+      <div style="flex:1;"><div style="font-size:13px;"><b style="color:var(--c-primary);">${a.agent}</b> <span style="color:var(--c-text-2);">${taskText}</span></div></div>
+      <div class="text-xs text-muted" style="flex-shrink:0;">${time}</div>`;
+    feed.insertBefore(entry, feed.firstChild);
+    // 只保留最近20条
+    while (feed.children.length > 20) { feed.removeChild(feed.lastChild); }
+    // 下一帧触发 slideDown / fadeIn 动画
+    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ entry.style.opacity='1'; entry.style.transform='translateY(0)'; }); });
+  }
+  const tFeed = setInterval(pushActivity, 10000);
+  window._aiTimers.push(tFeed);
+
+  // P0-4: 释放速率数据流每3秒追加一个新采样点,旧点左滑 (保持24小时的滚动窗口)
+  // 我们为 k / rate 两个系列维护可追加的全局状态
+  if (!window._rateData) {
+    // 初始化 24 个数据点
+    window._rateLabels = Array.from({length:24},(_,i)=>(i+1)+':00');
+    window._rateSeries = {
+      k: Array.from({length:24},(_,i)=>0.0060+Math.sin(i/4)*0.0008+(Math.random()-0.5)*0.0004),
+      rate: Array.from({length:24},(_,i)=>0.0035+Math.sin(i/4+1)*0.0005+(Math.random()-0.5)*0.00025),
+    };
+  }
+  function redrawRateChart() {
+    const chartEl = document.getElementById('rate-realtime-chart');
+    const kLabel = document.getElementById('rate-k-val');
+    const rateLabel = document.getElementById('rate-rate-val');
+    const trendLabel = document.getElementById('rate-trend');
+    if (!chartEl) return;
+    const { w=560, h=220, labels, series } = {
+      w: 560, h: 220,
+      labels: window._rateLabels,
+      series: [
+        { data: window._rateSeries.k, color:'var(--c-locked)', name:'k值(×100)', area:true, width:2.5 },
+        { data: window._rateSeries.rate, color:'var(--c-accent)', name:'rate(×100)', dash:true },
+      ],
+    };
+    chartEl.innerHTML = lineChart({ w, h, labels, series }) +
+      '<div id="rate-realtime-legend" style="margin-top:8px;">'+
+      series.map(s=>`<span class="tag tag-dot" style="background:${s.color.replace('var(--c-','var(--c-')};color:#fff;font-size:10px;">${s.name}</span>`).join(' ')+
+      '</div>';
+    // 更新指标卡
+    const lastK = window._rateSeries.k[window._rateSeries.k.length-1];
+    const lastRate = window._rateSeries.rate[window._rateSeries.rate.length-1];
+    const prevK = window._rateSeries.k[window._rateSeries.k.length-2];
+    const prevRate = window._rateSeries.rate[window._rateSeries.rate.length-2];
+    if (kLabel) kLabel.textContent = (lastK*100).toFixed(4)+'%';
+    if (rateLabel) rateLabel.textContent = (lastRate*100).toFixed(4)+'%';
+    if (trendLabel) {
+      const totalUp = (lastRate>prevRate) && (lastK>prevK);
+      trendLabel.textContent = totalUp ? '↗ 上升' : (lastRate<prevRate?'↘ 下降':'→ 平稳');
+      trendLabel.style.color = totalUp ? 'var(--c-available)' : (lastRate<prevRate?'var(--c-danger)':'var(--c-text-2)');
+    }
+  }
+  function appendRatePoint() {
+    if (!window._rateSeries) return;
+    // 左滑:弹出最早的标签和数据
+    window._rateLabels.shift();
+    const last = window._rateLabels[window._rateLabels.length-1];
+    const lastHour = parseInt(last, 10) || 0;
+    window._rateLabels.push(((lastHour%24)+1)+':00');
+    const kArr = window._rateSeries.k;
+    const rArr = window._rateSeries.rate;
+    const newK = Math.max(0.0045, Math.min(0.0085, kArr[kArr.length-1] + (Math.random()-0.5)*0.0004));
+    const newR = Math.max(0.0025, Math.min(0.0055, rArr[rArr.length-1] + (Math.random()-0.5)*0.00025));
+    kArr.shift(); rArr.shift();
+    kArr.push(newK); rArr.push(newR);
+    redrawRateChart();
+  }
+  // 暴露到 window,便于外部验证
+  window.pushActivity = pushActivity;
+  window.redrawRateChart = redrawRateChart;
+  window.appendRatePoint = appendRatePoint;
+  // 初次绘制(为 ID 锚点填充真实内容)
+  redrawRateChart();
+  const tRate = setInterval(appendRatePoint, 3000);
+  window._aiTimers.push(tRate);
 }
 
 /* ============== 工具 ============== */

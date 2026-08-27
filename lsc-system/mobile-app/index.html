@@ -715,6 +715,55 @@ function renderWallet() {
     <div class="wallet-tab">推广</div>
   </div>
   <div class="pg" style="padding-top:8px;">
+    <!-- 个人LSC流转链路图 -->
+    <div style="background:#fff;border-radius:14px;padding:12px;box-shadow:var(--sh-card);margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--c-primary);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+        <span class="icon icon-sm" data-i="flow" style="color:var(--c-primary);"></span>我的LSC流转链路
+      </div>
+      <div style="overflow-x:auto;">
+      <svg viewBox="0 0 560 170" style="width:100%;min-width:520px;height:140px;">
+        <defs>
+          <marker id="arrow-user-1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--c-locked)"/></marker>
+          <marker id="arrow-user-2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--c-available)"/></marker>
+          <marker id="arrow-user-3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--c-info)"/></marker>
+        </defs>
+        <!-- 节点:消费发行 -->
+        <rect x="6" y="58" width="94" height="54" rx="10" fill="var(--c-primary-tint,rgba(14,77,74,0.08))" stroke="var(--c-primary)" stroke-width="1.5"/>
+        <text x="53" y="82" font-size="11" font-weight="700" fill="var(--c-primary)" text-anchor="middle">消费发行</text>
+        <text x="53" y="98" font-size="9" fill="var(--c-text-3)" text-anchor="middle" font-family="var(--ff-mono)">+24,800</text>
+        <!-- 节点:锁定池 -->
+        <rect x="156" y="50" width="94" height="70" rx="10" fill="rgba(255,177,61,0.10)" stroke="var(--c-warning)" stroke-width="2"/>
+        <text x="203" y="76" font-size="12" font-weight="700" fill="var(--c-warning)" text-anchor="middle">🔒 锁定池</text>
+        <text x="203" y="94" font-size="11" fill="var(--c-text-2)" text-anchor="middle" font-family="var(--ff-mono)">15,200</text>
+        <text x="203" y="108" font-size="8" fill="var(--c-text-3)" text-anchor="middle">日释 0.038%</text>
+        <!-- 节点:可用池 -->
+        <rect x="306" y="50" width="94" height="70" rx="10" fill="rgba(45,179,128,0.10)" stroke="var(--c-available)" stroke-width="2"/>
+        <text x="353" y="76" font-size="12" font-weight="700" fill="var(--c-available)" text-anchor="middle">✓ 可用池</text>
+        <text x="353" y="94" font-size="11" fill="var(--c-text-2)" text-anchor="middle" font-family="var(--ff-mono)">8,640</text>
+        <text x="353" y="108" font-size="8" fill="var(--c-text-3)" text-anchor="middle">可消费/转账</text>
+        <!-- 节点:线下消费 -->
+        <rect x="456" y="16" width="94" height="50" rx="10" fill="rgba(59,130,246,0.10)" stroke="var(--c-info)" stroke-width="1.5"/>
+        <text x="503" y="38" font-size="11" font-weight="700" fill="var(--c-info)" text-anchor="middle">线下消费</text>
+        <text x="503" y="54" font-size="9" fill="var(--c-text-3)" text-anchor="middle" font-family="var(--ff-mono)">-6,400</text>
+        <!-- 节点:推广奖励 -->
+        <rect x="456" y="102" width="94" height="50" rx="10" fill="rgba(200,162,75,0.12)" stroke="var(--c-accent)" stroke-width="1.5"/>
+        <text x="503" y="124" font-size="11" font-weight="700" fill="var(--c-accent-deep)" text-anchor="middle">推广奖励</text>
+        <text x="503" y="140" font-size="9" fill="var(--c-text-3)" text-anchor="middle" font-family="var(--ff-mono)">+320</text>
+        <!-- 连线 -->
+        <line x1="100" y1="85" x2="154" y2="85" stroke="var(--c-locked)" stroke-width="2" marker-end="url(#arrow-user-1)"/>
+        <text x="127" y="80" font-size="8" fill="var(--c-locked)" font-weight="600" text-anchor="middle">1:1发行</text>
+        <line x1="250" y1="85" x2="304" y2="85" stroke="var(--c-available)" stroke-width="2.5" marker-end="url(#arrow-user-2)"/>
+        <text x="277" y="80" font-size="8" fill="var(--c-available)" font-weight="600" text-anchor="middle">每日缓释</text>
+        <path d="M 374 68 Q 430 40 454 40" fill="none" stroke="var(--c-info)" stroke-width="2" marker-end="url(#arrow-user-3)"/>
+        <text x="415" y="44" font-size="8" fill="var(--c-info)" font-weight="600" text-anchor="middle">扫码抵扣</text>
+        <path d="M 503 102 Q 503 90 400 90 Q 360 90 360 86" fill="none" stroke="var(--c-accent)" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#arrow-user-2)"/>
+        <text x="450" y="94" font-size="7" fill="var(--c-accent-deep)" font-weight="600" text-anchor="middle">直接入账</text>
+        <!-- 循环虚线 -->
+        <path d="M 40 58 Q 40 10 300 10 Q 500 10 500 16" fill="none" stroke="var(--c-text-3)" stroke-width="1" stroke-dasharray="3 3" opacity="0.4" marker-end="url(#arrow-user-3)"/>
+        <text x="280" y="4" font-size="7" fill="var(--c-text-3)" text-anchor="middle" opacity="0.7">消费循环</text>
+      </svg>
+      </div>
+    </div>
     <div style="background:#fff;border-radius:14px;padding:0 16px;box-shadow:var(--sh-card);margin-bottom:16px;">
       ${txHtml}
     </div>

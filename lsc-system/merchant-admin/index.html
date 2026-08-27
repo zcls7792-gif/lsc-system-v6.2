@@ -176,6 +176,14 @@
   .stat-card.green .sc-icon { background: var(--c-available-tint); color: var(--c-available); }
   .stat-card .stat-label { font-size: 12px; color: var(--c-text-3); }
   .stat-card .stat-value { font-size: 24px; font-weight: 700; font-family: var(--ff-mono); margin-top: 4px; }
+  .stat-trend { display:flex; align-items:center; gap:4px; font-size: 11px; margin-top: 6px; font-weight: 600; }
+  .stat-trend.up { color: var(--c-available); }
+  .stat-trend.down { color: var(--c-danger); }
+  .stat-trend .icon { width: 12px; height: 12px; }
+
+  .chart-card { padding: 18px; transition: box-shadow 0.25s ease, transform 0.25s ease; }
+  .chart-card:hover { box-shadow: var(--sh-lg); transform: translateY(-1px); }
+  .chart-area { position: relative; width: 100%; }
 
   .grid-2 { display:grid; grid-template-columns: 1.6fr 1fr; gap:16px; }
   .grid-2-eq { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
@@ -369,7 +377,8 @@
     </div>
     <nav class="nav" id="nav">
       <div class="nav-section">经营</div>
-      <div class="nav-item active" data-view="shop"><span class="icon" data-i="shop"></span><span>店铺管理</span></div>
+      <div class="nav-item active" data-view="dashboard"><span class="icon" data-i="overview"></span><span>经营总览</span></div>
+      <div class="nav-item" data-view="shop"><span class="icon" data-i="shop"></span><span>店铺管理</span></div>
       <div class="nav-item" data-view="product"><span class="icon" data-i="product"></span><span>商品管理</span><span class="nav-badge">3</span></div>
       <div class="nav-item" data-view="wallet"><span class="icon" data-i="wallet"></span><span>LSC账户</span></div>
       <div class="nav-section">凭证流转</div>
@@ -418,8 +427,8 @@ document.querySelectorAll('.icon[data-i]').forEach(el=>{
   if (ICONS[key]) el.innerHTML = ICONS[key];
 });
 
-const crumbMap = { shop:'店铺管理', product:'商品管理', wallet:'LSC账户', nh:'核销管理', b2b:'B2B交易', promotion:'推广管理', credit:'信用中心', ai:'AI助手' };
-const views = { shop: renderShop, product: renderProduct, wallet: renderWallet, nh: renderNH, b2b: renderB2B, promotion: renderPromotion, credit: renderCredit, ai: renderAI };
+const crumbMap = { dashboard:'经营总览', shop:'店铺管理', product:'商品管理', wallet:'LSC账户', nh:'核销管理', b2b:'B2B交易', promotion:'推广管理', credit:'信用中心', ai:'AI助手' };
+const views = { dashboard: renderDashboard, shop: renderShop, product: renderProduct, wallet: renderWallet, nh: renderNH, b2b: renderB2B, promotion: renderPromotion, credit: renderCredit, ai: renderAI };
 
 function navTo(view) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
@@ -451,6 +460,209 @@ function ringChart(pct, color='var(--c-accent)', size=140, stroke=12) {
   const r = (size-stroke)/2, c = 2*Math.PI*r, off = c*(1-pct);
   return `<svg width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--c-border-soft)" stroke-width="${stroke}"/>
   <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${size/2} ${size/2})"/></svg>`;
+}
+
+/* ============== 图表函数 ============== */
+/* 折线/区域图 */
+function lineChart(opts) {
+  const { w=680, h=220, labels=[], series=[], yTicks=5 } = opts;
+  const pad={l:44,r:14,t:18,b:28};
+  const iw=w-pad.l-pad.r, ih=h-pad.t-pad.b;
+  const all = series.flatMap(s=>s.data.filter(v=>v!=null&&!isNaN(v)));
+  const mx = Math.max(...all, 1), mn = Math.min(...all, 0);
+  const span = mx - mn || 1;
+  const sx = iw/Math.max(labels.length-1,1);
+  const sy = ih/span;
+  const px = i => pad.l + i*sx;
+  const py = v => pad.t + ih - (v-mn)*sy;
+  const T = d => Array.isArray(d) ? d : [d];
+  // Y轴刻度
+  let axes='';
+  for(let i=0;i<=yTicks;i++){
+    const yv = mn + (span/yTicks*i);
+    const yy = py(yv);
+    axes += `<line x1="${pad.l}" y1="${yy}" x2="${w-pad.r}" y2="${yy}" stroke="var(--c-divider)" stroke-dasharray="${i==0?'0':'3 3'}"/>`;
+    axes += `<text x="${pad.l-6}" y="${yy+3}" font-size="10" fill="var(--c-text-3)" text-anchor="end">${(yv).toFixed(3)}</text>`;
+  }
+  labels.forEach((lb,i)=>{ if(i%Math.ceil(labels.length/8)===0) axes += `<text x="${px(i)}" y="${h-8}" font-size="10" fill="var(--c-text-3)" text-anchor="middle">${lb}</text>`; });
+  // 系列
+  let paths='', legends='';
+  series.forEach((s,si)=>{
+    const data = s.data;
+    const validIdx = data.map((v,i)=>[v,i]).filter(([v])=>v!=null&&!isNaN(v));
+    const pts = validIdx.map(([v,i])=>[px(i),py(v)]);
+    const poly = pts.map(p=>p.join(',')).join(' ');
+    if(s.area && pts.length){
+      const area = `${pad.l},${pad.t+ih} ${poly} ${px(validIdx[validIdx.length-1][1])},${pad.t+ih}`;
+      paths += `<polygon points="${area}" fill="${s.color}" opacity="0.12"/>`;
+    }
+    paths += `<polyline points="${poly}" fill="none" stroke="${s.color}" stroke-width="${s.width||2}" stroke-linecap="round" stroke-linejoin="round" ${s.dash?'stroke-dasharray="6 3"':''}/>`;
+    pts.forEach(([x,y])=>{ paths += `<circle cx="${x}" cy="${y}" r="${s.radius||2.5}" fill="#fff" stroke="${s.color}" stroke-width="2"/>`; });
+    legends += `<span class="tag tag-dot" style="background:${s.color};color:#fff;font-size:10px;">${s.name}</span> `;
+  });
+  return { svg: `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${axes}${paths}</svg>`, legend: legends };
+}
+/* 环形/饼图 */
+function donutChart(opts) {
+  const { w=240, h=240, data, inner=0.55, unit='' } = opts;
+  const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 8, ir = r*inner;
+  const total = data.reduce((s,d)=>s+d.value,0)||1;
+  let acc=-Math.PI/2, arcs='', labels='';
+  data.forEach((d)=>{
+    const ang=(d.value/total)*Math.PI*2;
+    const a0=acc,a1=acc+ang; acc=a1;
+    const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0);
+    const x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+    const xi0=cx+ir*Math.cos(a0),yi0=cy+ir*Math.sin(a0);
+    const xi1=cx+ir*Math.cos(a1),yi1=cy+ir*Math.sin(a1);
+    const large=ang>Math.PI?1:0;
+    arcs+=`<path d="M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} L ${xi1} ${yi1} A ${ir} ${ir} 0 ${large} 0 ${xi0} ${yi0} Z" fill="${d.color}" opacity="0.92"/>`;
+    const pct=d.value/total;
+    if(pct>0.05){
+      const mid=(a0+a1)/2;
+      const lx=cx+(r+10)*Math.cos(mid), ly=cy+(r+10)*Math.sin(mid);
+      labels+=`<text x="${lx}" y="${ly+3}" font-size="10" fill="var(--c-text-2)" text-anchor="${Math.cos(mid)<0?'end':'start'}" font-weight="600">${(pct*100).toFixed(1)}%</text>`;
+    }
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${arcs}${labels}
+    <text x="${cx}" y="${cy-4}" font-size="11" fill="var(--c-text-3)" text-anchor="middle">总计</text>
+    <text x="${cx}" y="${cy+14}" font-size="15" font-weight="700" fill="var(--c-text-1)" text-anchor="middle" font-family="var(--ff-mono)">${total>=10000?(total/10000).toFixed(1)+'万':total}${unit}</text>
+  </svg>`;
+}
+/* 堆叠柱状图 */
+function stackedBar(opts) {
+  const { w=560, h=240, labels, stacks, unit='' } = opts;
+  const pad = { l: 44, r: 12, t: 16, b: 28 };
+  const iw = w-pad.l-pad.r, ih = h-pad.t-pad.b;
+  const n = labels.length;
+  const sums = labels.map((_,i)=>stacks.reduce((s,st)=>s+(st.data[i]||0),0));
+  const max = Math.max(...sums) || 1;
+  const gap = iw/n, bw = gap*0.6;
+  let bars = '', xLabs = '', legend = '';
+  labels.forEach((lb,i)=>{
+    const x = pad.l + i*gap + (gap-bw)/2;
+    let yBase = pad.t + ih;
+    stacks.forEach(st=>{
+      const v = st.data[i] || 0;
+      const bh = (v/max)*ih;
+      yBase -= bh;
+      bars += `<rect x="${x}" y="${yBase}" width="${bw}" height="${bh}" fill="${st.color}" opacity="0.88"><title>${st.name}: ${v}${unit}</title></rect>`;
+    });
+    if(i%Math.ceil(n/8)===0) xLabs += `<text x="${x+bw/2}" y="${h-pad.b+16}" font-size="10" fill="var(--c-text-3)" text-anchor="middle">${lb}</text>`;
+  });
+  stacks.forEach((st,i)=>{ legend += `<span class="tag tag-dot" style="background:${st.color};color:#fff;font-size:10px;">${st.name}</span> `; });
+  return { svg: `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabs}</svg>`, legend };
+}
+
+/* ============== 商家经营总览 ============== */
+function renderDashboard() {
+  const m = MOCK.merchants[0]; // 锦华餐饮
+  const products = MOCK.products.filter(p => p.merchant === m.name);
+  const NH = [
+    { date: 'D-6', pay: 28500, lsc: 27300 },
+    { date: 'D-5', pay: 31200, lsc: 30100 },
+    { date: 'D-4', pay: 29800, lsc: 28600 },
+    { date: 'D-3', pay: 33400, lsc: 32100 },
+    { date: 'D-2', pay: 32100, lsc: 30800 },
+    { date: 'D-1', pay: 35600, lsc: 34200 },
+    { date: '今日', pay: 18200, lsc: 17500 },
+  ];
+  const html = pageHead('经营总览', '核心指标 · 核销趋势 · 商品销售分布 · LSC流水构成', `
+    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="export"></span>导出报表</button>
+    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="qr"></span>收款码</button>
+  `) + `
+  <!-- 核心指标 -->
+  <div class="stat-grid mb-5 stagger">
+    <div class="stat-card"><div class="stat-label">今日营收</div><div class="stat-value">¥${LSC.fmtNum(18200)}</div><div class="stat-trend up"><span class="icon icon-sm" data-i="arrow-up"></span>12.4% vs 昨日</div></div>
+    <div class="stat-card"><div class="stat-label">今日核销LSC</div><div class="stat-value" style="color:var(--c-available);">${LSC.fmtNum(17500)}</div><div class="stat-trend up"><span class="icon icon-sm" data-i="arrow-up"></span>9.8%</div></div>
+    <div class="stat-card"><div class="stat-label">核销订单数</div><div class="stat-value">${LSC.fmtNum(86)}</div><div class="stat-trend up"><span class="icon icon-sm" data-i="arrow-up"></span>6.2%</div></div>
+    <div class="stat-card"><div class="stat-label">B2B采购(30日)</div><div class="stat-value" style="color:var(--c-accent-deep);">¥${LSC.fmtNum(286000)}</div><div class="stat-trend down"><span class="icon icon-sm" data-i="arrow-down"></span>3.1%</div></div>
+  </div>
+
+  <!-- 核销趋势折线图 -->
+  <div class="card chart-card mb-5">
+    <div class="card-head" style="border:none;padding:0 0 12px;">
+      <div><div class="card-title">近7日核销趋势</div><div class="card-sub">人民币支付金额 vs LSC核销数量</div></div>
+      <span class="tag tag-dot tag-success">实时</span>
+    </div>
+    <div class="chart-area">${(() => {
+      const lc = lineChart({
+        w: 680, h: 220,
+        labels: NH.map(d=>d.date),
+        series: [
+          { name:'支付金额(¥×1000)', color:'var(--c-accent-deep)', data: NH.map(d=>d.pay/1000), area:true, width:2.5 },
+          { name:'核销LSC(×1000)', color:'var(--c-available)', data: NH.map(d=>d.lsc/1000), dash:true },
+        ]
+      });
+      return lc.svg + `<div style="margin-top:8px;">${lc.legend}</div>`;
+    })()}</div>
+  </div>
+
+  <!-- 分布图表 2列 -->
+  <div class="grid-2-eq mb-5 stagger">
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">商品销售分布</div><div class="card-sub">本店铺商品LSC销售额占比</div></div>
+      </div>
+      ${(() => {
+        const colors = ['var(--c-primary)','var(--c-accent)','var(--c-available)','var(--c-warning)','var(--c-info)','var(--c-danger)','var(--c-primary-soft)'];
+        const data = products.map((p,i)=>({label:p.name.length>8?p.name.slice(0,7)+'…':p.name,value:Math.round(p.price*(80+Math.random()*300)),color:colors[i%colors.length]}));
+        return `<div style="height:200px;">${donutChart({w:220,h:220,data,unit:' LSC'})}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${data.map(d=>`<span class="tag tag-dot" style="background:${d.color};color:#fff;font-size:10px;">${d.label}</span>`).join('')}</div>`;
+      })()}
+    </div>
+
+    <div class="card chart-card">
+      <div class="card-head" style="border:none;padding:0 0 12px;">
+        <div><div class="card-title">LSC流水构成</div><div class="card-sub">近7日: 收款核销/B2B获得/推广奖励</div></div>
+      </div>
+      <div class="chart-area">${(() => {
+        const sb = stackedBar({
+          w: 540, h: 240, unit:' LSC',
+          labels: NH.map(d=>d.date),
+          stacks: [
+            { name:'核销收款', color:'var(--c-available)', data: NH.map(d=>d.lsc) },
+            { name:'B2B获得', color:'var(--c-accent)', data: [2800,3200,0,4500,0,3800,0] },
+            { name:'推广奖励', color:'var(--c-info)', data: [120,80,150,200,180,220,90] },
+          ]
+        });
+        return sb.svg + `<div style="margin-top:8px;">${sb.legend}</div>`;
+      })()}</div>
+    </div>
+  </div>
+
+  <!-- 今日核销记录 -->
+  <div class="card">
+    <div class="card-head"><div class="card-title">今日核销订单 (最近8笔)</div><span class="tag tag-primary">86 笔</span></div>
+    <div class="card-body" style="padding:0;">
+      <table class="table">
+        <thead><tr><th>时间</th><th>订单号</th><th>用户</th><th>商品</th><th>支付金额</th><th>核销LSC</th><th>AI核验</th><th>状态</th></tr></thead>
+        <tbody>
+        ${[
+          ['14:22','260827142201','U10092','招牌全家福套餐','¥588.00','588.00',97,'已完成'],
+          ['14:08','260827140816','U10155','精品双人套餐','¥399.00','399.00',96,'已完成'],
+          ['13:45','260827134508','U10042','工作日单人餐','¥158.00','158.00',99,'已完成'],
+          ['13:12','260827131223','U10211','商务宴请6人餐','¥1288.00','1288.00',95,'已完成'],
+          ['12:48','260827124831','U10087','工作日单人餐','¥158.00','158.00',99,'已完成'],
+          ['12:30','260827123005','U10189','精品双人套餐','¥399.00','399.00',94,'已完成'],
+          ['11:56','260827115644','U10012','家庭欢乐套餐','¥788.00','788.00',98,'已完成'],
+          ['11:22','260827112218','U10176','精品双人套餐','¥399.00','399.00',92,'已完成'],
+        ].map(r=>`<tr>
+          <td style="font-family:var(--ff-mono);font-size:11px;color:var(--c-text-3);">${r[0]}</td>
+          <td style="font-family:var(--ff-mono);font-size:11px;">${r[1]}</td>
+          <td style="font-size:11px;">${r[2]}</td>
+          <td>${r[3]}</td>
+          <td style="font-family:var(--ff-mono);font-weight:600;">${r[4]}</td>
+          <td style="font-family:var(--ff-mono);color:var(--c-available);font-weight:600;">${r[5]}</td>
+          <td><span class="tag tag-dot tag-success">${r[6]}%</span></td>
+          <td><span class="tag tag-success">${r[7]}</span></td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  `;
+  setView(html);
 }
 
 /* ============== 店铺管理 ============== */
@@ -1146,7 +1358,7 @@ function showProductDetail(pid) {
 }
 
 /* 启动 */
-renderShop();
+renderDashboard();
 </script>
 </body>
 </html>
