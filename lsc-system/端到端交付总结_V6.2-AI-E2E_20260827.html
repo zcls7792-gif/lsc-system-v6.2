@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>链盛通 LSC V6.2-AI · 端到端交付总结报告 · 2026-08-27</title>
+<style>
+  :root{
+    --bg-0:#030B1F; --bg-1:#071233; --bg-2:#0B1B47;
+    --ink-0:#EAF2FF; --ink-1:#B7C6E8; --ink-2:#7C8FB8; --ink-3:#546387;
+    --brand:#3B82F6; --brand-2:#22D3EE; --brand-3:#8B5CF6;
+    --gold:#F5B547; --ok:#10B981; --warn:#F59E0B; --err:#EF4444; --rose:#F43F5E;
+    --card: rgba(17,33,77,.55);
+    --card-border: rgba(123,167,255,.18);
+    --hl-border: rgba(123,167,255,.4);
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(59,130,246,.22), transparent 60%),
+    radial-gradient(900px 500px at 95% 20%, rgba(139,92,246,.18), transparent 60%),
+    radial-gradient(800px 500px at 50% 110%, rgba(34,211,238,.14), transparent 60%),
+    linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 55%, var(--bg-2) 100%);
+    color:var(--ink-0); font-family:var(--sans); line-height:1.6; min-height:100%;
+  }
+  body{padding:32px 28px 120px}
+  .wrap{max-width:1280px; margin:0 auto}
+  h1,h2,h3,h4{font-weight:700; letter-spacing:.2px; margin:0 0 .6em}
+  h1{font-size:34px; background:linear-gradient(90deg,#E8F0FF 0%,#93C5FD 38%,#A78BFA 75%,#22D3EE 100%); -webkit-background-clip:text; background-clip:text; color:transparent}
+  h2{font-size:24px; margin-top:48px; display:flex; align-items:center; gap:12px}
+  h2::before{content:""; display:inline-block; width:4px; height:22px; border-radius:4px;
+    background:linear-gradient(180deg,var(--brand), var(--brand-3), var(--brand-2))}
+  h3{font-size:17px; margin-top:18px; color:#CFE0FF}
+  p{margin:.4em 0 .9em; color:var(--ink-1)}
+  a{color:#93C5FD; text-decoration:none}
+  a:hover{text-decoration:underline; color:#BFDBFE}
+  code, .mono{font-family:var(--mono); font-size:13px}
+  code{background:rgba(15,35,82,.65); border:1px solid var(--card-border); border-radius:6px; padding:2px 6px; color:#C7D9FF}
+  .chip{display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px;
+    border:1px solid var(--card-border); background:rgba(10,25,64,.5); color:var(--ink-1); font-size:12px}
+  .chip.ok{border-color:rgba(16,185,129,.35); color:#76E0B3; background:rgba(16,185,129,.08)}
+  .chip.warn{border-color:rgba(245,158,11,.4); color:#F9D48E; background:rgba(245,158,11,.08)}
+  .chip.err{border-color:rgba(239,68,68,.4); color:#F8A0A8; background:rgba(239,68,68,.08)}
+  .chip.info{border-color:rgba(59,130,246,.4); color:#B9D4FF; background:rgba(59,130,246,.08)}
+  .card{background:var(--card); border:1px solid var(--card-border); border-radius:18px; padding:20px 22px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter: blur(6px)}
+  .grid{display:grid; gap:16px}
+  .grid.kpi{grid-template-columns:repeat(4,1fr)}
+  .grid.cols2{grid-template-columns:1fr 1fr}
+  .grid.cols3{grid-template-columns:repeat(3,1fr)}
+  @media (max-width:1024px){.grid.kpi{grid-template-columns:repeat(2,1fr)} .grid.cols2,.grid.cols3{grid-template-columns:1fr}}
+  .kpi .label{font-size:12px; color:var(--ink-2); letter-spacing:.5px; text-transform:uppercase}
+  .kpi .value{font-size:30px; font-weight:800; margin-top:6px; letter-spacing:.2px}
+  .kpi .sub{font-size:12px; color:var(--ink-2); margin-top:4px}
+  .hero{display:grid; grid-template-columns: 1.3fr 1fr; gap:24px; align-items:stretch; margin:18px 0 20px}
+  @media (max-width: 980px){.hero{grid-template-columns:1fr}}
+  .hero .meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+  .stage{position:relative; padding-left:34px; margin-top:6px}
+  .stage::before{content:""; position:absolute; left:13px; top:10px; bottom:-16px; width:2px;
+    background: linear-gradient(180deg, rgba(59,130,246,.5), rgba(139,92,246,.35), rgba(34,211,238,.2))}
+  .stage .node{position:relative; margin:0 0 18px; padding:14px 16px; border-radius:14px; background:rgba(12,28,68,.55);
+    border:1px solid var(--card-border)}
+  .stage .node::before{content:""; position:absolute; left:-28px; top:18px; width:14px; height:14px; border-radius:50%;
+    background:linear-gradient(135deg,var(--brand),var(--brand-3)); box-shadow:0 0 0 4px rgba(59,130,246,.15)}
+  .stage .node h4{margin:0 0 4px; font-size:15px}
+  .stage .node p{margin:4px 0 0; color:var(--ink-1)}
+  table{width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden;
+    border:1px solid var(--card-border); background:rgba(10,25,64,.5)}
+  th,td{padding:10px 12px; text-align:left; font-size:13.5px; vertical-align:top; border-bottom:1px dashed rgba(123,167,255,.12)}
+  th{background:rgba(24,50,110,.6); color:#D6E5FF; font-weight:600; position:sticky; top:0}
+  tr:last-child td{border-bottom:none}
+  td.mono, th.mono{font-family:var(--mono); font-size:12.5px; color:#CFE0FF}
+  td.num, th.num{text-align:right; font-variant-numeric:tabular-nums; font-family:var(--mono); font-size:12.5px}
+  .bar{height:10px; border-radius:999px; background:rgba(148,163,184,.15); overflow:hidden}
+  .bar>span{display:block; height:100%; border-radius:999px;
+    background:linear-gradient(90deg,var(--brand),var(--brand-2))}
+  .bar.ok>span{background:linear-gradient(90deg,#10B981,#34D399)}
+  .bar.warn>span{background:linear-gradient(90deg,#F59E0B,#FCD34D)}
+  .bar.err>span{background:linear-gradient(90deg,#EF4444,#F472B6)}
+  .callout{border:1px solid var(--hl-border); background:linear-gradient(135deg, rgba(59,130,246,.08), rgba(139,92,246,.07));
+    border-radius:14px; padding:14px 18px; margin:14px 0}
+  .callout h4{margin:0 0 6px; font-size:14px; color:#CFE0FF}
+  .callout.type-warn{border-color:rgba(245,158,11,.4); background:linear-gradient(135deg, rgba(245,158,11,.08), rgba(244,63,94,.06))}
+  .callout.type-ok{border-color:rgba(16,185,129,.35); background:linear-gradient(135deg, rgba(16,185,129,.08), rgba(34,211,238,.05))}
+  .cmd{background:#040A1F; border:1px solid rgba(123,167,255,.22); border-radius:12px; padding:12px 14px;
+    font-family:var(--mono); font-size:12.5px; color:#C7D9FF; overflow-x:auto; line-height:1.7}
+  .cmd .k{color:#93C5FD} .cmd .c{color:#64748B; font-style:italic} .cmd .s{color:#F9D48E}
+  .pill{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px;
+    background:rgba(59,130,246,.12); color:#B9D4FF; font-family:var(--mono); font-size:11.5px}
+  .pill.feat{background:rgba(139,92,246,.12); color:#DDD6FE}
+  .pill.test{background:rgba(16,185,129,.12); color:#A7F3D0}
+  .pill.ci{background:rgba(34,211,238,.12); color:#A5F3FC}
+  .pill.chore{background:rgba(148,163,184,.15); color:#CBD5E1}
+  .pill.ok{background:rgba(16,185,129,.12); color:#86EFAC}
+  .pill.merged{background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(59,130,246,.2)); color:#E0E7FF; border:1px solid rgba(123,167,255,.35)}
+  .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+  .muted{color:var(--ink-2)}
+  hr{border:none; height:1px; background:linear-gradient(90deg, transparent, rgba(123,167,255,.35), transparent); margin:32px 0}
+  .footer{margin-top:40px; padding-top:20px; border-top:1px dashed rgba(123,167,255,.2); color:var(--ink-2); font-size:12.5px; text-align:center}
+  .mini-table th, .mini-table td{padding:7px 10px; font-size:12.5px}
+  details>summary{cursor:pointer; color:#B9D4FF; padding:6px 0}
+  details[open]>summary{color:#E0E7FF; margin-bottom:8px}
+  svg{max-width:100%; height:auto}
+</style>
+</head><body>
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <div class="hero">
+    <div class="card">
+      <div class="row" style="margin-bottom:10px">
+        <span class="pill merged">MERGED · main@13ce7e3</span>
+        <span class="pill">版本 V6.2-AI-E2E</span>
+        <span class="pill info">报告生成日期 2026-08-27</span>
+      </div>
+      <h1>链盛通 LSC 消费权益凭证循环系统<br/>端到端交付总结报告</h1>
+      <p>覆盖 <b>P0 短期任务 5 项 → 三层测试累计 72 断言 → c8 覆盖率 81.89% → GitLab CI 流水线 → Conventional Commits → Draft PR → Ready for Review → GitHub Actions 双检查 PASS → Squash &amp; Merge 进 main</b> 的全链路交付。</p>
+      <div class="meta">
+        <span class="chip ok">✓ P0 5/5 全交付</span>
+        <span class="chip ok">✓ 测试 72/72 全通过</span>
+        <span class="chip ok">✓ 覆盖率 4 维达标</span>
+        <span class="chip info">GitLab CI · 4 step · per-SHA 归档</span>
+        <span class="chip info">PR #2 · https://github.com/zcls7792-gif/lsc-system-v6.2/pull/2</span>
+      </div>
+    </div>
+    <div class="card" style="background:
+      radial-gradient(600px 300px at 20% 10%, rgba(59,130,246,.18), transparent 60%),
+      radial-gradient(500px 300px at 90% 110%, rgba(139,92,246,.2), transparent 60%),
+      var(--card)">
+      <svg viewBox="0 0 520 280" role="img" aria-label="端到端交付时间线">
+        <defs>
+          <linearGradient id="gTime" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#3B82F6"/>
+            <stop offset="50%" stop-color="#8B5CF6"/>
+            <stop offset="100%" stop-color="#22D3EE"/>
+          </linearGradient>
+          <radialGradient id="gNode" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity=".9"/><stop offset="100%" stop-color="#3B82F6" stop-opacity=".0"/></radialGradient>
+        </defs>
+        <!-- 主时间线 -->
+        <line x1="60" y1="150" x2="460" y2="150" stroke="url(#gTime)" stroke-width="4" stroke-linecap="round"/>
+        <!-- 6 阶段节点 -->
+        <!-- 1 P0 -->
+        <g><circle cx="90" cy="150" r="14" fill="#030B1F" stroke="#3B82F6" stroke-width="2.5"/><circle cx="90" cy="150" r="6" fill="#93C5FD"/></g>
+        <text x="90" y="112" text-anchor="middle" font-size="12" fill="#B9D4FF">P0 交付</text>
+        <text x="90" y="128" text-anchor="middle" font-size="11" fill="#64748B">5/5 ✓</text>
+        <!-- 2 测试 -->
+        <g><circle cx="160" cy="150" r="14" fill="#030B1F" stroke="#10B981" stroke-width="2.5"/><circle cx="160" cy="150" r="6" fill="#6EE7B7"/></g>
+        <text x="160" y="112" text-anchor="middle" font-size="12" fill="#A7F3D0">测试体系</text>
+        <text x="160" y="128" text-anchor="middle" font-size="11" fill="#64748B">72/72</text>
+        <!-- 3 覆盖率 -->
+        <g><circle cx="230" cy="150" r="14" fill="#030B1F" stroke="#8B5CF6" stroke-width="2.5"/><circle cx="230" cy="150" r="6" fill="#C4B5FD"/></g>
+        <text x="230" y="112" text-anchor="middle" font-size="12" fill="#DDD6FE">覆盖率</text>
+        <text x="230" y="128" text-anchor="middle" font-size="11" fill="#64748B">81.89%</text>
+        <!-- 4 CI -->
+        <g><circle cx="300" cy="150" r="14" fill="#030B1F" stroke="#22D3EE" stroke-width="2.5"/><circle cx="300" cy="150" r="6" fill="#67E8F9"/></g>
+        <text x="300" y="112" text-anchor="middle" font-size="12" fill="#A5F3FC">GitLab CI</text>
+        <text x="300" y="128" text-anchor="middle" font-size="11" fill="#64748B">4 step</text>
+        <!-- 5 PR -->
+        <g><circle cx="370" cy="150" r="14" fill="#030B1F" stroke="#F59E0B" stroke-width="2.5"/><circle cx="370" cy="150" r="6" fill="#FCD34D"/></g>
+        <text x="370" y="112" text-anchor="middle" font-size="12" fill="#F9D48E">PR Review</text>
+        <text x="370" y="128" text-anchor="middle" font-size="11" fill="#64748B">#2 D→R</text>
+        <!-- 6 Merge -->
+        <g><circle cx="440" cy="150" r="16" fill="url(#gNode)" stroke="#EC4899" stroke-width="3"/><circle cx="440" cy="150" r="7" fill="#F9A8D4"/></g>
+        <text x="440" y="112" text-anchor="middle" font-size="12" fill="#FBCFE8">合入 main</text>
+        <text x="440" y="128" text-anchor="middle" font-size="11" fill="#64748B">13ce7e3</text>
+
+        <!-- 底部标签 -->
+        <g transform="translate(40,200)">
+          <rect x="0" y="0" width="440" height="60" rx="10" fill="rgba(10,25,64,.55)" stroke="rgba(123,167,255,.2)"/>
+          <text x="14" y="24" font-size="12" fill="#CFE0FF">统一 Test Harness：run-all.js → verify_p0 → TAP → c8 + coverage_runner → coverage_report.js</text>
+          <text x="14" y="44" font-size="12" fill="#7C8FB8">覆盖率阈值：STM≥70% · BR≥80%　|　CI 归档目录：coverage/$CI_COMMIT_SHORT_SHA/ + logs/step-*.log</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ============ KPI ============ -->
+  <div class="grid kpi">
+    <div class="card kpi">
+      <div class="label">Test Pass Rate</div>
+      <div class="value" style="color:#76E0B3">100%</div>
+      <div class="sub">三层累计 72/72 通过（22 + 8 + 42）</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">覆盖率四维度</div>
+      <div class="value"><span style="color:#93C5FD">81.89</span><span style="font-size:16px;color:#7C8FB8">% S</span> · <span style="color:#34D399">89.86</span><span style="font-size:16px;color:#7C8FB8">% B</span></div>
+      <div class="sub">函数 70.37%　·　行 81.89%</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">CI 流水线</div>
+      <div class="value"><span style="color:#67E8F9">4/4</span><span style="font-size:18px;color:#7C8FB8"> STEP</span></div>
+      <div class="sub">模拟 GITLAB_CI=true，本地 18.79s 跑完</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">合入状态</div>
+      <div class="value"><span style="color:#F9A8D4">MERGED</span></div>
+      <div class="sub">PR #2 · Squash &amp; Merge · main@13ce7e3</div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 1 EXECUTIVE SUMMARY ============ -->
+  <h2>一、Executive Summary · 一页看结论</h2>
+  <div class="grid cols2">
+    <div class="callout type-ok">
+      <h4>① 交付目标全部达成</h4>
+      <p>P0 短期任务 5 项全部通过验收（商家后台图表补齐、C 端 LSC 流转可视化、AI 活动流自动刷新、释放速率真·实时化、端到端综合验证）。</p>
+    </div>
+    <div class="callout type-ok">
+      <h4>② 质量门槛全部通过</h4>
+      <p>三层测试累计 <b>72/72</b> 通过；覆盖率指标 <b>语句 81.89% / 分支 89.86% / 函数 70.37% / 行 81.89%</b>，均超过预设阈值 STM≥70% &amp; BR≥80%。</p>
+    </div>
+    <div class="callout">
+      <h4>③ 可复用 CI / 自动化已落地</h4>
+      <p>GitLab CI job <code>test:chart-coverage</code> 4 步全流程 + 按 <code>$CI_COMMIT_SHORT_SHA</code> 独立子目录归档覆盖率 &amp; 每步独立日志，GitHub 镜像同步后可自动触发。</p>
+    </div>
+    <div class="callout">
+      <h4>④ 代码治理规范化</h4>
+      <p>按 Conventional Commits 拆 <code>ci(gitlab)</code> / <code>test(chart-logic)</code> / <code>chore(scm)</code> 3 条语义 commit → Draft PR → Ready → 两检查 GREEN → <b>Squash &amp; Merge</b> 进 main。</p>
+    </div>
+  </div>
+
+  <h3>总览架构 · 9 条端到端主线</h3>
+  <div class="stage">
+    <div class="node"><h4>① P0-1 商家后台图表补齐</h4><p>经营总览页补充 <code>lineChart / donutChart / stackedBar</code> 及指标卡，补齐 CSS 类 <code>.stat-trend / .chart-card / .chart-area</code>，避免图表样式异常。</p></div>
+    <div class="node"><h4>② P0-2 C 端 LSC 流转可视化</h4><p>移动 APP / 微信小程序 钱包页新增个人迷你 SVG 流转链路图（微信绿配色 + 横向滚动），双池循环直观可视化。</p></div>
+    <div class="node"><h4>③ P0-3 AI 活动流自动刷新</h4><p>每 10s <code>setInterval</code> 追加新记录 + <code>slideDown</code> CSS 动画，支持 <code>pushActivity</code> 20 条上限规则。</p></div>
+    <div class="node"><h4>④ P0-4 释放速率真·实时</h4><p>每 3s <code>appendRatePoint</code> 追加采样点 + shift 24h 窗口、K/R 值 <code>[min,max]</code> 钳位、<code>redrawRateChart</code> 左滑。</p></div>
+    <div class="node"><h4>⑤ P0-验证 · 4 应用零错误运行</h4><p>JSDOM 加载 4 个前端应用，断言 SVG 链路、图表容器、定时器存在、无 <code>ICONS not defined</code> 报错。</p></div>
+    <div class="node"><h4>⑥ 单元测试 · 8 TAP + 42 覆盖率用例</h4><p><code>test_p0_chart_logic.js</code> 针对 BUG#1/#2/#3 回归；<code>coverage_runner.js</code> 3 Session 共 42 断言，通过 <code>vm.Script(filename=absPath)</code> 关联真实文件。</p></div>
+    <div class="node"><h4>⑦ 覆盖率报告 · 总览 HTML + c8 逐行</h4><p><code>coverage_report.js</code> 解析 lcov.info → 4 维 KPI、文件明细、功能覆盖矩阵、未覆盖热点 Top12。</p></div>
+    <div class="node"><h4>⑧ GitLab CI 流水线</h4><p><code>.gitlab-ci.yml</code> 定义 <code>test:chart-coverage</code> 4-step runner、per-SHA 归档目录、tee logs、阈值门控（基于 lcov 机器可读数据而非 grep 文本）、可选 <code>pages</code> 部署。</p></div>
+    <div class="node"><h4>⑨ 合入流程 · PR #2 合入 main</h4><p>3 条语义 commits → push <code>codex/gitlab-ci-coverage-pipeline</code> → Draft PR → Ready for Review → GitHub Actions (JDK 构建 + Quality Gate) 双 GREEN → Squash &amp; Merge → <b>main@13ce7e3</b>。</p></div>
+  </div>
+
+  <!-- ============ SECTION 2 P0 交付矩阵 ============ -->
+  <h2>二、P0 短期任务 · 交付矩阵</h2>
+  <table>
+    <thead><tr>
+      <th style="width:110px">编号</th>
+      <th>方向</th>
+      <th>交付内容 / 关键函数</th>
+      <th>验证方式</th>
+      <th class="num">状态</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">P0-1</td>
+        <td>商家后台图表补齐</td>
+        <td><code>renderDashboard</code> / <code>lineChart</code> / <code>donutChart</code> / <code>stackedBar</code> + 指标卡 + <code>.stat-trend / .chart-card / .chart-area</code> 样式</td>
+        <td>verify_p0 断言 SVG 元素 &gt; 0 + 覆盖率 Session C 多参数分支</td>
+        <td class="num"><span class="chip ok">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td class="mono">P0-2</td>
+        <td>C 端 LSC 流转可视化</td>
+        <td>mobile-app / mini-program 钱包页 SVG 双池循环链路图（微信绿配色 + 横向滚动）</td>
+        <td>verify_p0: 两处 ID 选择器命中 &gt; 10 SVG 元素</td>
+        <td class="num"><span class="chip ok">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td class="mono">P0-3</td>
+        <td>AI 活动流自动刷新</td>
+        <td><code>pushActivity</code>（20 条上限）+ <code>setInterval</code> 10s 追加 + <code>.slide-down</code> 动画</td>
+        <td>TAP B8/B9/B10/B11：pushActivity 条数限制、切页清理、重登不重注册、20 条边界</td>
+        <td class="num"><span class="chip ok">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td class="mono">P0-4</td>
+        <td>释放速率真·实时</td>
+        <td><code>appendRatePoint</code>（24h 滚动窗口、K∈[0.45%,0.85%]、R∈[0.25%,0.55%] 钳位）+ <code>redrawRateChart</code> 左滑</td>
+        <td>TAP B1/B2/B3/B4：BUG#1 undefined 回归、切页不重置、24h 钟点钳位、100 次压力无报错</td>
+        <td class="num"><span class="chip ok">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td class="mono">P0-验证</td>
+        <td>4 应用综合运行时</td>
+        <td>platform-admin / merchant-admin / mobile-app / mini-program 通过 HTTP 加载，确保共享脚本 <code>app-utils.js</code> 等正确载入（修复 ICONS 未定义）</td>
+        <td>verify_p0 4 应用 × 功能断言 + 0 次运行时 error</td>
+        <td class="num"><span class="chip ok">✓ PASS</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ============ SECTION 3 测试体系 ============ -->
+  <h2>三、三层测试体系 · 累计 72/72 断言通过</h2>
+  <div class="callout type-ok">
+    <h4>🔗 对应经验 959665 / Success 1 · 统一 Test Harness</h4>
+    <p>把"HTTP 起服务 → JSDOM 加载 → 断言"与"vm.Script(filename=absPath) → c8 覆盖率采集 → 报告生成"沉淀为两个固定入口：<code>run-all.js</code>（全流程串联执行器）与 <code>coverage_runner.js</code>（覆盖率专用断言集）。所有 CI / 本地均走同一份脚本，避免本地与 CI 两套不可对齐的执行路径。</p>
+  </div>
+  <div class="grid cols3">
+    <div class="card"><h3>① verify_p0 (22 断言)</h3>
+      <div class="row"><span class="pill test">集成测试</span><span class="pill">JSDOM + HTTP</span></div>
+      <ul style="padding-left:18px; color:var(--ink-1); font-size:13.5px">
+        <li>平台后台：donut/heatmap/stackedBar/radar/分布/LSC链路/B2B状态机</li>
+        <li>商家后台：经营总览 renderDashboard</li>
+        <li>移动 APP + 小程序：钱包页 LSC 流转链路图</li>
+        <li>运行时错误捕获：0 次 error</li>
+      </ul>
+      <p class="muted mono">耗时 2.6~2.8s</p>
+    </div>
+    <div class="card"><h3>② test_p0_chart_logic (8 TAP)</h3>
+      <div class="row"><span class="pill test">BUG 回归</span><span class="pill">TAP v13</span></div>
+      <ul style="padding-left:18px; color:var(--ink-1); font-size:13.5px">
+        <li>B1 BUG#1 初始渲染无 undefined</li>
+        <li>B2 BUG#2 切页不重置定时器</li>
+        <li>B3-B4 24h 钟点钳位 + 100 次压力</li>
+        <li>B5-B7 K/R 值 min/max 钳位 3 分支</li>
+        <li>B8-B11 pushActivity 条数/清理/重登/上限</li>
+      </ul>
+      <p class="muted mono">耗时 11~12s (含 wait for timers)</p>
+    </div>
+    <div class="card"><h3>③ coverage_runner (42 断言)</h3>
+      <div class="row"><span class="pill test">覆盖率驱动</span><span class="pill">vm.Script + JSDOM</span></div>
+      <ul style="padding-left:18px; color:var(--ink-1); font-size:13.5px">
+        <li>Session A：BUG#1/#2/#3 必跑核心路径</li>
+        <li>Session B：lineChart 多分支、render* 全部页面函数、4 种图表（donut/stackedBar/radar/heatmap）边界参数</li>
+        <li>Session C：模态框 open/close/result/confirm 全路径 + 100 次混合压力</li>
+      </ul>
+      <p class="muted mono">耗时 4.0s</p>
+    </div>
+  </div>
+
+  <h3>用例分布 · 场景分类</h3>
+  <div class="grid cols2">
+    <div class="card">
+      <svg viewBox="0 0 480 260" aria-label="用例分布堆叠柱">
+        <g font-family="var(--mono)" font-size="11" fill="#94A3B8">
+          <!-- legend -->
+          <g transform="translate(20,12)"><rect width="12" height="12" rx="3" fill="#3B82F6"/><text x="20" y="11">BUG 回归 (8)</text></g>
+          <g transform="translate(140,12)"><rect width="12" height="12" rx="3" fill="#8B5CF6"/><text x="20" y="11">核心逻辑路径 (16)</text></g>
+          <g transform="translate(300,12)"><rect width="12" height="12" rx="3" fill="#22D3EE"/><text x="20" y="11">分支/参数/边界 (28)</text></g>
+          <g transform="translate(20,50)">
+            <text x="0" y="0" fill="#7C8FB8">verify_p0 (22)</text>
+            <rect x="0" y="8" width="60" height="18" fill="#3B82F6" rx="3"/>
+            <rect x="60" y="8" width="60" height="18" fill="#8B5CF6" rx="3"/>
+            <rect x="120" y="8" width="0" height="18"/>
+            <text x="128" y="22" fill="#CFE0FF">22 集成断言</text>
+
+            <text x="0" y="58" fill="#7C8FB8">TAP (8)</text>
+            <rect x="0" y="66" width="240" height="18" fill="#3B82F6" rx="3"/>
+            <text x="248" y="80" fill="#CFE0FF">8 BUG-specific (P0-1..4)</text>
+
+            <text x="0" y="116" fill="#7C8FB8">coverage_runner (42)</text>
+            <rect x="0" y="124" width="120" height="18" fill="#8B5CF6" rx="3"/>
+            <rect x="120" y="124" width="210" height="18" fill="#22D3EE" rx="3"/>
+            <text x="338" y="138" fill="#CFE0FF">42 断言 · Session A/B/C</text>
+          </g>
+          <!-- total -->
+          <g transform="translate(20,200)">
+            <rect x="0" y="0" width="440" height="36" rx="10" fill="rgba(16,185,129,.1)" stroke="rgba(16,185,129,.3)"/>
+            <text x="14" y="22" fill="#86EFAC" font-size="14" font-weight="700">合计 72 / 72 = 100% 通过率</text>
+            <text x="300" y="22" fill="#A7F3D0" font-size="13">22 + 8 + 42</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="card">
+      <h3>测试与 CI 对齐策略</h3>
+      <table class="mini-table">
+        <tr><th>入口</th><th>场景</th><th>CI 是否执行</th></tr>
+        <tr><td class="mono">npm run test:verify</td><td>verify_p0 22 断言</td><td>✓ step 1</td></tr>
+        <tr><td class="mono">npm run test:chart</td><td>TAP 8 用例</td><td>✓ step 2</td></tr>
+        <tr><td class="mono">npm run coverage</td><td>c8 + coverage_runner 42 断言</td><td>✓ step 3</td></tr>
+        <tr><td class="mono">npm run report</td><td>总览 HTML 报告生成</td><td>✓ step 4</td></tr>
+        <tr><td class="mono">npm run ci</td><td>4 步串联 + tee logs</td><td>— (就是 job 本身)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 4 覆盖率 ============ -->
+  <h2>四、覆盖率提升 · 前后对比</h2>
+  <div class="callout">
+    <h4>关键提升</h4>
+    <p>初始版本函数覆盖率 44.23% 偏低，原因是平台后台有 10+ 个仅在特定导航点击时触发的 <code>render*</code> 页面函数未被采集。本次在 <code>coverage_runner.js</code> 中显式补充 <code>renderDashboard/Merchant/Product/B2B/Risk/Credit/Release/Reconcile/System/NotifList</code> 及 <code>barChart / ringChart</code>、<code>open/close/result/confirmModal</code> 全路径，函数覆盖率升至 70.37%。</p>
+  </div>
+
+  <h3>四维度对比（修复前 vs 修复后）</h3>
+  <div class="grid cols2">
+    <div class="card">
+      <svg viewBox="0 0 520 320" aria-label="覆盖率前后对比">
+        <!-- bars -->
+        <g font-family="var(--mono)" font-size="12">
+          <g transform="translate(60,40)">
+            <!-- Y axis labels -->
+            <g stroke="#334155" stroke-opacity=".5"><line x1="0" y1="0" x2="420" y2="0"/><line x1="0" y1="50" x2="420" y2="50"/><line x1="0" y1="100" x2="420" y2="100"/><line x1="0" y1="150" x2="420" y2="150"/><line x1="0" y1="200" x2="420" y2="200"/></g>
+            <g fill="#7C8FB8" text-anchor="end"><text x="-6" y="4">100%</text><text x="-6" y="54">75%</text><text x="-6" y="104">50%</text><text x="-6" y="154">25%</text><text x="-6" y="204">0%</text></g>
+            <!-- before = #475569, after = gradient -->
+            <g>
+              <!-- Statements -->
+              <text x="20" y="-12" fill="#CFE0FF">语句</text>
+              <rect x="0"  y="6"  width="90" height="24" fill="#334155" rx="3"/><text x="45" y="23" text-anchor="middle" fill="#CBD5E1">63.82</text>
+              <rect x="100" y="6"  width="116" height="24" fill="#3B82F6" rx="3"/><text x="158" y="23" text-anchor="middle" fill="#fff">81.88</text>
+              <!-- Branch -->
+              <text x="220" y="-12" fill="#CFE0FF">分支</text>
+              <rect x="220" y="6" width="130" height="24" fill="#334155" rx="3"/><text x="285" y="23" text-anchor="middle" fill="#CBD5E1">91.78</text>
+              <rect x="360" y="6" width="120" height="24" fill="#10B981" rx="3"/><text x="420" y="23" text-anchor="middle" fill="#fff">89.86</text>
+
+              <!-- Functions -->
+              <text x="20" y="88" fill="#CFE0FF">函数</text>
+              <rect x="0"  y="56" width="58"  height="24" fill="#334155" rx="3"/><text x="29" y="73" text-anchor="middle" fill="#CBD5E1">44.23</text>
+              <rect x="100" y="56" width="96"  height="24" fill="#8B5CF6" rx="3"/><text x="148" y="73" text-anchor="middle" fill="#fff">70.37</text>
+              <!-- Lines -->
+              <text x="220" y="88" fill="#CFE0FF">行</text>
+              <rect x="220" y="56" width="90" height="24" fill="#334155" rx="3"/><text x="265" y="73" text-anchor="middle" fill="#CBD5E1">63.82</text>
+              <rect x="360" y="56" width="116" height="24" fill="#22D3EE" rx="3"/><text x="418" y="73" text-anchor="middle" fill="#082f49">81.88</text>
+            </g>
+          </g>
+          <g transform="translate(60,270)">
+            <g><rect width="12" height="12" rx="3" fill="#334155"/><text x="20" y="11" fill="#B7C6E8">修复前</text></g>
+            <g transform="translate(120,0)"><rect width="12" height="12" rx="3" fill="#3B82F6"/><text x="20" y="11" fill="#B7C6E8">修复后 (语句/分支/函数/行)</text></g>
+            <g transform="translate(320,0)"><text fill="#F9D48E">提升：函数 +26.14pp · 语句 +18.06pp</text></g>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="card">
+      <h3>文件维度明细（节选 Top 5）</h3>
+      <table class="mini-table">
+        <tr><th>文件</th><th class="num">STM %</th><th class="num">BR %</th><th class="num">FN %</th><th class="num">行</th></tr>
+        <tr><td class="mono">shared/app-utils.js</td><td class="num">95.0</td><td class="num">92.1</td><td class="num">83.3</td><td class="num">95.0</td></tr>
+        <tr><td class="mono">platform-admin/app.js</td><td class="num">81.6</td><td class="num">89.6</td><td class="num">70.4</td><td class="num">81.6</td></tr>
+        <tr><td class="mono">verify_p0.js</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td></tr>
+        <tr><td class="mono">coverage_runner.js</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">excl.</td></tr>
+        <tr><td class="mono">test_p0_chart_logic.js</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">excl.</td></tr>
+      </table>
+      <p class="muted" style="margin-top:14px">完整列表见 <code>coverage_report.js</code> 生成的《覆盖率报告_P0-图表逻辑_总览报告.html》。</p>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 5 CI ============ -->
+  <h2>五、GitLab CI 流水线设计</h2>
+  <div class="callout">
+    <h4>🔗 对应经验 959665 / Success 2 · 覆盖率门槛基于机器可解析产物（lcov）</h4>
+    <p>阈值门控不依赖 grep c8 文本 Summary，而是 <b>在 CI job 中用 Node 脚本解析 lcov.info 的 LH/LF/BRH/BRF/FNF/FNH 六项</b>，算出四维度百分比并写入 <code>metrics.json</code>，再与 <code>LSC_COVERAGE_MIN_STMT / LSC_COVERAGE_MIN_BRANCH</code> 数字比较，完全避免格式漂移风险。</p>
+  </div>
+  <div class="callout type-warn">
+    <h4>🔗 对应经验 949301 · "同一次执行一个目录" + "以日志为准"收敛</h4>
+    <p>① 每次 pipeline 覆盖率产物写入 <code>coverage/$CI_COMMIT_SHORT_SHA/</code>，防止多个 runs 共享 <code>coverage/</code> 导致 lcov/v8 profile 跨运行实例混数据。② 即便任务被 <code>interruptible</code> 取消或超时，<code>artifacts: when: always</code> 强制上传 <code>logs/step-XX-*.log</code>（含 build context header + step exit tail），可离线判断具体卡在第几步。</p>
+  </div>
+
+  <h3>Job 结构图</h3>
+  <div class="card">
+    <svg viewBox="0 0 1140 420" role="img" aria-label="GitLab CI job 结构和归档路径">
+      <defs>
+        <linearGradient id="gCard" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(24,50,110,.85)"/>
+          <stop offset="100%" stop-color="rgba(12,28,68,.85)"/>
+        </linearGradient>
+        <filter id="fS"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity=".35"/></filter>
+      </defs>
+      <!-- Runner env card -->
+      <g filter="url(#fS)">
+        <rect x="20" y="20" width="1100" height="86" rx="16" fill="url(#gCard)" stroke="rgba(123,167,255,.25)"/>
+        <text x="40" y="48" fill="#CFE0FF" font-size="14" font-weight="700">test:chart-coverage (stage: test) · image: node:22-alpine · timeout: 20m · interruptible</text>
+        <text x="40" y="72" fill="#93C5FD" font-family="monospace" font-size="12">before_script → npm ci (lockfile cache, pull-push on first run) → mkdir coverage/$CI_COMMIT_SHORT_SHA logs/</text>
+      </g>
+      <!-- 4 steps -->
+      <g font-family="var(--sans)" font-size="13" fill="#EAF2FF">
+        <!-- step 1 -->
+        <g transform="translate(20,130)">
+          <rect width="258" height="140" rx="14" fill="rgba(24,50,110,.6)" stroke="rgba(59,130,246,.35)"/>
+          <rect x="0" y="0" width="258" height="28" rx="14" fill="rgba(59,130,246,.22)"/>
+          <rect x="0" y="0" width="258" height="28" rx="14" fill="transparent"/>
+          <text x="16" y="19" fill="#93C5FD" font-weight="700">STEP 1 · verify_p0</text>
+          <text x="16" y="56" fill="#CFE0FF">4 前端应用 × 22 断言</text>
+          <text x="16" y="76" fill="#7C8FB8">JSDOM + HTTP 加载共享脚本</text>
+          <text x="16" y="104" fill="#86EFAC" font-family="monospace" font-size="12">PASS · 2.77s</text>
+        </g>
+        <!-- arrow -->
+        <polygon points="282,200 300,195 300,205" fill="#93C5FD"/>
+        <!-- step 2 -->
+        <g transform="translate(302,130)">
+          <rect width="258" height="140" rx="14" fill="rgba(24,50,110,.6)" stroke="rgba(16,185,129,.35)"/>
+          <rect x="0" y="0" width="258" height="28" rx="14" fill="rgba(16,185,129,.2)"/>
+          <text x="16" y="19" fill="#86EFAC" font-weight="700">STEP 2 · TAP BUG 回归</text>
+          <text x="16" y="56" fill="#CFE0FF">8 TAP cases (P0-1..4)</text>
+          <text x="16" y="76" fill="#7C8FB8">BUG#1/#2/#3 + 100 次压力</text>
+          <text x="16" y="104" fill="#86EFAC" font-family="monospace" font-size="12">PASS · 11.79s</text>
+        </g>
+        <polygon points="564,200 582,195 582,205" fill="#A7F3D0"/>
+        <!-- step 3 -->
+        <g transform="translate(584,130)">
+          <rect width="258" height="140" rx="14" fill="rgba(24,50,110,.6)" stroke="rgba(139,92,246,.35)"/>
+          <rect x="0" y="0" width="258" height="28" rx="14" fill="rgba(139,92,246,.2)"/>
+          <text x="16" y="19" fill="#C4B5FD" font-weight="700">STEP 3 · c8 + coverage_runner</text>
+          <text x="16" y="56" fill="#CFE0FF">Session A/B/C 共 42 断言</text>
+          <text x="16" y="76" fill="#7C8FB8">vm.Script(filename=absPath) 采集</text>
+          <text x="16" y="104" fill="#86EFAC" font-family="monospace" font-size="12">PASS · 3.99s (写入 $C8_REPORT_DIR)</text>
+        </g>
+        <polygon points="846,200 864,195 864,205" fill="#DDD6FE"/>
+        <!-- step 4 -->
+        <g transform="translate(866,130)">
+          <rect width="254" height="140" rx="14" fill="rgba(24,50,110,.6)" stroke="rgba(34,211,238,.35)"/>
+          <rect x="0" y="0" width="254" height="28" rx="14" fill="rgba(34,211,238,.2)"/>
+          <text x="16" y="19" fill="#67E8F9" font-weight="700">STEP 4 · coverage_report.js</text>
+          <text x="16" y="56" fill="#CFE0FF">解析 lcov.info → HTML 总览</text>
+          <text x="16" y="76" fill="#7C8FB8">4 维 KPI + 矩阵 + 未覆盖热点</text>
+          <text x="16" y="104" fill="#86EFAC" font-family="monospace" font-size="12">PASS · 0.24s (写 总览报告.html)</text>
+        </g>
+      </g>
+      <!-- 门控 + 产物 -->
+      <g transform="translate(20,296)">
+        <rect width="550" height="110" rx="14" fill="rgba(10,25,64,.55)" stroke="rgba(245,158,11,.35)"/>
+        <text x="16" y="24" fill="#F9D48E" font-weight="700" font-size="14">阈值门控 &amp; Metrics (基于 lcov.info 解析 · 不 grep 文本)</text>
+        <text x="16" y="48" fill="#CFE0FF" font-family="monospace" font-size="12">Node 解析 LH/LF/BRH/BRF/FNF/FNH → metrics.json → 与 CI 变量比较</text>
+        <text x="16" y="70" fill="#86EFAC" font-family="monospace" font-size="12">LSC_COVERAGE_MIN_STMT = 70   (本次 81.88 ≥ 70   ✓)
+LSC_COVERAGE_MIN_BRANCH = 80 (本次 89.86 ≥ 80   ✓)</text>
+        <text x="16" y="98" fill="#7C8FB8" font-size="12">MR Badge: coverage: '/Statements\s*:\s*([\d.]+%)/' (GitLab 自动抓取注入)</text>
+      </g>
+      <g transform="translate(584,296)">
+        <rect width="536" height="110" rx="14" fill="rgba(10,25,64,.55)" stroke="rgba(123,167,255,.3)"/>
+        <text x="16" y="24" fill="#93C5FD" font-weight="700" font-size="14">Artifacts (when: always · 30 天过期)</text>
+        <g font-family="monospace" font-size="11.5" fill="#CFE0FF">
+          <text x="16" y="48">coverage/$CI_COMMIT_SHORT_SHA/</text>
+          <text x="32" y="66">├─ index.html + platform-admin/app.js.html + ...</text>
+          <text x="32" y="82">├─ lcov.info + metrics.json</text>
+          <text x="32" y="98">└─ 总览报告.html (深海金融美学 · 单文件)</text>
+          <text x="16" y="118">logs/step-{01..04}-*.log (含 build context + 结束状态)</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <h3>pages job（可选 · 只在 main/tag 触发）</h3>
+  <p>把最新 run 子目录的 <code>总览报告.html</code> 作为 <code>public/index.html</code>，c8 逐行 HTML 放 <code>public/html-c8/</code>，通过 GitLab Pages 即可外链访问。</p>
+  <div class="cmd"><span class="c"># 示例结果 URL 结构</span>
+<span class="k">https</span>://&lt;user&gt;.gitlab.io/&lt;project&gt;/index.html        <span class="c"># ← 单文件总览（深海金融美学）</span>
+<span class="k">https</span>://&lt;user&gt;.gitlab.io/&lt;project&gt;/html-c8/        <span class="c"># ← c8 逐行覆盖率（可点击跳文件）</span></div>
+
+  <!-- ============ SECTION 6 提交与合入 ============ -->
+  <h2>六、代码变更与合入流程 · Conventional Commits + PR 状态机</h2>
+
+  <h3>① 语义拆分 · 3 条 Commits</h3>
+  <table>
+    <thead><tr>
+      <th style="width:110px">Type(Scope)</th>
+      <th>标题</th>
+      <th>影响文件</th>
+      <th>动机</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="pill ci">ci(gitlab)</span></td>
+        <td>add chart-logic coverage pipeline with per-SHA archive + tee step logs</td>
+        <td class="mono">lsc-system/.gitlab-ci.yml<br/>lsc-system/run-all.js</td>
+        <td>为 4 前端应用+图表逻辑建立 CI 可重复执行的覆盖率流水线；<b>解决 alpine sh 不认 bash PIPESTATUS</b>（改用 Node 原生 pipe 写 step logs）。</td>
+      </tr>
+      <tr>
+        <td><span class="pill test">test(chart-logic)</span></td>
+        <td>support per-commit coverage archive + add ci entrypoints</td>
+        <td class="mono">lsc-system/coverage_report.js<br/>lsc-system/package.json</td>
+        <td>coverage_report 支持按 run 目录读写；npm 新增 <code>ci / all / report</code> 标准入口；coverage 脚本默认本地 <code>coverage/</code>，CI 下切换为 `${C8_REPORT_DIR:-coverage}`。</td>
+      </tr>
+      <tr>
+        <td><span class="pill chore">chore(scm)</span></td>
+        <td>stop tracking regenerated 覆盖率_P0 HTML deliverable</td>
+        <td class="mono">.gitignore + git rm --cached 报告.html</td>
+        <td>报告为可重生成产物，版本控制会造成每次重跑的大 diff 噪声；改用 <code>npm run coverage &amp;&amp; npm run report</code> 随时再生。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>② PR 状态机 · 从 Draft 到 Merged</h3>
+  <div class="grid cols2">
+    <div class="card">
+      <h3>演进时间线</h3>
+      <div class="stage" style="padding-left:34px">
+        <div class="node"><h4>Draft PR 打开</h4><p>分支 <code>codex/gitlab-ci-coverage-pipeline</code> 推送后，<code>gh pr create --draft</code> 创建 PR #2，标题 <code>[codex] ci(test): GitLab coverage pipeline + per-SHA archive + step logs</code>。<span class="muted">isDraft=true · state=OPEN</span></p></div>
+        <div class="node"><h4>Ready for Review</h4><p><code>gh pr ready 2</code> 取消草稿；<b>仍缺 reviewDecision（未设置要求 review 才能合并）</b>，mergeStateStatus 等待 checks。<span class="muted">isDraft=false · state=OPEN</span></p></div>
+        <div class="node"><h4>GitHub Actions 检查（2 项）</h4><p>约 3.5~4 分钟：<b>Build, Test &amp; Coverage (JDK 17)</b> → SUCCESS；<b>Quality Gate Summary</b> → SUCCESS。<span class="muted">mergeStateStatus=CLEAN · mergeable=MERGEABLE</span></p></div>
+        <div class="node"><h4>Squash &amp; Merge 入 main</h4><p><code>gh pr merge 2 --squash --delete-branch --subject="ci(test): …" --body="… Closes #2"</code>。<span class="pill merged">MERGED @ 2026-08-27T15:17:50Z</span></p></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Squash Commit 落盘</h3>
+      <div class="cmd"><span class="c"># main HEAD after merge</span>
+$ git show --stat --oneline 13ce7e3
+<span class="s">13ce7e3</span> <span class="k">ci(test): add GitLab coverage pipeline for chart-logic (per-SHA archive + step logs)</span>
+ lsc-system/.gitlab-ci.yml                                  |  182 +
+ lsc-system/run-all.js                                      |  164 +
+ lsc-system/coverage_report.js                              |  471 +
+ lsc-system/package.json                                    |    5 +
+ lsc-system/coverage_runner.js + verify_p0.js + TAP         |  合计约 1,500+
+ ... (前端应用 / 共享脚本 / package-lock 累计 18 档文件)
+18 files changed, 9801 insertions(+)</div>
+      <h3>检查通过矩阵</h3>
+      <table class="mini-table">
+        <tr><th>检查</th><th>状态</th><th>说明</th></tr>
+        <tr><td>Build, Test &amp; Coverage (JDK 17)</td><td><span class="chip ok">SUCCESS</span></td><td>Java 构建工作流，前端改动不影响</td></tr>
+        <tr><td>Quality Gate Summary</td><td><span class="chip ok">SUCCESS</span></td><td>代码质量门限通过</td></tr>
+        <tr><td>mergeStateStatus</td><td><span class="chip info">CLEAN</span></td><td>无冲突 + 检查全绿</td></tr>
+        <tr><td>mergeable</td><td><span class="chip info">MERGEABLE</span></td><td>可合并</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 7 问题与修复 ============ -->
+  <h2>七、典型问题 &amp; 经验落地（7 条）</h2>
+  <div class="callout type-warn">
+    <h4>🔗 对应经验 959665 / Failure 1 · 沙箱权限错误立刻切换不触发隔离层的执行策略</h4>
+    <p>体现在 #5 修复：最初写的 <code>spawnWithTee</code> 依赖 bash <code>${PIPESTATUS[0]}</code>，但 <code>node:22-alpine</code> 的 <code>/bin/sh=ash</code>（相当于受限 shell 沙箱）不认，直接 Bad substitution exit=2；立刻切换到 Node 原生 pipe（spawnSync stdio=pipe），在 Node 层完成"同时写终端 + logs/"的 tee 语义，本地/CI 两套 shell 环境下都一致。</p>
+  </div>
+  <table>
+    <thead><tr>
+      <th style="width:40px">#</th>
+      <th>症状</th>
+      <th>根因</th>
+      <th>修复</th>
+      <th style="width:100px">对应经验</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td class="num mono">1</td>
+        <td>JSDOM 报错 <code>ICONS is not defined</code></td>
+        <td>直接读本地文件 <code>file://</code> 时，外部共享脚本 <code>shared/app-utils.js</code> 未被加载</td>
+        <td>验证脚本改为通过 <code>http://127.0.0.1:PORT</code> URL 加载页面，确保 script src 链路生效</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td class="num mono">2</td>
+        <td>商家经营总览图表样式异常（stat-trend / chart-card 缺样式）</td>
+        <td>merchant-admin 最初只移植了图表函数，未同步 <code>.stat-trend / .chart-card / .chart-area</code> 样式定义</td>
+        <td>在 merchant-admin/index.html 的 CSS 部分补齐对应类（字体、圆角、flex gap 等）</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td class="num mono">3</td>
+        <td>test_p0_chart_logic 全部报 <code>Assignment to constant variable</code></td>
+        <td><code>const PORT = 18766; PORT++</code>，不允许对 const 再赋值</td>
+        <td>改为 <code>let PORT = 18766; PORT++</code></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td class="num mono">4</td>
+        <td>c8 报告 platform-admin/app.js 覆盖率 0%</td>
+        <td>JSDOM 独立 vm context 中执行脚本，V8 未把执行数据关联到真实文件路径</td>
+        <td>改用 <code>new vm.Script(src, { filename: absPath })</code> 显式传入源文件绝对路径，使 V8 Profile 正确落文件</td>
+        <td>959665 F1 切换隔离策略</td>
+      </tr>
+      <tr>
+        <td class="num mono">5</td>
+        <td>模拟 CI 时 <code>/bin/sh: 1: Bad substitution</code> exit=2</td>
+        <td><code>spawnWithTee</code> 用了 bash 专有 <code>${PIPESTATUS[0]}</code>；alpine ash/dash 不支持</td>
+        <td>改为 <code>spawnSync(stdio:['ignore','pipe','pipe'])</code>，在 Node 层捕获 stdout/stderr → 同时写终端与 log 文件，完全不依赖 shell 特性</td>
+        <td>959665 F1（沙箱 shell 限制）</td>
+      </tr>
+      <tr>
+        <td class="num mono">6</td>
+        <td>（风险防患）多 pipeline 共用 coverage/ 目录可能跨 run 混 lcov</td>
+        <td>默认 c8 每次写 <code>coverage/</code>，若 runner 不清缓存会与上次重叠</td>
+        <td>引入 <code>coverage/$CI_COMMIT_SHORT_SHA/</code> 作为每次运行唯一目录，由 npm script 的 <code>--reports-dir=${C8_REPORT_DIR:-coverage}</code> 驱动</td>
+        <td>949301（同一次执行一目录）</td>
+      </tr>
+      <tr>
+        <td class="num mono">7</td>
+        <td>（风险防患）长任务超时 / skipped 无法判断卡点</td>
+        <td>传统 CI 仅把终端 log 打 job log，出问题要通篇翻找</td>
+        <td>run-all 在 CI 模式下为每步生成独立 <code>logs/step-XX-*.log</code>，开头写 CI 构建上下文、结尾写 finished status；artifacts 设 <code>when: always</code> 强制上传</td>
+        <td>949301（以日志为准收敛）</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ============ SECTION 8 产物索引 ============ -->
+  <h2>八、交付产物索引</h2>
+  <div class="grid cols2">
+    <div class="card">
+      <h3>本地路径（仓库内）</h3>
+      <table class="mini-table">
+        <tr><th>类型</th><th>路径</th></tr>
+        <tr><td>前端 4 应用</td><td class="mono">lsc-system/{platform-admin,merchant-admin,mobile-app,mini-program}/index.html</td></tr>
+        <tr><td>共享脚本</td><td class="mono">lsc-system/shared/{design-system.css,app-utils.js}</td></tr>
+        <tr><td>抽离脚本</td><td class="mono">lsc-system/platform-admin/app.js</td></tr>
+        <tr><td>3 层测试</td><td class="mono">lsc-system/{verify_p0.js,test_p0_chart_logic.js,coverage_runner.js}</td></tr>
+        <tr><td>报告生成器</td><td class="mono">lsc-system/coverage_report.js</td></tr>
+        <tr><td>全流程 runner</td><td class="mono">lsc-system/run-all.js</td></tr>
+        <tr><td>GitLab CI</td><td class="mono">lsc-system/.gitlab-ci.yml</td></tr>
+        <tr><td>覆盖率总览</td><td class="mono">lsc-system/coverage/&lt;sha&gt;/总览报告.html</td></tr>
+        <tr><td>覆盖率逐行</td><td class="mono">lsc-system/coverage/&lt;sha&gt;/index.html</td></tr>
+        <tr><td>本报告</td><td class="mono">lsc-system/端到端交付总结_V6.2-AI-E2E_20260827.html</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>远端链接 &amp; 引用</h3>
+      <table class="mini-table">
+        <tr><th>项</th><th>值</th></tr>
+        <tr><td>GitHub 仓库</td><td><a href="https://github.com/zcls7792-gif/lsc-system-v6.2" target="_blank" rel="noopener">zcls7792-gif/lsc-system-v6.2</a></td></tr>
+        <tr><td>合入 PR</td><td><a href="https://github.com/zcls7792-gif/lsc-system-v6.2/pull/2" target="_blank" rel="noopener">PR #2 (MERGED)</a></td></tr>
+        <tr><td>合入 commit</td><td class="mono"><a href="https://github.com/zcls7792-gif/lsc-system-v6.2/commit/13ce7e3" target="_blank" rel="noopener">main@13ce7e3</a></td></tr>
+        <tr><td>合入标题</td><td>ci(test): add GitLab coverage pipeline for chart-logic (per-SHA archive + step logs)</td></tr>
+        <tr><td>mergedAt</td><td>2026-08-27T15:17:50Z</td></tr>
+        <tr><td>已删分支</td><td class="mono">codex/gitlab-ci-coverage-pipeline (已在 PR merge 时删除)</td></tr>
+        <tr><td>原 agent 分支</td><td class="mono">trae/agent-pgeTAC (保留现场)</td></tr>
+      </table>
+      <h3>一键命令卡片</h3>
+      <div class="cmd"><span class="c"># 全流程回归（对齐 GitLab CI job）</span>
+$ <span class="k">cd</span> lsc-system && <span class="k">npm run ci</span>
+
+<span class="c"># 只跑覆盖率 + 生成总览 HTML</span>
+$ npm run coverage && npm run report
+
+<span class="c"># 在本地模拟 CI 子目录归档模式</span>
+$ GITLAB_CI=true CI_COMMIT_SHORT_SHA=abc123f LSC_REPORT_SUBDIR=abc123f \
+  LSC_COVERAGE_MIN_STMT=70 LSC_COVERAGE_MIN_BRANCH=80 npm run ci</div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 9 后续建议 ============ -->
+  <h2>九、后续建议（P1/P2 优先级）</h2>
+  <div class="callout">
+    <h4>🔗 对应经验 959665 / Failure 3 · 能力缺失的测试要明确策略 A/B</h4>
+    <p>目前 P0 只覆盖了前端图表逻辑；B2B 后端数据库操作、发行 / 释放 / 核销等核心端点、以及登录鉴权尚不在范围内。建议在 P1 阶段按"策略 A：补齐后端端点 + JWT 工具脚本签发测试 token + 集成测试 + E2E Playwright 登录闭环"推进，避免用"前端已覆盖"掩盖未完成的后端测试。</p>
+  </div>
+  <div class="grid cols3">
+    <div class="card"><h3>P1 · GitLab 对接（近 1 周内）</h3>
+      <ol style="padding-left:18px; color:var(--ink-1)">
+        <li>在 GitLab 项目开启 Mirroring：HTTPS URL + GitHub PAT 选"Trigger pipelines on mirror update"</li>
+        <li>配置 Runner 标签 → 若使用自有 runner，在 <code>.gitlab-ci.yml</code> 中为 job 加 <code>tags: [your-runner-tag]</code></li>
+        <li>在 <code>Settings → CI/CD → Variables</code> 设置 <code>LSC_COVERAGE_MIN_STMT=80</code> / <code>LSC_COVERAGE_MIN_BRANCH=85</code>，逐步抬门槛</li>
+      </ol>
+    </div>
+    <div class="card"><h3>P1 · 覆盖率增强</h3>
+      <ol style="padding-left:18px; color:var(--ink-1)">
+        <li>在 <code>.gitlab-ci.yml</code> after_script 中加入 <code>lcov → cobertura.xml</code> 转换，开启 GitLab diff 逐行覆盖率（需 16.0+）</li>
+        <li>把 4 个前端应用的 <code>&lt;script&gt;</code> 内联 JS 都抽离为独立 <code>*.js</code> 文件（类似 <code>platform-admin/app.js</code>），使 c8 可逐个文件统计</li>
+        <li>补充 merchant-admin / mobile-app / mini-program 更多的 <code>render*</code> 调用，把函数覆盖率从 70.37% 抬至 ≥85%</li>
+      </ol>
+    </div>
+    <div class="card"><h3>P2 · 测试体系扩展（2~4 周）</h3>
+      <ol style="padding-left:18px; color:var(--ink-1)">
+        <li>后端集成测试：B2B 发行 / 释放 / 核销 / 流转 / LSC 双池查询等端点，统一 Test Harness（DB 初始化+清理+Seed、JWT 签发 helper）</li>
+        <li>Playwright E2E：平台后台登录 → 经营总览 → 核销 → 钱包页 SVG 流转链路图变化的完整闭环</li>
+        <li>加入 GitHub Actions 副本（和 GitLab 并行）或改 GitLab 为主 CI，避免跨平台双重维护</li>
+        <li>把 <code>metrics.json</code> 接入 GitLab Metrics Reports，在 MR 页面可直接对比 commits 覆盖率趋势</li>
+      </ol>
+    </div>
+  </div>
+
+  <hr/>
+  <div class="footer">
+    链盛通 LSC V6.2-AI · 端到端交付总结报告 · 生成于 <code>2026-08-27</code> · 本报告为单文件 HTML（可离线分发）。本地可随时重新生成端到端验证：<code>cd lsc-system &amp;&amp; npm run ci</code>
+  </div>
+</div>
+</body></html>
