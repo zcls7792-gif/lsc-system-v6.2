@@ -501,20 +501,31 @@ function renderHome() {
 }
 
 /* ===== 商城 ===== */
+const PRODUCT_LIST = [
+  {name:'精品双人套餐·周末限定', price:399, tag:'热销', merchant:'锦华餐饮连锁·总店', sales:1280, cat:'餐饮', aiScore:96, stock:50,
+   desc:'周末限定双人精选套餐, 包含招牌菜4道+主食2份+甜品2份。精选当季食材, 由主厨匠心烹制。仅限周末堂食享用。'},
+  {name:'招牌全家福套餐', price:588, tag:'', merchant:'锦华餐饮连锁·总店', sales:856, cat:'餐饮', aiScore:94, stock:30,
+   desc:'全家福套餐含招牌菜8道, 适合4-6人享用, 含招牌烤鸭、松鼠桂鱼等经典菜式。节假日家庭聚餐首选。'},
+  {name:'明前龙井·礼盒装250g', price:888, tag:'新品', merchant:'御品茶业工坊', sales:234, cat:'茶酒', aiScore:98, stock:100,
+   desc:'2026明前龙井, 杭州西湖核心产区, 礼盒装250g。茶汤嫩绿明亮, 栗香持久, 回甘绵长。附防伪溯源码。'},
+  {name:'智能蓝牙耳机Pro3', price:499, tag:'', merchant:'数码优选旗舰店', sales:3420, cat:'数码', aiScore:92, stock:200,
+   desc:'主动降噪, 蓝牙5.3, 续航36小时, IPX5防水, 含Type-C快充。搭配LSC可享额外9折。'},
+  {name:'进口澳洲和牛M9·500g', price:698, tag:'生鲜', merchant:'环球生鲜直送', sales:612, cat:'生鲜', aiScore:95, stock:80,
+   desc:'澳洲进口和牛M9级, 500g真空冷链包装, 雪花纹理丰富, 适合煎烤。顺丰冷链次日达, 签收保持0-4℃。'},
+  {name:'季节限定·蟹粉小笼礼盒', price:288, tag:'', merchant:'老字号糕点坊', sales:1560, cat:'餐饮', aiScore:93, stock:120,
+   desc:'当季蟹粉手工小笼, 礼盒装12只装, 含秘制姜醋。老字号手工包制, 顺丰冷链次日达。'},
+];
+
 function renderMall() {
-  const ps = [
-    {n:'精品双人套餐·周末限定',p:399,t:'热销'},{n:'招牌全家福套餐',p:588,t:''},
-    {n:'明前龙井·礼盒装250g',p:888,t:'新品'},{n:'智能蓝牙耳机Pro3',p:499,t:''},
-    {n:'进口澳洲和牛M9·500g',p:698,t:'生鲜'},{n:'季节限定·蟹粉小笼礼盒',p:288,t:''},
-  ];
+  const ps = PRODUCT_LIST;
   document.getElementById('screen-mall').innerHTML = `
   <div class="wx-search-bar"><div class="wx-search-inner"><span class="icon" data-i="search"></span><input placeholder="搜索商品/商家"></div></div>
   <div class="wx-cats"><span class="wx-cat active">全部</span><span class="wx-cat">餐饮</span><span class="wx-cat">生鲜</span><span class="wx-cat">数码</span><span class="wx-cat">茶酒</span><span class="wx-cat">服饰</span></div>
   <div class="wx-mall-grid">
-    ${ps.map(p=>`<div class="wx-mall-card" onclick="showScreen('product')">
-      <div class="wx-mall-img"><span class="icon" data-i="product"></span>${p.t?`<span class="tag tag-accent" style="position:absolute;top:6px;left:6px;font-size:10px;">${p.t}</span>`:''}</div>
-      <div style="padding:8px;"><div style="font-size:12px;font-weight:500;line-height:1.3;height:32px;overflow:hidden;color:#1a1a1a;">${p.n}</div>
-      <div class="flex items-center justify-between mt-1"><span style="font-size:16px;font-weight:700;color:#ff5a3c;font-family:var(--ff-mono);">¥${p.p}</span><span style="font-size:10px;color:var(--c-wx-green-deep);">抵${p.p}LSC</span></div></div>
+    ${ps.map((p,i)=>`<div class="wx-mall-card" onclick="openProduct(${i})">
+      <div class="wx-mall-img"><span class="icon" data-i="product"></span>${p.tag?`<span class="tag tag-accent" style="position:absolute;top:6px;left:6px;font-size:10px;">${p.tag}</span>`:''}</div>
+      <div style="padding:8px;"><div style="font-size:12px;font-weight:500;line-height:1.3;height:32px;overflow:hidden;color:#1a1a1a;">${p.name}</div>
+      <div class="flex items-center justify-between mt-1"><span style="font-size:16px;font-weight:700;color:#ff5a3c;font-family:var(--ff-mono);">¥${p.price}</span><span style="font-size:10px;color:var(--c-wx-green-deep);">抵${p.price}LSC</span></div></div>
     </div>`).join('')}
   </div>
   <div style="text-align:center;padding:16px;font-size:11px;color:#999;">— 上滑加载更多 —</div>`;
@@ -737,26 +748,45 @@ function wxShare() {
 }
 
 /* ===== 商品详情 ===== */
-function renderProduct() {
+let _curProductIdx = 0;
+function openProduct(idx) {
+  _curProductIdx = idx;
+  renderProduct(idx);
+  showScreen('product');
+}
+function renderProduct(idx) {
+  idx = (idx == null) ? _curProductIdx : idx;
+  const p = PRODUCT_LIST[idx] || PRODUCT_LIST[0];
   document.getElementById('screen-product').innerHTML = `
   <div style="height:240px;background:linear-gradient(135deg,var(--c-wx-green-tint),#f7f7f7);display:flex;align-items:center;justify-content:center;position:relative;">
     <span class="icon" data-i="product" style="width:72px;height:72px;color:var(--c-wx-green);opacity:0.4;"></span>
-    <span class="tag tag-accent" style="position:absolute;top:12px;right:12px;">热销</span>
+    ${p.tag?`<span class="tag tag-accent" style="position:absolute;top:12px;right:12px;">${p.tag}</span>`:''}
   </div>
   <div style="background:#fff;padding:14px;margin-top:-12px;border-radius:14px 14px 0 0;">
-    <div style="font-size:17px;font-weight:700;">精品双人套餐·周末限定</div>
+    <div style="font-size:17px;font-weight:700;">${p.name}</div>
     <div class="flex items-center gap-2 mt-2">
-      <span style="font-size:24px;font-weight:700;color:#ff5a3c;font-family:var(--ff-mono);">¥399</span>
-      <span style="font-size:11px;color:var(--c-wx-green-deep);">可抵399 LSC</span>
+      <span style="font-size:24px;font-weight:700;color:#ff5a3c;font-family:var(--ff-mono);">¥${p.price}</span>
+      <span style="font-size:11px;color:var(--c-wx-green-deep);">可抵${p.price} LSC</span>
     </div>
-    <div class="text-xs text-muted mt-2">锦华餐饮连锁·总店 · 月销1280</div>
-    <div style="background:var(--c-wx-green-tint);color:var(--c-wx-green-deep);padding:8px 10px;border-radius:6px;font-size:12px;margin-top:10px;"><span class="icon icon-sm" data-i="unlock"></span> 支付¥399后获得399 LSC进入锁定池, 每日动态释放</div>
+    <div class="text-xs text-muted mt-2">${p.merchant} · 月销${p.sales}</div>
+    <div style="background:var(--c-wx-green-tint);color:var(--c-wx-green-deep);padding:8px 10px;border-radius:6px;font-size:12px;margin-top:10px;"><span class="icon icon-sm" data-i="unlock"></span> 支付¥${p.price}后获得${p.price} LSC进入锁定池, 每日动态释放</div>
+    <!-- 商品属性 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+      <div style="background:#f7f7f7;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;color:#999;">AI 真实度评分</div>
+        <div style="font-size:15px;font-weight:700;color:var(--c-wx-green-deep);font-family:var(--ff-mono);">${p.aiScore}%</div>
+      </div>
+      <div style="background:#f7f7f7;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;color:#999;">库存</div>
+        <div style="font-size:15px;font-weight:700;color:#1a1a1a;font-family:var(--ff-mono);">${p.stock} 件</div>
+      </div>
+    </div>
     <div class="wx-section-title" style="padding:14px 0 8px;"><h3 style="font-size:14px;">商品详情</h3></div>
-    <div class="text-sm" style="line-height:1.7;color:#666;">周末限定双人精选套餐, 包含招牌菜4道+主食2份+甜品2份。精选当季食材, 由主厨匠心烹制。仅限周末堂食享用。</div>
+    <div class="text-sm" style="line-height:1.7;color:#666;">${p.desc}</div>
     <div style="height:60px;"></div>
   </div>
   <div class="wx-pay-bar" style="position:fixed;left:0;right:0;bottom:0;max-width:366px;margin:0 auto;z-index:20;">
-    <button class="wx-btn wx-btn-outline" style="flex:1;padding:10px;margin-right:6px;" onclick="showTip('已加入购物车')">加入购物车</button>
+    <button class="wx-btn wx-btn-outline" style="flex:1;padding:10px;margin-right:6px;" onclick="showTip('已加入购物车 · ${p.name}')">加入购物车</button>
     <button class="wx-btn wx-btn-green" style="flex:1;padding:10px;" onclick="wxScanPay()">立即购买</button>
   </div>`;
   renderIcons(document.getElementById('screen-product'));

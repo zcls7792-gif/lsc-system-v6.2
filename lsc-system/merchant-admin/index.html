@@ -302,6 +302,40 @@
   .chat-ai { background: var(--c-primary-tint); color: var(--c-text-1); align-self: flex-start; border-bottom-left-radius: 4px; }
   .chat-me { background: var(--c-primary); color:#fff; align-self: flex-end; border-bottom-right-radius: 4px; }
 
+  /* ===== 弹窗扩展 ===== */
+  .modal-detail { width: 92%; max-width: 600px; }
+  .modal-detail .modal-head { padding: 18px 24px; }
+  .modal-detail .modal-title { font-size: var(--fs-lg); }
+  .modal-detail .modal-body { padding: 20px 24px; }
+  .detail-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
+  .detail-field { display:flex; flex-direction:column; }
+  .detail-label { font-size:11px; color:var(--c-text-3); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:3px; }
+  .detail-value { font-size:14px; color:var(--c-text-1); font-weight:500; }
+  .detail-value.mono { font-family: var(--ff-mono); }
+  .voucher-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-top:8px; }
+  .voucher-thumb {
+    aspect-ratio: 4/3; border-radius: var(--r-md); border:1px solid var(--c-border-soft);
+    background: linear-gradient(135deg, var(--c-primary-tint), var(--c-bg-soft));
+    display:flex; align-items:center; justify-content:center;
+    color: var(--c-primary); opacity:0.6; cursor:pointer; position:relative;
+  }
+  .voucher-thumb:hover { opacity:0.9; box-shadow: var(--sh-sm); }
+  .voucher-thumb .ai-tag-mini {
+    position:absolute; bottom:4px; right:4px; font-size:9px;
+    background: var(--c-available); color:#fff; padding:1px 5px; border-radius:6px; font-weight:600;
+  }
+  .ai-verify-progress {
+    height: 6px; background: var(--c-border-soft); border-radius: var(--r-pill); overflow:hidden; margin: 8px 0;
+  }
+  .ai-verify-progress > div {
+    height:100%; background: linear-gradient(90deg, var(--c-accent), var(--c-available));
+    border-radius: var(--r-pill); transition: width 0.6s ease;
+  }
+  .verify-step { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px; }
+  .verify-step .vs-dot { width:10px; height:10px; border-radius:50%; background: var(--c-border); flex-shrink:0; }
+  .verify-step.done .vs-dot { background: var(--c-available); }
+  .verify-step.active .vs-dot { background: var(--c-accent); animation: pulse 1.2s infinite; }
+
   /* 响应式 */
   @media (max-width: 1100px) {
     .stat-grid { grid-template-columns: repeat(2,1fr); }
@@ -313,6 +347,7 @@
     .brand-text, .nav-item span, .nav-section, .sidebar-foot span, .balance-mini { display:none; }
     .nav-item { justify-content:center; }
     .search-box { width:140px; }
+    .detail-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -559,7 +594,7 @@ function renderProduct() {
         </div>
         <div>
           <label class="field-label">商品视频 (选填)</label>
-          <div style="border:1px dashed var(--c-border);border-radius:8px;padding:18px;text-align:center;color:var(--c-text-3);font-size:12px;cursor:pointer;" onclick="alert('调用视频上传·AI审核')">
+          <div style="border:1px dashed var(--c-border);border-radius:8px;padding:18px;text-align:center;color:var(--c-text-3);font-size:12px;cursor:pointer;" onclick="resultModal('视频上传','已调用视频上传接口, AI将自动审核视频内容真实性与版权。','info')">
             <span class="icon" data-i="eye"></span> 点击上传视频 · AI自动审核
           </div>
         </div>
@@ -731,7 +766,7 @@ function renderNH() {
           <div class="flex justify-between text-sm"><span class="text-muted">监管账户→主账户</span><b style="color:var(--c-available);">+¥8,700.00</b></div>
         </div>
         <div class="alert alert-info mb-3" style="font-size:11px;"><span class="icon icon-sm" data-i="info"></span>核销资金来源: 商家14%监管账户划拨至主账户。平台2%技术服务费已在消费分账时由支付机构直接清分, 与核销资金无关。</div>
-        <button class="btn btn-primary btn-block" onclick="alert('核销申请提交, 采用订单号+版本号乐观锁双重幂等校验')">提交核销申请</button>
+        <button class="btn btn-primary btn-block" onclick="confirmModal('提交核销申请','核销资金来源: 商家14%监管账户划拨至主账户。提交后采用订单号+版本号乐观锁双重幂等校验。',()=>resultModal('核销申请已提交','核销申请已提交, 系统将校验幂等性并执行资金划拨。','success'),{btnText:'提交'})">提交核销申请</button>
       </div>
     </div>
   </div>
@@ -784,7 +819,7 @@ function renderB2B() {
         <div><label class="field-label">合同编号</label><input class="input" value="HT-2026-0824-2"></div>
         <div><label class="field-label">过期时间</label><input class="input" type="date" value="2026-09-24"></div>
         <div style="grid-column:1/3;"><label class="field-label">贸易凭证 (合同/发票/物流单)</label>
-          <div style="border:1px dashed var(--c-border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;" onclick="alert('上传凭证后AI自动核验')">
+          <div style="border:1px dashed var(--c-border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;" onclick="resultModal('凭证上传','已调用凭证上传, AI将自动进行OCR提取、字段匹配与真伪核验。','info')">
             <span class="icon icon-lg" data-i="doc" style="color:var(--c-text-3);"></span>
             <div class="text-sm text-muted mt-2">点击上传贸易凭证图片 (支持多张)</div>
             <div class="text-xs text-accent mt-1">AI将提取合同编号/金额并与订单匹配</div>
@@ -792,7 +827,7 @@ function renderB2B() {
         </div>
       </div>
       <div class="alert alert-warning mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="warning"></span>消费者会员间禁止LSC流转 · 消费者→商家支付允许 · 商家→消费者反向流转禁止。流转后接收方LSC有效期重置为365天。</div>
-      <div class="flex justify-end gap-3 mt-3"><button class="btn btn-outline btn-sm">保存草稿</button><button class="btn btn-primary btn-sm" onclick="alert('订单已提交, 等待对手方确认')">提交并等待确认</button></div>
+      <div class="flex justify-end gap-3 mt-3"><button class="btn btn-outline btn-sm" onclick="resultModal('已保存草稿','B2B订单草稿已保存, 可稍后继续编辑。','info')">保存草稿</button><button class="btn btn-primary btn-sm" onclick="confirmModal('提交B2B订单','确认提交订单? 提交后进入待对手方确认状态, AI将并行核验凭证真伪。',()=>resultModal('订单已提交','B2B订单已提交, 等待对手方确认。AI核验同步进行中。','success'),{btnText:'提交'})">提交并等待确认</button></div>
     </div>
   </div>
 
@@ -955,6 +990,159 @@ function renderAI() {
   </div>
   `;
   setView(html);
+}
+
+/* ============== 弹窗系统 ============== */
+function openModal(opts) {
+  closeModal();
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.id = 'global-modal';
+  mask.innerHTML = `<div class="modal modal-detail">
+    <div class="modal-head">
+      <div class="modal-title">${opts.title || '详情'}</div>
+      <span class="icon" data-i="close" id="gm-close" style="cursor:pointer;color:var(--c-text-3);"></span>
+    </div>
+    <div class="modal-body">${opts.body || ''}</div>
+    ${opts.footer ? `<div class="modal-foot">${opts.footer}</div>` : ''}
+  </div>`;
+  document.body.appendChild(mask);
+  mask.querySelectorAll('.icon[data-i]').forEach(el=>{ const k=el.getAttribute('data-i'); if(ICONS[k]) el.innerHTML=ICONS[k]; });
+  mask.addEventListener('click', e=>{ if (e.target===mask || e.target.id==='gm-close') closeModal(); });
+}
+function closeModal() {
+  const m = document.getElementById('global-modal');
+  if (m) m.remove();
+}
+function resultModal(title, body, type='success') {
+  const iconMap = { success:'check', warning:'warning', danger:'warning', info:'ai' };
+  const colorMap = { success:'var(--c-available)', warning:'var(--c-warning)', danger:'var(--c-danger)', info:'var(--c-info)' };
+  openModal({
+    title,
+    body: `<div style="text-align:center;padding:20px 10px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:${colorMap[type]};margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <span class="icon icon-xl" data-i="${iconMap[type]}" style="width:32px;height:32px;color:#fff;"></span>
+      </div>
+      <div style="font-size:17px;font-weight:700;">${title}</div>
+      <div class="text-sm text-muted mt-2" style="line-height:1.7;">${body}</div>
+    </div>`,
+    footer: `<button class="btn btn-primary btn-sm" onclick="closeModal()">确定</button>`
+  });
+}
+function confirmModal(title, body, onConfirm, opts={}) {
+  openModal({
+    title,
+    body: `<div style="padding:8px 4px;">${body}</div>`,
+    footer: `<button class="btn btn-outline btn-sm" onclick="closeModal()">取消</button><button class="btn ${opts.danger?'btn-danger':'btn-primary'} btn-sm" id="confirm-yes">${opts.btnText||'确认'}</button>`
+  });
+  document.getElementById('confirm-yes').addEventListener('click', ()=>{ closeModal(); onConfirm && onConfirm(); });
+}
+
+/* B2B订单详情 + AI核验进度 */
+function showB2BDetail(oid) {
+  const orders = {
+    'B2B20260824002': { counter:'御品茶业工坊', desc:'高端茶叶季度供应', rmb:96000, lsc:96000, contract:'HT-2026-0824-2', verify:3, match:0.98, status:'completed', time:'2026-08-24 14:32' },
+    'B2B20260822003': { counter:'恒通建材批发中心', desc:'装修材料采购', rmb:12000, lsc:12000, contract:'HT-2026-0822', verify:1, match:0.94, status:'completed', time:'2026-08-22 10:15' },
+    'B2B20260827009': { counter:'海纳科技公司', desc:'智能点餐系统采购', rmb:45000, lsc:45000, contract:'HT-2026-0827', verify:0, match:0, status:'pending', time:'2026-08-27 09:08' },
+  };
+  const o = orders[oid];
+  if (!o) return;
+  const verifyMap = { 0:{tag:'tag-info',label:'待核验'}, 1:{tag:'tag-success',label:'AI判定真实'}, 2:{tag:'tag-warning',label:'AI判定可疑'}, 3:{tag:'tag-success',label:'人工确认真实'}, 4:{tag:'tag-danger',label:'人工确认虚假'} };
+  const v = verifyMap[o.verify];
+  const isVerifying = o.verify === 0;
+  const body = `
+    <div class="detail-grid">
+      <div class="detail-field"><div class="detail-label">订单号</div><div class="detail-value mono">${oid}</div></div>
+      <div class="detail-field"><div class="detail-label">合同编号</div><div class="detail-value mono">${o.contract}</div></div>
+      <div class="detail-field"><div class="detail-label">对手方</div><div class="detail-value">${o.counter}</div></div>
+      <div class="detail-field"><div class="detail-label">创建时间</div><div class="detail-value">${o.time}</div></div>
+      <div class="detail-field" style="grid-column:1/3;"><div class="detail-label">交易描述</div><div class="detail-value">${o.desc}</div></div>
+      <div class="detail-field"><div class="detail-label">人民币金额</div><div class="detail-value mono">${LSC.fmtMoney(o.rmb)}</div></div>
+      <div class="detail-field"><div class="detail-label">LSC金额 (1:1)</div><div class="detail-value mono" style="color:var(--c-available);">${LSC.fmtNum(o.lsc)} LSC</div></div>
+      <div class="detail-field"><div class="detail-label">AI核验结果</div><div class="detail-value"><span class="tag ${v.tag} tag-dot">${v.label}</span> ${o.match>0?`匹配度 ${(o.match*100).toFixed(0)}%`:''}</div></div>
+      <div class="detail-field"><div class="detail-label">流转状态</div><div class="detail-value">${o.status==='completed'?'已完成流转':o.status==='pending'?'对手方待确认':'处理中'}</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="detail-label" style="margin-bottom:8px;">贸易凭证</div>
+    <div class="voucher-grid">
+      <div class="voucher-thumb"><span class="icon icon-lg" data-i="doc"></span><div class="ai-tag-mini">${o.verify>=1?'合同 ✓':'待核'}</div></div>
+      <div class="voucher-thumb"><span class="icon icon-lg" data-i="doc"></span><div class="ai-tag-mini">${o.verify>=1?'发票 ✓':'待核'}</div></div>
+      <div class="voucher-thumb"><span class="icon icon-lg" data-i="doc"></span><div class="ai-tag-mini">${o.verify>=1?'物流 ✓':'待核'}</div></div>
+    </div>
+    ${isVerifying ? `<div class="mt-4" style="padding:14px;background:var(--c-accent-soft);border-radius:var(--r-md);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span class="icon icon-sm" data-i="ai" style="color:var(--c-accent-deep);"></span><b style="color:var(--c-accent-deep);">B2B OCR核验 Agent 进行中</b></div>
+      <div class="ai-verify-progress"><div id="verify-bar" style="width:0%;"></div></div>
+      <div class="verify-step done"><span class="vs-dot"></span>对手方已确认订单</div>
+      <div class="verify-step active" id="step-ocr"><span class="vs-dot"></span>OCR提取合同编号/金额/双方信息...</div>
+      <div class="verify-step" id="step-match"><span class="vs-dot"></span>字段匹配校验 (1:1金额对应)</div>
+      <div class="verify-step" id="step-result"><span class="vs-dot"></span>多模态模型识别凭证真伪</div>
+    </div>` : `<div class="alert alert-info mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="ai"></span>B2B OCR核验Agent: OCR提取合同信息并与订单匹配，多模态模型识别凭证真伪。强制校验LSC数量与人民币金额1:1对应。流转后接收方LSC有效期重置365天。</div>`}
+  `;
+  openModal({
+    title: 'B2B订单详情',
+    body,
+    footer: `<button class="btn btn-outline btn-sm" onclick="closeModal()">关闭</button>${isVerifying?'<button class="btn btn-primary btn-sm" onclick="simulateVerify(\''+oid+'\')">模拟AI核验</button>':''}`
+  });
+  if (isVerifying) {
+    let p = 0;
+    window._verifyTimer = setInterval(()=>{
+      p += 8;
+      const bar = document.getElementById('verify-bar');
+      if (bar) bar.style.width = Math.min(p, 100) + '%';
+      if (p >= 40 && document.getElementById('step-ocr')) { document.getElementById('step-ocr').classList.replace('active','done'); document.getElementById('step-match').classList.add('active'); }
+      if (p >= 75 && document.getElementById('step-match')) { document.getElementById('step-match').classList.replace('active','done'); document.getElementById('step-result').classList.add('active'); }
+      if (p >= 100) { clearInterval(window._verifyTimer); closeModal(); resultModal('AI核验完成', `订单 ${oid} AI核验完成：<br>• OCR提取: 合同编号 ${o.contract} ✓<br>• 金额匹配: ¥${LSC.fmtNum(o.rmb)} = ${LSC.fmtNum(o.lsc)} LSC ✓<br>• 凭证真伪: 真实 (匹配度 96%)<br><br>等待对手方确认后即可执行LSC流转。`); }
+    }, 300);
+  }
+}
+function simulateVerify(oid) {
+  // 模拟点击已自动运行的进度条，这里直接触发完成
+  if (window._verifyTimer) { clearInterval(window._verifyTimer); }
+  const bar = document.getElementById('verify-bar');
+  if (bar) bar.style.width = '100%';
+  setTimeout(()=>{ closeModal(); resultModal('AI核验完成', `订单 ${oid} AI核验完成：<br>• OCR提取: 合同编号匹配 ✓<br>• 金额匹配: 1:1对应 ✓<br>• 凭证真伪: 真实 (匹配度 96%)<br><br>等待对手方确认后即可执行LSC流转。`); }, 400);
+}
+
+/* 商品详情 */
+function showProductDetail(pid) {
+  const products = {
+    'P001': { name:'精品双人套餐·周末限定', price:399, stock:500, status:'on', video:'ok', aiScore:0.92, aiTags:['真实','高清','合规'] },
+    'P002': { name:'单人元气午餐套餐', price:58, stock:800, status:'on', video:'none', aiScore:0.88, aiTags:['真实','合规'] },
+    'P003': { name:'招牌四菜一汤家宴', price:288, stock:200, status:'review', video:'ok', aiScore:0.65, aiTags:['需人工复核'] },
+  };
+  const p = products[pid];
+  if (!p) return;
+  const statusInfo = p.status==='on' ? {tag:'tag-success',label:'已上架'} : p.status==='review' ? {tag:'tag-warning',label:'审核中'} : {tag:'tag-info',label:'已下架'};
+  const body = `
+    <div class="grid-2" style="grid-template-columns:160px 1fr;gap:16px;">
+      <div style="height:140px;border-radius:var(--r-md);background:linear-gradient(135deg,var(--c-primary-tint),var(--c-bg-soft));display:flex;align-items:center;justify-content:center;">
+        <span class="icon icon-xl" data-i="product" style="width:48px;height:48px;color:var(--c-primary);opacity:0.5;"></span>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;">${p.name}</div>
+        <div class="text-sm text-muted mt-1">商品ID: ${pid}</div>
+        <div class="flex gap-2 mt-2 flex-wrap">
+          <span class="tag ${statusInfo.tag} tag-dot">${statusInfo.label}</span>
+          ${p.video==='ok'?'<span class="tag tag-info">含视频</span>':''}
+        </div>
+        <div class="mt-3"><span class="text-xs text-muted">售价</span> <b style="font-family:var(--ff-mono);color:var(--c-accent-deep);">${LSC.fmtMoney(p.price)}</b> <span class="text-xs text-available">= ${p.price} LSC (1:1)</span></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="detail-grid">
+      <div class="detail-field"><div class="detail-label">库存</div><div class="detail-value mono">${p.stock}</div></div>
+      <div class="detail-field"><div class="detail-label">AI审核置信度</div><div class="detail-value" style="color:${p.aiScore>0.8?'var(--c-available)':'var(--c-warning)'};">${(p.aiScore*100).toFixed(0)}%</div></div>
+    </div>
+    <div class="mt-3"><div class="detail-label" style="margin-bottom:6px;">AI审核标签</div>
+      <div class="flex gap-2 flex-wrap">${p.aiTags.map(t=>`<span class="tag ${t.includes('需')?'tag-warning':'tag-success'}">${t}</span>`).join('')}</div>
+    </div>
+    <div class="alert alert-info mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="ai"></span>商品发布强制校验人民币价格与LSC价格1:1一致。视频上传后AI多模态模型自动审核。</div>
+  `;
+  openModal({
+    title: '商品详情',
+    body,
+    footer: `<button class="btn btn-outline btn-sm" onclick="closeModal()">关闭</button>${p.status==='on'?`<button class="btn btn-danger btn-sm" onclick="closeModal();confirmModal('下架商品','确认下架 ${p.name}？',()=>resultModal('已下架','商品 ${p.name} 已下架。','warning'),{danger:true,btnText:'下架'})">下架</button>`:''}`
+  });
 }
 
 /* 启动 */
