@@ -1,8 +1,8 @@
 # 链盛通 LSC V6.2-AI 增强版 · 可访问性最终审计总结报告
 
-> **报告生成时间**: 2026-08-28 (Asia/Shanghai)
+> **报告生成时间**: 2026-08-28 (Asia/Shanghai) · v1.2
 > **审计对象**: 链盛通LSC消费权益凭证循环系统 V6.2-AI 增强版
-> **审计范围**: 4 个应用 × 2 视口 = 8 项快照
+> **审计范围**: 4 个应用 × 2 视口 × 2 种主题 (浅色 / 深色) = 16 项快照
 > **审计标准**: WCAG 2.0 A / AA + best-practice (axe-core)
 > **审计工具**: Playwright Chromium (动态) + JSDOM + axe-core (静态)
 
@@ -26,7 +26,42 @@
 | WCAG 2.4.7 焦点可见 | **符合** (新增 `:focus-visible`) ✅ |
 | WCAG 2.0 AA 合规性 | **符合** ✅ |
 
-**结论**: 4 个应用 (平台后台 / 商家后台 / 移动 APP / 微信小程序) 在 8 种视口下均**零违规通过** axe-core 全量规则集，可作为后续 MR 的"无回归"阈值基准。
+**结论**: 4 个应用 (平台后台 / 商家后台 / 移动 APP / 微信小程序) 在 2 种视口 × **浅色 / 深色双主题**下共 **16 张快照**均**零违规通过** axe-core 全量规则集，可作为后续 MR 的"无回归"阈值基准。
+
+## 一 (补充) · 深色模式动态 Chromium 审计结果（16 快照全景）
+
+本次在 `audit-a11y-baseline.js` 中新增 `colorScheme` 参数，让 Playwright 创建 context 时设置 `colorScheme:'dark'`，并在页面初始化脚本中注入 `document.documentElement.setAttribute('data-theme','dark')`，确保**媒体查询 + data-theme 属性双通路**均处于深色态。最终 16 张快照 **100% 零违规**：
+
+```
+  platform@768x1024[light]  → 0  violations   platform@768x1024[dark]  → 0
+  platform@1440x900[light]  → 0  violations   platform@1440x900[dark]  → 0
+  merchant@768x1024[light]  → 0  violations   merchant@768x1024[dark]  → 0
+  merchant@1440x900[light]  → 0  violations   merchant@1440x900[dark]  → 0
+  mobile@360x740 [light]    → 0  violations   mobile@360x740 [dark]    → 0
+  mobile@768x1024[light]    → 0  violations   mobile@768x1024[dark]    → 0
+  mini@360x740  [light]     → 0  violations   mini@360x740  [dark]     → 0
+  mini@768x1024 [light]     → 0  violations   mini@768x1024 [dark]     → 0
+
+  合计: 16/16 通过 · violations=0 · consoleE/W=0 · net 4xx/5xx=0 · 缺alt=0
+```
+
+**深色模式修复清单 (根因 + 处理策略)**:
+
+| 问题位置 | 根因 | 修复策略 |
+|---|---|---|
+| 商家后台 折线/柱/饼 图例 tag | 内联 `style="color:#fff"` 优先级高于外部 dark 规则 | 新增令牌 `--c-text-on-colored`（浅色 #FFF / 深色 #0A0F17），内联改为 `var(--c-text-on-colored,#fff)` |
+| 移动 APP 状态栏 `.status-bar.dark` | 串级顺序：外部 `@media` 早于本地 `background: var(--c-primary-deep)` 声明 | 在移动 APP 自身 `@media (prefers-color-scheme: dark)` 块**后声明** `.status-bar.dark { background:#082E2C; }`，同 specificity 靠后者胜出 |
+| 移动 APP `.quick-item` / `.product-m` / `.merchant-m` | 硬编码 `background:#fff` + 深色模式提亮文本变量导致对比不足 | 内联深色覆盖：卡底 `#151E2E` + 文字显式 `#F1F5F9 / #CBD5E1 / #D4AF50 / #48C986` |
+| 平台后台 / 商家后台 搜索输入框 | 未声明 `color:`，浏览器默认深色文本适配不完整 | 显式 `color:var(--c-text-1)`，配合令牌自适应 |
+| 小程序 公告条 / 搜索条 | 硬编码浅灰底白字 | 深色模式下改为深色底 + 高对比文字 |
+
+修改的代码文件：
+- [audit-a11y-baseline.js](file:///workspace/lsc-system/audit-a11y-baseline.js) — 新增 `colorScheme` 参数 + data-theme 注入脚本
+- [shared/design-system.css](file:///workspace/lsc-system/shared/design-system.css) — 新增 `--c-text-on-colored` 令牌（light/dark 两态），补全 `[data-theme="dark"]` 块
+- [merchant-admin/app.js](file:///workspace/lsc-system/merchant-admin/app.js) 第 80 / 132 / 190 行 — 图例 tag 颜色改为 `var(--c-text-on-colored,#fff)`
+- [mobile-app/index.html](file:///workspace/lsc-system/mobile-app/index.html) — 本地 @media 覆盖 status-bar / quick-item / product-m / merchant-m
+- [platform-admin/index.html](file:///workspace/lsc-system/platform-admin/index.html) — 本地 `@media (prefers-color-scheme: dark)` 覆盖 hero-band 渐变
+- [mini-program/index.html](file:///workspace/lsc-system/mini-program/index.html) — notice-bar / search-bar 深色模式适配
 
 ---
 
@@ -37,13 +72,14 @@
 ### 2.1 动态审计 (Chromium + Playwright + axe-core)
 - **引擎**: Playwright headless Chromium
 - **执行脚本**: [audit-a11y-baseline.js](file:///workspace/lsc-system/audit-a11y-baseline.js)
-- **快照**: 4 应用 × 2 视口 = 8 张
+- **快照**: 4 应用 × 2 视口 × **2 主题 (浅色 / 深色)** = **16 张**
   - 平台后台: 768×1024, 1440×900
   - 商家后台: 768×1024, 1440×900
   - 移动 APP: 360×740, 768×1024
   - 微信小程序: 360×740, 768×1024
 - **规则集**: wcag2a + wcag2aa + best-practice
 - **采集项**: axe 违规/通过/待核查、console error/warn、网络 4xx/5xx、无 alt 图像、文本长度
+- **深色模式审计机制**: Playwright 创建 context 时设置 `colorScheme: 'dark'`，并通过 `addInitScript` 注入 `data-theme="dark"` 属性；截图文件名追加 `-dark` 后缀以便对比
 
 ### 2.2 静态审计 (JSDOM + axe-core + 对比度计算)
 - **引擎**: JSDOM + axe-core (浏览器侧静态渲染)
@@ -235,24 +271,155 @@
 4. **设计令牌守护**: 修改 `--c-text-*`、`--c-accent-*`、`--c-available` 等令牌时，必须重新运行静态对比度核验
 
 ### 9.3 后续可选优化 (非阻塞，未实现)
-- 接入真实屏幕阅读器 (NVDA / VoiceOver) 用户测试
-- 动态 Chromium 审计中切换 `prefers-color-scheme: dark` 渲染深色模式并重新运行 axe-core 规则
-- 在移动 APP / 平台后台增加深色模式切换 UI 按钮 (当前仅系统自动 + `data-theme="dark"` 属性两种方式)
+- （沙箱环境下无法自动化，需线下执行）接入真实屏幕阅读器 (NVDA / VoiceOver) 用户测试 — 本章十一已附标准测试脚本
 
-### 9.3 (已实现项)
+### 9.4 本阶段 v1.2 已实现项 (原 9.3 待办清单)
 - ✅ 深色模式设计令牌 + 静态对比度 14 项全部通过 (见"八 (补充)")
 - ✅ 键盘焦点环 `:focus-visible` 视觉强化 + `prefers-contrast: more` 支持 (见"八 (补充)")
+- ✅ 动态 Chromium 审计中切换 `prefers-color-scheme: dark` 并重新运行 axe-core 规则：16 快照全部 zero violations
+- ✅ 移动 APP 增加深色/浅色主题切换 UI 按钮（三态循环 `auto → light → dark`，localStorage 持久化 + data-theme 注入）
+- ✅ 平台管理后台增加深色/浅色主题切换 UI 按钮（同三态机制，topbar 左侧首个 icon-btn）
+- ✅ 新增：`data-theme="light"` 覆盖，用于用户强制浅色（即使浏览器 `prefers-color-scheme: dark`）也能按浅色令牌渲染
 
 ---
 
-## 十、结论
+## 十、主题切换 UI 实现说明（移动 APP + 平台后台）
 
-**最终审计结果: PASS ✅**
+**需求**：除浏览器自带 `prefers-color-scheme: dark` 与手动写入 `data-theme="dark"` 属性两种机制外，提供用户侧可点击的 UI 入口，实现**三态循环切换**。
 
-链盛通 LSC V6.2-AI 增强版已完成可访问性深度优化，4 个应用在 8 种视口下全部通过 axe-core WCAG 2.0 A/AA + best-practice 全量规则审计，**零违规、零控制台错误、零资源加载失败**。静态对比度方面：浅色模式 9/9 全部满足 WCAG AA 4.5:1 阈值 (最低 4.81:1)，**新增深色模式 14/14 全部通过** (最低 5.96:1)，**合计 23/23**。本次新增实现了键盘焦点环 `:focus-visible` 视觉强化 (WCAG 2.4.7) 与 `prefers-contrast: more` 支持，同步补齐了 `prefers-color-scheme: dark` 与 `data-theme="dark"` 两种深色模式触发方式。共涉及 7 个源代码文件 (含 design-system.css 追加约 200 行令牌与焦点环代码) 和 2 个审计脚本 (静态审计扩展为浅色+深色双层核验)，建立了完整的动态+静态双层审计基础设施，可作为后续持续合规的基线基准。
+### 10.1 切换逻辑（双应用统一协议）
+
+| 状态 | HTML 根属性 | `color-scheme` | 用户触发视觉 |
+|---|---|---|---|
+| `auto`（默认） | 移除 `data-theme`，交给 `@media (prefers-color-scheme)` 决定 | `light dark` | 显示器 / 手机图标 (tt-auto) |
+| `light` | `data-theme="light"`，CSS 内联覆盖浅色令牌 | `light` | 太阳图标 (tt-sun) |
+| `dark` | `data-theme="dark"`，触发设计令牌深色块 + 各端本地深色覆盖 | `dark` | 月亮图标 (tt-moon) |
+
+- **持久化**：`localStorage` 双端独立 key：`lsc-mobile-theme` / `lsc-platform-theme`
+- **首屏无闪烁**：脚本在 `</body>` 之前同步执行，初始化阶段先 `localStorage` 读取 → 立即应用 → DOMContentLoaded 再绑定点击，避免二次渲染。
+- **可访问性**：
+  - `<button type="button">` + 动态 `aria-label="切换主题，当前：跟随系统 / 浅色模式 / 深色模式"`
+  - 移动端按钮带 `title` 与可聚焦，`:focus-visible` 会显示焦点环
+  - SVG 图案统一 `aria-hidden="true"`，由按钮自身的 aria-label 承担语义
+
+### 10.2 移动端 位置与样式
+
+- **位置**：`.phone-screen` 容器内绝对定位 `top:58px; right:12px; z-index:30`，位于状态栏下方、右上角不遮挡 hero 文案与钱包浮动卡
+- **外观**：34×34 圆形 FAB，白底深色边（浅色态）/ `#151E2E` 深色底浅色边（深色态），`:hover` 有 1px 上浮反馈
+- **代码位置**：
+  - 按钮 DOM：[mobile-app/index.html L387-L392](file:///workspace/lsc-system/mobile-app/index.html#L387-L392)
+  - CSS 样式：[mobile-app/index.html L330-L350](file:///workspace/lsc-system/mobile-app/index.html#L330-L350)
+  - 切换脚本：[mobile-app/index.html L429-L471](file:///workspace/lsc-system/mobile-app/index.html#L429-L471)
+
+### 10.3 平台后台 位置与样式
+
+- **位置**：`header.topbar > .topbar-actions` 首位 icon-btn（左→右：主题 → AI → 通知 → 用户卡）
+- **外观**：复用现有 38×38 `.icon-btn` 容器样式，SVG 尺寸 18×18 与现有 sprite 图标视觉对齐
+- **代码位置**：
+  - 按钮 DOM：[platform-admin/index.html L460-L464](file:///workspace/lsc-system/platform-admin/index.html#L460-L464)
+  - CSS 样式：[platform-admin/index.html L414-L434](file:///workspace/lsc-system/platform-admin/index.html#L414-L434)
+  - 切换脚本：[platform-admin/index.html L542-L579](file:///workspace/lsc-system/platform-admin/index.html#L542-L579)
+
+### 10.4 data-theme=light 兜底
+
+由于 `prefers-color-scheme: dark` 媒体查询只在"浏览器/系统偏好深色"时触发，当用户在"系统深色 → 手动浅色"场景需**撤销媒体查询生效**。方案：为 `:root[data-theme="light"]` 在两端各自 style 块注入与浅色调色板完全一致的 CSS 变量声明，优先级高于 `@media (prefers-color-scheme: dark)` 中的同名变量。
 
 ---
 
-**报告版本**: 1.1 FINAL (含 v1.0 → 深色模式 + 焦点环增强)
+## 十一、真人屏幕阅读器（NVDA / VoiceOver）标准测试脚本
+
+> ⚠️ **说明**：本沙箱内无真实屏幕阅读器硬件/进程，无法自动化执行 NVDA / VoiceOver。以下提供**可线下复现**的 WCAG 感知操作 / 键盘 / 语义 标准检查清单，供 QA 或无障碍专家现场核验。建议每季度或每大版本至少执行 1 轮。
+
+### 11.1 测试环境准备
+
+| 阅读器 | 系统 | 浏览器 | 推荐版本 |
+|---|---|---|---|
+| NVDA 2024.x | Windows 11 | Firefox 最新稳定 / Chrome 最新稳定 | NVDA + Firefox 组合最贴近 W3C 官方 AT/UA 参考实现 |
+| VoiceOver (macOS) | macOS 14+ Sonoma | Safari 最新稳定 | 开启：⌘+F5 或系统设置→辅助功能→VoiceOver |
+| VoiceOver (iOS) | iOS 17+ | Safari 内置 | 设置→辅助功能→VoiceOver；推荐物理 iPhone 而非模拟器 |
+| TalkBack (Android) | Android 14+ | Chrome 最新稳定 | 设置→无障碍→TalkBack |
+
+**所有环境共同要求**：
+- 关闭翻译插件 / 广告拦截 / 强制深色扩展（避免语义被改写）
+- 浏览器使用默认缩放 100%，系统 DPI 默认
+- 键盘：仅 Tab / Shift+Tab / Enter / Space / ←↑↓→ / Esc 操作，不使用鼠标
+- 主题：分别在 **浅色** 与 **深色** 态各跑一轮（使用本报告新增 UI 按钮切换）；移动端额外测试跟随系统切换
+
+### 11.2 通用必测用例（4 端全部覆盖）
+
+#### A. 启动与页面标题 (H64 / H25)
+- [ ] **NVDA：** `NVDA+T` 朗读页面 `<title>` — 应为"链盛通 × 应用名"明确标识
+- [ ] **VoiceOver：** `VO+Shift+M` → "描述网页标题" 读取内容一致
+- [ ] 页面存在唯一 `<h1>`（平台 / 商家 / 移动 / 小程序均有 `sr-only` 形式的 h1）
+
+#### B. 地标 Landmarks 遍历 (ARIA11)
+- [ ] 按屏幕阅读器"下一个地标"快捷键 (NVDA: `D` · VoiceOver: `VO+Command+L`) 可依次进入：
+  - `banner` / `navigation (sidebar)` / `navigation (tab-bar)` / `main` / `region (主内容区)` / `contentinfo`
+- [ ] 所有地标均有中文语义 label（`aria-label="侧边导航"` 等），非英文乱码或空
+
+#### C. 导航与 Tab
+- [ ] 不使用鼠标，仅 Tab 遍历，页面所有可交互元素有可见焦点环（`:focus-visible`）
+- [ ] 焦点顺序**视觉从上到下、左到右**符合预期；无跳跃到页尾再跳回
+- [ ] `Shift+Tab` 可完整逆向；到达最后一个按钮后按 Tab 回到浏览器 URL 栏（不被 trap）
+
+#### D. 按钮/链接/输入控件语义 (ARIA8)
+- [ ] 所有 `<button>` 被读为 "按钮" + 语义名称（如"切换主题，当前：跟随系统 按钮"）
+- [ ] 所有 `<a href>` 读为 "链接" + 可理解的锚文本；不出现"点击这里"、空锚
+- [ ] 搜索框读为"可编辑文本，搜索商家/订单/用户ID..."；`<input type=search>` + placeholder 被正确朗读
+
+#### E. 复杂数据 (图表/表格/卡片)
+- [ ] 商家后台 3 张图：图表容器存在 `role="img"` 或 SVG `<title>` 被朗读（折线图数据点 tooltip、柱分系列名称、饼分占比）
+- [ ] 表格（商家列表/订单列表/券审核/双签列表）：`caption` + `scope=col` 表头正确读出；单元格读顺序与视觉语义一致
+
+#### F. 色彩与对比度 (视觉 + 辅助)
+- [ ] 非色觉辅助：所有"红/绿"状态（已发放/审核中）同时有文字标签（tag-success / tag-pending），不依赖颜色
+- [ ] NVDA `NVDA+Z` 关闭虚拟光标目视检查：白色/深色背景下小字 (11px product-lsc / 12px user-role) 仍清晰可辨
+
+### 11.3 平台管理后台 / 商家管理后台 专项
+
+- [ ] 侧边栏 `role=navigation aria-label="侧边导航"` 被正确读；菜单折叠后图标仍播报（已配 `data-icon` + 屏幕阅读器 span）
+- [ ] 顶部面包屑 `platform-admin > 仪表盘` 语义正确；搜索回车后有焦点变动（读"搜索结果 X 项"）
+- [ ] AI 助手浮窗 / 通知面板模态：打开后焦点进入弹窗；Esc 可关；关闭后焦点回到触发按钮（focus trap + 回归可访问性）
+- [ ] 数据表格：批量勾选 `checkbox` 读为"复选框"，行按钮"查看 / 认证 / 冻结"各自独立不串台
+
+### 11.4 移动端 APP / 小程序 专项
+
+- [ ] **Tab（5 项：首页/商城/扫码/钱包/我的）** VoiceOver rotor→导航→Tab 栏，每项名称 2 字中文读正确
+- [ ] **钱包 LSC 数值卡**："8,640.50 LSC" 被读为阿拉伯数字 + 单位（非中文单字读出）
+- [ ] **快捷功能 (快捷入口 4 宫格)**：入口名称（扫码付款/商家核销/积分商城/卡包券）读清晰；激活后进入对应屏幕
+- [ ] **产品横向滚动条**：每条产品被读为"精品双人套餐·周末限定 399 元 可抵 399 LSC"完整三合一
+- [ ] **主题切换 FAB**：点击后 VoiceOver 应即时播报切换态变更（已配动态 aria-label）
+- [ ] 两指左右滑动的 VoiceOver 转子导航：顺序与视觉一致，无卡住、无跳到空元素
+
+### 11.5 建议输出物（线下报告）
+
+执行后建议汇总为：
+```
+屏幕阅读器测试报告 · 链盛通 LSC V6.2
+├── 阅读器/系统/浏览器版本:   4 平台各至少 1 个
+├── 执行用例总数:             约 60 项 (通用 + 端侧专项 × 2 主题)
+├── 失败用例数 + 截图/录屏:   逐条定位到具体 DOM 与屏幕阅读器脚本
+├── WCAG 失败准则引用:        SC 1.1.1 / 1.3.1 / 1.3.2 / 2.1.1 / 2.4.3 / 2.4.7 / 2.5.3 / 3.3.2 / 4.1.2
+└── 修复建议与优先级:         (P0 阻断 / P1 功能 / P2 体验) 与对应修复代码文件
+```
+
+---
+
+## 十二、结论
+
+**最终审计结果: PASS ✅ (v1.2)**
+
+链盛通 LSC V6.2-AI 增强版已完成可访问性深度优化，4 个应用 × 2 视口 × **浅色/深色双主题** 共 **16 张 Chromium 动态快照** 全部零违规通过 axe-core WCAG 2.0 A/AA + best-practice 全量规则审计，**零违规、零控制台错误、零资源加载失败、零缺 alt 图像**。静态对比度：浅色 9/9 ≥ 4.5:1（最低 4.81:1）、深色 14/14 ≥ 4.5:1（最低 5.96:1），合计 **23/23**。
+
+本阶段（v1.2）在 v1.1 基础上进一步完成了用户所列全部三项待办：
+1. **动态 Chromium 深色模式审计**：在 audit-a11y-baseline.js 中新增 Playwright `colorScheme:'dark'` + `data-theme="dark"` 注入机制，覆盖所有 4 应用 × 2 视口；修复了商家后台图例 tag 内联硬编码白字、移动端 status-bar / quick-item / product-m / merchant-m 硬编码白底 + 提亮文字色对比不足等一系列根因级问题，最终 16 快照保持 **0 violations** 稳定阈值。
+2. **主题切换 UI 按钮**（移动 APP + 平台后台）：三态循环（跟随系统 → 浅色 → 深色），localStorage 持久化独立 key，data-theme 属性注入 + color-scheme 同步管理，同时补齐 `data-theme="light"` 令牌兜底（用户可在系统深色态强制浅色）。两端按钮均按可访问性最佳实践配置：动态 `aria-label`、`aria-hidden` SVG、与现有 icon/btn 样式视觉对齐、支持键盘 Tab + Enter/Space 触发。
+3. **真人屏幕阅读器（NVDA / VoiceOver / TalkBack）用户测试脚本**：受沙箱硬件限制无法自动化执行，本章十一提供跨平台环境清单 + 6 类通用检查项（页面标题 / Landmarks / 焦点遍历 / 控件语义 / 图表与表格 / 色彩不依赖）+ 平台/商家/移动/小程序端侧专项清单，并给出线下报告输出模板，供 QA 或无障碍专家每季度/每大版复现核验。
+
+共修改/新增代码涉及：**2 个审计脚本 + 1 套共享设计系统 CSS + 4 套应用端（平台/商家/移动/小程序）深色模式覆盖 + 2 套应用端（移动/平台）主题切换 UI**。建立了完整的动态+静态双层审计基础设施，并提供了用户可控的主题入口与可线下落地的真人屏幕阅读器核验方案，可作为后续持续合规基线。
+
+---
+
+**报告版本**: 1.2 FINAL (v1.0 基础版 → v1.1 深色+焦点环 → **v1.2 深色动态审计 + 主题切换 UI + 屏幕阅读器测试脚本**)
 **审计员**: AI Agent (TraeCode)
-**下次复审**: 建议 30 天后或下次大版本发布前
+**下次复审**: 建议 30 天后或下次大版本发布前；NVDA/VoiceOver/TalkBack 真人测试建议上线前至少 1 轮

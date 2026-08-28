@@ -79,13 +79,19 @@ function mdEscape(s) {
   return String(s).replace(/\|/g, '\\|').replace(/\n/g, ' ');
 }
 
-async function auditOne(browser, app, size) {
+async function auditOne(browser, app, size, colorScheme = 'light') {
   const ctx = await browser.newContext({
     viewport: { width: size.w, height: size.h },
-    colorScheme: 'light',
+    colorScheme: colorScheme,           // 'light' | 'dark'
     locale: 'zh-CN',
   });
   const page = await ctx.newPage();
+  // 若为 dark: 在页面加载前就给 <html> 写 data-theme="dark",让 [data-theme="dark"] 令牌生效
+  if (colorScheme === 'dark') {
+    await page.addInitScript(() => {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    });
+  }
   const cw = { warn: [], error: [] };
   const neterr = [];
   page.on('console', msg => {
@@ -152,8 +158,9 @@ async function auditOne(browser, app, size) {
     }
   }
 
-  // 截图
-  const shot = path.join(OUT_DIR, `${app.id}__${size.id}__${size.w}x${size.h}.png`);
+  // 截图 - 加入颜色方案后缀避免覆盖
+  const suffix = colorScheme === 'dark' ? '__dark' : '';
+  const shot = path.join(OUT_DIR, `${app.id}__${size.id}__${size.w}x${size.h}${suffix}.png`);
   try {
     await page.screenshot({ path: shot, fullPage: true, timeout: 8000 });
   } catch (_) {}
@@ -161,6 +168,7 @@ async function auditOne(browser, app, size) {
   await ctx.close();
   return {
     app: app.id, appName: app.name, size: size.id, width: size.w, height: size.h, sizeLabel: size.label,
+    colorScheme,                                 // 记录 light / dark
     url,
     loadedOK,
     consoleErrors: cw.error.slice(0, 50),
@@ -279,16 +287,23 @@ async function main() {
   }
   const results = [];
   const pairs = [];
+  const SCHEMES = ['light', 'dark'];          // light + dark 双色方案
   for (const app of APPS) {
     for (const sid of SIZE_BY_APP[app.id]) {
       const size = SIZES.find(s => s.id === sid);
-      pairs.push({ app, size });
+      for (const scheme of SCHEMES) {
+        pairs.push({ app, size, scheme });
+      }
     }
   }
-  for (const { app, size } of pairs) {
-    const k = `${app.id}@${size.w}x${size.h}`;
-    process.stdout.write(`  ${k.padEnd(26)} → `);
-    const r = mode === 'jsdom' ? await auditOneJSDOM(app, size) : await auditOne(browser, app, size);
+  for (const { app, size, scheme } of pairs) {
+    const k = `${app.id}@${size.w}x${size.h}[${scheme}]`;
+    process.stdout.write(`  ${k.padEnd(32)} → `);
+    const r = mode === 'jsdom'
+      ? await auditOneJSDOM(app, size)
+      : await auditOne(browser, app, size, scheme);
+    // jsdom fallback 无 colorScheme 信息补齐
+    if (!r.colorScheme) r.colorScheme = scheme;
     const v = (r.axe && r.axe.violations) ? r.axe.violations.length : '-';
     const e = r.consoleErrors.length;
     const w = r.consoleWarnings.length;
@@ -303,34 +318,43 @@ async function main() {
 
   // 写 Markdown 报告
   const lines = [];
-  lines.push('# 链盛通 LSC V6.2-AI · 可访问性 & 响应式基线审计 (快照)');
+  lines.push('# 链盛通 LSC V6.2-AI · 可访问性 & 响应式基线审计 (快照 · Light + Dark)');
   lines.push('');
-  lines.push(`> 生成于 **${new Date().toISOString()}** · axe-core wcag2a+wcag2aa+best-practice · 4 应用 × 2 视口共 8 项快照`);
+  lines.push(`> 生成于 **${new Date().toISOString()}** · axe-core wcag2a+wcag2aa+best-practice · 4 应用 × 2 视口 × 2 色方案 = 共 16 项快照`);
   lines.push('');
   lines.push('## 汇总表');
   lines.push('');
-  lines.push('| # | 应用 | 视口 | 加载 | 规则违规(V) | 待核查(Inc) | 通过规则 | console.error | console.warn | 4xx/5xx | 无 alt 图 | 正文长度 |');
-  lines.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
+  lines.push('| # | 应用 | 视口 | 配色 | 加载 | 违规(V) | 待核查(Inc) | 通过规则 | console.error | console.warn | 4xx/5xx | 无 alt 图 | 正文长度 |');
+  lines.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   let i = 0, tv = 0, terr = 0, twarn = 0, tnet = 0, timg = 0;
+  const statsByScheme = { light: { v:0, pass:0, inc:0 }, dark: { v:0, pass:0, inc:0 } };
   for (const r of results) {
     i++;
     const v = (r.axe && r.axe.violations) ? r.axe.violations.length : 0;
     const inc = (r.axe && r.axe.incomplete) || 0;
     const pass = (r.axe && r.axe.passes) || 0;
+    const scheme = r.colorScheme || 'light';
+    statsByScheme[scheme].v += v;
+    statsByScheme[scheme].pass += pass;
+    statsByScheme[scheme].inc += inc;
     tv += v; terr += r.consoleErrors.length; twarn += r.consoleWarnings.length;
     tnet += r.netErrors.length; timg += r.counts.img;
-    lines.push(`| ${i} | ${mdEscape(r.appName)} | ${r.width}×${r.height} | ${r.loadedOK?'✅':'❌'} | ${v} | ${inc} | ${pass} | ${r.consoleErrors.length} | ${r.consoleWarnings.length} | ${r.netErrors.length} | ${r.counts.img} | ${r.counts.totalText} |`);
+    const schemeBadge = scheme === 'dark' ? '🌙 dark' : '☀️ light';
+    lines.push(`| ${i} | ${mdEscape(r.appName)} | ${r.width}×${r.height} | ${schemeBadge} | ${r.loadedOK?'✅':'❌'} | ${v} | ${inc} | ${pass} | ${r.consoleErrors.length} | ${r.consoleWarnings.length} | ${r.netErrors.length} | ${r.counts.img} | ${r.counts.totalText} |`);
   }
-  lines.push(`| — | **合计 8** | — | — | **${tv}** | — | — | **${terr}** | **${twarn}** | **${tnet}** | **${timg}** | — |`);
+  lines.push(`| — | **合计 16** | — | light(${statsByScheme.light.v})/dark(${statsByScheme.dark.v}) | — | **${tv}** | — | — | **${terr}** | **${twarn}** | **${tnet}** | **${timg}** | — |`);
+  lines.push('');
+  lines.push(`> 子统计: Light 模式违规=${statsByScheme.light.v}  通过规则=${statsByScheme.light.pass}   Dark 模式违规=${statsByScheme.dark.v}  通过规则=${statsByScheme.dark.pass}`);
   lines.push('');
 
   lines.push('## 逐项违规详情');
   lines.push('');
   for (const r of results) {
     const vs = r.axe && r.axe.violations;
-    lines.push(`### ${r.appName} · ${r.sizeLabel} (${r.width}×${r.height})  `);
-    lines.push(`- 加载: ${r.loadedOK?'✅':'❌'}    截图: ![${r.app}-${r.size}](${r.screenshot})  `);
-    lines.push(`- URL: \`${r.url}\``);
+    const schemeLabel = (r.colorScheme === 'dark') ? ' 🌙dark' : ' ☀️light';
+    lines.push(`### ${r.appName} · ${r.sizeLabel} (${r.width}×${r.height})${schemeLabel}  `);
+    lines.push(`- 加载: ${r.loadedOK?'✅':'❌'}    截图: ![${r.app}-${r.size}-${r.colorScheme}](${r.screenshot})  `);
+    lines.push(`- URL: \`${r.url}\`   配色: \`${r.colorScheme||'light'}\``);
     if (r.consoleErrors.length) lines.push(`- console.error (首 3):\n${r.consoleErrors.slice(0,3).map(x=>'  - '+mdEscape(x)).join('\n')}`);
     if (r.netErrors.length) lines.push(`- 资源失败 (首 3):\n${r.netErrors.slice(0,3).map(x=>`  - ${x.status} ${x.url}`).join('\n')}`);
     if (!vs || !vs.length) {
@@ -347,11 +371,12 @@ async function main() {
 
   lines.push('## 结论 (基线)');
   lines.push('');
-  lines.push(`- **可访问性规则违规合计: ${tv} 条** (axe-core, 含 ${APPS.length} 应用)`);
+  lines.push(`- **可访问性规则违规合计: ${tv} 条** (axe-core, 含 ${APPS.length} 应用, 双色方案 light + dark)`);
+  lines.push(`- Light 模式: 违规 ${statsByScheme.light.v} / 通过规则 ${statsByScheme.light.pass}    Dark 模式: 违规 ${statsByScheme.dark.v} / 通过规则 ${statsByScheme.dark.pass}`);
   lines.push(`- **JS 控制台错误合计: ${terr} 条**  警告合计: ${twarn} 条`);
   lines.push(`- **资源加载失败(4xx/5xx): ${tnet} 次**  缺 alt 图像: ${timg} 张`);
-  if (tv === 0 && terr === 0 && tnet === 0) lines.push('- ✅ **A11y/加载基线全绿，可作为后续 MR 的"无回归"阈值基准。**');
-  else lines.push('- ⚠️ 存在基线问题，建议优先修复 console.error / 4xx/5xx，其次针对 axe violation 分类处理。');
+  if (tv === 0 && terr === 0 && tnet === 0) lines.push('- ✅ **Light + Dark 双色方案 A11y/加载基线全绿，可作为后续 MR 的"无回归"阈值基准。**');
+  else lines.push('- ⚠️ 存在基线问题，建议优先修复 console.error / 4xx/5xx，其次针对 axe violation 分类处理 (查看具体 colorScheme 分类定位)。');
   lines.push('');
   lines.push('> 详细 JSON: `audit-report/a11y-baseline.json`');
   fs.writeFileSync(MD_OUT, lines.join('\n'));

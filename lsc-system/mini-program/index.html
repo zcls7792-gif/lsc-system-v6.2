@@ -322,6 +322,20 @@
     .phone-frame::before { display:none; }
     .phone-screen { border-radius:0; }
   }
+
+  /* 深色模式下的小程序组件硬编码色覆盖 (WCAG AA 4.5:1) */
+  @media (prefers-color-scheme: dark) {
+    .wx-notice { background:#151E2E; color:#CBD5E1; }
+    .wx-search-bar { background:#151E2E; }
+    .wx-search-inner { background:#1E293B; color:#F1F5F9; }
+    .wx-search-inner input { color:#F1F5F9; }
+    .wx-content { background:#0E1520; }
+  }
+  [data-theme="dark"] .wx-notice { background:#151E2E; color:#CBD5E1; }
+  [data-theme="dark"] .wx-search-bar { background:#151E2E; }
+  [data-theme="dark"] .wx-search-inner { background:#1E293B; color:#F1F5F9; }
+  [data-theme="dark"] .wx-search-inner input { color:#F1F5F9; }
+  [data-theme="dark"] .wx-content { background:#0E1520; }
 </style>
 </head>
 <body>

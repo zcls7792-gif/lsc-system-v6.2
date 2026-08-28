@@ -77,7 +77,7 @@ function lineChart(opts) {
     }
     paths += `<polyline points="${poly}" fill="none" stroke="${s.color}" stroke-width="${s.width||2}" stroke-linecap="round" stroke-linejoin="round" ${s.dash?'stroke-dasharray="6 3"':''}/>`;
     pts.forEach(([x,y])=>{ paths += `<circle cx="${x}" cy="${y}" r="${s.radius||2.5}" fill="#fff" stroke="${s.color}" stroke-width="2"/>`; });
-    legends += `<span class="tag tag-dot" style="background:${s.color};color:#fff;font-size:10px;">${s.name}</span> `;
+    legends += `<span class="tag tag-dot" style="background:${s.color};color:var(--c-text-on-colored,#fff);font-size:10px;">${s.name}</span> `;
   });
   return { svg: `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${axes}${paths}</svg>`, legend: legends };
 }
@@ -129,7 +129,7 @@ function stackedBar(opts) {
     });
     if(i%Math.ceil(n/8)===0) xLabs += `<text x="${x+bw/2}" y="${h-pad.b+16}" font-size="10" fill="var(--c-text-3)" text-anchor="middle">${lb}</text>`;
   });
-  stacks.forEach((st,i)=>{ legend += `<span class="tag tag-dot" style="background:${st.color};color:#fff;font-size:10px;">${st.name}</span> `; });
+  stacks.forEach((st,i)=>{ legend += `<span class="tag tag-dot" style="background:${st.color};color:var(--c-text-on-colored,#fff);font-size:10px;">${st.name}</span> `; });
   return { svg: `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabs}</svg>`, legend };
 }
 
@@ -187,7 +187,7 @@ function renderDashboard() {
         const colors = ['var(--c-primary)','var(--c-accent)','var(--c-available)','var(--c-warning)','var(--c-info)','var(--c-danger)','var(--c-primary-soft)'];
         const data = products.map((p,i)=>({label:p.name.length>8?p.name.slice(0,7)+'…':p.name,value:Math.round(p.price*(80+Math.random()*300)),color:colors[i%colors.length]}));
         return `<div style="height:200px;">${donutChart({w:220,h:220,data,unit:' LSC'})}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${data.map(d=>`<span class="tag tag-dot" style="background:${d.color};color:#fff;font-size:10px;">${d.label}</span>`).join('')}</div>`;
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${data.map(d=>`<span class="tag tag-dot" style="background:${d.color};color:var(--c-text-on-colored,#fff);font-size:10px;">${d.label}</span>`).join('')}</div>`;
       })()}
     </div>
 

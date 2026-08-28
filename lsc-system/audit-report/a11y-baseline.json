@@ -6,6 +6,7 @@
     "width": 768,
     "height": 1024,
     "sizeLabel": "平板 768×1024 (iPad mini)",
+    "colorScheme": "light",
     "url": "http://127.0.0.1:8765/platform-admin/index.html",
     "loadedOK": true,
     "consoleErrors": [],
@@ -13,19 +14,48 @@
     "netErrors": [],
     "counts": {
       "a": 1,
-      "button": 3,
+      "button": 4,
       "input": 2,
       "img": 0,
-      "svg": 34,
+      "svg": 37,
       "heading": 1,
-      "totalText": 1741
+      "totalText": 1743
     },
     "axe": {
       "violations": [],
       "incomplete": 1,
-      "passes": 36
+      "passes": 37
     },
     "screenshot": "audit-report/platform__md__768x1024.png"
+  },
+  {
+    "app": "platform",
+    "appName": "平台管理后台",
+    "size": "md",
+    "width": 768,
+    "height": 1024,
+    "sizeLabel": "平板 768×1024 (iPad mini)",
+    "colorScheme": "dark",
+    "url": "http://127.0.0.1:8765/platform-admin/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 1,
+      "button": 4,
+      "input": 2,
+      "img": 0,
+      "svg": 37,
+      "heading": 1,
+      "totalText": 1738
+    },
+    "axe": {
+      "violations": [],
+      "incomplete": 1,
+      "passes": 37
+    },
+    "screenshot": "audit-report/platform__md__768x1024__dark.png"
   },
   {
     "app": "platform",
@@ -34,6 +64,7 @@
     "width": 1440,
     "height": 900,
     "sizeLabel": "桌面 1440×900",
+    "colorScheme": "light",
     "url": "http://127.0.0.1:8765/platform-admin/index.html",
     "loadedOK": true,
     "consoleErrors": [],
@@ -41,19 +72,48 @@
     "netErrors": [],
     "counts": {
       "a": 1,
-      "button": 3,
+      "button": 4,
       "input": 2,
       "img": 0,
-      "svg": 34,
+      "svg": 37,
       "heading": 1,
-      "totalText": 1808
+      "totalText": 1809
     },
     "axe": {
       "violations": [],
       "incomplete": 1,
-      "passes": 36
+      "passes": 37
     },
     "screenshot": "audit-report/platform__lg__1440x900.png"
+  },
+  {
+    "app": "platform",
+    "appName": "平台管理后台",
+    "size": "lg",
+    "width": 1440,
+    "height": 900,
+    "sizeLabel": "桌面 1440×900",
+    "colorScheme": "dark",
+    "url": "http://127.0.0.1:8765/platform-admin/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 1,
+      "button": 4,
+      "input": 2,
+      "img": 0,
+      "svg": 37,
+      "heading": 1,
+      "totalText": 1812
+    },
+    "axe": {
+      "violations": [],
+      "incomplete": 1,
+      "passes": 37
+    },
+    "screenshot": "audit-report/platform__lg__1440x900__dark.png"
   },
   {
     "app": "merchant",
@@ -62,6 +122,36 @@
     "width": 768,
     "height": 1024,
     "sizeLabel": "平板 768×1024 (iPad mini)",
+    "colorScheme": "light",
+    "url": "http://127.0.0.1:8765/merchant-admin/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 2,
+      "input": 1,
+      "img": 0,
+      "svg": 16,
+      "heading": 1,
+      "totalText": 930
+    },
+    "axe": {
+      "violations": [],
+      "incomplete": 1,
+      "passes": 36
+    },
+    "screenshot": "audit-report/merchant__md__768x1024.png"
+  },
+  {
+    "app": "merchant",
+    "appName": "商家管理后台",
+    "size": "md",
+    "width": 768,
+    "height": 1024,
+    "sizeLabel": "平板 768×1024 (iPad mini)",
+    "colorScheme": "dark",
     "url": "http://127.0.0.1:8765/merchant-admin/index.html",
     "loadedOK": true,
     "consoleErrors": [],
@@ -81,7 +171,7 @@
       "incomplete": 1,
       "passes": 36
     },
-    "screenshot": "audit-report/merchant__md__768x1024.png"
+    "screenshot": "audit-report/merchant__md__768x1024__dark.png"
   },
   {
     "app": "merchant",
@@ -90,6 +180,7 @@
     "width": 1440,
     "height": 900,
     "sizeLabel": "桌面 1440×900",
+    "colorScheme": "light",
     "url": "http://127.0.0.1:8765/merchant-admin/index.html",
     "loadedOK": true,
     "consoleErrors": [],
@@ -112,12 +203,42 @@
     "screenshot": "audit-report/merchant__lg__1440x900.png"
   },
   {
+    "app": "merchant",
+    "appName": "商家管理后台",
+    "size": "lg",
+    "width": 1440,
+    "height": 900,
+    "sizeLabel": "桌面 1440×900",
+    "colorScheme": "dark",
+    "url": "http://127.0.0.1:8765/merchant-admin/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 2,
+      "input": 1,
+      "img": 0,
+      "svg": 16,
+      "heading": 1,
+      "totalText": 1064
+    },
+    "axe": {
+      "violations": [],
+      "incomplete": 1,
+      "passes": 36
+    },
+    "screenshot": "audit-report/merchant__lg__1440x900__dark.png"
+  },
+  {
     "app": "mobile",
     "appName": "移动端 APP",
     "size": "sm",
     "width": 360,
     "height": 740,
     "sizeLabel": "移动端 360×740 (iPhone SE)",
+    "colorScheme": "light",
     "url": "http://127.0.0.1:8765/mobile-app/index.html",
     "loadedOK": true,
     "consoleErrors": [],
@@ -125,19 +246,48 @@
     "netErrors": [],
     "counts": {
       "a": 0,
-      "button": 9,
+      "button": 10,
       "input": 2,
       "img": 0,
-      "svg": 72,
+      "svg": 75,
       "heading": 2,
       "totalText": 353
     },
     "axe": {
       "violations": [],
       "incomplete": 1,
-      "passes": 27
+      "passes": 29
     },
     "screenshot": "audit-report/mobile__sm__360x740.png"
+  },
+  {
+    "app": "mobile",
+    "appName": "移动端 APP",
+    "size": "sm",
+    "width": 360,
+    "height": 740,
+    "sizeLabel": "移动端 360×740 (iPhone SE)",
+    "colorScheme": "dark",
+    "url": "http://127.0.0.1:8765/mobile-app/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 10,
+      "input": 2,
+      "img": 0,
+      "svg": 75,
+      "heading": 2,
+      "totalText": 353
+    },
+    "axe": {
+      "violations": [],
+      "incomplete": 1,
+      "passes": 29
+    },
+    "screenshot": "audit-report/mobile__sm__360x740__dark.png"
   },
   {
     "app": "mobile",
@@ -146,6 +296,7 @@
     "width": 768,
     "height": 1024,
     "sizeLabel": "平板 768×1024 (iPad mini)",
+    "colorScheme": "light",
     "url": "http://127.0.0.1:8765/mobile-app/index.html",
     "loadedOK": true,
     "consoleErrors": [],
@@ -153,19 +304,48 @@
     "netErrors": [],
     "counts": {
       "a": 0,
-      "button": 9,
+      "button": 10,
       "input": 2,
       "img": 0,
-      "svg": 72,
+      "svg": 75,
       "heading": 2,
       "totalText": 353
     },
     "axe": {
       "violations": [],
       "incomplete": 1,
-      "passes": 27
+      "passes": 29
     },
     "screenshot": "audit-report/mobile__md__768x1024.png"
+  },
+  {
+    "app": "mobile",
+    "appName": "移动端 APP",
+    "size": "md",
+    "width": 768,
+    "height": 1024,
+    "sizeLabel": "平板 768×1024 (iPad mini)",
+    "colorScheme": "dark",
+    "url": "http://127.0.0.1:8765/mobile-app/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 10,
+      "input": 2,
+      "img": 0,
+      "svg": 75,
+      "heading": 2,
+      "totalText": 353
+    },
+    "axe": {
+      "violations": [],
+      "incomplete": 1,
+      "passes": 29
+    },
+    "screenshot": "audit-report/mobile__md__768x1024__dark.png"
   },
   {
     "app": "mini",
@@ -174,6 +354,7 @@
     "width": 360,
     "height": 740,
     "sizeLabel": "移动端 360×740 (iPhone SE)",
+    "colorScheme": "light",
     "url": "http://127.0.0.1:8765/mini-program/index.html",
     "loadedOK": true,
     "consoleErrors": [],
@@ -198,10 +379,40 @@
   {
     "app": "mini",
     "appName": "微信小程序",
+    "size": "sm",
+    "width": 360,
+    "height": 740,
+    "sizeLabel": "移动端 360×740 (iPhone SE)",
+    "colorScheme": "dark",
+    "url": "http://127.0.0.1:8765/mini-program/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 4,
+      "input": 1,
+      "img": 0,
+      "svg": 66,
+      "heading": 5,
+      "totalText": 409
+    },
+    "axe": {
+      "violations": [],
+      "incomplete": 1,
+      "passes": 29
+    },
+    "screenshot": "audit-report/mini__sm__360x740__dark.png"
+  },
+  {
+    "app": "mini",
+    "appName": "微信小程序",
     "size": "md",
     "width": 768,
     "height": 1024,
     "sizeLabel": "平板 768×1024 (iPad mini)",
+    "colorScheme": "light",
     "url": "http://127.0.0.1:8765/mini-program/index.html",
     "loadedOK": true,
     "consoleErrors": [],
@@ -222,5 +433,34 @@
       "passes": 29
     },
     "screenshot": "audit-report/mini__md__768x1024.png"
+  },
+  {
+    "app": "mini",
+    "appName": "微信小程序",
+    "size": "md",
+    "width": 768,
+    "height": 1024,
+    "sizeLabel": "平板 768×1024 (iPad mini)",
+    "colorScheme": "dark",
+    "url": "http://127.0.0.1:8765/mini-program/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 4,
+      "input": 1,
+      "img": 0,
+      "svg": 66,
+      "heading": 5,
+      "totalText": 409
+    },
+    "axe": {
+      "violations": [],
+      "incomplete": 1,
+      "passes": 29
+    },
+    "screenshot": "audit-report/mini__md__768x1024__dark.png"
   }
 ]

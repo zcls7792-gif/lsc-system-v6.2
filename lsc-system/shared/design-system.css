@@ -42,6 +42,7 @@
   --c-text-2: #4B5563;         /* 次要文字 */
   --c-text-3: #525A66;         /* 辅助文字 (WCAG AA 4.5:1 on #F5F3EC) */
   --c-text-inv: #FFFFFF;
+  --c-text-on-colored: #FFFFFF; /* 放置于彩色 Chip/Tag 底色上的文字色 (用于内联彩色标签) */
   --c-border: #E3DFD3;         /* 暖色边框 */
   --c-border-soft: #EFEBE0;
   --c-divider: #EDE9DC;
@@ -620,6 +621,7 @@ textarea:focus-visible {
     --c-text-2: #CBD5E1;        /* 次文字: AA ≥ 4.5:1 vs --c-bg */
     --c-text-3: #94A3B8;        /* 辅助文字: AA ≥ 4.5:1 vs --c-bg */
     --c-text-inv: #0E1520;
+    --c-text-on-colored: #0A0F17; /* 彩色 Chip/Tag 在深色模式下提亮,需深色文字覆盖确保 AA */
 
     /* 边框/分隔线 */
     --c-border: #2A3748;
@@ -665,6 +667,18 @@ textarea:focus-visible {
   .alert-warning { background: #3D2A12; color: #FCD34D; }
   .alert-danger { background: #3A1614; color: #FCA5A5; }
 
+  /* 深色模式下 Tag 配色 (替换浅色底色为深色底，保持 4.5:1) */
+  .tag-success { background: #163526; color: #86EFAC; }
+  .tag-available { background: #1A3028; color: var(--c-available); }
+  .tag-warning { background: #3D2A12; color: #FCD34D; }
+  .tag-danger { background: #3A1614; color: #FCA5A5; }
+  .tag-locked { background: #1A2342; color: var(--c-locked); }
+  .tag-info { background: #1A2B55; color: #93C5FD; }
+  .tag-accent { background: #3D3420; color: var(--c-accent); }
+
+  /* 深色模式: .status-bar.dark 使用更深的背景保证白字对比度 (替代被提亮的 --c-primary-deep) */
+  .status-bar.dark { background: #082E2C; }
+
   /* 深色模式下模态遮罩加深 */
   .modal-mask { background: rgba(0, 0, 0, 0.75); }
 
@@ -688,6 +702,7 @@ textarea:focus-visible {
   --c-text-2: #CBD5E1;
   --c-text-3: #94A3B8;
   --c-text-inv: #0E1520;
+  --c-text-on-colored: #0A0F17;
 
   /* 边框 */
   --c-border: #2A3748;
@@ -731,6 +746,14 @@ textarea:focus-visible {
 [data-theme="dark"] .alert-success { background: #163526; color: #86EFAC; }
 [data-theme="dark"] .alert-warning { background: #3D2A12; color: #FCD34D; }
 [data-theme="dark"] .alert-danger { background: #3A1614; color: #FCA5A5; }
+[data-theme="dark"] .tag-success { background: #163526; color: #86EFAC; }
+[data-theme="dark"] .tag-available { background: #1A3028; color: var(--c-available); }
+[data-theme="dark"] .tag-warning { background: #3D2A12; color: #FCD34D; }
+[data-theme="dark"] .tag-danger { background: #3A1614; color: #FCA5A5; }
+[data-theme="dark"] .tag-locked { background: #1A2342; color: var(--c-locked); }
+[data-theme="dark"] .tag-info { background: #1A2B55; color: #93C5FD; }
+[data-theme="dark"] .tag-accent { background: #3D3420; color: var(--c-accent); }
+[data-theme="dark"] .status-bar.dark { background: #082E2C; }
 [data-theme="dark"] .modal-mask { background: rgba(0, 0, 0, 0.75); }
 [data-theme="dark"] .skeleton {
   background: linear-gradient(90deg, var(--c-border-soft) 25%, var(--c-bg-soft) 50%, var(--c-border-soft) 75%);
