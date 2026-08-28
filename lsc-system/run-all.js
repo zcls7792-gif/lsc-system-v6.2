@@ -149,6 +149,7 @@ const steps = [
   runStep('2. TAP BUG 回归 test_p0_chart_logic (8 用例)',       'node', ['test_p0_chart_logic.js']),
   runStep('3. c8 覆盖率采集 + coverage_runner (28 断言)',       'npm',  ['run','coverage'], { useShell: true }),
   runStep('4. 覆盖率总览 HTML 报告 coverage_report.js',         'node', ['coverage_report.js']),
+  runStep('5. lcov → cobertura.xml (GitLab MR diff 逐行覆盖率)', 'node', ['lcov-to-cobertura.js']),
 ];
 
 const allOk = steps.every(s => s.ok);
@@ -159,6 +160,6 @@ if (cov) {
   extra.push(`${BOLD}覆盖率汇总:${RESET} 语句 ${cov.stmts?.toFixed(2)}%  分支 ${YELLOW+cov.branch?.toFixed(2)+'%'+RESET}  函数 ${cov.funcs?.toFixed(2)}%  行 ${cov.lines?.toFixed(2)}%`);
   if (cov.branch < 80) extra.push(`${RED}⚠ 分支覆盖率低于 80% (目标 80)${RESET}`);
 }
-extra.push('报告: 覆盖率报告_P0-图表逻辑_20260827.html  /  coverage/index.html (逐行)');
+extra.push('报告: 覆盖率报告_P0-图表逻辑_日期.html  /  coverage/index.html (逐行)  /  coverage/cobertura.xml (MR diff)');
 printReport(steps, extra);
 process.exit(allOk ? 0 : 1);

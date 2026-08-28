@@ -35,6 +35,19 @@ module.exports = defineConfig({
         viewport: { width: 1440, height: 900 },
       },
     },
+    {
+      // 用于移动端 / 小程序响应式模拟（iPhone 14 尺寸）
+      name: 'chromium-mobile',
+      grep: /移动端|小程序|\(mobile\)|\(mini\)/i,
+      use: {
+        ...devices['iPhone 14'],
+        headless: true,
+        defaultBrowserType: 'chromium',
+        isMobile: true,
+        hasTouch: true,
+        colorScheme: 'dark',
+      },
+    },
   ],
   // 当静态服务未启动时，Playwright可自行启动
   webServer: {

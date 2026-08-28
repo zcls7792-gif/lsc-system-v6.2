@@ -78,60 +78,64 @@ test:chart-coverage:
     # (run-all 内部会判断 $GITLAB_CI=='true' 时启用 tee)
     GITLAB_CI: "true"
   script:
-    - echo "==> STEP 1~4 全流程 (npm run ci == run-all.js)"
+    - echo "==> STEP 1~5 全流程 (npm run ci == run-all.js)"
     - |
-      # run-all 自身是 4 个子进程串行;这里同时重定向到 logs/ 以便下载排查
-      # 经验 949301: "以日志为准"收敛 — 即使 section 被折叠/任务超时,也能拿 logs 判断卡在第几步
-      set -o pipefail
-      npm run ci 2>&1 | tee logs/pipeline-run-all.log
-      rc=${PIPESTATUS[0]}
-      echo "==> run-all 退出码: $rc"
-      exit $rc
+      # run-all 是 5 个子进程串行;用 node 直接跑,保证 ash/bash 都兼容 (不用 PIPESTATUS)
+      node -e "
+        const { spawnSync } = require('child_process');
+        const fs = require('fs');
+        const LOG = 'logs/pipeline-run-all.log';
+        const p = spawnSync('npm', ['run', 'ci'], {
+          cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 80*1024*1024, env: process.env, shell: true
+        });
+        if (p.stdout) process.stdout.write(p.stdout);
+        if (p.stderr) process.stderr.write(p.stderr);
+        try { fs.writeFileSync(LOG, '# npm run ci\n' + (p.stdout||'') + (p.stderr?'\n---STDERR---\n'+p.stderr:'')); } catch(_){}
+        console.log('==> run-all 退出码:', p.status);
+        process.exit(p.status || 0);
+      "
 
-    # ---- 覆盖率阈值门控(可选) ------------------------------------------
+    # ---- 覆盖率阈值门控(可选) + 子目录归档 ---------------------------
     - |
-      echo "==> 覆盖率阈值检查 (如设置了 LSC_COVERAGE_MIN_*)"
-      LCOV="coverage/$LSC_REPORT_SUBDIR/lcov.info"
-      if [ ! -f "$LCOV" ]; then
-        # c8 默认会写 coverage/lcov.info;尝试复制到按提交分的目录
-        if [ -f coverage/lcov.info ]; then
-          cp -a coverage/lcov.info coverage/lcov-report coverage/html-report 2>/dev/null || true
-          mv coverage/lcov.info    "coverage/$LSC_REPORT_SUBDIR/" 2>/dev/null || true
-        fi
-      fi
-      # 汇总一行:从 coverage-summary.json 读更准,拿不到就从 c8 文本 Summary 行 grep
-      if [ -f coverage/coverage-summary.json ]; then
-        cp coverage/coverage-summary.json "coverage/$LSC_REPORT_SUBDIR/summary.json" 2>/dev/null || true
-      fi
-      # 计算 4 个百分比
-      if [ -f "coverage/$LSC_REPORT_SUBDIR/lcov.info" ]; then
-        node -e "
-          const fs=require('fs'),p='coverage/'+process.env.LSC_REPORT_SUBDIR+'/lcov.info';
-          const s=fs.readFileSync(p,'utf8');let lf=0,lh=0,bf=0,bh=0,ff=0,fh=0;
-          for(const l of s.split(/\r?\n/)){
-            if(l.startsWith('LF:'))lf+=+l.slice(3);if(l.startsWith('LH:'))lh+=+l.slice(3);
-            if(l.startsWith('BRF:'))bf+=+l.slice(4);if(l.startsWith('BRH:'))bh+=+l.slice(4);
-            if(l.startsWith('FNF:'))ff+=+l.slice(4);if(l.startsWith('FNH:'))fh+=+l.slice(4);
-          }
-          const pct=(h,f)=>f?(100*h/f):100;
-          const r={stmts:pct(lh,lf).toFixed(2),branch:pct(bh,bf).toFixed(2),funcs:pct(fh,ff).toFixed(2),lines:pct(lh,lf).toFixed(2)};
-          fs.writeFileSync('coverage/'+process.env.LSC_REPORT_SUBDIR+'/metrics.json', JSON.stringify(r,null,2));
-          console.log(JSON.stringify(r));
-          let fail=[];
-          const mStmt=+process.env.LSC_COVERAGE_MIN_STMT, mBr=+process.env.LSC_COVERAGE_MIN_BRANCH;
-          if(mStmt && +r.stmts  < mStmt) fail.push('stmts '+r.stmts+'% < '+mStmt+'%');
-          if(mBr   && +r.branch < mBr)   fail.push('branch '+r.branch+'% < '+mBr+'%');
-          if(fail.length){ console.error('COVER THRESHOLD FAIL:',fail.join('; ')); process.exit(2); }
-        "
-      fi
+      echo "==> 覆盖率阈值检查 + GitLab MR diff cobertura 归档"
+      # run-all 第 5 步已经写 coverage/cobertura.xml;按本次 SHA 做副本
+      mkdir -p "coverage/$LSC_REPORT_SUBDIR"
+      [ -f coverage/cobertura.xml ]        && cp -a coverage/cobertura.xml "coverage/$LSC_REPORT_SUBDIR/cobertura.xml" || true
+      [ -f coverage/lcov.info ]            && cp -a coverage/lcov.info    "coverage/$LSC_REPORT_SUBDIR/lcov.info"    || true
+      [ -f coverage/coverage-summary.json ]&& cp -a coverage/coverage-summary.json "coverage/$LSC_REPORT_SUBDIR/summary.json" || true
+      # metrics.json 手算 (lcov 聚合 4 个百分比, 任何环境都稳定)
+      node -e "
+        const fs=require('fs'),p=process.env.C8_REPORT_DIR ? process.env.C8_REPORT_DIR+'/lcov.info' : 'coverage/lcov.info';
+        if(!fs.existsSync(p)){console.error('lcov not found at',p);process.exit(0);}
+        const s=fs.readFileSync(p,'utf8');let lf=0,lh=0,bf=0,bh=0,ff=0,fh=0;
+        for(const l of s.split(/\r?\n/)){
+          if(l.startsWith('LF:'))lf+=+l.slice(3);if(l.startsWith('LH:'))lh+=+l.slice(3);
+          if(l.startsWith('BRF:'))bf+=+l.slice(4);if(l.startsWith('BRH:'))bh+=+l.slice(4);
+          if(l.startsWith('FNF:'))ff+=+l.slice(4);if(l.startsWith('FNH:'))fh+=+l.slice(4);
+        }
+        const pct=(h,f)=>f?+(100*h/f).toFixed(2):100;
+        const r={stmts:pct(lh,lf),branch:pct(bh,bf),funcs:pct(fh,ff),lines:pct(lh,lf)};
+        const out='coverage/'+(process.env.LSC_REPORT_SUBDIR||'')+'/metrics.json';
+        fs.writeFileSync(out.replace(/\/+metrics/,'/metrics'), JSON.stringify(r,null,2));
+        console.log(JSON.stringify(r));
+        let fail=[];
+        const mStmt=+process.env.LSC_COVERAGE_MIN_STMT, mBr=+process.env.LSC_COVERAGE_MIN_BRANCH;
+        if(mStmt && +r.stmts  < mStmt) fail.push('stmts '+r.stmts+'% < '+mStmt+'%');
+        if(mBr   && +r.branch < mBr)   fail.push('branch '+r.branch+'% < '+mBr+'%');
+        if(fail.length){ console.error('COVER THRESHOLD FAIL:',fail.join('; ')); process.exit(2); }
+      "
 
     # ---- 把产物移到本次提交子目录(便于归档比对) --------------------------
     - |
       echo "==> 归档本次报告: coverage/$LSC_REPORT_SUBDIR/ 与 logs/"
-      # 拷贝 c8 html 报告到 独立子目录/html
-      if [ -d coverage/html-report ]; then mv coverage/html-report "coverage/$LSC_REPORT_SUBDIR/html"; fi
-      if [ -d coverage/lcov-report ]; then mv coverage/lcov-report "coverage/$LSC_REPORT_SUBDIR/lcov-html"; fi
-      # 覆盖率总览 HTML (类似 覆盖率报告_P0-图表逻辑_20260827.html)
+      if [ -d coverage/index.html.bak ]; then :; fi
+      # 拷贝 c8 html 报告到独立子目录/html
+      [ -d coverage/html-report ] && mv coverage/html-report "coverage/$LSC_REPORT_SUBDIR/html" || true
+      [ -d coverage/lcov-report ] && mv coverage/lcov-report "coverage/$LSC_REPORT_SUBDIR/lcov-html" || true
+      [ -d coverage/platform-admin ] && cp -a coverage/platform-admin "coverage/$LSC_REPORT_SUBDIR/" || true
+      [ -d coverage/shared ]         && cp -a coverage/shared         "coverage/$LSC_REPORT_SUBDIR/" || true
+      [ -d coverage/base.css ]       && cp -a coverage/*.css coverage/*.js coverage/*.png coverage/index.html "coverage/$LSC_REPORT_SUBDIR/" 2>/dev/null || true
+      # 覆盖率总览 HTML (类似 覆盖率报告_P0-图表逻辑_日期.html)
       mv -f 覆盖率报告_P0-图表逻辑_*.html "coverage/$LSC_REPORT_SUBDIR/总览报告.html" 2>/dev/null || true
   coverage: '/Statements\s*:\s*([\d.]+%)/'              # GitLab MR badge = c8 Statements %
   artifacts:
@@ -139,14 +143,15 @@ test:chart-coverage:
     when: always                                        # 即便失败也能拿 logs / 覆盖率半产物判断卡点
     expire_in: 30 days
     paths:
-      - coverage/                                       # 逐行 HTML / lcov / 总览报告
+      - coverage/                                       # 逐行 HTML / lcov / cobertura / 总览报告
       - logs/                                           # 每步独立日志: 超时/skipped 时能直接离线分析
     reports:
-      # GitLab 16.0+ 支持 coverage_report(cobertura.xml);我们出的是 lcov,
-      # 如后续想在 MR diff 里看逐行覆盖率,可加 lcov → cobertura 转换步骤再接上
-      # coverage_report:
-      #   coverage_format: cobertura
-      #   path: coverage/cobertura.xml
+      # GitLab 15.3+ 在 MR diff 中逐行绿/红高亮覆盖率
+      # run-all.js 第 5 步 lcov-to-cobertura.js 会生成 coverage/cobertura.xml
+      # (按 CI 子目录化,这里取归档后的同一路径)
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura.xml
 
 # ====================================================================
 # Job 2 : Pages (可选,只在 master/tag 生成一次公开报告)
