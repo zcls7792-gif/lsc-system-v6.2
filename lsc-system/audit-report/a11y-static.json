@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-08-28T08:12:32.105Z",
-  "method": "jsdom + axe-core static",
+  "timestamp": "2026-08-28T09:41:13.804Z",
+  "method": "jsdom + axe-core static (light + dark)",
   "apps": [
     {
       "app": "platform",
@@ -39,7 +39,7 @@
       }
     }
   ],
-  "contrast": [
+  "contrastLight": [
     {
       "name": "辅助文字 --c-text-3 vs 主背景 --c-bg",
       "fg": "#525A66",
@@ -55,7 +55,7 @@
       "pass": true
     },
     {
-      "name": "鎏金深 --c-accent-deep vs 白色",
+      "name": "鎏金深 --c-accent-deep vs 纯白/纯黑",
       "fg": "#7A5E26",
       "bg": "#FFFFFF",
       "ratio": 6.08,
@@ -69,7 +69,7 @@
       "pass": true
     },
     {
-      "name": "可用池 --c-available vs 白色",
+      "name": "可用池 --c-available vs 纯白/纯黑",
       "fg": "#1F7A48",
       "bg": "#FFFFFF",
       "ratio": 5.34,
@@ -83,7 +83,7 @@
       "pass": true
     },
     {
-      "name": "成功色 --c-success vs 白色",
+      "name": "成功色 --c-success vs 纯白/纯黑",
       "fg": "#1F7A48",
       "bg": "#FFFFFF",
       "ratio": 5.34,
@@ -104,11 +104,113 @@
       "pass": true
     }
   ],
+  "contrastDark": [
+    {
+      "name": "辅助文字 --c-text-3 vs 主背景 --c-bg",
+      "fg": "#94A3B8",
+      "bg": "#0E1520",
+      "ratio": 7.14,
+      "pass": true
+    },
+    {
+      "name": "辅助文字 --c-text-3 vs 卡片 --c-bg-card",
+      "fg": "#94A3B8",
+      "bg": "#151E2E",
+      "ratio": 6.52,
+      "pass": true
+    },
+    {
+      "name": "鎏金深 --c-accent-deep vs 纯白/纯黑",
+      "fg": "#D4AF50",
+      "bg": "#070B13",
+      "ratio": 9.42,
+      "pass": true
+    },
+    {
+      "name": "鎏金深 --c-accent-deep vs 主背景 --c-bg",
+      "fg": "#D4AF50",
+      "bg": "#0E1520",
+      "ratio": 8.76,
+      "pass": true
+    },
+    {
+      "name": "可用池 --c-available vs 纯白/纯黑",
+      "fg": "#48C986",
+      "bg": "#070B13",
+      "ratio": 9.35,
+      "pass": true
+    },
+    {
+      "name": "可用池 --c-available vs 主背景 --c-bg",
+      "fg": "#48C986",
+      "bg": "#0E1520",
+      "ratio": 8.7,
+      "pass": true
+    },
+    {
+      "name": "成功色 --c-success vs 纯白/纯黑",
+      "fg": "#48C986",
+      "bg": "#070B13",
+      "ratio": 9.35,
+      "pass": true
+    },
+    {
+      "name": "主文字 --c-text-1 vs 主背景 --c-bg",
+      "fg": "#F1F5F9",
+      "bg": "#0E1520",
+      "ratio": 16.72,
+      "pass": true
+    },
+    {
+      "name": "次文字 --c-text-2 vs 主背景 --c-bg",
+      "fg": "#CBD5E1",
+      "bg": "#0E1520",
+      "ratio": 12.33,
+      "pass": true
+    },
+    {
+      "name": "主色系 --c-primary vs 主背景 --c-bg",
+      "fg": "#3EB8B3",
+      "bg": "#0E1520",
+      "ratio": 7.6,
+      "pass": true
+    },
+    {
+      "name": "信息蓝 --c-info vs 主背景 --c-bg",
+      "fg": "#78A4F7",
+      "bg": "#0E1520",
+      "ratio": 7.37,
+      "pass": true
+    },
+    {
+      "name": "警告色 --c-warning vs 主背景 --c-bg",
+      "fg": "#F5B041",
+      "bg": "#0E1520",
+      "ratio": 9.74,
+      "pass": true
+    },
+    {
+      "name": "危险色 --c-danger vs 主背景 --c-bg",
+      "fg": "#EF6A63",
+      "bg": "#0E1520",
+      "ratio": 6.03,
+      "pass": true
+    },
+    {
+      "name": "锁定池 --c-locked vs 主背景 --c-bg",
+      "fg": "#6E92DE",
+      "bg": "#0E1520",
+      "ratio": 5.96,
+      "pass": true
+    }
+  ],
   "summary": {
     "totalViolations": 0,
     "totalPasses": 105,
     "byRule": {},
-    "contrastPass": 9,
-    "contrastFail": 0
+    "contrastLightPass": 9,
+    "contrastLightFail": 0,
+    "contrastDarkPass": 14,
+    "contrastDarkFail": 0
   }
 }

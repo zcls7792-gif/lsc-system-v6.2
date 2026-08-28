@@ -549,3 +549,202 @@ img { max-width: 100%; display: block; }
 .alert-success { background: #E4F4EC; color: #166534; }
 .alert-warning { background: #FEF3E2; color: #92400E; }
 .alert-danger { background: #FCE6E4; color: #991B1B; }
+
+/* ============================================================
+   A11y 键盘焦点环增强 - WCAG 2.4.7 焦点可见
+   使用 :focus-visible 仅在键盘导航时显示，避免鼠标点击的视觉噪音
+   ============================================================ */
+:focus { outline: none; }
+
+:focus-visible {
+  outline: 2px solid var(--c-accent, #C8A24B);
+  outline-offset: 2px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 3px rgba(200, 162, 75, 0.22);
+  transition: outline-offset 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* 按钮/卡片使用圆角焦点环 */
+.btn:focus-visible,
+button:focus-visible,
+.card:focus-visible,
+input[type="button"]:focus-visible,
+input[type="submit"]:focus-visible {
+  border-radius: var(--r-md, 10px);
+}
+
+/* 可滚动区域(通过 a11yEnhance 设置了 tabindex=0)焦点态 */
+[role="region"][tabindex="0"]:focus-visible {
+  outline: 2px dashed var(--c-accent, #C8A24B);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+
+/* Tab / Nav 项焦点环 */
+[role="tab"]:focus-visible,
+nav a:focus-visible,
+.tabbar-item:focus-visible,
+.wx-tab:focus-visible {
+  border-radius: var(--r-pill, 999px);
+}
+
+/* 表单控件焦点环 */
+input:not([type="button"]):not([type="submit"]):focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-radius: var(--r-sm, 6px);
+}
+
+/* 高对比度模式下加粗焦点环 */
+@media (prefers-contrast: more) {
+  :focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+}
+
+/* ============================================================
+   深色模式 Design Tokens - WCAG AA 对比度核验
+   触发方式: 系统 prefers-color-scheme: dark 或 data-theme="dark"
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 背景色阶 - 深海夜蓝 */
+    --c-bg: #0E1520;
+    --c-bg-card: #151E2E;
+    --c-bg-soft: #111A28;
+    --c-bg-dark: #070B13;
+
+    /* 文字色阶 - 反向对比度 */
+    --c-text-1: #F1F5F9;        /* 主文字: AA ≥ 4.5:1 vs --c-bg */
+    --c-text-2: #CBD5E1;        /* 次文字: AA ≥ 4.5:1 vs --c-bg */
+    --c-text-3: #94A3B8;        /* 辅助文字: AA ≥ 4.5:1 vs --c-bg */
+    --c-text-inv: #0E1520;
+
+    /* 边框/分隔线 */
+    --c-border: #2A3748;
+    --c-border-soft: #1E293B;
+    --c-divider: #1C2636;
+
+    /* 主色系 - 保持品牌感 + 可访问性 */
+    --c-primary: #3EB8B3;       /* 深海青(提亮版) */
+    --c-primary-deep: #2B8A86;
+    --c-primary-soft: #5AC7C3;
+    --c-primary-tint: #1A2F3D;
+
+    /* 强调色 - 鎏金 */
+    --c-accent: #E6C36A;        /* 鎏金(提亮版) */
+    --c-accent-deep: #D4AF50;
+    --c-accent-soft: #3D3420;
+
+    /* 业务色 - 深色模式下提亮确保 4.5:1 */
+    --c-locked: #6E92DE;
+    --c-locked-tint: #1A2342;
+    --c-locked-soft: #90AEF0;
+    --c-available: #48C986;     /* 翡翠(提亮版) */
+    --c-available-tint: #1A3028;
+    --c-available-soft: #71D9A4;
+
+    /* 功能色 - 深色模式下提亮 */
+    --c-success: #48C986;
+    --c-warning: #F5B041;
+    --c-danger: #EF6A63;
+    --c-info: #78A4F7;
+    --c-neutral: #94A3B8;
+
+    /* 阴影 - 深色模式下使用内发光感 */
+    --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.25);
+    --sh-md: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.25);
+    --sh-lg: 0 10px 30px rgba(0, 0, 0, 0.55), 0 4px 8px rgba(0, 0, 0, 0.3);
+    --sh-card: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  /* 深色模式下的 Alert 配色 */
+  .alert-info { background: #1A2B55; color: #93C5FD; }
+  .alert-success { background: #163526; color: #86EFAC; }
+  .alert-warning { background: #3D2A12; color: #FCD34D; }
+  .alert-danger { background: #3A1614; color: #FCA5A5; }
+
+  /* 深色模式下模态遮罩加深 */
+  .modal-mask { background: rgba(0, 0, 0, 0.75); }
+
+  /* 深色模式下骨架屏 */
+  .skeleton {
+    background: linear-gradient(90deg, var(--c-border-soft) 25%, var(--c-bg-soft) 50%, var(--c-border-soft) 75%);
+    background-size: 200% 100%;
+  }
+}
+
+/* 手动切换深色模式 (data-theme="dark" 属性) - 与 prefers-color-scheme 保持一致 */
+[data-theme="dark"] {
+  /* 背景色阶 - 深海夜蓝 */
+  --c-bg: #0E1520;
+  --c-bg-card: #151E2E;
+  --c-bg-soft: #111A28;
+  --c-bg-dark: #070B13;
+
+  /* 文字色阶 */
+  --c-text-1: #F1F5F9;
+  --c-text-2: #CBD5E1;
+  --c-text-3: #94A3B8;
+  --c-text-inv: #0E1520;
+
+  /* 边框 */
+  --c-border: #2A3748;
+  --c-border-soft: #1E293B;
+  --c-divider: #1C2636;
+
+  /* 主色系 */
+  --c-primary: #3EB8B3;
+  --c-primary-deep: #2B8A86;
+  --c-primary-soft: #5AC7C3;
+  --c-primary-tint: #1A2F3D;
+
+  /* 强调色 */
+  --c-accent: #E6C36A;
+  --c-accent-deep: #D4AF50;
+  --c-accent-soft: #3D3420;
+
+  /* 业务色 */
+  --c-locked: #6E92DE;
+  --c-locked-tint: #1A2342;
+  --c-locked-soft: #90AEF0;
+  --c-available: #48C986;
+  --c-available-tint: #1A3028;
+  --c-available-soft: #71D9A4;
+
+  /* 功能色 */
+  --c-success: #48C986;
+  --c-warning: #F5B041;
+  --c-danger: #EF6A63;
+  --c-info: #78A4F7;
+  --c-neutral: #94A3B8;
+
+  /* 阴影 */
+  --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.25);
+  --sh-md: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.25);
+  --sh-lg: 0 10px 30px rgba(0, 0, 0, 0.55), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --sh-card: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .alert-info { background: #1A2B55; color: #93C5FD; }
+[data-theme="dark"] .alert-success { background: #163526; color: #86EFAC; }
+[data-theme="dark"] .alert-warning { background: #3D2A12; color: #FCD34D; }
+[data-theme="dark"] .alert-danger { background: #3A1614; color: #FCA5A5; }
+[data-theme="dark"] .modal-mask { background: rgba(0, 0, 0, 0.75); }
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, var(--c-border-soft) 25%, var(--c-bg-soft) 50%, var(--c-border-soft) 75%);
+  background-size: 200% 100%;
+}
+
+/* 深色模式焦点环 - 更亮的鎏金色 */
+@media (prefers-color-scheme: dark) {
+  :focus-visible {
+    outline-color: var(--c-accent, #E6C36A);
+    box-shadow: 0 0 0 3px rgba(230, 195, 106, 0.25);
+  }
+}
+[data-theme="dark"] :focus-visible {
+  outline-color: var(--c-accent, #E6C36A);
+  box-shadow: 0 0 0 3px rgba(230, 195, 106, 0.25);
+}

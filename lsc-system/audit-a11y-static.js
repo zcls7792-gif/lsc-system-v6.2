@@ -51,13 +51,41 @@ function contrast(fg, bg) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-// 从 design-system.css 提取 :root 变量
-function loadCssVars(cssPath) {
+// 从 design-system.css 提取设计令牌变量
+// mode='light': 仅读取顶层的 :root { ... } 块 (不嵌套在 @media / 选择器内)
+// mode='dark':  读取 @media (prefers-color-scheme: dark) 中的 :root 块, fallback 到 [data-theme="dark"] 块
+function loadCssVars(cssPath, mode = 'light') {
   const txt = fs.readFileSync(cssPath, 'utf8');
   const vars = {};
+  let scope = '';
+
+  if (mode === 'light') {
+    // 1) 先删除所有 @media 块和属性选择器块, 只保留顶层声明
+    let top = txt
+      .replace(/@media[^{]*\{[\s\S]*?\n\s*\}/g, '')
+      .replace(/\[data-theme=["']\w+["']\]\s*\{[\s\S]*?\n\s*\}/g, '');
+    // 2) 再取顶层 :root { ... }
+    const rootRe = /(?:^|\n)\s*:root\s*\{([\s\S]*?)\n\s*\}/;
+    const m = top.match(rootRe);
+    scope = m ? m[1] : top;
+  } else if (mode === 'dark') {
+    // 优先 @media (prefers-color-scheme: dark) { :root { ... } }
+    const mediaRe = /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{([\s\S]*?)\n\s*\}/;
+    const mediaMatch = txt.match(mediaRe);
+    if (mediaMatch) {
+      const inner = mediaMatch[1];
+      const rootInMedia = inner.match(/:root\s*\{([\s\S]*?)\n\s*\}/);
+      scope = rootInMedia ? rootInMedia[1] : inner;
+    } else {
+      const attrRe = /\[data-theme=["']dark["']\]\s*\{([\s\S]*?)\n\s*\}/;
+      const attrMatch = txt.match(attrRe);
+      if (attrMatch) scope = attrMatch[1];
+    }
+  }
+
   const re = /--([\w-]+)\s*:\s*([^;]+);/g;
   let m;
-  while ((m = re.exec(txt))) {
+  while ((m = re.exec(scope))) {
     vars['--' + m[1]] = m[2].trim();
   }
   return vars;
@@ -124,20 +152,31 @@ async function auditOne(app) {
 }
 
 // 静态 color-contrast 校验: 基于 CSS 变量直接计算前景/背景对比度
-function verifyContrastStatic() {
+// mode: 'light' (默认浅色模式) 或 'dark' (深色模式)
+function verifyContrastStatic(mode = 'light') {
   const cssPath = path.join(ROOT, 'shared/design-system.css');
-  const vars = loadCssVars(cssPath);
-  // 校验关键前景色 vs 关键背景色的对比度 >= 4.5
+  const vars = loadCssVars(cssPath, mode);
+  const bgWhite = mode === 'dark' ? vars['--c-bg-dark'] || '#070B13' : '#FFFFFF';
+
+  // 通用校验用例 (浅色 / 深色共用同一组变量名组合)
   const cases = [
     { name: '辅助文字 --c-text-3 vs 主背景 --c-bg',           fg: vars['--c-text-3'],      bg: vars['--c-bg'] },
     { name: '辅助文字 --c-text-3 vs 卡片 --c-bg-card',         fg: vars['--c-text-3'],      bg: vars['--c-bg-card'] },
-    { name: '鎏金深 --c-accent-deep vs 白色',                   fg: vars['--c-accent-deep'], bg: '#FFFFFF' },
+    { name: '鎏金深 --c-accent-deep vs 纯白/纯黑',              fg: vars['--c-accent-deep'], bg: bgWhite },
     { name: '鎏金深 --c-accent-deep vs 主背景 --c-bg',         fg: vars['--c-accent-deep'], bg: vars['--c-bg'] },
-    { name: '可用池 --c-available vs 白色',                     fg: vars['--c-available'],   bg: '#FFFFFF' },
+    { name: '可用池 --c-available vs 纯白/纯黑',                fg: vars['--c-available'],   bg: bgWhite },
     { name: '可用池 --c-available vs 主背景 --c-bg',           fg: vars['--c-available'],   bg: vars['--c-bg'] },
-    { name: '成功色 --c-success vs 白色',                       fg: vars['--c-success'],     bg: '#FFFFFF' },
+    { name: '成功色 --c-success vs 纯白/纯黑',                  fg: vars['--c-success'],     bg: bgWhite },
     { name: '主文字 --c-text-1 vs 主背景 --c-bg',              fg: vars['--c-text-1'],     bg: vars['--c-bg'] },
     { name: '次文字 --c-text-2 vs 主背景 --c-bg',              fg: vars['--c-text-2'],     bg: vars['--c-bg'] },
+    // 深色模式额外重要的令牌组合
+    ...(mode === 'dark' ? [
+      { name: '主色系 --c-primary vs 主背景 --c-bg',           fg: vars['--c-primary'],     bg: vars['--c-bg'] },
+      { name: '信息蓝 --c-info vs 主背景 --c-bg',               fg: vars['--c-info'],        bg: vars['--c-bg'] },
+      { name: '警告色 --c-warning vs 主背景 --c-bg',            fg: vars['--c-warning'],     bg: vars['--c-bg'] },
+      { name: '危险色 --c-danger vs 主背景 --c-bg',             fg: vars['--c-danger'],      bg: vars['--c-bg'] },
+      { name: '锁定池 --c-locked vs 主背景 --c-bg',             fg: vars['--c-locked'],      bg: vars['--c-bg'] },
+    ] : []),
   ];
   return cases.map(c => {
     const r = contrast(c.fg, c.bg);
@@ -157,11 +196,15 @@ async function main() {
     results.push(r);
   }
 
-  const contrastResults = verifyContrastStatic();
-  let contrastPass = 0, contrastFail = 0;
-  for (const c of contrastResults) {
-    if (c.pass) contrastPass++; else contrastFail++;
-  }
+  // 浅色模式对比度
+  const contrastLight = verifyContrastStatic('light');
+  let clPass = 0, clFail = 0;
+  for (const c of contrastLight) { if (c.pass) clPass++; else clFail++; }
+
+  // 深色模式对比度 (新增)
+  const contrastDark = verifyContrastStatic('dark');
+  let cdPass = 0, cdFail = 0;
+  for (const c of contrastDark) { if (c.pass) cdPass++; else cdFail++; }
 
   // 汇总
   let totalV = 0, totalP = 0, totalI = 0;
@@ -179,22 +222,31 @@ async function main() {
   console.log('\n=== 静态审计汇总 ===');
   console.log('  违规节点总数:', totalV, '  通过规则:', totalP, '  待核查:', totalI);
   console.log('  按规则分布:', JSON.stringify(byId));
-  console.log('  对比度校验: PASS=' + contrastPass + ' FAIL=' + contrastFail);
-  if (contrastFail > 0) {
-    console.log('  对比度不达标项:');
-    for (const c of contrastResults) if (!c.pass) console.log(`    - ${c.name}: ${c.fg} on ${c.bg} → ${c.ratio}:1`);
+  console.log('  对比度校验(浅色): PASS=' + clPass + ' FAIL=' + clFail);
+  if (clFail > 0) {
+    console.log('  浅色不达标项:');
+    for (const c of contrastLight) if (!c.pass) console.log(`    - ${c.name}: ${c.fg} on ${c.bg} → ${c.ratio}:1`);
+  }
+  console.log('  对比度校验(深色): PASS=' + cdPass + ' FAIL=' + cdFail);
+  if (cdFail > 0) {
+    console.log('  深色不达标项:');
+    for (const c of contrastDark) if (!c.pass) console.log(`    - ${c.name}: ${c.fg} on ${c.bg} → ${c.ratio}:1`);
   }
 
   const out = {
     timestamp: new Date().toISOString(),
-    method: 'jsdom + axe-core static',
+    method: 'jsdom + axe-core static (light + dark)',
     apps: results,
-    contrast: contrastResults,
+    contrastLight,
+    contrastDark,
     summary: {
       totalViolations: totalV,
       totalPasses: totalP,
       byRule: byId,
-      contrastPass, contrastFail,
+      contrastLightPass: clPass,
+      contrastLightFail: clFail,
+      contrastDarkPass: cdPass,
+      contrastDarkFail: cdFail,
     },
   };
   fs.writeFileSync(JSON_OUT, JSON.stringify(out, null, 2));
