@@ -7,9 +7,17 @@
 # ==========================================================================
 set +e
 # 当前脚本所在目录，source 时也能解析
-_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# BASH_SOURCE[0] 在非交互 bash（如 bash -c）中可能为空，需要 fallback
+_SCRIPT_PATH="${BASH_SOURCE[0]:-$0}"
+_SCRIPT_DIR="$( cd "$( dirname "$_SCRIPT_PATH" )" && pwd )"
 _ROOT="$( cd "$_SCRIPT_DIR/.." && pwd )"
 _ENV_FILE="$_ROOT/.gitlab-ci.env"
+# Fallback: 若 BASH_SOURCE 为空导致 _SCRIPT_DIR=CWD 而非 scripts/ 目录
+if [ ! -f "$_SCRIPT_DIR/gitlab_ci_auth_setup.sh" ] && [ -f "$_SCRIPT_DIR/scripts/gitlab_ci_auth_setup.sh" ]; then
+  _SCRIPT_DIR="$_SCRIPT_DIR/scripts"
+  _ROOT="$( cd "$_SCRIPT_DIR/.." && pwd )"
+  _ENV_FILE="$_ROOT/.gitlab-ci.env"
+fi
 
 echo "╔══════════════════════════════════════════════════╗"
 echo "║ 🔐 链盛通 LSC · GitLab 凭据加载器 (v1)            ║"
@@ -46,7 +54,7 @@ set -a; . "$_ENV_FILE"; set +a
 # -------- 3. 预检缺失 --------
 MISS=0
 for NEED in GITLAB_TOKEN GITLAB_HOST; do
-  VAL="${!NEED}"
+  eval "VAL=\$$NEED"
   if [ -z "$VAL" ]; then
     echo "  ✗ $NEED 未设置"
     MISS=$((MISS+1))
