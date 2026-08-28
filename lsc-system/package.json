@@ -10,7 +10,11 @@
     "coverage:all": "c8 --reports-dir=${C8_REPORT_DIR:-coverage} --reporter=html --reporter=text --reporter=lcov --reporter=text-summary --include=\"shared/**/*.js\" --include=\"platform-admin/**/*.js\" --include=\"merchant-admin/**/*.js\" --include=\"mobile-app/**/*.js\" --include=\"mini-program/**/*.js\" --exclude=\"node_modules/**\" --exclude=\"verify_p0.js\" --exclude=\"test_p0_chart_logic.js\" --exclude=\"coverage_runner.js\" --exclude=\"coverage_report.js\" --exclude=\"run-all.js\" --exclude=\"coverage/**\" node verify_p0.js && node test_p0_chart_logic.js",
     "report": "node coverage_report.js",
     "all": "node run-all.js",
-    "ci": "node run-all.js"
+    "ci": "node run-all.js",
+    "e2e": "npx playwright test --project=chromium-headless",
+    "e2e:ui": "npx playwright test --project=chromium-headless --headed",
+    "e2e:report": "npx playwright show-report e2e-report",
+    "e2e:install": "npx playwright install chromium --with-deps"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +23,9 @@
   "c8": {
     "checkCoverage": false,
     "reportDir": "coverage",
-    "extension": [".js"],
+    "extension": [
+      ".js"
+    ],
     "sourceMap": true,
     "instrument": true
   },
@@ -27,6 +33,8 @@
     "jsdom": "^29.1.1"
   },
   "devDependencies": {
-    "c8": "^12.0.0"
+    "@playwright/test": "^1.62.1",
+    "c8": "^12.0.0",
+    "playwright": "^1.62.1"
   }
 }

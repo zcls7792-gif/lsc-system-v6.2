@@ -301,11 +301,116 @@ function renderShop() {
             <button class="btn btn-outline btn-sm">百度地图选点</button>
           </div>
         </div>
-        <div class="map-box">
-          <div class="map-pin-circle"></div>
-          <span class="map-pin icon icon-xl" data-i="location" style="width:36px;height:36px;"></span>
-          <div style="position:absolute;bottom:12px;left:12px;background:#fff;padding:6px 12px;border-radius:8px;font-size:12px;box-shadow:var(--sh-sm);">
-            <span class="text-available font-bold">●</span> 锦华餐饮·总店<br><span class="text-muted">世纪大道100号</span>
+        <div class="map-box" id="shop-map-box">
+          <svg class="map-svg" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="waterPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                <rect width="40" height="40" fill="#d9e6f2"/>
+                <path d="M0 20 Q 10 15, 20 20 T 40 20" stroke="#c0d4e8" stroke-width="1" fill="none" opacity="0.6"/>
+              </pattern>
+              <linearGradient id="parkGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#a5d6a7"/>
+                <stop offset="100%" stop-color="#81c784"/>
+              </linearGradient>
+              <radialGradient id="heatGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="var(--c-danger)" stop-opacity="0.55"/>
+                <stop offset="40%" stop-color="var(--c-warning)" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="var(--c-accent)" stop-opacity="0.08"/>
+              </radialGradient>
+              <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+                <feOffset dx="0" dy="2" result="off"/>
+                <feComponentTransfer><feFuncA type="linear" slope="0.35"/></feComponentTransfer>
+                <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <!-- 地面背景 -->
+            <rect width="720" height="300" fill="#f4f6f8"/>
+            <!-- 黄浦江/水域 -->
+            <path d="M0,80 C120,60 240,100 360,88 C500,74 620,120 720,96 L720,170 C620,186 480,142 360,154 C240,166 120,200 0,170 Z" fill="url(#waterPattern)" stroke="#a8c5e0" stroke-width="1"/>
+            <!-- 陆家嘴中心公园 -->
+            <ellipse cx="420" cy="210" rx="68" ry="40" fill="url(#parkGrad)" opacity="0.9"/>
+            <circle cx="395" cy="200" r="5" fill="#4e8f51" opacity="0.7"/>
+            <circle cx="438" cy="218" r="4" fill="#4e8f51" opacity="0.7"/>
+            <circle cx="410" cy="225" r="3" fill="#4e8f51" opacity="0.7"/>
+            <!-- 主干道路（世纪大道方向） -->
+            <rect x="0" y="140" width="720" height="14" fill="#ffffff" stroke="#d9dde3" stroke-width="0.5"/>
+            <rect x="330" y="0" width="18" height="300" fill="#ffffff" stroke="#d9dde3" stroke-width="0.5"/>
+            <!-- 道路中心虚线 -->
+            <line x1="0" y1="147" x2="720" y2="147" stroke="#f5b301" stroke-width="1.5" stroke-dasharray="10 8"/>
+            <line x1="339" y1="0" x2="339" y2="300" stroke="#f5b301" stroke-width="1.5" stroke-dasharray="10 8"/>
+            <!-- 次干道 -->
+            <rect x="0" y="230" width="720" height="9" fill="#ffffff" stroke="#e6eaef" stroke-width="0.5"/>
+            <rect x="140" y="0" width="11" height="300" fill="#ffffff" stroke="#e6eaef" stroke-width="0.5"/>
+            <rect x="560" y="0" width="11" height="300" fill="#ffffff" stroke="#e6eaef" stroke-width="0.5"/>
+            <!-- 小区块（街区） -->
+            <rect x="12"  y="28"  width="110" height="94" fill="#eef0f3" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="160" y="28"  width="154" height="94" fill="#edeef2" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="360" y="28"  width="182" height="94" fill="#eef0f3" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="580" y="28"  width="128" height="94" fill="#edeef2" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="12"  y="164" width="110" height="54" fill="#eef0f3" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="160" y="164" width="154" height="54" fill="#edeef2" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="360" y="164" width="182" height="54" fill="#eef0f3" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="580" y="164" width="128" height="54" fill="#edeef2" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="12"  y="248" width="110" height="40" fill="#eef0f3" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="160" y="248" width="154" height="40" fill="#edeef2" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="360" y="248" width="182" height="40" fill="#eef0f3" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <rect x="580" y="248" width="128" height="40" fill="#edeef2" stroke="#dce0e6" stroke-width="0.5" rx="3"/>
+            <!-- 商业建筑/POI（不同高度长方体示意） -->
+            <g filter="url(#softShadow)">
+              <rect x="38"  y="52" width="54"  height="62" fill="#ffffff" stroke="#c5cbd4" rx="2"/>
+              <rect x="62"  y="40" width="28"  height="14" fill="#3f7ca1" rx="2"/>
+              <rect x="178" y="46" width="82"  height="68" fill="#ffffff" stroke="#c5cbd4" rx="2"/>
+              <rect x="204" y="32" width="32"  height="16" fill="#2e6b9e" rx="2"/>
+              <rect x="382" y="50" width="102" height="64" fill="#ffffff" stroke="#c5cbd4" rx="2"/>
+              <rect x="414" y="30" width="40"  height="22" fill="#1d5a90" rx="2"/>
+              <rect x="596" y="46" width="94"  height="68" fill="#ffffff" stroke="#c5cbd4" rx="2"/>
+              <rect x="622" y="34" width="40"  height="14" fill="#447eaa" rx="2"/>
+            </g>
+            <!-- 行人热力（核销密集区域） -->
+            <circle cx="340" cy="148" r="80" fill="url(#heatGrad)"/>
+            <circle cx="340" cy="148" r="42" fill="var(--c-danger)" opacity="0.18"/>
+            <!-- POI 商家/地铁站/银行图标 -->
+            <g font-family="var(--ff-mono)" font-size="10" fill="var(--c-text-2)" text-anchor="middle">
+              <circle cx="86"   cy="150" r="7" fill="var(--c-warning)" opacity="0.9"/>
+              <text x="86" y="153" fill="#fff" font-size="8" font-weight="700">M</text>
+              <text x="86" y="168">陆家嘴站</text>
+              <circle cx="618"  cy="150" r="7" fill="var(--c-warning)" opacity="0.9"/>
+              <text x="618" y="153" fill="#fff" font-size="8" font-weight="700">M</text>
+              <text x="618" y="168">世纪大道站</text>
+              <circle cx="640" cy="72"  r="6" fill="var(--c-accent-deep)" opacity="0.95"/>
+              <text x="640" y="75" fill="#fff" font-size="8" font-weight="700">¥</text>
+              <text x="640" y="86">银行</text>
+              <circle cx="72"  cy="282" r="6" fill="var(--c-info)" opacity="0.95"/>
+              <text x="72"  y="285" fill="#fff" font-size="8" font-weight="700">购</text>
+              <text x="72"  y="297">商场</text>
+            </g>
+            <!-- 目标门店（锦华餐饮 · 总店）锚点 -->
+            <g transform="translate(339,147)">
+              <!-- 呼吸脉冲外圈 -->
+              <circle class="map-pin-circle" cx="0" cy="0" r="22" fill="none" stroke="var(--c-danger)" stroke-width="2" opacity="0.45">
+                <animate attributeName="r" values="12;28;12" dur="2.2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.55;0.05;0.55" dur="2.2s" repeatCount="indefinite"/>
+              </circle>
+              <circle r="8" fill="#fff" stroke="var(--c-danger)" stroke-width="2"/>
+              <path class="map-pin" d="M0,-4 C-8,-4 -13,-12 -13,-22 C-13,-32 -5,-40 0,-44 C5,-40 13,-32 13,-22 C13,-12 8,-4 0,-4 Z" fill="var(--c-danger)"/>
+              <circle cx="0" cy="-22" r="5" fill="#fff"/>
+              <text x="0" y="-20" text-anchor="middle" font-size="8" font-weight="800" fill="var(--c-danger)" font-family="var(--ff-mono)">L</text>
+            </g>
+            <!-- 距离参考刻度 -->
+            <line x1="590" y1="290" x2="670" y2="290" stroke="var(--c-text-2)" stroke-width="1.5"/>
+            <line x1="590" y1="286" x2="590" y2="294" stroke="var(--c-text-2)" stroke-width="1.5"/>
+            <line x1="670" y1="286" x2="670" y2="294" stroke="var(--c-text-2)" stroke-width="1.5"/>
+            <text x="630" y="285" font-size="9" fill="var(--c-text-2)" font-family="var(--ff-mono)" text-anchor="middle">500 m</text>
+          </svg>
+          <div class="map-ctrl" role="group" aria-label="地图缩放控件">
+            <button type="button" id="map-zoom-in" title="放大">+</button>
+            <button type="button" id="map-zoom-out" title="缩小">−</button>
+            <button type="button" id="map-reset" title="重置" style="font-size:11px;">⟳</button>
+          </div>
+          <div class="map-scale">比例尺 1:5000</div>
+          <div style="position:absolute;bottom:12px;left:12px;background:#fff;padding:6px 12px;border-radius:8px;font-size:12px;box-shadow:var(--sh-sm);z-index:2;">
+            <span class="text-available font-bold">●</span> 锦华餐饮·总店<br><span class="text-muted">世纪大道100号（121.5066, 31.2399）</span>
           </div>
         </div>
       </div>
@@ -320,6 +425,27 @@ function renderShop() {
   </div>
   `;
   setView(html);
+  bindMapControls();
+}
+
+/* 地图缩放/重置控件 */
+function bindMapControls() {
+  const svg = document.querySelector('#shop-map-box svg.map-svg');
+  if (!svg) return;
+  let scale = 1, tx = 0, ty = 0;
+  function apply() {
+    svg.style.transformOrigin = 'center center';
+    svg.style.transition = 'transform 0.2s ease';
+    svg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    const scaleEl = document.querySelector('.map-scale');
+    if (scaleEl) scaleEl.textContent = `比例尺 1:${Math.round(5000/scale)}`;
+  }
+  const bIn = document.getElementById('map-zoom-in');
+  const bOut = document.getElementById('map-zoom-out');
+  const bReset = document.getElementById('map-reset');
+  if (bIn) bIn.addEventListener('click', () => { scale = Math.min(scale * 1.25, 4); apply(); });
+  if (bOut) bOut.addEventListener('click', () => { scale = Math.max(scale / 1.25, 0.5); apply(); });
+  if (bReset) bReset.addEventListener('click', () => { scale = 1; tx = 0; ty = 0; apply(); });
 }
 
 /* ============== 商品管理 ============== */
