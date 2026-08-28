@@ -329,6 +329,9 @@ async function main() {
     console.log('[a11y] 启动 Playwright chromium ...');
     browser = await chromium.launch({
       headless: true,
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+        || require('child_process').execSync('ls /root/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome 2>/dev/null | head -1').toString().trim()
+        || undefined,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     });
   } catch (e) {

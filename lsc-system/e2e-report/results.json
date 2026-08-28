@@ -4,8 +4,7 @@
       "/root/.nvm/versions/node/v24.1.0/bin/node",
       "/workspace/lsc-system/node_modules/.bin/playwright",
       "test",
-      "--project=chromium-mobile",
-      "--retries=0"
+      "--project=chromium-headless"
     ],
     "configFile": "/workspace/lsc-system/playwright.config.js",
     "rootDir": "/workspace/lsc-system/e2e",
@@ -26,7 +25,7 @@
       {
         "outputDir": "/workspace/lsc-system/test-results",
         "repeatEach": 1,
-        "retries": 0,
+        "retries": 2,
         "metadata": {
           "actualWorkers": 2
         },
@@ -42,7 +41,7 @@
       {
         "outputDir": "/workspace/lsc-system/test-results",
         "repeatEach": 1,
-        "retries": 0,
+        "retries": 2,
         "metadata": {
           "actualWorkers": 2
         },
@@ -96,12 +95,241 @@
   },
   "suites": [
     {
+      "title": "lsc-core.spec.js",
+      "file": "lsc-core.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LSC V6.2-AI · 端到端核心 3 场景",
+          "file": "lsc-core.spec.js",
+          "line": 14,
+          "column": 6,
+          "specs": [
+            {
+              "title": "场景A: 商家后台核销管理页面 → 核销计算联动 + LSC账户值非空",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2461,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-28T11:37:45.088Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "381d9a03cfaa35a94702-e9a8cb855379d376fde8",
+              "file": "lsc-core.spec.js",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "场景B: 平台后台 AI活动流feed + 速率图表SVG渲染 + 2个定时器创建",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1871,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-28T11:37:45.094Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "381d9a03cfaa35a94702-90e67d462f84787d0bd1",
+              "file": "lsc-core.spec.js",
+              "line": 69,
+              "column": 3
+            },
+            {
+              "title": "场景C: 商家店铺地图替换占位为真实SVG + 缩放控件可交互",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2441,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-28T11:37:47.428Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "381d9a03cfaa35a94702-6d563e871c6eae2f0c72",
+              "file": "lsc-core.spec.js",
+              "line": 100,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "lsc-extended.spec.js",
       "file": "lsc-extended.spec.js",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
+        {
+          "title": "LSC V6.2-AI · 桌面端深度扩展",
+          "file": "lsc-extended.spec.js",
+          "line": 27,
+          "column": 6,
+          "specs": [
+            {
+              "title": "场景D(桌面): 商家核销 → 填写金额/备注/单号 → confirmModal+resultModal 完整交互",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2730,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-28T11:37:48.103Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-0b6e683de281aee1faaa",
+              "file": "lsc-extended.spec.js",
+              "line": 33,
+              "column": 3
+            },
+            {
+              "title": "场景E(桌面): 平台后台 · 商家/B2B/风险/释放 4 个视图渲染无空白",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2475,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-28T11:37:49.947Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-d9b1f38defe1d033f5a1",
+              "file": "lsc-extended.spec.js",
+              "line": 80,
+              "column": 3
+            },
+            {
+              "title": "场景H(桌面): 商家核销输入异常值 → 提示/禁用 → 输入合法后按钮可用",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1644,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-28T11:37:50.887Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-fdc15669eb643a2d3ecd",
+              "file": "lsc-extended.spec.js",
+              "line": 107,
+              "column": 3
+            }
+          ]
+        },
         {
           "title": "LSC V6.2-AI · 移动端 (mobile)",
           "file": "lsc-extended.spec.js",
@@ -117,19 +345,19 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 3544,
+                      "duration": 1833,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-28T06:02:01.644Z",
+                      "startTime": "2026-08-28T11:37:52.440Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -137,7 +365,7 @@
                   "status": "expected"
                 }
               ],
-              "id": "aaed197fda9439e7798c-b503f717431f96f83ab5",
+              "id": "aaed197fda9439e7798c-5313ae5debc21316fae8",
               "file": "lsc-extended.spec.js",
               "line": 139,
               "column": 3
@@ -159,19 +387,19 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3047,
+                      "duration": 1772,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-28T06:02:01.647Z",
+                      "startTime": "2026-08-28T11:37:52.561Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -179,7 +407,7 @@
                   "status": "expected"
                 }
               ],
-              "id": "aaed197fda9439e7798c-06aa664836d1ecbed651",
+              "id": "aaed197fda9439e7798c-bb66b9c713c9330e2ed5",
               "file": "lsc-extended.spec.js",
               "line": 184,
               "column": 3
@@ -191,9 +419,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-08-28T06:02:00.474Z",
-    "duration": 4987.308,
-    "expected": 2,
+    "startTime": "2026-08-28T11:37:44.267Z",
+    "duration": 10235.695,
+    "expected": 8,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

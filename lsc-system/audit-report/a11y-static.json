@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-28T09:41:13.804Z",
+  "timestamp": "2026-08-28T11:23:04.113Z",
   "method": "jsdom + axe-core static (light + dark)",
   "apps": [
     {
@@ -7,7 +7,7 @@
       "appName": "平台管理后台",
       "axe": {
         "violations": [],
-        "passes": 32,
+        "passes": 33,
         "incomplete": 2
       }
     },
@@ -25,7 +25,7 @@
       "appName": "移动端 APP",
       "axe": {
         "violations": [],
-        "passes": 22,
+        "passes": 24,
         "incomplete": 2
       }
     },
@@ -206,7 +206,7 @@
   ],
   "summary": {
     "totalViolations": 0,
-    "totalPasses": 105,
+    "totalPasses": 108,
     "byRule": {},
     "contrastLightPass": 9,
     "contrastLightFail": 0,

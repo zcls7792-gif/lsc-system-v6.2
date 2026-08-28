@@ -5,6 +5,11 @@ const { defineConfig, devices } = require('@playwright/test');
 const BASE_URL = process.env.LSC_E2E_BASE_URL || 'http://127.0.0.1:8765';
 const PORT = process.env.LSC_E2E_PORT ? Number(process.env.LSC_E2E_PORT) : 8765;
 
+// 自动检测可用 Chromium 二进制（Playwright 内置 / puppeteer / 系统）
+const CHROMIUM_EXEC = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+  || require('child_process').execSync('ls /root/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome 2>/dev/null | head -1').toString().trim()
+  || undefined;
+
 module.exports = defineConfig({
   testDir: './e2e',
   testMatch: '**/*.spec.js',
@@ -23,8 +28,9 @@ module.exports = defineConfig({
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    video: 'off',
     locale: 'zh-CN',
+    ...(CHROMIUM_EXEC ? { launchOptions: { executablePath: CHROMIUM_EXEC, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] } } : {}),
   },
   projects: [
     {
