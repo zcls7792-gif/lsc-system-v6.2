@@ -4,7 +4,7 @@
       "/root/.nvm/versions/node/v24.1.0/bin/node",
       "/workspace/lsc-system/node_modules/.bin/playwright",
       "test",
-      "--project=chromium-headless",
+      "--project=chromium-mobile",
       "--retries=0"
     ],
     "configFile": "/workspace/lsc-system/playwright.config.js",
@@ -32,6 +32,22 @@
         },
         "id": "chromium-headless",
         "name": "chromium-headless",
+        "testDir": "/workspace/lsc-system/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/workspace/lsc-system/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "chromium-mobile",
+        "name": "chromium-mobile",
         "testDir": "/workspace/lsc-system/e2e",
         "testIgnore": [],
         "testMatch": [
@@ -80,20 +96,20 @@
   },
   "suites": [
     {
-      "title": "lsc-core.spec.js",
-      "file": "lsc-core.spec.js",
+      "title": "lsc-extended.spec.js",
+      "file": "lsc-extended.spec.js",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "LSC V6.2-AI · 端到端核心 3 场景",
-          "file": "lsc-core.spec.js",
-          "line": 14,
+          "title": "LSC V6.2-AI · 移动端 (mobile)",
+          "file": "lsc-extended.spec.js",
+          "line": 135,
           "column": 6,
           "specs": [
             {
-              "title": "场景A: 商家后台核销管理页面 → 核销计算联动 + LSC账户值非空",
+              "title": "场景F(移动端): 5 Tab 切换 + 首页 Hero + 钱包 LSC 余额 非空",
               "ok": true,
               "tags": [],
               "tests": [
@@ -101,19 +117,19 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-headless",
-                  "projectName": "chromium-headless",
+                  "projectId": "chromium-mobile",
+                  "projectName": "chromium-mobile",
                   "results": [
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4358,
+                      "duration": 3544,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-28T05:43:50.540Z",
+                      "startTime": "2026-08-28T06:02:01.644Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -121,13 +137,21 @@
                   "status": "expected"
                 }
               ],
-              "id": "381d9a03cfaa35a94702-e9a8cb855379d376fde8",
-              "file": "lsc-core.spec.js",
-              "line": 29,
+              "id": "aaed197fda9439e7798c-b503f717431f96f83ab5",
+              "file": "lsc-extended.spec.js",
+              "line": 139,
               "column": 3
-            },
+            }
+          ]
+        },
+        {
+          "title": "LSC V6.2-AI · 微信小程序 (mini)",
+          "file": "lsc-extended.spec.js",
+          "line": 180,
+          "column": 6,
+          "specs": [
             {
-              "title": "场景B: 平台后台 AI活动流feed + 速率图表SVG渲染 + 2个定时器创建",
+              "title": "场景G(小程序): 首页 + 核销码 + 我的 视图切换 & 关键内容",
               "ok": true,
               "tags": [],
               "tests": [
@@ -135,19 +159,19 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-headless",
-                  "projectName": "chromium-headless",
+                  "projectId": "chromium-mobile",
+                  "projectName": "chromium-mobile",
                   "results": [
                     {
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 3933,
+                      "duration": 3047,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-28T05:43:50.555Z",
+                      "startTime": "2026-08-28T06:02:01.647Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -155,43 +179,9 @@
                   "status": "expected"
                 }
               ],
-              "id": "381d9a03cfaa35a94702-90e67d462f84787d0bd1",
-              "file": "lsc-core.spec.js",
-              "line": 69,
-              "column": 3
-            },
-            {
-              "title": "场景C: 商家店铺地图替换占位为真实SVG + 缩放控件可交互",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-headless",
-                  "projectName": "chromium-headless",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 3230,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-08-28T05:43:54.795Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "381d9a03cfaa35a94702-6d563e871c6eae2f0c72",
-              "file": "lsc-core.spec.js",
-              "line": 100,
+              "id": "aaed197fda9439e7798c-06aa664836d1ecbed651",
+              "file": "lsc-extended.spec.js",
+              "line": 184,
               "column": 3
             }
           ]
@@ -201,9 +191,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-08-28T05:43:48.950Z",
-    "duration": 9165.978000000001,
-    "expected": 3,
+    "startTime": "2026-08-28T06:02:00.474Z",
+    "duration": 4987.308,
+    "expected": 2,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

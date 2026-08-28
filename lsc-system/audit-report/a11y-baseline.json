@@ -1,0 +1,985 @@
+[
+  {
+    "app": "platform",
+    "appName": "平台管理后台",
+    "size": "md",
+    "width": 768,
+    "height": 1024,
+    "sizeLabel": "平板 768×1024 (iPad mini)",
+    "url": "http://127.0.0.1:8765/platform-admin/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 1,
+      "button": 3,
+      "input": 2,
+      "img": 0,
+      "svg": 34,
+      "heading": 0,
+      "totalText": 1713
+    },
+    "axe": {
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensures the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "count": 16,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": ".breadcrumb > span:nth-child(1)",
+              "html": "<span>平台管理后台</span>"
+            },
+            {
+              "target": ".user-role",
+              "html": "<div class=\"user-role\">超级管理员</div>"
+            },
+            {
+              "target": ".page-desc",
+              "html": "<div class=\"page-desc\">链盛通LSC凭证循环系统 · 全网实时态势</div>"
+            },
+            {
+              "target": ".locked.stat-card > .stat-label",
+              "html": "<div class=\"stat-label\">全网锁定池总量</div>"
+            },
+            {
+              "target": ".locked.stat-card > div:nth-child(3) > .stat-unit",
+              "html": "<span class=\"stat-unit\">百万 LSC</span>"
+            },
+            {
+              "target": ".locked.stat-card > .stat-delta-up.stat-delta",
+              "html": "<div class=\"stat-delta stat-delta-up\"><span class=\"icon icon-sm\" data-i=\"arrowUp\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M12 19V5M6 11l6-6 6 6\"></path><"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "description": "Ensures the document has a main landmark",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "description": "Ensures all page content is contained by landmarks",
+          "count": 33,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": ".page-head > div:nth-child(1)",
+              "html": "<div><div class=\"page-title\">运营仪表盘</div><div class=\"page-desc\">链盛通LSC凭证循环系统 · 全网实时态势</div></div>"
+            },
+            {
+              "target": ".locked.stat-card > .stat-label",
+              "html": "<div class=\"stat-label\">全网锁定池总量</div>"
+            },
+            {
+              "target": ".locked.stat-card > div:nth-child(3)",
+              "html": "<div><span class=\"stat-value\">86.54</span><span class=\"stat-unit\">百万 LSC</span></div>"
+            },
+            {
+              "target": ".locked.stat-card > .stat-delta-up.stat-delta",
+              "html": "<div class=\"stat-delta stat-delta-up\"><span class=\"icon icon-sm\" data-i=\"arrowUp\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M12 19V5M6 11l6-6 6 6\"></path><"
+            },
+            {
+              "target": ".available.stat-card > .stat-label",
+              "html": "<div class=\"stat-label\">全网可用池总量</div>"
+            },
+            {
+              "target": ".available.stat-card > div:nth-child(3)",
+              "html": "<div><span class=\"stat-value\">42.32</span><span class=\"stat-unit\">百万 LSC</span></div>"
+            }
+          ]
+        },
+        {
+          "id": "scrollable-region-focusable",
+          "impact": "serious",
+          "description": "Ensure elements that have scrollable content are accessible by keyboard",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/scrollable-region-focusable?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": ".mb-5.card.chart-card > div:nth-child(2)",
+              "html": "<div style=\"overflow-x:auto;\">"
+            }
+          ]
+        }
+      ],
+      "incomplete": 2,
+      "passes": 20
+    },
+    "screenshot": "audit-report/platform__md__768x1024.png"
+  },
+  {
+    "app": "platform",
+    "appName": "平台管理后台",
+    "size": "lg",
+    "width": 1440,
+    "height": 900,
+    "sizeLabel": "桌面 1440×900",
+    "url": "http://127.0.0.1:8765/platform-admin/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 1,
+      "button": 3,
+      "input": 2,
+      "img": 0,
+      "svg": 34,
+      "heading": 0,
+      "totalText": 1828
+    },
+    "axe": {
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensures the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "count": 19,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": ".breadcrumb > span:nth-child(1)",
+              "html": "<span>平台管理后台</span>"
+            },
+            {
+              "target": ".user-role",
+              "html": "<div class=\"user-role\">超级管理员</div>"
+            },
+            {
+              "target": ".page-desc",
+              "html": "<div class=\"page-desc\">链盛通LSC凭证循环系统 · 全网实时态势</div>"
+            },
+            {
+              "target": ".locked.stat-card > .stat-label",
+              "html": "<div class=\"stat-label\">全网锁定池总量</div>"
+            },
+            {
+              "target": ".locked.stat-card > div:nth-child(3) > .stat-unit",
+              "html": "<span class=\"stat-unit\">百万 LSC</span>"
+            },
+            {
+              "target": ".locked.stat-card > .stat-delta-up.stat-delta",
+              "html": "<div class=\"stat-delta stat-delta-up\"><span class=\"icon icon-sm\" data-i=\"arrowUp\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M12 19V5M6 11l6-6 6 6\"></path><"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "description": "Ensures the document has a main landmark",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "description": "Ensures all page content is contained by landmarks",
+          "count": 33,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": ".page-head > div:nth-child(1)",
+              "html": "<div><div class=\"page-title\">运营仪表盘</div><div class=\"page-desc\">链盛通LSC凭证循环系统 · 全网实时态势</div></div>"
+            },
+            {
+              "target": ".locked.stat-card > .stat-label",
+              "html": "<div class=\"stat-label\">全网锁定池总量</div>"
+            },
+            {
+              "target": ".locked.stat-card > div:nth-child(3)",
+              "html": "<div><span class=\"stat-value\">86.54</span><span class=\"stat-unit\">百万 LSC</span></div>"
+            },
+            {
+              "target": ".locked.stat-card > .stat-delta-up.stat-delta",
+              "html": "<div class=\"stat-delta stat-delta-up\"><span class=\"icon icon-sm\" data-i=\"arrowUp\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M12 19V5M6 11l6-6 6 6\"></path><"
+            },
+            {
+              "target": ".available.stat-card > .stat-label",
+              "html": "<div class=\"stat-label\">全网可用池总量</div>"
+            },
+            {
+              "target": ".available.stat-card > div:nth-child(3)",
+              "html": "<div><span class=\"stat-value\">42.32</span><span class=\"stat-unit\">百万 LSC</span></div>"
+            }
+          ]
+        }
+      ],
+      "incomplete": 2,
+      "passes": 20
+    },
+    "screenshot": "audit-report/platform__lg__1440x900.png"
+  },
+  {
+    "app": "merchant",
+    "appName": "商家管理后台",
+    "size": "md",
+    "width": 768,
+    "height": 1024,
+    "sizeLabel": "平板 768×1024 (iPad mini)",
+    "url": "http://127.0.0.1:8765/merchant-admin/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 2,
+      "input": 1,
+      "img": 0,
+      "svg": 16,
+      "heading": 0,
+      "totalText": 916
+    },
+    "axe": {
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensures the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "count": 15,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": ".breadcrumb > span:nth-child(1)",
+              "html": "<span>商家管理后台</span>"
+            },
+            {
+              "target": ".user-chip > div:nth-child(2) > div:nth-child(2)",
+              "html": "<div style=\"font-size:11px;color:var(--c-text-3);\">M20001 · A档商家</div>"
+            },
+            {
+              "target": ".items-center > div:nth-child(1) > div:nth-child(2)",
+              "html": "<div style=\"font-size:13px;color:var(--c-text-3);margin-top:4px;\">核心指标 · 核销趋势 · 商品销售分布 · LSC流水构成</div>"
+            },
+            {
+              "target": ".stat-card:nth-child(1) > .stat-label",
+              "html": "<div class=\"stat-label\">今日营收</div>"
+            },
+            {
+              "target": ".stat-card:nth-child(1) > .up.stat-trend",
+              "html": "<div class=\"stat-trend up\"><span class=\"icon icon-sm\" data-i=\"arrow-up\"></span>12.4% vs 昨日</div>"
+            },
+            {
+              "target": ".stat-card:nth-child(2) > .stat-label",
+              "html": "<div class=\"stat-label\">今日核销LSC</div>"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "description": "Ensures the document has a main landmark",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "description": "Ensures all page content is contained by landmarks",
+          "count": 9,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": ".items-center > div:nth-child(1)",
+              "html": "<div><div style=\"font-size:20px;font-weight:700;\">经营总览</div><div style=\"font-size:13px;color:var(--c-text-3);margin-top:4px;\">核心指标 · 核销趋势 · 商品销售分布 · LSC流水构成</div></div>"
+            },
+            {
+              "target": ".stat-grid",
+              "html": "<div class=\"stat-grid mb-5 stagger\">"
+            },
+            {
+              "target": ".chart-card.card.mb-5 > .card-head",
+              "html": "<div class=\"card-head\" style=\"border:none;padding:0 0 12px;\">\n      <div><div class=\"card-title\">近7日核销趋势</div><div class=\"card-sub\">人民币支付金额 vs LSC核销数量</div></div>\n      <span class=\"tag tag-dot tag-su"
+            },
+            {
+              "target": ".chart-card.card.mb-5 > .chart-area > div",
+              "html": "<div style=\"margin-top:8px;\"><span class=\"tag tag-dot\" style=\"background:var(--c-accent-deep);color:#fff;font-size:10px;\">支付金额(¥×1000)</span> <span class=\"tag tag-dot\" style=\"background:var(--c-availa"
+            },
+            {
+              "target": ".chart-card.card:nth-child(1) > .card-head",
+              "html": "<div class=\"card-head\" style=\"border:none;padding:0 0 12px;\">\n        <div><div class=\"card-title\">商品销售分布</div><div class=\"card-sub\">本店铺商品LSC销售额占比</div></div>\n      </div>"
+            },
+            {
+              "target": ".chart-card.card:nth-child(1) > div:nth-child(3)",
+              "html": "<div style=\"display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;\"><span class=\"tag tag-dot\" style=\"background:var(--c-primary);color:#fff;font-size:10px;\">精品双人套餐·…</span></div>"
+            }
+          ]
+        }
+      ],
+      "incomplete": 1,
+      "passes": 22
+    },
+    "screenshot": "audit-report/merchant__md__768x1024.png"
+  },
+  {
+    "app": "merchant",
+    "appName": "商家管理后台",
+    "size": "lg",
+    "width": 1440,
+    "height": 900,
+    "sizeLabel": "桌面 1440×900",
+    "url": "http://127.0.0.1:8765/merchant-admin/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 2,
+      "input": 1,
+      "img": 0,
+      "svg": 16,
+      "heading": 0,
+      "totalText": 1052
+    },
+    "axe": {
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensures the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "count": 16,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": ".breadcrumb > span:nth-child(1)",
+              "html": "<span>商家管理后台</span>"
+            },
+            {
+              "target": ".user-chip > div:nth-child(2) > div:nth-child(2)",
+              "html": "<div style=\"font-size:11px;color:var(--c-text-3);\">M20001 · A档商家</div>"
+            },
+            {
+              "target": ".items-center > div:nth-child(1) > div:nth-child(2)",
+              "html": "<div style=\"font-size:13px;color:var(--c-text-3);margin-top:4px;\">核心指标 · 核销趋势 · 商品销售分布 · LSC流水构成</div>"
+            },
+            {
+              "target": ".stat-card:nth-child(1) > .stat-label",
+              "html": "<div class=\"stat-label\">今日营收</div>"
+            },
+            {
+              "target": ".stat-card:nth-child(1) > .up.stat-trend",
+              "html": "<div class=\"stat-trend up\"><span class=\"icon icon-sm\" data-i=\"arrow-up\"></span>12.4% vs 昨日</div>"
+            },
+            {
+              "target": ".stat-card:nth-child(2) > .stat-label",
+              "html": "<div class=\"stat-label\">今日核销LSC</div>"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "description": "Ensures the document has a main landmark",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "description": "Ensures all page content is contained by landmarks",
+          "count": 9,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": ".items-center > div:nth-child(1)",
+              "html": "<div><div style=\"font-size:20px;font-weight:700;\">经营总览</div><div style=\"font-size:13px;color:var(--c-text-3);margin-top:4px;\">核心指标 · 核销趋势 · 商品销售分布 · LSC流水构成</div></div>"
+            },
+            {
+              "target": ".stat-grid",
+              "html": "<div class=\"stat-grid mb-5 stagger\">"
+            },
+            {
+              "target": ".chart-card.card.mb-5 > .card-head",
+              "html": "<div class=\"card-head\" style=\"border:none;padding:0 0 12px;\">\n      <div><div class=\"card-title\">近7日核销趋势</div><div class=\"card-sub\">人民币支付金额 vs LSC核销数量</div></div>\n      <span class=\"tag tag-dot tag-su"
+            },
+            {
+              "target": ".chart-card.card.mb-5 > .chart-area > div",
+              "html": "<div style=\"margin-top:8px;\"><span class=\"tag tag-dot\" style=\"background:var(--c-accent-deep);color:#fff;font-size:10px;\">支付金额(¥×1000)</span> <span class=\"tag tag-dot\" style=\"background:var(--c-availa"
+            },
+            {
+              "target": ".chart-card.card:nth-child(1) > .card-head",
+              "html": "<div class=\"card-head\" style=\"border:none;padding:0 0 12px;\">\n        <div><div class=\"card-title\">商品销售分布</div><div class=\"card-sub\">本店铺商品LSC销售额占比</div></div>\n      </div>"
+            },
+            {
+              "target": ".chart-card.card:nth-child(1) > div:nth-child(3)",
+              "html": "<div style=\"display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;\"><span class=\"tag tag-dot\" style=\"background:var(--c-primary);color:#fff;font-size:10px;\">精品双人套餐·…</span></div>"
+            }
+          ]
+        }
+      ],
+      "incomplete": 1,
+      "passes": 22
+    },
+    "screenshot": "audit-report/merchant__lg__1440x900.png"
+  },
+  {
+    "app": "mobile",
+    "appName": "移动端 APP",
+    "size": "sm",
+    "width": 360,
+    "height": 740,
+    "sizeLabel": "移动端 360×740 (iPhone SE)",
+    "url": "http://127.0.0.1:8765/mobile-app/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 9,
+      "input": 2,
+      "img": 0,
+      "svg": 72,
+      "heading": 1,
+      "totalText": 340
+    },
+    "axe": {
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensures the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "count": 11,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#statusbar > span",
+              "html": "<span>9:41</span>"
+            },
+            {
+              "target": ".section-more[onclick=\"showScreen('mall')\"]",
+              "html": "<div class=\"section-more\" onclick=\"showScreen('mall')\">更多 <span class=\"icon icon-sm\" data-i=\"arrowRight\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M5 12h14"
+            },
+            {
+              "target": ".product-m[onclick=\"showScreen('product')\"]:nth-child(1) > .product-m-body > .product-m-price",
+              "html": "<div class=\"product-m-price\">¥399</div>"
+            },
+            {
+              "target": ".product-m[onclick=\"showScreen('product')\"]:nth-child(1) > .product-m-body > .product-m-lsc",
+              "html": "<div class=\"product-m-lsc\">可抵 399 LSC</div>"
+            },
+            {
+              "target": ".product-m[onclick=\"showScreen('product')\"]:nth-child(2) > .product-m-body > .product-m-price",
+              "html": "<div class=\"product-m-price\">¥888</div>"
+            },
+            {
+              "target": ".product-m[onclick=\"showScreen('product')\"]:nth-child(2) > .product-m-body > .product-m-lsc",
+              "html": "<div class=\"product-m-lsc\">可抵 888 LSC</div>"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "description": "Ensures the document has a main landmark",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "description": "Ensures all page content is contained by landmarks",
+          "count": 22,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#statusbar > span",
+              "html": "<span>9:41</span>"
+            },
+            {
+              "target": ".home-loc > span:nth-child(2)",
+              "html": "<span>上海·浦东新区</span>"
+            },
+            {
+              "target": ".home-hero > div:nth-child(2)",
+              "html": "<div style=\"font-size:13px;opacity:0.8;\">您好, 李先生</div>"
+            },
+            {
+              "target": ".home-hero > div:nth-child(3)",
+              "html": "<div style=\"font-size:22px;font-weight:700;margin-top:2px;\">链盛通 · 让消费创造权益</div>"
+            },
+            {
+              "target": ".wallet-float",
+              "html": "<div class=\"wallet-float\">"
+            },
+            {
+              "target": ".quick-item[onclick=\"showScreen('scan')\"] > span",
+              "html": "<span>扫一扫</span>"
+            }
+          ]
+        },
+        {
+          "id": "scrollable-region-focusable",
+          "impact": "serious",
+          "description": "Ensure elements that have scrollable content are accessible by keyboard",
+          "count": 2,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/scrollable-region-focusable?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#content",
+              "html": "<div class=\"app-content\" id=\"content\">"
+            },
+            {
+              "target": ".h-scroll",
+              "html": "<div class=\"h-scroll\">"
+            }
+          ]
+        }
+      ],
+      "incomplete": 1,
+      "passes": 8
+    },
+    "screenshot": "audit-report/mobile__sm__360x740.png"
+  },
+  {
+    "app": "mobile",
+    "appName": "移动端 APP",
+    "size": "md",
+    "width": 768,
+    "height": 1024,
+    "sizeLabel": "平板 768×1024 (iPad mini)",
+    "url": "http://127.0.0.1:8765/mobile-app/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 9,
+      "input": 2,
+      "img": 0,
+      "svg": 72,
+      "heading": 1,
+      "totalText": 340
+    },
+    "axe": {
+      "violations": [
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "description": "Ensures the document has a main landmark",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "description": "Ensures all page content is contained by landmarks",
+          "count": 22,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#statusbar > span",
+              "html": "<span>9:41</span>"
+            },
+            {
+              "target": ".home-loc > span:nth-child(2)",
+              "html": "<span>上海·浦东新区</span>"
+            },
+            {
+              "target": ".home-hero > div:nth-child(2)",
+              "html": "<div style=\"font-size:13px;opacity:0.8;\">您好, 李先生</div>"
+            },
+            {
+              "target": ".home-hero > div:nth-child(3)",
+              "html": "<div style=\"font-size:22px;font-weight:700;margin-top:2px;\">链盛通 · 让消费创造权益</div>"
+            },
+            {
+              "target": ".wallet-float",
+              "html": "<div class=\"wallet-float\">"
+            },
+            {
+              "target": ".quick-item[onclick=\"showScreen('scan')\"] > span",
+              "html": "<span>扫一扫</span>"
+            }
+          ]
+        },
+        {
+          "id": "scrollable-region-focusable",
+          "impact": "serious",
+          "description": "Ensure elements that have scrollable content are accessible by keyboard",
+          "count": 2,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/scrollable-region-focusable?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#content",
+              "html": "<div class=\"app-content\" id=\"content\">"
+            },
+            {
+              "target": ".h-scroll",
+              "html": "<div class=\"h-scroll\">"
+            }
+          ]
+        }
+      ],
+      "incomplete": 1,
+      "passes": 8
+    },
+    "screenshot": "audit-report/mobile__md__768x1024.png"
+  },
+  {
+    "app": "mini",
+    "appName": "微信小程序",
+    "size": "sm",
+    "width": 360,
+    "height": 740,
+    "sizeLabel": "移动端 360×740 (iPhone SE)",
+    "url": "http://127.0.0.1:8765/mini-program/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 4,
+      "input": 1,
+      "img": 0,
+      "svg": 66,
+      "heading": 4,
+      "totalText": 397
+    },
+    "axe": {
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensures the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "count": 9,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#wx-statusbar > span",
+              "html": "<span>9:41</span>"
+            },
+            {
+              "target": "#wx-nav-title",
+              "html": "<span id=\"wx-nav-title\">链盛通LSC</span>"
+            },
+            {
+              "target": ".wx-notice-tag",
+              "html": "<span class=\"wx-notice-tag\">公告</span>"
+            },
+            {
+              "target": "span[onclick=\"showScreen('mall')\"]",
+              "html": "<span class=\"more\" onclick=\"showScreen('mall')\">更多 ›</span>"
+            },
+            {
+              "target": "div[data-screen=\"home\"] > span:nth-child(2)",
+              "html": "<span>首页</span>"
+            },
+            {
+              "target": "div[data-screen=\"mall\"] > span:nth-child(2)",
+              "html": "<span>商城</span>"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "description": "Ensures the document has a main landmark",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "description": "Ensures all page content is contained by landmarks",
+          "count": 28,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#wx-statusbar > span",
+              "html": "<span>9:41</span>"
+            },
+            {
+              "target": "#wx-nav-title",
+              "html": "<span id=\"wx-nav-title\">链盛通LSC</span>"
+            },
+            {
+              "target": ".wx-hero-loc > span:nth-child(2)",
+              "html": "<span>上海·浦东</span>"
+            },
+            {
+              "target": ".wx-hero > div:nth-child(2)",
+              "html": "<div style=\"font-size:13px;opacity:0.9;\">您好, 李先生</div>"
+            },
+            {
+              "target": ".wx-hero > div:nth-child(3)",
+              "html": "<div style=\"font-size:20px;font-weight:700;margin-top:2px;\">消费即创造权益</div>"
+            },
+            {
+              "target": ".lsc-float",
+              "html": "<div class=\"lsc-float\">"
+            }
+          ]
+        },
+        {
+          "id": "scrollable-region-focusable",
+          "impact": "serious",
+          "description": "Ensure elements that have scrollable content are accessible by keyboard",
+          "count": 2,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/scrollable-region-focusable?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#wx-content",
+              "html": "<div class=\"wx-content\" id=\"wx-content\">"
+            },
+            {
+              "target": ".wx-h-scroll",
+              "html": "<div class=\"wx-h-scroll\">"
+            }
+          ]
+        }
+      ],
+      "incomplete": 1,
+      "passes": 10
+    },
+    "screenshot": "audit-report/mini__sm__360x740.png"
+  },
+  {
+    "app": "mini",
+    "appName": "微信小程序",
+    "size": "md",
+    "width": 768,
+    "height": 1024,
+    "sizeLabel": "平板 768×1024 (iPad mini)",
+    "url": "http://127.0.0.1:8765/mini-program/index.html",
+    "loadedOK": true,
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "netErrors": [],
+    "counts": {
+      "a": 0,
+      "button": 4,
+      "input": 1,
+      "img": 0,
+      "svg": 66,
+      "heading": 4,
+      "totalText": 397
+    },
+    "axe": {
+      "violations": [
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "description": "Ensures the document has a main landmark",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "count": 1,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "html",
+              "html": "<html lang=\"zh-CN\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "description": "Ensures all page content is contained by landmarks",
+          "count": 28,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#wx-statusbar > span",
+              "html": "<span>9:41</span>"
+            },
+            {
+              "target": "#wx-nav-title",
+              "html": "<span id=\"wx-nav-title\">链盛通LSC</span>"
+            },
+            {
+              "target": ".wx-hero-loc > span:nth-child(2)",
+              "html": "<span>上海·浦东</span>"
+            },
+            {
+              "target": ".wx-hero > div:nth-child(2)",
+              "html": "<div style=\"font-size:13px;opacity:0.9;\">您好, 李先生</div>"
+            },
+            {
+              "target": ".wx-hero > div:nth-child(3)",
+              "html": "<div style=\"font-size:20px;font-weight:700;margin-top:2px;\">消费即创造权益</div>"
+            },
+            {
+              "target": ".lsc-float",
+              "html": "<div class=\"lsc-float\">"
+            }
+          ]
+        },
+        {
+          "id": "scrollable-region-focusable",
+          "impact": "serious",
+          "description": "Ensure elements that have scrollable content are accessible by keyboard",
+          "count": 2,
+          "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/scrollable-region-focusable?application=LSC-V6.2-AI%20A11y",
+          "nodes": [
+            {
+              "target": "#wx-content",
+              "html": "<div class=\"wx-content\" id=\"wx-content\">"
+            },
+            {
+              "target": ".wx-h-scroll",
+              "html": "<div class=\"wx-h-scroll\">"
+            }
+          ]
+        }
+      ],
+      "incomplete": 1,
+      "passes": 10
+    },
+    "screenshot": "audit-report/mini__md__768x1024.png"
+  }
+]
