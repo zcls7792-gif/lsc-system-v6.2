@@ -332,7 +332,7 @@
 <div class="phone-frame">
   <div class="phone-screen">
     <!-- 状态栏 -->
-    <div class="status-bar" id="statusbar">
+    <div class="status-bar" id="statusbar" aria-hidden="true">
       <span>9:41</span>
       <div class="status-icons">
         <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M2 22h2V10H2v12zm5 0h2V2H7v20zm5 0h2v-8h-2v8zm5 0h2V6h-2v16z"/></svg>
@@ -342,7 +342,8 @@
     </div>
 
     <!-- 内容区 -->
-    <div class="app-content" id="content">
+    <main class="app-content" id="content" role="main" aria-label="应用主内容">
+      <h1 class="sr-only">链盛通LSC消费者APP</h1>
       <div class="screen active" id="screen-home"></div>
       <div class="screen" id="screen-mall"></div>
       <div class="screen" id="screen-scan"></div>
@@ -354,10 +355,10 @@
       <div class="screen" id="screen-ai"></div>
       <div class="screen" id="screen-paycode"></div>
       <div class="screen" id="screen-product"></div>
-    </div>
+    </main>
 
     <!-- 底部 Tab -->
-    <div class="tab-bar" id="tabbar">
+    <div class="tab-bar" id="tabbar" role="navigation" aria-label="主导航">
       <div class="tab-item active" data-screen="home"><span class="icon" data-i="home"></span><span>首页</span></div>
       <div class="tab-item" data-screen="mall"><span class="icon" data-i="mall"></span><span>商城</span></div>
       <div class="tab-item" data-screen="scan" style="flex:0.6;"><div class="tab-scan"><span class="icon" data-i="scan"></span></div><div class="tab-scan-label">扫码</div></div>

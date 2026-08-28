@@ -16,6 +16,7 @@
     "e2e:report": "npx playwright show-report e2e-report",
     "e2e:install": "npx playwright install chromium --with-deps",
     "audit:a11y": "node audit-a11y-baseline.js",
+    "audit:a11y:static": "node audit-a11y-static.js",
     "coverage:cobertura": "node lcov-to-cobertura.js",
     "all:hard": "npm run ci && npm run e2e && npm run audit:a11y"
   },

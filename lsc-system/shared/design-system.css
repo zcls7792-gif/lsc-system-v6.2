@@ -15,19 +15,19 @@
 
   /* 强调色 - 鎏金 */
   --c-accent: #C8A24B;         /* 鎏金强调 */
-  --c-accent-deep: #9C7B30;
+  --c-accent-deep: #7A5E26;     /* 鎏金深 - WCAG AA 4.5:1 on white */
   --c-accent-soft: #F4E6BD;
 
   /* 业务专属色 - 锁定池(藏青) vs 可用池(翡翠) */
   --c-locked: #2D4A8A;         /* 锁定池 - 藏青 */
   --c-locked-tint: #E8EDF7;
   --c-locked-soft: #4A6BB8;
-  --c-available: #2B8C5A;      /* 可用池 - 翡翠 */
+  --c-available: #1F7A48;      /* 可用池 - 翡翠 (WCAG AA 4.5:1 on white) */
   --c-available-tint: #E4F4EC;
   --c-available-soft: #4FAE7C;
 
   /* 功能色 */
-  --c-success: #2B8C5A;
+  --c-success: #1F7A48;
   --c-warning: #D97706;
   --c-danger: #C8332B;
   --c-info: #2563EB;
@@ -40,7 +40,7 @@
   --c-bg-dark: #082E2C;
   --c-text-1: #1A1F2E;         /* 主要文字 */
   --c-text-2: #4B5563;         /* 次要文字 */
-  --c-text-3: #8A92A3;         /* 辅助文字 */
+  --c-text-3: #525A66;         /* 辅助文字 (WCAG AA 4.5:1 on #F5F3EC) */
   --c-text-inv: #FFFFFF;
   --c-border: #E3DFD3;         /* 暖色边框 */
   --c-border-soft: #EFEBE0;
@@ -151,6 +151,8 @@ img { max-width: 100%; display: block; }
 .text-danger { color: var(--c-danger); }
 .text-success { color: var(--c-success); }
 .text-warning { color: var(--c-warning); }
+/* 屏幕阅读器专用: 视觉隐藏但可访问 */
+.sr-only { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
 .mt-2 { margin-top: var(--sp-2); }
 .mt-3 { margin-top: var(--sp-3); }
 .mt-4 { margin-top: var(--sp-4); }

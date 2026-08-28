@@ -65,6 +65,27 @@ const LSC = {
       clearTimeout(t);
       t = setTimeout(() => fn.apply(this, a), wait);
     };
+  },
+  // A11y 增强: 扫描所有 overflow:auto/scroll 元素,补 tabindex=0 + role=region
+  // 解决 axe-core scrollable-region-focusable 违规
+  a11yEnhance(root = document) {
+    const els = root.querySelectorAll('*');
+    let n = 0;
+    for (const el of els) {
+      if (el.hasAttribute('tabindex')) continue;
+      const cs = getComputedStyle(el);
+      const ov = (cs.overflowX + ' ' + cs.overflowY).toLowerCase();
+      if (ov.includes('auto') || ov.includes('scroll')) {
+        el.setAttribute('tabindex', '0');
+        if (!el.getAttribute('role')) el.setAttribute('role', 'region');
+        if (!el.getAttribute('aria-label')) {
+          const t = (el.textContent || '').trim().slice(0, 30);
+          el.setAttribute('aria-label', t ? `可滚动区域: ${t}` : '可滚动区域');
+        }
+        n++;
+      }
+    }
+    return n;
   }
 };
 

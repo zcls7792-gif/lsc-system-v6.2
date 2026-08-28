@@ -89,7 +89,7 @@ function renderHome() {
     <span>每日凌晨2点动态释放LSC, 当前核销率k=0.72%, 释放速率0.0385%</span>
   </div>
 
-  <div class="wx-section-title"><h3>权益商城推荐</h3><span class="more" onclick="showScreen('mall')">更多 ›</span></div>
+  <div class="wx-section-title"><h2>权益商城推荐</h2><span class="more" onclick="showScreen('mall')">更多 ›</span></div>
   <div class="wx-h-scroll">
     <div class="wx-product" onclick="showScreen('product')">
       <div class="wx-product-img"><span class="icon" data-i="product"></span></div>
@@ -105,7 +105,7 @@ function renderHome() {
     </div>
   </div>
 
-  <div class="wx-section-title"><h3>附近商家</h3><span class="more">全部 ›</span></div>
+  <div class="wx-section-title"><h2>附近商家</h2><span class="more">全部 ›</span></div>
   <div class="wx-merchant" onclick="wxScanPay()">
     <div class="wx-merchant-logo">锦</div>
     <div class="wx-merchant-info">
@@ -381,7 +381,7 @@ function renderPromo() {
     <button class="wx-btn wx-btn-green" onclick="wxShare()"><span class="icon" data-i="promotion" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></span>分享给微信好友</button>
     <button class="wx-btn wx-btn-outline" style="margin-top:8px;" onclick="showTip('已保存推广码到相册')">保存推广码图片</button>
   </div>
-  <div class="wx-section-title"><h3>推广战绩</h3></div>
+  <div class="wx-section-title"><h2>推广战绩</h2></div>
   <div style="display:flex;gap:8px;padding:0 12px 12px;">
     <div style="flex:1;background:#fff;border-radius:10px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;font-family:var(--ff-mono);color:var(--c-wx-green-deep);">248</div><div class="text-xs text-muted">已邀请</div></div>
     <div style="flex:1;background:#fff;border-radius:10px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;font-family:var(--ff-mono);color:var(--c-wx-green-deep);">186</div><div class="text-xs text-muted">活跃</div></div>
@@ -446,7 +446,7 @@ function renderProduct(idx) {
         <div style="font-size:15px;font-weight:700;color:#1a1a1a;font-family:var(--ff-mono);">${p.stock} 件</div>
       </div>
     </div>
-    <div class="wx-section-title" style="padding:14px 0 8px;"><h3 style="font-size:14px;">商品详情</h3></div>
+    <div class="wx-section-title" style="padding:14px 0 8px;"><h2 style="font-size:14px;">商品详情</h2></div>
     <div class="text-sm" style="line-height:1.7;color:#666;">${p.desc}</div>
     <div style="height:60px;"></div>
   </div>
@@ -471,3 +471,5 @@ function showTip(msg) {
 renderHome(); renderMall(); renderScan(); renderWallet(); renderMe();
 renderOrders(); renderPromo(); renderProduct();
 showScreen('home');
+// A11y: 为滚动容器补 tabindex=0 / role=region / aria-label, 解决 axe-core scrollable-region-focusable
+if (typeof LSC !== 'undefined' && LSC.a11yEnhance) LSC.a11yEnhance(document.getElementById('wx-content'));

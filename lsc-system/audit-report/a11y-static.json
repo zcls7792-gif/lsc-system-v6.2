@@ -1,0 +1,114 @@
+{
+  "timestamp": "2026-08-28T08:12:32.105Z",
+  "method": "jsdom + axe-core static",
+  "apps": [
+    {
+      "app": "platform",
+      "appName": "平台管理后台",
+      "axe": {
+        "violations": [],
+        "passes": 32,
+        "incomplete": 2
+      }
+    },
+    {
+      "app": "merchant",
+      "appName": "商家管理后台",
+      "axe": {
+        "violations": [],
+        "passes": 27,
+        "incomplete": 2
+      }
+    },
+    {
+      "app": "mobile",
+      "appName": "移动端 APP",
+      "axe": {
+        "violations": [],
+        "passes": 22,
+        "incomplete": 2
+      }
+    },
+    {
+      "app": "mini",
+      "appName": "微信小程序",
+      "axe": {
+        "violations": [],
+        "passes": 24,
+        "incomplete": 2
+      }
+    }
+  ],
+  "contrast": [
+    {
+      "name": "辅助文字 --c-text-3 vs 主背景 --c-bg",
+      "fg": "#525A66",
+      "bg": "#F5F3EC",
+      "ratio": 6.28,
+      "pass": true
+    },
+    {
+      "name": "辅助文字 --c-text-3 vs 卡片 --c-bg-card",
+      "fg": "#525A66",
+      "bg": "#FFFFFF",
+      "ratio": 6.97,
+      "pass": true
+    },
+    {
+      "name": "鎏金深 --c-accent-deep vs 白色",
+      "fg": "#7A5E26",
+      "bg": "#FFFFFF",
+      "ratio": 6.08,
+      "pass": true
+    },
+    {
+      "name": "鎏金深 --c-accent-deep vs 主背景 --c-bg",
+      "fg": "#7A5E26",
+      "bg": "#F5F3EC",
+      "ratio": 5.47,
+      "pass": true
+    },
+    {
+      "name": "可用池 --c-available vs 白色",
+      "fg": "#1F7A48",
+      "bg": "#FFFFFF",
+      "ratio": 5.34,
+      "pass": true
+    },
+    {
+      "name": "可用池 --c-available vs 主背景 --c-bg",
+      "fg": "#1F7A48",
+      "bg": "#F5F3EC",
+      "ratio": 4.81,
+      "pass": true
+    },
+    {
+      "name": "成功色 --c-success vs 白色",
+      "fg": "#1F7A48",
+      "bg": "#FFFFFF",
+      "ratio": 5.34,
+      "pass": true
+    },
+    {
+      "name": "主文字 --c-text-1 vs 主背景 --c-bg",
+      "fg": "#1A1F2E",
+      "bg": "#F5F3EC",
+      "ratio": 14.78,
+      "pass": true
+    },
+    {
+      "name": "次文字 --c-text-2 vs 主背景 --c-bg",
+      "fg": "#4B5563",
+      "bg": "#F5F3EC",
+      "ratio": 6.81,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "totalViolations": 0,
+    "totalPasses": 105,
+    "byRule": {},
+    "contrastPass": 9,
+    "contrastFail": 0
+  }
+}

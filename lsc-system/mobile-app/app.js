@@ -651,3 +651,5 @@ function showTip(msg) {
 renderHome(); renderMall(); renderScan(); renderWallet(); renderMe();
 renderOrders(); renderPromo(); renderAI(); renderPaycode(); renderProduct();
 showScreen('home');
+// A11y: 为滚动容器补 tabindex=0 / role=region / aria-label, 解决 axe-core scrollable-region-focusable
+if (typeof LSC !== 'undefined' && LSC.a11yEnhance) LSC.a11yEnhance(document.getElementById('content'));

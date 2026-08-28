@@ -172,7 +172,7 @@
     display:flex; align-items:center; justify-content:space-between;
     padding: 16px 16px 10px;
   }
-  .wx-section-title h3 { font-size:16px; font-weight:600; color:#1a1a1a; }
+  .wx-section-title h2 { font-size:16px; font-weight:600; color:#1a1a1a; }
   .wx-section-title .more { font-size:12px; color:#999; }
 
   /* 横向滚动商品 */
@@ -328,7 +328,7 @@
 <div class="phone-frame">
   <div class="phone-screen">
     <!-- 状态栏 -->
-    <div class="wx-statusbar" id="wx-statusbar">
+    <div class="wx-statusbar" id="wx-statusbar" aria-hidden="true">
       <span>9:41</span>
       <div class="wx-status-icons">
         <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M2 22h2V10H2v12zm5 0h2V2H7v20zm5 0h2v-8h-2v8zm5 0h2V6h-2v16z"/></svg>
@@ -338,7 +338,7 @@
     </div>
 
     <!-- 导航栏(胶囊) - 内容随页面变化 -->
-    <div class="wx-navbar" id="wx-navbar">
+    <div class="wx-navbar" id="wx-navbar" role="banner" aria-label="顶部导航栏">
       <span id="wx-nav-title">链盛通LSC</span>
       <div class="wx-capsule">
         <div class="cap-dot"><span class="icon" data-i="more"></span></div>
@@ -348,7 +348,8 @@
     </div>
 
     <!-- 内容区 -->
-    <div class="wx-content" id="wx-content">
+    <main class="wx-content" id="wx-content" role="main" aria-label="应用主内容">
+      <h1 class="sr-only">链盛通LSC微信小程序</h1>
       <div class="screen active" id="screen-home"></div>
       <div class="screen" id="screen-mall"></div>
       <div class="screen" id="screen-scan"></div>
@@ -357,10 +358,10 @@
       <div class="screen" id="screen-orders"></div>
       <div class="screen" id="screen-promo"></div>
       <div class="screen" id="screen-product"></div>
-    </div>
+    </main>
 
     <!-- TabBar -->
-    <div class="wx-tabbar" id="wx-tabbar">
+    <div class="wx-tabbar" id="wx-tabbar" role="navigation" aria-label="主导航">
       <div class="wx-tab active" data-screen="home"><span class="icon" data-i="home"></span><span>首页</span></div>
       <div class="wx-tab" data-screen="mall"><span class="icon" data-i="mall"></span><span>商城</span></div>
       <div class="wx-tab" data-screen="scan"><span class="icon" data-i="scan"></span><span>扫码</span></div>

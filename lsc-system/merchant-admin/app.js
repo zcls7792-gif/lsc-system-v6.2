@@ -30,6 +30,8 @@ function setView(html) {
     const key = el.getAttribute('data-i');
     if (ICONS[key]) el.innerHTML = ICONS[key];
   });
+  // A11y: 为滚动容器补 tabindex=0 / role=region / aria-label, 解决 axe-core scrollable-region-focusable
+  if (typeof LSC !== 'undefined' && LSC.a11yEnhance) LSC.a11yEnhance(v);
 }
 
 /* 环形进度 */
