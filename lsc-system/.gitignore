@@ -27,6 +27,23 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# -------- Playwright / Chromium cache --------
+.cache/playwright-browsers/
+test-results/
+.playwright-cache/
+.ms-playwright/
+
+# -------- A11y Diff / 运行时临时 JSON (基线文件 .baseline.json 例外, 需要入库) --------
+audit-report/*.png
+audit-report/a11y-baseline.json
+audit-report/a11y-diff.json
+audit-report/a11y-diff.md
+audit-report/[0-9a-f]*/
+audit-report/PR-*/
+
+# Note: 请务必把"master 绿版"固化为 `audit-report/a11y-baseline.baseline.json` 提交到仓库
+#       命令: `npm run audit:a11y:baseline-save` 然后 `git add audit-report/a11y-baseline.baseline.json`
+
 # -------- Editor / OS --------
 .DS_Store
 Thumbs.db

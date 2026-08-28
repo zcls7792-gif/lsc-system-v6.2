@@ -17,6 +17,58 @@ const fs = require('fs');
 const https = require('https');
 const http = require('http');
 
+/* ------------------------------------------------------------------ */
+/*  CLI 参数解析 (CI 可用)                                            */
+/* ------------------------------------------------------------------ */
+function parseArgs(argv) {
+  const opts = {
+    strict: process.env.CI === 'true' || process.env.GITLAB_CI === 'true' || process.env.GITHUB_ACTIONS === 'true',
+    // 仅 strict 模式下, 违规/consoleErr/网络/缺alt/consoleWarn 哪些会触发非零退出
+    failOn: { violations: true, consoleE: true, consoleW: false, net4xx5xx: true, missingAlt: true },
+    // 允许的每类阈值 (默认 0)
+    maxViolations: 0, maxConsoleE: 0, maxConsoleW: 0, maxNet: 0,
+    label: '',
+  };
+  for (let i = 2; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--strict')           opts.strict = true;
+    else if (a === '--no-strict')   opts.strict = false;
+    else if (a === '--fail-warn')   opts.failOn.consoleW = true;
+    else if (a === '--allow-warn')  opts.failOn.consoleW = false;
+    else if (a === '--label' && argv[i+1]) { opts.label = argv[++i]; }
+    else if (a.startsWith('--label=')) { opts.label = a.slice('--label='.length); }
+    else if (a.startsWith('--max-violations=')) opts.maxViolations = +a.split('=')[1];
+    else if (a.startsWith('--max-consoleE='))  opts.maxConsoleE   = +a.split('=')[1];
+    else if (a.startsWith('--max-consoleW='))  opts.maxConsoleW   = +a.split('=')[1];
+    else if (a.startsWith('--max-net='))       opts.maxNet        = +a.split('=')[1];
+    else if (a === '-h' || a === '--help') {
+      console.log(`
+LSC V6.2-AI · A11y(axe-core) 16 快照审计 (4 app × 2 size × light/dark)
+
+用法:  node audit-a11y-baseline.js [选项]
+
+选项:
+  --strict / --no-strict    严格模式 (默认 CI=true 自动开启)
+  --fail-warn / --allow-warn   console.warn 是否视为失败 (默认 strict 下也放行)
+  --max-violations=N        允许的 axe violations (strict 下默认 0)
+  --max-consoleE=N          允许的 console.error 数量 (默认 0)
+  --max-consoleW=N          允许的 console.warn 数量 (默认 Infinity)
+  --max-net=N               允许的 4xx/5xx 次数 (默认 0)
+  --label=NAME              产物/报告里附一个可读标签 (PR/MR sha/分支名)
+  -h, --help                本帮助
+
+退出码:
+  0  所有阈值通过
+  1  致命错误 (playwright 启动失败 / 文件系统错误)
+  2  违反 CI 阈值 (violations / consoleE / net / missingAlt 越限)
+  3  consoleW 越限 (仅 --fail-warn 生效)
+`); process.exit(0);
+    }
+  }
+  return opts;
+}
+const OPTS = parseArgs(process.env.NODE_ENV === 'test' ? process.argv : process.argv);
+
 const ROOT = __dirname;
 const OUT_DIR = path.join(ROOT, 'audit-report');
 fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -313,8 +365,44 @@ async function main() {
   }
   if (browser) await browser.close();
 
+  // 先预聚合所有统计量 (生成 JSON/Markdown 结论均需要)
+  let i = 0, tv = 0, terr = 0, twarn = 0, tnet = 0, timg = 0;
+  const statsByScheme = { light: { v:0, pass:0, inc:0 }, dark: { v:0, pass:0, inc:0 } };
+  for (const r of results) {
+    i++;
+    const v  = (r.axe && r.axe.violations)   ? r.axe.violations.length                   : 0;
+    const pass   = (r.axe && r.axe.passes)       ? r.axe.passes                             : 0;
+    const inc    = (r.axe && r.axe.incomplete)   ? r.axe.incomplete                         : 0;
+    const scheme = r.colorScheme || 'light';
+    statsByScheme[scheme].v    += v;
+    statsByScheme[scheme].pass += pass;
+    statsByScheme[scheme].inc  += inc;
+    tv    += v;
+    terr  += (Array.isArray(r.consoleErrors)   ? r.consoleErrors.length   : (r.consoleErrors  || 0));
+    twarn += (Array.isArray(r.consoleWarnings) ? r.consoleWarnings.length : (r.consoleWarnings|| 0));
+    tnet  += (Array.isArray(r.netErrors)       ? r.netErrors.length       : (r.netErrors    || 0));
+    timg  += (r.counts && r.counts.img)        ? r.counts.img             : 0;
+  }
+
   // 写 JSON
-  fs.writeFileSync(JSON_OUT, JSON.stringify(results, null, 2));
+  const payload = {
+    meta: {
+      generatedAt: new Date().toISOString(),
+      label: OPTS.label || '',
+      strict: !!OPTS.strict,
+      thresholds: {
+        maxViolations: OPTS.maxViolations, maxConsoleE: OPTS.maxConsoleE,
+        maxConsoleW: OPTS.maxConsoleW, maxNet: OPTS.maxNet,
+      },
+      summary: {
+        totalViolations: tv, totalConsoleE: terr, totalConsoleW: twarn,
+        totalNetErrors: tnet, totalMissingAlt: timg,
+        light: statsByScheme.light, dark: statsByScheme.dark,
+      },
+    },
+    records: results,
+  };
+  fs.writeFileSync(JSON_OUT, JSON.stringify(payload, null, 2));
 
   // 写 Markdown 报告
   const lines = [];
@@ -326,21 +414,19 @@ async function main() {
   lines.push('');
   lines.push('| # | 应用 | 视口 | 配色 | 加载 | 违规(V) | 待核查(Inc) | 通过规则 | console.error | console.warn | 4xx/5xx | 无 alt 图 | 正文长度 |');
   lines.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
-  let i = 0, tv = 0, terr = 0, twarn = 0, tnet = 0, timg = 0;
-  const statsByScheme = { light: { v:0, pass:0, inc:0 }, dark: { v:0, pass:0, inc:0 } };
+  // 重新遍历填表格 (stats 已经聚合过, 按结果逐行渲染)
+  i = 0;
   for (const r of results) {
     i++;
     const v = (r.axe && r.axe.violations) ? r.axe.violations.length : 0;
     const inc = (r.axe && r.axe.incomplete) || 0;
     const pass = (r.axe && r.axe.passes) || 0;
-    const scheme = r.colorScheme || 'light';
-    statsByScheme[scheme].v += v;
-    statsByScheme[scheme].pass += pass;
-    statsByScheme[scheme].inc += inc;
-    tv += v; terr += r.consoleErrors.length; twarn += r.consoleWarnings.length;
-    tnet += r.netErrors.length; timg += r.counts.img;
-    const schemeBadge = scheme === 'dark' ? '🌙 dark' : '☀️ light';
-    lines.push(`| ${i} | ${mdEscape(r.appName)} | ${r.width}×${r.height} | ${schemeBadge} | ${r.loadedOK?'✅':'❌'} | ${v} | ${inc} | ${pass} | ${r.consoleErrors.length} | ${r.consoleWarnings.length} | ${r.netErrors.length} | ${r.counts.img} | ${r.counts.totalText} |`);
+    const ce = Array.isArray(r.consoleErrors)   ? r.consoleErrors.length   : (r.consoleErrors  || 0);
+    const cw = Array.isArray(r.consoleWarnings) ? r.consoleWarnings.length : (r.consoleWarnings|| 0);
+    const ne = Array.isArray(r.netErrors)       ? r.netErrors.length       : (r.netErrors    || 0);
+    const mi = (r.counts && r.counts.img)       ? r.counts.img             : 0;
+    const schemeBadge = (r.colorScheme === 'dark') ? '🌙 dark' : '☀️ light';
+    lines.push(`| ${i} | ${mdEscape(r.appName)} | ${r.width}×${r.height} | ${schemeBadge} | ${r.loadedOK?'✅':'❌'} | ${v} | ${inc} | ${pass} | ${ce} | ${cw} | ${ne} | ${mi} | ${r.counts.totalText} |`);
   }
   lines.push(`| — | **合计 16** | — | light(${statsByScheme.light.v})/dark(${statsByScheme.dark.v}) | — | **${tv}** | — | — | **${terr}** | **${twarn}** | **${tnet}** | **${timg}** | — |`);
   lines.push('');
@@ -379,11 +465,43 @@ async function main() {
   else lines.push('- ⚠️ 存在基线问题，建议优先修复 console.error / 4xx/5xx，其次针对 axe violation 分类处理 (查看具体 colorScheme 分类定位)。');
   lines.push('');
   lines.push('> 详细 JSON: `audit-report/a11y-baseline.json`');
+  if (OPTS.label) lines.push(`> CI 标签: \`${OPTS.label}\` · 严格模式: \`${OPTS.strict ? 'on' : 'off'}\``);
   fs.writeFileSync(MD_OUT, lines.join('\n'));
-  console.log(`\n[a11y] 完成 → ${JSON_OUT} / ${MD_OUT}`);
-  // 控制台总览
-  console.log(`  违规=${tv}  consoleE=${terr}  consoleW=${twarn}  net4xx5xx=${tnet}  缺alt=${timg}`);
-  process.exit(tv > 0 || terr > 0 ? 2 : 0);
+  // 控制台总览 + 产物附加
+  const label = OPTS.label ? ` [${OPTS.label}]` : '';
+  console.log(`  违规=${tv}  consoleE=${terr}  consoleW=${twarn}  net4xx5xx=${tnet}  缺alt=${timg}${label}`);
+
+  /* ------- CI 严格模式阈值判定 ------- */
+  if (OPTS.strict) {
+    const fail = [];
+    if (OPTS.failOn.violations  && tv   > OPTS.maxViolations) fail.push(`violations ${tv} > 阈值 ${OPTS.maxViolations}`);
+    if (OPTS.failOn.consoleE    && terr > OPTS.maxConsoleE)  fail.push(`consoleE   ${terr} > 阈值 ${OPTS.maxConsoleE}`);
+    if (OPTS.failOn.net4xx5xx   && tnet > OPTS.maxNet)       fail.push(`net4xx5xx  ${tnet} > 阈值 ${OPTS.maxNet}`);
+    if (OPTS.failOn.missingAlt  && timg > 0)                 fail.push(`缺alt 图像 ${timg} > 阈值 0`);
+    if (OPTS.failOn.consoleW    && twarn> OPTS.maxConsoleW) {
+      console.error('\n[a11y][CI] 阈值违规 (warn):',  `consoleW ${twarn} > 阈值 ${OPTS.maxConsoleW}`);
+      process.exit(3);
+    }
+    if (fail.length) {
+      console.error('\n[a11y][CI] 严格模式阈值违规: ❌');
+      for (const f of fail) console.error('  · ' + f);
+      console.error('\n👉 修复步骤:');
+      console.error('   1) 打开 audit-report/a11y-baseline.md 查看按 colorScheme / app 分类的报告');
+      console.error('   2) 对 color-contrast 类违规,在 shared/design-system.css / 对应 app 的 <style> 中补足深色或浅色覆盖');
+      console.error('   3) 对 consoleE/net4xx5xx, 检查本次 PR 是否引入新的 script/资源路径错误');
+      console.error('   4) 本地 `node audit-a11y-diff.js` 与 master 基线 diff,定位是否为 NEW 违规');
+      process.exit(2);
+    }
+    console.log(`\n[a11y][CI] 严格模式通过 ✅ (阈值: violations≤${OPTS.maxViolations} consoleE≤${OPTS.maxConsoleE} net≤${OPTS.maxNet} missingAlt=0)`);
+    process.exit(0);
+  }
+
+  // 非 strict: 沿用原"violations/consoleErr 即失败"语义,但不把 missingAlt / net4xx5xx 计为致命失败, 输出提示
+  if (tv > 0 || terr > 0) {
+    console.warn('[a11y] 非严格模式下仍有 violations / consoleE, 建议以 --strict 再跑一次.');
+    process.exit(2);
+  }
+  process.exit(0);
 }
 
 main().catch(e => { console.error('FATAL', e); process.exit(1); });

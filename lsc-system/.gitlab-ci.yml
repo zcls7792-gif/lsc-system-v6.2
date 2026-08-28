@@ -23,6 +23,7 @@
 
 stages:
   - test
+  - a11y
   - pages
 
 # ---- 公共变量 -----------------------------------------------------------
@@ -154,7 +155,115 @@ test:chart-coverage:
         path: coverage/cobertura.xml
 
 # ====================================================================
-# Job 2 : Pages (可选,只在 master/tag 生成一次公开报告)
+# Job 2 : 可访问性 16 快照审计 (4 应用 × 2 视口 × light/dark)
+#       · Step A: 跑 Playwright Chromium + axe-core 16 快照, --strict 断言 0 违规
+#       · Step B: 与 master 基线 (a11y-baseline.baseline.json) diff,
+#                 新增违规 → 阻塞 MR 合入
+# ====================================================================
+test:a11y:
+  extends: [.node_setup]
+  stage: a11y
+  timeout: 25m
+  interruptible: true
+  cache:
+    # 复用 npm_cache 锚点, 但 Playwright Chromium 需要单独安装
+    <<: *npm_cache
+    policy: pull-push
+  variables:
+    # 让 Playwright 将浏览器装到项目目录下,便于被 cache 命中,避免每任务下载 250MB+
+    PLAYWRIGHT_BROWSERS_PATH: "$CI_PROJECT_DIR/.cache/playwright-browsers"
+    # audit-a11y-baseline 中 --strict 自动开启 (CI/GITLAB_CI 内置 true)
+    LSC_A11Y_LABEL: "$CI_MERGE_REQUEST_IID ? \"MR-${CI_MERGE_REQUEST_IID}-${CI_COMMIT_SHORT_SHA}\" : \"${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}\""
+  rules:
+    # 每次 MR 必跑; master/tag / 手动触发 / web 触发也跑
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+  script:
+    # ---- 1) 安装 Chromium for Playwright (带系统依赖, alpine 需要 libstdc++/nss 等) ----
+    - echo "==> [A11Y 1/4] 准备 Playwright Chromium  ($PLAYWRIGHT_BROWSERS_PATH)"
+    - |
+      # Alpine: Playwright 需要手动补系统库 (microsoft/playwright 官方镜像更全, 这里用 node:22-alpine 手工补)
+      if grep -qi alpine /etc/os-release 2>/dev/null; then
+        apk add --no-cache --virtual=.pw-deps \
+          chromium chromium-chromedriver \
+          nss harfbuzz freetype ttf-freefont font-noto-cjk \
+          mesa-gbm mesa-egl libxkbcommon libxshmfence \
+          dbus-libs libevent libvpx opus ffmpeg-libs libwebp \
+          libx11 libxcomposite libxdamage libxext libxfixes libxrender libxrandr libxtst libxcb libxkbfile \
+          alsa-lib cups-libs pango cairo atk at-spi2-core gtk+3.0 || true
+      fi
+    - npm run audit:a11y:install 2>&1 | tail -20
+    - npx playwright install chromium --with-deps 2>&1 | tail -10 || true
+
+    # ---- 2) 固化 master 基线 (仅在 master/tag 分支保存为 baseline 文件) ----
+    - echo "==> [A11Y 2/4] 准备基线文件"
+    - |
+      mkdir -p audit-report
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ] || [ -n "$CI_COMMIT_TAG" ]; then
+        # master/tag: 本次跑完后自动固化为基线 (防止下次回归)
+        echo "  · 当前为 $CI_COMMIT_BRANCH 分支/Tag, 跑完后将覆盖 a11y-baseline.baseline.json"
+        NEED_COMMIT_BASELINE=1
+      else
+        # MR/其他分支: 若项目内自带 .baseline.json 则用它, 否则从 $CI_DEFAULT_BRANCH 最新 job 尝试下载
+        if [ -f audit-report/a11y-baseline.baseline.json ]; then
+          echo "  · 使用项目内置 audit-report/a11y-baseline.baseline.json"
+        else
+          echo "  · ⚠ 未找到项目内置基线, 将以 strict 阈值 (0 违规) 作为唯一门控,不做 diff 比较"
+          SKIP_BASELINE_DIFF=1
+        fi
+      fi
+
+    # ---- 3) 跑 16 快照严格审计 ----
+    - echo "==> [A11Y 3/4] 跑 16 快照 (light + dark) · 严格模式: violations=0 / consoleE=0 / net=0 / missingAlt=0"
+    - npm run audit:a11y -- --label="${LSC_A11Y_LABEL:-$CI_COMMIT_SHORT_SHA}"
+
+    # ---- 4) 基线 Diff (MR 阻塞门) ----
+    - echo "==> [A11Y 4/4] 与 master 基线 Diff 对比"
+    - |
+      if [ "${SKIP_BASELINE_DIFF:-0}" = "1" ]; then
+        echo "  · (skip) 未提供 baseline, diff 步骤跳过"
+      else
+        # 对 master/tag 分支: 因为刚生成的 current == baseline 内容 (或更优), 可以跑 diff 验证幂等
+        # 若还没 baseline.json, 直接把当前绿版复制一份作为基线 (首次 master 跑)
+        if [ ! -f audit-report/a11y-baseline.baseline.json ]; then
+          echo "  · ⓘ 首次 master 构建, 将 current 固化为 baseline"
+          cp -a audit-report/a11y-baseline.json audit-report/a11y-baseline.baseline.json
+        fi
+        npm run audit:a11y:diff
+        DIFF_RC=$?
+        # 把 master 产物覆盖写回 baseline (方便下一次 MR 对比)
+        if [ "${NEED_COMMIT_BASELINE:-0}" = "1" ]; then
+          cp -a audit-report/a11y-baseline.json audit-report/a11y-baseline.baseline.json
+        fi
+        exit $DIFF_RC
+      fi
+
+    # ---- 5) 归档本次快照 / 日志到独立子目录, 汇总页面可直接浏览 ----
+    - |
+      OUTDIR="audit-report/$LSC_REPORT_SUBDIR"
+      mkdir -p "$OUTDIR"
+      for f in audit-report/*.md audit-report/*.json audit-report/*.png; do
+        [ -f "$f" ] && cp -a "$f" "$OUTDIR/" 2>/dev/null || true
+      done
+      ls -la "$OUTDIR" 2>/dev/null || true
+
+  artifacts:
+    name: "lsc-a11y-$CI_COMMIT_SHORT_SHA"
+    when: always                                          # 即便失败, 也能直接下载 PNG/MD 定位违规
+    expire_in: 30 days
+    paths:
+      - audit-report/                                     # 基线 / 当前 JSON、Markdown 报告、16 × 2 PNG 截图
+    expose_as: "A11y 审计报告"
+    # GitLab CI Accessibility Report (GitLab 16.0+) 直接把 a11y-baseline.json 当作 MR widget 附件
+    reports:
+      accessibility: audit-report/a11y-baseline.json
+
+# ====================================================================
+# Job 3 : Pages (可选,只在 master/tag 生成一次公开报告)
 # ====================================================================
 pages:
   stage: pages
@@ -162,6 +271,9 @@ pages:
   needs:
     - job: test:chart-coverage
       artifacts: true
+    - job: test:a11y
+      artifacts: true
+      optional: true
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_COMMIT_TAG'

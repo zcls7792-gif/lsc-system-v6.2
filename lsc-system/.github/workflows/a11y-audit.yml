@@ -1,0 +1,233 @@
+# ============================================================================
+# 链盛通 LSC V6.2-AI · A11y (axe-core 16 快照)  PR / Push CI 工作流
+# ----------------------------------------------------------------------------
+# 触发:
+#   · 每个 push 到 master/main / release-*
+#   · 每个 pull_request (目标任意分支)
+#   · 手动 workflow_dispatch (支持传入 阈值 / 基线文件路径)
+#
+# 步骤:
+#   1) 检出 + Node.js 22 + npm cache
+#   2) npm ci 安装依赖
+#   3) Playwright 安装 Chromium (actions/cache 缓存浏览器二进制, 省 ~30s)
+#   4) 如果 baseline 未内置 (首次跑) 直接固化; 否则 下载 master 的 baseline artifact 作为 对比基准
+#   5) `npm run audit:a11y:ci` = 16 快照 strict + 和 baseline diff
+#   6) 上传 a11y artifact (JSON / MD 报告 + 16×2 PNG 截图) 供 MR 查阅
+#   7) 把 Markdown Diff 通过 summary 写入 GitHub Job Summary, MR 直接可见
+# ============================================================================
+
+name: LSC V6.2-A11y Audit (16 snapshots · light/dark)
+
+on:
+  push:
+    branches: [ master, main, "release-*" ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'coverage/**'
+  pull_request:
+    branches: [ master, main ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'coverage/**'
+  workflow_dispatch:
+    inputs:
+      maxViolations:
+        description: '允许的 violations 阈值 (default 0)'
+        required: false
+        default: '0'
+      maxConsoleE:
+        description: '允许的 console.error 阈值 (default 0)'
+        required: false
+        default: '0'
+      maxNet:
+        description: '允许的 4xx/5xx 次数 (default 0)'
+        required: false
+        default: '0'
+      skipDiff:
+        description: '跳过 baseline diff (true / false, 默认 false, master 首次跑可开)'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: a11y-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  NODE_VERSION: "22.x"
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/playwright-browsers
+
+jobs:
+  a11y-audit:
+    name: A11y 16-snapshot (Playwright Chromium + axe-core)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read      # 下载 baseline artifact
+      checks: write      # 写 Job Summary
+      pull-requests: write
+    steps:
+
+      - name: 🔍 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 npm ci (frozen lockfile)
+        run: npm ci --no-audit --no-fund
+
+      # 缓存 Playwright 浏览器, 减少 1~2 分钟下载
+      - name: 🎨 Cache Playwright Chromium
+        uses: actions/cache@v4
+        id:   pw-cache
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key:  pw-chromium-${{ runner.os }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          restore-keys: |
+            pw-chromium-${{ runner.os }}-
+
+      - name: 🎭 Install Playwright Chromium (with deps)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npm run audit:a11y:install
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+
+      # ------- master baseline artifact (MR 场景) -------
+      - name: 🧭 准备 baseline (从 master 最近成功 run 下载 artifact)
+        if: ${{ github.event_name == 'pull_request' && inputs.skipDiff != 'true' }}
+        id: baseline-artifact
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          name: lsc-a11y-baseline
+          workflow: a11y-audit.yml
+          workflow_conclusion: success
+          branch: ${{ github.base_ref || (github.event.repository.default_branch) }}
+          path: .a11y-baseline-artifact
+
+      - name: 🔗 链接 baseline 文件路径, 供 audit-a11y-diff 读取
+        run: |
+          mkdir -p audit-report
+          if [ -f .a11y-baseline-artifact/a11y-baseline.baseline.json ]; then
+            cp -a .a11y-baseline-artifact/a11y-baseline.baseline.json audit-report/a11y-baseline.baseline.json
+            echo "✅ 已从 master artifact 应用 baseline"
+          elif [ -f audit-report/a11y-baseline.baseline.json ]; then
+            echo "ℹ️  项目内置了 audit-report/a11y-baseline.baseline.json, 使用它"
+          else
+            echo "⚠️ 未找到 master artifact 也未内置 baseline, 本 run 将跳过 diff, 仅用 strict 阈值门控"
+            echo "LSC_SKIP_DIFF=1" >> $GITHUB_ENV
+          fi
+
+      # ------- 主步骤: 16 快照 + strict 断言 + diff -------
+      - name: 🧪 运行 A11y 16 快照审计 (strict + diff)
+        id: audit-run
+        continue-on-error: true     # 失败后仍能 artifact 上传 + 写 summary, 最后重新 fail
+        run: |
+          LABEL="${GITHUB_SHA::7}"
+          if [ -n "$GITHUB_HEAD_REF" ]; then LABEL="PR${{ github.event.pull_request.number }}-${LABEL}"; fi
+          EXTRA_ARGS=""
+          [ "${{ inputs.maxViolations }}" ] && EXTRA_ARGS="$EXTRA_ARGS --max-violations=${{ inputs.maxViolations }}"
+          [ "${{ inputs.maxConsoleE }}" ]   && EXTRA_ARGS="$EXTRA_ARGS --max-consoleE=${{ inputs.maxConsoleE }}"
+          [ "${{ inputs.maxNet }}" ]        && EXTRA_ARGS="$EXTRA_ARGS --max-net=${{ inputs.maxNet }}"
+
+          set -x
+          npm run audit:a11y -- --strict --label="$LABEL" $EXTRA_ARGS
+          STATUS1=$?
+          set +x
+          echo "audit_status=$STATUS1" >> $GITHUB_OUTPUT
+
+          if [ "${LSC_SKIP_DIFF:-0}" != "1" ] && [ "${{ inputs.skipDiff }}" != "true" ]; then
+            set -x
+            npm run audit:a11y:diff
+            STATUS2=$?
+            set +x
+            echo "diff_status=$STATUS2" >> $GITHUB_OUTPUT
+          else
+            echo "diff_status=0 (skipped)" >> $GITHUB_OUTPUT
+            STATUS2=0
+          fi
+
+          # 综合 exit
+          if [ $STATUS1 -ne 0 ] || [ $STATUS2 -ne 0 ]; then
+            echo "FINAL_EXIT=2" >> $GITHUB_OUTPUT
+            exit 2
+          else
+            echo "FINAL_EXIT=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          # color output for logs
+          FORCE_COLOR: 3
+
+      # ------- master/tag 跑时: 把产物打包为 baseline artifact, 下次 MR 可下载 -------
+      - name: 📤 保存 master baseline artifact (仅 master/main/tag)
+        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lsc-a11y-baseline
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            audit-report/a11y-baseline.json
+            audit-report/a11y-baseline.md
+            audit-report/a11y-baseline.baseline.json
+
+      # ------- 上传本次 A11y 产物 (JSON / MD / 32 张 PNG + diff md) -------
+      - name: 📤 Upload A11y artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lsc-a11y-report-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: ignore
+          path: |
+            audit-report/a11y-baseline.json
+            audit-report/a11y-baseline.md
+            audit-report/a11y-diff.json
+            audit-report/a11y-diff.md
+            audit-report/*.png
+
+      # ------- Job Summary: PR 页面内直接嵌入 Diff Markdown -------
+      - name: 📋 写入 GitHub Job Summary (PR 内直接可读)
+        if: always()
+        run: |
+          {
+            echo "# 链盛通 LSC V6.2-AI · A11y 审计结果"
+            echo ""
+            echo "| 步骤 | 退出码 | 说明 |"
+            echo "|---|---|---|"
+            echo "| audit-a11y (strict) | ${{ steps.audit-run.outputs.audit_status }} | 16 快照 0 违规断言 |"
+            echo "| audit-diff (vs master baseline) | ${{ steps.audit-run.outputs.diff_status }} | 新增违规检查 |"
+            echo ""
+            if [ -f audit-report/a11y-diff.md ]; then
+              echo "---"
+              echo "## Baseline Diff (自动生成)"
+              echo ""
+              cat audit-report/a11y-diff.md
+            elif [ -f audit-report/a11y-baseline.md ]; then
+              echo "---"
+              echo "## 快照审计摘要 (无 Diff)"
+              echo ""
+              cat audit-report/a11y-baseline.md
+            else
+              echo "⚠️ 未找到报告文件, 请查看 artifacts。"
+            fi
+          } >> $GITHUB_STEP_SUMMARY
+
+      # ------- 失败重抛: continue-on-error 之后需要手动设置结果 -------
+      - name: 🚦 汇总结果, 失败则 fail
+        if: always()
+        run: |
+          STATUS1="${{ steps.audit-run.outputs.audit_status }}"
+          STATUS2="${{ steps.audit-run.outputs.diff_status }}"
+          FINAL="${{ steps.audit-run.outputs.FINAL_EXIT }}"
+          echo "audit=$STATUS1 diff=$STATUS2 final=$FINAL"
+          if [ -z "$FINAL" ] || [ "$FINAL" != "0" ]; then exit ${FINAL:-2}; fi
