@@ -1,0 +1,211 @@
+{
+  "config": {
+    "argv": [
+      "/root/.nvm/versions/node/v24.1.0/bin/node",
+      "/workspace/lsc-system/node_modules/.bin/playwright",
+      "test",
+      "--project=chromium-headless",
+      "--retries=0"
+    ],
+    "configFile": "/workspace/lsc-system/playwright.config.js",
+    "rootDir": "/workspace/lsc-system/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/workspace/lsc-system/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "chromium-headless",
+        "name": "chromium-headless",
+        "testDir": "/workspace/lsc-system/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.js"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "e2e-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "e2e-report/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.1",
+    "workers": 2,
+    "webServer": {
+      "command": "python3 -m http.server 8765 --bind 0.0.0.0",
+      "url": "http://127.0.0.1:8765/",
+      "reuseExistingServer": true,
+      "cwd": "/workspace/lsc-system",
+      "timeout": 20000
+    }
+  },
+  "suites": [
+    {
+      "title": "lsc-core.spec.js",
+      "file": "lsc-core.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LSC V6.2-AI · 端到端核心 3 场景",
+          "file": "lsc-core.spec.js",
+          "line": 14,
+          "column": 6,
+          "specs": [
+            {
+              "title": "场景A: 商家后台核销管理页面 → 核销计算联动 + LSC账户值非空",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4358,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-28T05:43:50.540Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "381d9a03cfaa35a94702-e9a8cb855379d376fde8",
+              "file": "lsc-core.spec.js",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "场景B: 平台后台 AI活动流feed + 速率图表SVG渲染 + 2个定时器创建",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 3933,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-28T05:43:50.555Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "381d9a03cfaa35a94702-90e67d462f84787d0bd1",
+              "file": "lsc-core.spec.js",
+              "line": 69,
+              "column": 3
+            },
+            {
+              "title": "场景C: 商家店铺地图替换占位为真实SVG + 缩放控件可交互",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 3230,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-28T05:43:54.795Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "381d9a03cfaa35a94702-6d563e871c6eae2f0c72",
+              "file": "lsc-core.spec.js",
+              "line": 100,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-08-28T05:43:48.950Z",
+    "duration": 9165.978000000001,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
