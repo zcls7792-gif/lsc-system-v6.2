@@ -151,10 +151,10 @@ function renderMall() {
     ${ps.map((p,i)=>`<div class="wx-mall-card" onclick="openProduct(${i})">
       <div class="wx-mall-img"><span class="icon" data-i="product"></span>${p.tag?`<span class="tag tag-accent" style="position:absolute;top:6px;left:6px;font-size:10px;">${p.tag}</span>`:''}</div>
       <div style="padding:8px;"><div style="font-size:12px;font-weight:500;line-height:1.3;height:32px;overflow:hidden;color:#1a1a1a;">${p.name}</div>
-      <div class="flex items-center justify-between mt-1"><span style="font-size:16px;font-weight:700;color:#ff5a3c;font-family:var(--ff-mono);">¥${p.price}</span><span style="font-size:10px;color:var(--c-wx-green-deep);">抵${p.price}LSC</span></div></div>
+      <div class="flex items-center justify-between mt-1"><span style="font-size:16px;font-weight:700;color:#D93814;font-family:var(--ff-mono);">¥${p.price}</span><span style="font-size:10px;color:var(--c-wx-green-deep);">抵${p.price}LSC</span></div></div>
     </div>`).join('')}
   </div>
-  <div style="text-align:center;padding:16px;font-size:11px;color:#999;">— 上滑加载更多 —</div>`;
+  <div style="text-align:center;padding:16px;font-size:11px;color:#666;">— 上滑加载更多 —</div>`;
   renderIcons(document.getElementById('screen-mall'));
 }
 

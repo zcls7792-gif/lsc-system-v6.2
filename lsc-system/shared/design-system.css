@@ -30,7 +30,7 @@
   --c-success: #1F7A48;
   --c-warning: #D97706;
   --c-danger: #C8332B;
-  --c-info: #2563EB;
+  --c-info: #1A4DC8;            /* 信息蓝 - WCAG AA 5.9:1 on #E0EBFD */
   --c-neutral: #6B7280;
 
   /* 中性色阶 */

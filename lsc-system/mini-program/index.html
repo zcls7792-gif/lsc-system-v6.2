@@ -51,7 +51,7 @@
     flex-shrink: 0; position: relative; z-index: 10;
     background: #fff;
   }
-  .wx-statusbar.dark { color: #fff; background: transparent; }
+  .wx-statusbar.dark { color: #fff; background: var(--c-wx-green-deep); }
   .wx-status-icons { display:flex; align-items:center; gap:6px; }
 
   /* 小程序导航栏 */
@@ -62,7 +62,7 @@
     position: relative; flex-shrink: 0; border-bottom: 1px solid #f0f0f0;
     font-size: 16px; font-weight: 600; color: #1a1a1a;
   }
-  .wx-navbar.dark { background: transparent; color: #fff; border-bottom: none; }
+  .wx-navbar.dark { background: var(--c-wx-green-deep); color: #fff; border-bottom: none; }
   /* 微信胶囊按钮 */
   .wx-capsule {
     position: absolute; right: 14px; top: 50%;
@@ -102,7 +102,7 @@
   }
   .wx-tab {
     flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
-    color: #7a7a7a; font-size: 10px; cursor:pointer;
+    color: #666; font-size: 10px; cursor:pointer;
   }
   .wx-tab .icon { width: 24px; height: 24px; }
   .wx-tab.active { color: var(--c-wx-green); }
@@ -110,8 +110,8 @@
 
   /* 微信小程序主题色 */
   :root {
-    --c-wx-green: #07C160;
-    --c-wx-green-deep: #06ad56;
+    --c-wx-green: #057A3E;
+    --c-wx-green-deep: #046D36;
     --c-wx-green-tint: #e6f7ee;
   }
 
@@ -173,7 +173,7 @@
     padding: 16px 16px 10px;
   }
   .wx-section-title h2 { font-size:16px; font-weight:600; color:#1a1a1a; }
-  .wx-section-title .more { font-size:12px; color:#999; }
+  .wx-section-title .more { font-size:12px; color:#666; }
 
   /* 横向滚动商品 */
   .wx-h-scroll { display:flex; gap:10px; overflow-x:auto; padding: 0 12px 12px; }
@@ -203,7 +203,7 @@
     display:flex; align-items:center; gap:8px; background:#fff;
     margin: 12px; padding:10px 12px; border-radius:10px; font-size:12px;
   }
-  .wx-notice-tag { background:#ff5a3c; color:#fff; font-size:10px; padding:2px 6px; border-radius:3px; flex-shrink:0; }
+  .wx-notice-tag { background:#D93814; color:#fff; font-size:10px; padding:2px 6px; border-radius:3px; flex-shrink:0; }
 
   /* 商城 */
   .wx-search-bar { padding:8px 12px; background:#fff; position:sticky; top:0; z-index:5; }

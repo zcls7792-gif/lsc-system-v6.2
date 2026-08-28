@@ -18,15 +18,14 @@
       "img": 0,
       "svg": 34,
       "heading": 1,
-      "totalText": 6547
+      "totalText": 1741
     },
     "axe": {
       "violations": [],
-      "incomplete": 2,
-      "passes": 35
+      "incomplete": 1,
+      "passes": 36
     },
-    "screenshot": null,
-    "mode": "jsdom"
+    "screenshot": "audit-report/platform__md__768x1024.png"
   },
   {
     "app": "platform",
@@ -47,15 +46,14 @@
       "img": 0,
       "svg": 34,
       "heading": 1,
-      "totalText": 6555
+      "totalText": 1808
     },
     "axe": {
       "violations": [],
-      "incomplete": 2,
-      "passes": 35
+      "incomplete": 1,
+      "passes": 36
     },
-    "screenshot": null,
-    "mode": "jsdom"
+    "screenshot": "audit-report/platform__lg__1440x900.png"
   },
   {
     "app": "merchant",
@@ -76,15 +74,14 @@
       "img": 0,
       "svg": 16,
       "heading": 1,
-      "totalText": 2649
+      "totalText": 929
     },
     "axe": {
       "violations": [],
-      "incomplete": 2,
-      "passes": 33
+      "incomplete": 1,
+      "passes": 36
     },
-    "screenshot": null,
-    "mode": "jsdom"
+    "screenshot": "audit-report/merchant__md__768x1024.png"
   },
   {
     "app": "merchant",
@@ -105,15 +102,14 @@
       "img": 0,
       "svg": 16,
       "heading": 1,
-      "totalText": 2649
+      "totalText": 1064
     },
     "axe": {
       "violations": [],
-      "incomplete": 2,
-      "passes": 33
+      "incomplete": 1,
+      "passes": 36
     },
-    "screenshot": null,
-    "mode": "jsdom"
+    "screenshot": "audit-report/merchant__lg__1440x900.png"
   },
   {
     "app": "mobile",
@@ -134,15 +130,14 @@
       "img": 0,
       "svg": 72,
       "heading": 2,
-      "totalText": 5556
+      "totalText": 353
     },
     "axe": {
       "violations": [],
-      "incomplete": 2,
-      "passes": 24
+      "incomplete": 1,
+      "passes": 27
     },
-    "screenshot": null,
-    "mode": "jsdom"
+    "screenshot": "audit-report/mobile__sm__360x740.png"
   },
   {
     "app": "mobile",
@@ -163,15 +158,14 @@
       "img": 0,
       "svg": 72,
       "heading": 2,
-      "totalText": 5556
+      "totalText": 353
     },
     "axe": {
       "violations": [],
-      "incomplete": 2,
-      "passes": 24
+      "incomplete": 1,
+      "passes": 27
     },
-    "screenshot": null,
-    "mode": "jsdom"
+    "screenshot": "audit-report/mobile__md__768x1024.png"
   },
   {
     "app": "mini",
@@ -192,15 +186,14 @@
       "img": 0,
       "svg": 66,
       "heading": 5,
-      "totalText": 3364
+      "totalText": 409
     },
     "axe": {
       "violations": [],
-      "incomplete": 2,
-      "passes": 26
+      "incomplete": 1,
+      "passes": 29
     },
-    "screenshot": null,
-    "mode": "jsdom"
+    "screenshot": "audit-report/mini__sm__360x740.png"
   },
   {
     "app": "mini",
@@ -221,14 +214,13 @@
       "img": 0,
       "svg": 66,
       "heading": 5,
-      "totalText": 3364
+      "totalText": 409
     },
     "axe": {
       "violations": [],
-      "incomplete": 2,
-      "passes": 26
+      "incomplete": 1,
+      "passes": 29
     },
-    "screenshot": null,
-    "mode": "jsdom"
+    "screenshot": "audit-report/mini__md__768x1024.png"
   }
 ]
