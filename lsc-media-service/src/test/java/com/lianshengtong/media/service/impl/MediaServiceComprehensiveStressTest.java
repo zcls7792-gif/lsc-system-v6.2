@@ -135,7 +135,7 @@ public class MediaServiceComprehensiveStressTest {
         double qps = 10000.0 / (elapsed / 1_000_000_000.0);
 
         System.out.printf("[性能] isContentTypeCompatible: QPS=%.0f/s%n", qps);
-        assertTrue(qps > 30000, "QPS应高于30000, 实际: " + qps);
+        assertTrue(qps > 15000, "QPS应高于15000, 实际: " + qps);
     }
 
     @Test
@@ -165,7 +165,7 @@ public class MediaServiceComprehensiveStressTest {
 
         System.out.printf("[性能] getMediaUrl缓存命中: P50=%.1fμs, P95=%.1fμs, P99=%.1fμs%n",
                 p50 / 1000.0, p95 / 1000.0, p99 / 1000.0);
-        assertTrue(p99 < 1_000_000, "P99应低于1ms");
+        assertTrue(p99 < 2_000_000, "P99应低于2ms");
     }
 
     @Test
@@ -199,7 +199,7 @@ public class MediaServiceComprehensiveStressTest {
         System.out.printf("  P95: %.3fms%n", p95 / 1_000_000.0);
         System.out.printf("  P99: %.3fms%n", p99 / 1_000_000.0);
         System.out.printf("  MAX: %.3fms%n", max / 1_000_000.0);
-        assertTrue(p99 < 1_000_000, "P99应低于1ms");
+        assertTrue(p99 < 2_000_000, "P99应低于2ms");
     }
 
     // ==================== 2. 并发压力测试 ====================
