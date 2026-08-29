@@ -317,7 +317,7 @@ function renderDashboard() {
         </div>
       </div>
       <div style="font-size:12px;color:var(--c-text-3);">释放速率 rate = <b style="color:var(--c-primary);font-family:var(--ff-mono);">${(d.currentRate*10000).toFixed(3)}‱</b></div>
-      <div class="alert alert-info mt-3" style="width:100%;font-size:12px;">k值处于0.50%-1.0%健康区间，按公式 rate = 0.075% - 0.05×k 动态计算</div>
+      <div class="alert alert-info mt-3" style="width:100%;font-size:12px;">k值处于0.50%-1.0%健康区间，按公式 rate = 0.09% - 0.06×k 动态计算</div>
     </div>
   </div>
 
@@ -917,7 +917,7 @@ function renderRelease() {
   <div class="grid-2-1 mb-5">
     <div class="card chart-card">
       <div class="card-head" style="border:none;padding:0 0 12px;">
-        <div><div class="card-title">释放速率 rate 与核销率 k 关系曲线</div><div class="card-sub">rate = 0.075% - 0.05×k (k∈[0.5%,1.0%])</div></div>
+        <div><div class="card-title">释放速率 rate 与核销率 k 关系曲线</div><div class="card-sub">rate = 0.09% - 0.06×k (k∈[0.5%,1.0%] · rate∈[0.03%,0.06%])</div></div>
       </div>
       <div class="chart-area">${lineChart({
         w:560, h:280,
@@ -942,7 +942,7 @@ function renderRelease() {
   <div class="card mb-5">
     <div class="card-head"><div class="card-title">释放算法参数配置</div><div class="card-sub">rate_max/rate_min 不可编辑 · 其余参数可编辑(需双人审批)</div></div>
     <div class="card-body">
-      <div class="param-row"><div><div class="param-key">rate_max <span class="tag" style="font-size:10px;">不可编辑</span></div><div class="param-desc">释放速率上限 · k≤0.50%时启用</div></div><div class="param-val locked-param">0.05% <i>‱</i></div></div>
+      <div class="param-row"><div><div class="param-key">rate_max <span class="tag" style="font-size:10px;">不可编辑</span></div><div class="param-desc">释放速率上限 · k≤0.50%时启用</div></div><div class="param-val locked-param">0.06% <i>‱</i></div></div>
       <div class="param-row"><div><div class="param-key">rate_min <span class="tag" style="font-size:10px;">不可编辑</span></div><div class="param-desc">释放速率下限 · k≥1.0%时启用</div></div><div class="param-val locked-param">0.03% <i>‱</i></div></div>
       <div class="param-row" style="cursor:pointer;" onclick="showParamEdit('k_min')"><div><div class="param-key">k_min <span class="tag tag-info" style="font-size:10px;">可编辑</span></div><div class="param-desc">健康核销率下限 · 低于此值启用rate_max</div></div><div class="param-val">0.50% <i>当前</i></div></div>
       <div class="param-row" style="cursor:pointer;" onclick="showParamEdit('k_max')"><div><div class="param-key">k_max <span class="tag tag-info" style="font-size:10px;">可编辑</span></div><div class="param-desc">健康核销率上限 · 高于此值启用rate_min</div></div><div class="param-val">1.0% <i>当前</i></div></div>
@@ -961,8 +961,8 @@ function renderRelease() {
       </div>
       <div class="task-step done"><span class="step-dot"></span>02:00 任务启动 (XXL-JOB集群单实例)</div>
       <div class="task-step done"><span class="step-dot"></span>02:01 计算 N_total / M_total → k=0.72%</div>
-      <div class="task-step done"><span class="step-dot"></span>02:01 分段计算 rate=0.0385% (0.075%-0.05×0.0072)</div>
-      <div class="task-step done"><span class="step-dot"></span>02:02 二次校验 rate ∈ [0.03%,0.05%] ✓</div>
+      <div class="task-step done"><span class="step-dot"></span>02:01 分段计算 rate=0.0468% (0.09%-0.06×0.0072)</div>
+      <div class="task-step done"><span class="step-dot"></span>02:02 二次校验 rate ∈ [0.03%,0.06%] ✓</div>
       <div class="task-step done"><span class="step-dot"></span>02:03 批量执行 86 批次 (每批10万条) 全部成功</div>
       <div class="task-step done"><span class="step-dot"></span>02:08 汇总校验 实际=应释放 零误差</div>
       <div class="task-step done"><span class="step-dot"></span>02:09 链上存证 SHA-256哈希已上链 Fabric</div>
@@ -1176,7 +1176,7 @@ function renderAI() {
         </div>
         <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
           <div class="text-xs text-muted">当前 rate</div>
-          <div id="rate-rate-val" style="font-size:16px;font-weight:700;color:var(--c-accent-deep);font-family:var(--ff-mono);">0.0385%</div>
+          <div id="rate-rate-val" style="font-size:16px;font-weight:700;color:var(--c-accent-deep);font-family:var(--ff-mono);">0.0468%</div>
         </div>
         <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
           <div class="text-xs text-muted">预测趋势</div>
@@ -1698,7 +1698,7 @@ function showB2BDetail(oid) {
 /* 释放参数修改(双人审批) */
 function showParamEdit(paramKey) {
   const params = {
-    k_min: { label:'k_min 健康核销率下限', current:'0.50%', desc:'低于此值启用 rate_max (0.05%)', options:['0.45%','0.50%','0.55%'] },
+    k_min: { label:'k_min 健康核销率下限', current:'0.50%', desc:'低于此值启用 rate_max (0.06%)', options:['0.45%','0.50%','0.55%'] },
     k_max: { label:'k_max 健康核销率上限', current:'1.0%', desc:'高于此值启用 rate_min (0.03%)', options:['0.9%','1.0%','1.1%'] },
     alpha: { label:'alpha 动态加权平滑系数', current:'0.05', desc:'用于k值历史加权平滑', options:['0.03','0.05','0.08'] },
   };
@@ -1745,7 +1745,7 @@ function showSimulation() {
     <div class="sim-result">
       <div class="sim-row"><span class="text-muted">预测7天后核销率 k</span><b style="color:var(--c-accent-deep);">0.82% (↑0.10%)</b></div>
       <div class="sim-row"><span class="text-muted">预测30天后核销率 k</span><b style="color:var(--c-accent-deep);">0.91% (↑0.19%)</b></div>
-      <div class="sim-row"><span class="text-muted">预测释放速率 rate</span><b style="color:var(--c-primary);">0.0295% (↓0.009%)</b></div>
+      <div class="sim-row"><span class="text-muted">预测释放速率 rate</span><b style="color:var(--c-primary);">0.0354% (↓0.011%)</b></div>
       <div class="sim-row"><span class="text-muted">30天累计释放总量</span><b style="color:var(--c-available);">11,856,200 LSC</b></div>
       <div class="sim-row"><span class="text-muted">系统健康度评分</span><b style="color:var(--c-available);">94分 · 优秀</b></div>
       <div class="sim-row"><span class="text-muted">风险等级</span><b style="color:var(--c-available);">低 · 无需干预</b></div>
@@ -1773,7 +1773,7 @@ function showCircuitBreaker() {
     danger: true,
     summary: `<div class="alert alert-danger"><span class="icon icon-sm" data-i="warning"></span><div><b>高危操作</b>：熔断将立即暂停当日释放任务，所有未释放LSC将延迟处理。此操作仅限极端情况使用。</div></div>
     <div class="detail-grid mt-3">
-      <div class="detail-field"><div class="detail-label">当前释放速率</div><div class="detail-value mono">0.0385%‱</div></div>
+      <div class="detail-field"><div class="detail-label">当前释放速率</div><div class="detail-value mono">0.0468%‱</div></div>
       <div class="detail-field"><div class="detail-label">当前核销率 k</div><div class="detail-value mono">0.72%</div></div>
       <div class="detail-field"><div class="detail-label">今日已释放</div><div class="detail-value mono">${LSC.fmtNum(MOCK.dashboard.todayRelease)} LSC</div></div>
       <div class="detail-field"><div class="detail-label">待释放</div><div class="detail-value mono" style="color:var(--c-warning);">0 LSC</div></div>

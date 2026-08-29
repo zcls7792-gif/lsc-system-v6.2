@@ -739,13 +739,13 @@ async function main() {
     const k2 = LSC.genIdempotentKey('nh', 'U10086');
     assert(/^nh:U10086:\d+:\d{4}$/.test(k1), 'D24. 幂等键格式正确 ' + k1);
     assert(k1 !== k2, 'D25. 同一用户两次幂等键不相同');
-    // calcRate 三分支: k<=0.005, k>=0.01, 中间
-    assert(LSC.calcRate(0.004) === 0.0005,         'D26. calcRate(0.004) 低端 = 0.0005');
-    assert(LSC.calcRate(0.005) === 0.0005,         'D27. calcRate(0.005) 低端边界 = 0.0005');
+    // calcRate 三分支: k<=0.005, k>=0.01, 中间 (rate ∈ [0.03%,0.06%] 2026-08-29 重大调整)
+    assert(LSC.calcRate(0.004) === 0.0006,         'D26. calcRate(0.004) 低端 = 0.0006');
+    assert(LSC.calcRate(0.005) === 0.0006,         'D27. calcRate(0.005) 低端边界 = 0.0006');
     assert(LSC.calcRate(0.01)  === 0.0003,         'D28. calcRate(0.01) 高端边界 = 0.0003');
     assert(LSC.calcRate(0.02)  === 0.0003,         'D29. calcRate(0.02) 高端 = 0.0003');
     const mid = LSC.calcRate(0.007);
-    assert(Math.abs(mid - (0.00075 - 0.05*0.007)) < 1e-9, 'D30. calcRate(0.007) 中间公式正确 ='+mid);
+    assert(Math.abs(mid - (0.0009 - 0.06*0.007)) < 1e-9, 'D30. calcRate(0.007) 中间公式正确 ='+mid);
     // router: routes[存在] / routes[fallback]
     let called = null, calledParams = null;
     const routes = {

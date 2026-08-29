@@ -302,7 +302,7 @@ function paySuccess(btn) {
   //   若 rmbPay>0 → 按人民币实付额发行 LSC, 锁定池 +issue
   //   若 rmbPay=0 → LSC抵扣, 无发行, 无锁定池入账
   const issueBlock = rmbPay > 0
-    ? `<div class="alert alert-success mt-4" style="font-size:12px;text-align:left;"><span class="icon icon-sm" data-i="unlock"></span><b>${issueFmt} LSC</b> 已进入您的<b>锁定池</b> (来源: 人民币实付 ¥${rmbFmt} 1:1发行), 将按每日动态释放至可用池, 释放速率约0.0385%。</div>`
+    ? `<div class="alert alert-success mt-4" style="font-size:12px;text-align:left;"><span class="icon icon-sm" data-i="unlock"></span><b>${issueFmt} LSC</b> 已进入您的<b>锁定池</b> (来源: 人民币实付 ¥${rmbFmt} 1:1发行), 将按每日动态释放至可用池, 释放速率约0.0468%。</div>`
     : `<div class="alert alert-warning mt-4" style="font-size:12px;text-align:left;"><span class="icon icon-sm" data-i="scan"></span>本次为<b>LSC消费抵扣(${lscUFmt} LSC)</b>, 不触发 LSC 发行, 无锁定池入账。发行仅在人民币实际支付时按 ¥1=1LSC 产生。</div>`;
   const payBreak = lscUse > 0
     ? `订单 ¥${totalFmt} · 抵扣 ${lscUFmt} LSC · 人民币实付 ¥${rmbFmt} · <span style="color:var(--c-locked);">发行 +${issueFmt} LSC</span>`
@@ -411,7 +411,7 @@ function renderWallet() {
         <rect x="156" y="50" width="94" height="70" rx="10" fill="rgba(255,177,61,0.10)" stroke="var(--c-warning)" stroke-width="2"/>
         <text x="203" y="76" font-size="12" font-weight="700" fill="var(--c-warning)" text-anchor="middle">🔒 锁定池</text>
         <text x="203" y="94" font-size="11" fill="var(--c-text-2)" text-anchor="middle" font-family="var(--ff-mono)">15,200</text>
-        <text x="203" y="108" font-size="8" fill="var(--c-text-3)" text-anchor="middle">日释 0.038%</text>
+        <text x="203" y="108" font-size="8" fill="var(--c-text-3)" text-anchor="middle">日释 0.047%</text>
         <!-- 节点:可用池 -->
         <rect x="306" y="50" width="94" height="70" rx="10" fill="rgba(45,179,128,0.10)" stroke="var(--c-available)" stroke-width="2"/>
         <text x="353" y="76" font-size="12" font-weight="700" fill="var(--c-available)" text-anchor="middle">✓ 可用池</text>
@@ -617,7 +617,7 @@ function renderAI() {
     <div class="ai-chat-body" id="chat-body">
       <div class="chat-bubble chat-ai">您好, 我是链盛通智能客服。可以为您解答LSC规则、消费、释放、核销等问题。请问有什么可以帮您?</div>
       <div class="chat-bubble chat-me">LSC是怎么释放的?</div>
-      <div class="chat-bubble chat-ai">LSC释放机制:<br><br>1️⃣ 消费后获得LSC进入<b>锁定池</b><br>2️⃣ 每日凌晨2点按动态速率释放至<b>可用池</b><br>3️⃣ 释放速率 rate 由全网核销率 k 决定:<br>· k≤0.5%: rate=0.05%<br>· k≥1.0%: rate=0.03%<br>· 0.5%&lt;k&lt;1.0%: rate=0.075%-0.05×k<br><br>当前 k=0.72%, rate=0.0385%</div>
+      <div class="chat-bubble chat-ai">LSC释放机制:<br><br>1️⃣ 消费后获得LSC进入<b>锁定池</b><br>2️⃣ 每日凌晨2点按动态速率释放至<b>可用池</b><br>3️⃣ 释放速率 rate 由全网核销率 k 决定:<br>· k≤0.5%: rate=0.06%<br>· k≥1.0%: rate=0.03%<br>· 0.5%&lt;k&lt;1.0%: rate=0.09%-0.06×k<br><br>当前 k=0.72%, rate=0.0468%</div>
       <div class="chat-bubble chat-me">锁定池和可用池有什么区别?</div>
       <div class="chat-bubble chat-ai">🔹 <b>锁定池</b>: 消费获得, 每日动态缓释, 不可直接消费<br>🔹 <b>可用池</b>: 可消费抵扣、线下扫码、推广奖励来源<br><br>简单理解: 锁定池是"正在释放中", 可用池是"可立即使用"。</div>
     </div>

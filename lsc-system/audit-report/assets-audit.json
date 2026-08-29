@@ -13,9 +13,9 @@
     "files": 6
   },
   "totals": {
-    "raw": 325902,
-    "gzip": 84184,
-    "compressRatio": 0.2583
+    "raw": 326146,
+    "gzip": 84336,
+    "compressRatio": 0.2586
   },
   "apps": {
     "platform-admin": {
@@ -26,19 +26,19 @@
         {
           "file": "platform-admin/app.js",
           "ext": "js",
-          "raw": 119695,
-          "gzip": 29946,
+          "raw": 119716,
+          "gzip": 29957,
           "ratio": 25.02
         }
       ],
       "raw": {
-        "total": 119695,
-        "js": 119695,
+        "total": 119716,
+        "js": 119716,
         "css": 0
       },
       "gzip": {
-        "total": 29946,
-        "js": 29946,
+        "total": 29957,
+        "js": 29957,
         "css": 0
       }
     },
@@ -74,14 +74,14 @@
         {
           "file": "mobile-app/app.js",
           "ext": "js",
-          "raw": 46514,
+          "raw": 46513,
           "gzip": 12082,
-          "ratio": 25.97
+          "ratio": 25.98
         }
       ],
       "raw": {
-        "total": 46514,
-        "js": 46514,
+        "total": 46513,
+        "js": 46513,
         "css": 0
       },
       "gzip": {
@@ -99,7 +99,7 @@
           "file": "mini-program/app.js",
           "ext": "js",
           "raw": 35313,
-          "gzip": 8758,
+          "gzip": 8759,
           "ratio": 24.8
         }
       ],
@@ -109,8 +109,8 @@
         "css": 0
       },
       "gzip": {
-        "total": 8758,
-        "js": 8758,
+        "total": 8759,
+        "js": 8759,
         "css": 0
       }
     },
@@ -129,23 +129,23 @@
         {
           "file": "shared/app-utils.js",
           "ext": "js",
-          "raw": 19490,
-          "gzip": 6066,
-          "ratio": 31.12
+          "raw": 19714,
+          "gzip": 6206,
+          "ratio": 31.48
         }
       ],
       "raw": {
-        "total": 46545,
-        "js": 19490,
+        "total": 46769,
+        "js": 19714,
         "css": 27055
       },
       "gzip": {
-        "total": 13401,
-        "js": 6066,
+        "total": 13541,
+        "js": 6206,
         "css": 7335
       }
     }
   },
   "alerts": [],
-  "_generatedAt": "2026-08-29T10:00:11.910Z"
+  "_generatedAt": "2026-08-29T10:24:42.092Z"
 }

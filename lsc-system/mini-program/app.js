@@ -101,7 +101,7 @@ function renderHome() {
 
   <div class="wx-notice">
     <span class="wx-notice-tag">公告</span>
-    <span>每日凌晨2点动态释放LSC, 当前核销率k=0.72%, 释放速率0.0385%</span>
+    <span>每日凌晨2点动态释放LSC, 当前核销率k=0.72%, 释放速率0.0468%</span>
   </div>
 
   <div class="wx-section-title"><h2>权益商城推荐</h2><span class="more" onclick="showScreen('mall')">更多 ›</span></div>
@@ -283,7 +283,7 @@ function renderWallet() {
       <rect x="140" y="46" width="86" height="68" rx="10" fill="rgba(255,177,61,0.10)" stroke="#ff9500" stroke-width="2"/>
       <text x="183" y="70" font-size="11" font-weight="700" fill="#ff9500" text-anchor="middle">🔒 锁定池</text>
       <text x="183" y="88" font-size="10" fill="#1a1a1a" text-anchor="middle">15,200</text>
-      <text x="183" y="102" font-size="8" fill="#999" text-anchor="middle">日释 0.038%</text>
+      <text x="183" y="102" font-size="8" fill="#999" text-anchor="middle">日释 0.047%</text>
       <rect x="276" y="46" width="86" height="68" rx="10" fill="rgba(7,193,96,0.10)" stroke="var(--c-wx-green-deep)" stroke-width="2"/>
       <text x="319" y="70" font-size="11" font-weight="700" fill="var(--c-wx-green-deep)" text-anchor="middle">✓ 可用池</text>
       <text x="319" y="88" font-size="10" fill="#1a1a1a" text-anchor="middle">8,640</text>

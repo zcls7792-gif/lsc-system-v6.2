@@ -43,11 +43,11 @@ const LSC = {
     const rand = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     return `${bizType}:${userId}:${ts}:${rand}`;
   },
-  // 释放速率计算
+  // 释放速率计算 (rate ∈ [0.03%,0.06%] · 2026-08-29 重大调整)
   calcRate(k) {
-    if (k <= 0.005) return 0.0005;
-    if (k >= 0.01) return 0.0003;
-    return 0.00075 - 0.05 * k;
+    if (k <= 0.005) return 0.0006;   // k≤0.50% → rate_max = 0.06%
+    if (k >= 0.01)  return 0.0003;   // k≥1.0%  → rate_min = 0.03%
+    return 0.0009 - 0.06 * k;        // 线性插值: rate = 0.09% - 0.06×k
   },
   // 简易 SPA 路由
   router(routes, defaultRoute) {
@@ -95,7 +95,7 @@ const MOCK = {
   dashboard: {
     lockedTotal: 86542000.50,    // 全网锁定总量
     availableTotal: 42318000.00, // 全网可用总量
-    todayRelease: 385200.00,      // 当日释放
+    todayRelease: 468230.00,      // 当日释放 (rate=0.0468% · 上调 21.6%)
     todayNHTotal: 1240000.00,     // 当日核销
     todayB2B: 856000.00,          // 当日B2B流转
     todayConsume: 2340000.00,     // 当日消费发行
@@ -104,7 +104,7 @@ const MOCK = {
     todayNewUser: 2840,
     todayNewMerchant: 56,
     currentK: 0.0072,             // 当前核销率
-    currentRate: 0.000385,        // 当前释放速率
+    currentRate: 0.000468,        // 当前释放速率 (k=0.72% → 0.0468%)
   },
   // k值历史 (近30天)
   kHistory: [0.0062,0.0065,0.0068,0.0071,0.0069,0.0072,0.0074,0.0073,0.0071,0.0068,
