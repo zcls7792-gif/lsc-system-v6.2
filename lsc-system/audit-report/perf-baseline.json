@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T02:13:17.982Z",
+  "generatedAt": "2026-08-29T02:18:08.994Z",
   "mode": "desktop",
   "thresholds": true,
   "summary": {
@@ -21,15 +21,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 228,
+        "FCP": 132,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 183,
-        "FP": 228,
-        "DCL": 175,
-        "load": 190
+        "TTI": 177,
+        "FP": 132,
+        "DCL": 172,
+        "load": 182
       }
     },
     {
@@ -43,15 +43,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 132,
+        "FCP": 140,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 61,
-        "FP": 132,
-        "DCL": 49,
-        "load": 73
+        "TTI": 89,
+        "FP": 140,
+        "DCL": 88,
+        "load": 89
       }
     },
     {
@@ -65,15 +65,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 88,
+        "FCP": 124,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 87,
-        "FP": 88,
-        "DCL": 78,
-        "load": 95
+        "TTI": 78,
+        "FP": 124,
+        "DCL": 70,
+        "load": 85
       }
     },
     {
@@ -87,15 +87,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 76,
+        "FCP": 120,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 79,
-        "FP": 76,
-        "DCL": 77,
-        "load": 81
+        "TTI": 72,
+        "FP": 120,
+        "DCL": 70,
+        "load": 74
       }
     }
   ]
