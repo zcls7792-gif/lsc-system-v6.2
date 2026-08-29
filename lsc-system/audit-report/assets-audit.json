@@ -1,0 +1,151 @@
+{
+  "strict": true,
+  "thresholds": {
+    "jsPerApp": 204800,
+    "cssPerApp": 51200,
+    "anyFileGzip": 184320,
+    "totalGzip": 819200
+  },
+  "score": 100,
+  "counts": {
+    "fail": 0,
+    "warn": 0,
+    "files": 6
+  },
+  "totals": {
+    "raw": 320762,
+    "gzip": 81979,
+    "compressRatio": 0.2556
+  },
+  "apps": {
+    "platform-admin": {
+      "title": "平台管理后台",
+      "dir": "platform-admin",
+      "count": 1,
+      "files": [
+        {
+          "file": "platform-admin/app.js",
+          "ext": "js",
+          "raw": 117705,
+          "gzip": 28983,
+          "ratio": 24.62
+        }
+      ],
+      "raw": {
+        "total": 117705,
+        "js": 117705,
+        "css": 0
+      },
+      "gzip": {
+        "total": 28983,
+        "js": 28983,
+        "css": 0
+      }
+    },
+    "merchant-admin": {
+      "title": "商家管理后台",
+      "dir": "merchant-admin",
+      "count": 1,
+      "files": [
+        {
+          "file": "merchant-admin/app.js",
+          "ext": "js",
+          "raw": 77661,
+          "gzip": 19878,
+          "ratio": 25.6
+        }
+      ],
+      "raw": {
+        "total": 77661,
+        "js": 77661,
+        "css": 0
+      },
+      "gzip": {
+        "total": 19878,
+        "js": 19878,
+        "css": 0
+      }
+    },
+    "mobile-app": {
+      "title": "消费者移动端APP",
+      "dir": "mobile-app",
+      "count": 1,
+      "files": [
+        {
+          "file": "mobile-app/app.js",
+          "ext": "js",
+          "raw": 43538,
+          "gzip": 10959,
+          "ratio": 25.17
+        }
+      ],
+      "raw": {
+        "total": 43538,
+        "js": 43538,
+        "css": 0
+      },
+      "gzip": {
+        "total": 10959,
+        "js": 10959,
+        "css": 0
+      }
+    },
+    "mini-program": {
+      "title": "微信小程序端",
+      "dir": "mini-program",
+      "count": 1,
+      "files": [
+        {
+          "file": "mini-program/app.js",
+          "ext": "js",
+          "raw": 35313,
+          "gzip": 8758,
+          "ratio": 24.8
+        }
+      ],
+      "raw": {
+        "total": 35313,
+        "js": 35313,
+        "css": 0
+      },
+      "gzip": {
+        "total": 8758,
+        "js": 8758,
+        "css": 0
+      }
+    },
+    "shared": {
+      "title": "共享资源 (design-system.css/app-utils.js)",
+      "dir": "shared",
+      "count": 2,
+      "files": [
+        {
+          "file": "shared/design-system.css",
+          "ext": "css",
+          "raw": 27055,
+          "gzip": 7335,
+          "ratio": 27.11
+        },
+        {
+          "file": "shared/app-utils.js",
+          "ext": "js",
+          "raw": 19490,
+          "gzip": 6066,
+          "ratio": 31.12
+        }
+      ],
+      "raw": {
+        "total": 46545,
+        "js": 19490,
+        "css": 27055
+      },
+      "gzip": {
+        "total": 13401,
+        "js": 6066,
+        "css": 7335
+      }
+    }
+  },
+  "alerts": [],
+  "_generatedAt": "2026-08-29T02:41:09.750Z"
+}

@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-29T02:18:08.994Z",
-  "mode": "desktop",
+  "generatedAt": "2026-08-29T02:35:07.159Z",
+  "mode": "mobile",
   "thresholds": true,
   "summary": {
     "avgPerf": 100,
-    "avgA11y": 100,
+    "avgA11y": 98,
     "maxLCP": 0,
     "maxTBT": 0,
     "maxCLS": 0
@@ -21,15 +21,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 132,
+        "FCP": 188,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 177,
-        "FP": 132,
-        "DCL": 172,
-        "load": 182
+        "TTI": 170,
+        "FP": 188,
+        "DCL": 167,
+        "load": 173
       }
     },
     {
@@ -43,15 +43,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 140,
+        "FCP": 96,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 89,
-        "FP": 140,
-        "DCL": 88,
-        "load": 89
+        "TTI": 79,
+        "FP": 96,
+        "DCL": 78,
+        "load": 80
       }
     },
     {
@@ -60,20 +60,20 @@
       "mode": "playwright-native (fallback)",
       "scores": {
         "performance": 100,
-        "accessibility": 100,
+        "accessibility": 95,
         "bestPractices": null,
         "seo": null
       },
       "metrics": {
-        "FCP": 124,
+        "FCP": 60,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 78,
-        "FP": 124,
-        "DCL": 70,
-        "load": 85
+        "TTI": 82,
+        "FP": 60,
+        "DCL": 79,
+        "load": 84
       }
     },
     {
@@ -82,20 +82,20 @@
       "mode": "playwright-native (fallback)",
       "scores": {
         "performance": 100,
-        "accessibility": 100,
+        "accessibility": 95,
         "bestPractices": null,
         "seo": null
       },
       "metrics": {
-        "FCP": 120,
+        "FCP": 52,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 72,
-        "FP": 120,
-        "DCL": 70,
-        "load": 74
+        "TTI": 78,
+        "FP": 52,
+        "DCL": 77,
+        "load": 79
       }
     }
   ]

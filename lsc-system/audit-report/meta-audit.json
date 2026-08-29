@@ -1,0 +1,585 @@
+{
+  "passed": 76,
+  "warn": 0,
+  "fail": 0,
+  "apps": {
+    "platform-admin": {
+      "title": "平台管理后台",
+      "file": "platform-admin/index.html",
+      "titleText": "链盛通LSC系统 · 平台管理后台 V6.2",
+      "htmlLang": "zh-CN",
+      "metaCount": 22,
+      "linkCount": 5,
+      "jsonLdCount": 1,
+      "rules": [
+        {
+          "key": "charset",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta charset=\"UTF-8\"> (必须 HTML5)",
+          "required": true
+        },
+        {
+          "key": "viewport",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"viewport\"> 必须含 width=device-width 且 initial-scale",
+          "required": true
+        },
+        {
+          "key": "title",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<title> 长度 8~60 字符 (SEO/展示建议)",
+          "required": true
+        },
+        {
+          "key": "htmlLang",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<html lang=\"zh-CN\"> 可访问性/本地化",
+          "required": true
+        },
+        {
+          "key": "favicon",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"icon\"> 防止 /favicon.ico 404",
+          "required": true
+        },
+        {
+          "key": "description",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"description\"> 长度 50~160 (SEO/OG fallback)",
+          "required": false
+        },
+        {
+          "key": "keywords",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"keywords\"> (兼容性)",
+          "required": false
+        },
+        {
+          "key": "themeColor",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"theme-color\"> (移动端 UI 适配, 需 media=(prefers-color-scheme) 双色)",
+          "required": false
+        },
+        {
+          "key": "csp",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta http-equiv=\"Content-Security-Policy\"> (含 default-src 且 unsafe-inline 非必须但无 *)",
+          "required": false
+        },
+        {
+          "key": "contentTypeNosniff",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta http-equiv=\"X-Content-Type-Options\"> nosniff",
+          "required": false
+        },
+        {
+          "key": "referrer",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"referrer\"> strict-origin-when-cross-origin (隐私)",
+          "required": false
+        },
+        {
+          "key": "ogTitle",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:title\">",
+          "required": false
+        },
+        {
+          "key": "ogDescription",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:description\">",
+          "required": false
+        },
+        {
+          "key": "ogImage",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:image\"> 链接可访问",
+          "required": false
+        },
+        {
+          "key": "ogType",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:type\"> website/...",
+          "required": false
+        },
+        {
+          "key": "twitterCard",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"twitter:card\"> summary/summary_large_image",
+          "required": false
+        },
+        {
+          "key": "appleTouchIcon",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"apple-touch-icon\"> (iOS 主屏)",
+          "required": false
+        },
+        {
+          "key": "designSystemCSS",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"stylesheet\"> 加载 design-system.css",
+          "required": true
+        },
+        {
+          "key": "jsonLd",
+          "level": "PASS",
+          "ok": true,
+          "desc": "存在 <script type=\"application/ld+json\"> 结构化数据",
+          "required": false
+        }
+      ]
+    },
+    "merchant-admin": {
+      "title": "商家管理后台",
+      "file": "merchant-admin/index.html",
+      "titleText": "链盛通LSC · 商家管理后台 V6.2",
+      "htmlLang": "zh-CN",
+      "metaCount": 22,
+      "linkCount": 5,
+      "jsonLdCount": 1,
+      "rules": [
+        {
+          "key": "charset",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta charset=\"UTF-8\"> (必须 HTML5)",
+          "required": true
+        },
+        {
+          "key": "viewport",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"viewport\"> 必须含 width=device-width 且 initial-scale",
+          "required": true
+        },
+        {
+          "key": "title",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<title> 长度 8~60 字符 (SEO/展示建议)",
+          "required": true
+        },
+        {
+          "key": "htmlLang",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<html lang=\"zh-CN\"> 可访问性/本地化",
+          "required": true
+        },
+        {
+          "key": "favicon",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"icon\"> 防止 /favicon.ico 404",
+          "required": true
+        },
+        {
+          "key": "description",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"description\"> 长度 50~160 (SEO/OG fallback)",
+          "required": false
+        },
+        {
+          "key": "keywords",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"keywords\"> (兼容性)",
+          "required": false
+        },
+        {
+          "key": "themeColor",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"theme-color\"> (移动端 UI 适配, 需 media=(prefers-color-scheme) 双色)",
+          "required": false
+        },
+        {
+          "key": "csp",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta http-equiv=\"Content-Security-Policy\"> (含 default-src 且 unsafe-inline 非必须但无 *)",
+          "required": false
+        },
+        {
+          "key": "contentTypeNosniff",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta http-equiv=\"X-Content-Type-Options\"> nosniff",
+          "required": false
+        },
+        {
+          "key": "referrer",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"referrer\"> strict-origin-when-cross-origin (隐私)",
+          "required": false
+        },
+        {
+          "key": "ogTitle",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:title\">",
+          "required": false
+        },
+        {
+          "key": "ogDescription",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:description\">",
+          "required": false
+        },
+        {
+          "key": "ogImage",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:image\"> 链接可访问",
+          "required": false
+        },
+        {
+          "key": "ogType",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:type\"> website/...",
+          "required": false
+        },
+        {
+          "key": "twitterCard",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"twitter:card\"> summary/summary_large_image",
+          "required": false
+        },
+        {
+          "key": "appleTouchIcon",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"apple-touch-icon\"> (iOS 主屏)",
+          "required": false
+        },
+        {
+          "key": "designSystemCSS",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"stylesheet\"> 加载 design-system.css",
+          "required": true
+        },
+        {
+          "key": "jsonLd",
+          "level": "PASS",
+          "ok": true,
+          "desc": "存在 <script type=\"application/ld+json\"> 结构化数据",
+          "required": false
+        }
+      ]
+    },
+    "mobile-app": {
+      "title": "移动端消费者APP",
+      "file": "mobile-app/index.html",
+      "titleText": "链盛通LSC · 消费者APP V6.2",
+      "htmlLang": "zh-CN",
+      "metaCount": 25,
+      "linkCount": 5,
+      "jsonLdCount": 1,
+      "rules": [
+        {
+          "key": "charset",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta charset=\"UTF-8\"> (必须 HTML5)",
+          "required": true
+        },
+        {
+          "key": "viewport",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"viewport\"> 必须含 width=device-width 且 initial-scale",
+          "required": true
+        },
+        {
+          "key": "title",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<title> 长度 8~60 字符 (SEO/展示建议)",
+          "required": true
+        },
+        {
+          "key": "htmlLang",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<html lang=\"zh-CN\"> 可访问性/本地化",
+          "required": true
+        },
+        {
+          "key": "favicon",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"icon\"> 防止 /favicon.ico 404",
+          "required": true
+        },
+        {
+          "key": "description",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"description\"> 长度 50~160 (SEO/OG fallback)",
+          "required": false
+        },
+        {
+          "key": "keywords",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"keywords\"> (兼容性)",
+          "required": false
+        },
+        {
+          "key": "themeColor",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"theme-color\"> (移动端 UI 适配, 需 media=(prefers-color-scheme) 双色)",
+          "required": false
+        },
+        {
+          "key": "csp",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta http-equiv=\"Content-Security-Policy\"> (含 default-src 且 unsafe-inline 非必须但无 *)",
+          "required": false
+        },
+        {
+          "key": "contentTypeNosniff",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta http-equiv=\"X-Content-Type-Options\"> nosniff",
+          "required": false
+        },
+        {
+          "key": "referrer",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"referrer\"> strict-origin-when-cross-origin (隐私)",
+          "required": false
+        },
+        {
+          "key": "ogTitle",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:title\">",
+          "required": false
+        },
+        {
+          "key": "ogDescription",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:description\">",
+          "required": false
+        },
+        {
+          "key": "ogImage",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:image\"> 链接可访问",
+          "required": false
+        },
+        {
+          "key": "ogType",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:type\"> website/...",
+          "required": false
+        },
+        {
+          "key": "twitterCard",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"twitter:card\"> summary/summary_large_image",
+          "required": false
+        },
+        {
+          "key": "appleTouchIcon",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"apple-touch-icon\"> (iOS 主屏)",
+          "required": false
+        },
+        {
+          "key": "designSystemCSS",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"stylesheet\"> 加载 design-system.css",
+          "required": true
+        },
+        {
+          "key": "jsonLd",
+          "level": "PASS",
+          "ok": true,
+          "desc": "存在 <script type=\"application/ld+json\"> 结构化数据",
+          "required": false
+        }
+      ]
+    },
+    "mini-program": {
+      "title": "微信小程序端",
+      "file": "mini-program/index.html",
+      "titleText": "链盛通LSC · 微信小程序 V6.2",
+      "htmlLang": "zh-CN",
+      "metaCount": 25,
+      "linkCount": 5,
+      "jsonLdCount": 1,
+      "rules": [
+        {
+          "key": "charset",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta charset=\"UTF-8\"> (必须 HTML5)",
+          "required": true
+        },
+        {
+          "key": "viewport",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"viewport\"> 必须含 width=device-width 且 initial-scale",
+          "required": true
+        },
+        {
+          "key": "title",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<title> 长度 8~60 字符 (SEO/展示建议)",
+          "required": true
+        },
+        {
+          "key": "htmlLang",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<html lang=\"zh-CN\"> 可访问性/本地化",
+          "required": true
+        },
+        {
+          "key": "favicon",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"icon\"> 防止 /favicon.ico 404",
+          "required": true
+        },
+        {
+          "key": "description",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"description\"> 长度 50~160 (SEO/OG fallback)",
+          "required": false
+        },
+        {
+          "key": "keywords",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"keywords\"> (兼容性)",
+          "required": false
+        },
+        {
+          "key": "themeColor",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"theme-color\"> (移动端 UI 适配, 需 media=(prefers-color-scheme) 双色)",
+          "required": false
+        },
+        {
+          "key": "csp",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta http-equiv=\"Content-Security-Policy\"> (含 default-src 且 unsafe-inline 非必须但无 *)",
+          "required": false
+        },
+        {
+          "key": "contentTypeNosniff",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta http-equiv=\"X-Content-Type-Options\"> nosniff",
+          "required": false
+        },
+        {
+          "key": "referrer",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"referrer\"> strict-origin-when-cross-origin (隐私)",
+          "required": false
+        },
+        {
+          "key": "ogTitle",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:title\">",
+          "required": false
+        },
+        {
+          "key": "ogDescription",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:description\">",
+          "required": false
+        },
+        {
+          "key": "ogImage",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:image\"> 链接可访问",
+          "required": false
+        },
+        {
+          "key": "ogType",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta property=\"og:type\"> website/...",
+          "required": false
+        },
+        {
+          "key": "twitterCard",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<meta name=\"twitter:card\"> summary/summary_large_image",
+          "required": false
+        },
+        {
+          "key": "appleTouchIcon",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"apple-touch-icon\"> (iOS 主屏)",
+          "required": false
+        },
+        {
+          "key": "designSystemCSS",
+          "level": "PASS",
+          "ok": true,
+          "desc": "<link rel=\"stylesheet\"> 加载 design-system.css",
+          "required": true
+        },
+        {
+          "key": "jsonLd",
+          "level": "PASS",
+          "ok": true,
+          "desc": "存在 <script type=\"application/ld+json\"> 结构化数据",
+          "required": false
+        }
+      ]
+    }
+  },
+  "strict": true,
+  "_generatedAt": "2026-08-29T02:41:09.466Z"
+}

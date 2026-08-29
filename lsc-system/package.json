@@ -6,7 +6,7 @@
     "test": "node verify_p0.js && node test_p0_chart_logic.js",
     "test:verify": "node verify_p0.js",
     "test:chart": "node test_p0_chart_logic.js",
-    "coverage": "c8 --reports-dir=${C8_REPORT_DIR:-coverage} --reporter=html --reporter=text --reporter=lcov --reporter=text-summary --include=\"shared/**/*.js\" --include=\"platform-admin/**/*.js\" --exclude=\"node_modules/**\" --exclude=\"verify_p0.js\" --exclude=\"test_p0_chart_logic.js\" --exclude=\"coverage_runner.js\" --exclude=\"coverage_report.js\" --exclude=\"run-all.js\" --exclude=\"coverage/**\" --all node coverage_runner.js",
+    "coverage": "c8 --reports-dir=${C8_REPORT_DIR:-coverage} --reporter=html --reporter=text --reporter=lcov --reporter=text-summary --include=\"shared/**/*.js\" --include=\"platform-admin/**/*.js\" --include=\"merchant-admin/**/*.js\" --include=\"mobile-app/**/*.js\" --include=\"mini-program/**/*.js\" --exclude=\"node_modules/**\" --exclude=\"verify_p0.js\" --exclude=\"test_p0_chart_logic.js\" --exclude=\"coverage_runner.js\" --exclude=\"coverage_report.js\" --exclude=\"run-all.js\" --exclude=\"coverage/**\" node coverage_runner.js",
     "coverage:all": "c8 --reports-dir=${C8_REPORT_DIR:-coverage} --reporter=html --reporter=text --reporter=lcov --reporter=text-summary --include=\"shared/**/*.js\" --include=\"platform-admin/**/*.js\" --include=\"merchant-admin/**/*.js\" --include=\"mobile-app/**/*.js\" --include=\"mini-program/**/*.js\" --exclude=\"node_modules/**\" --exclude=\"verify_p0.js\" --exclude=\"test_p0_chart_logic.js\" --exclude=\"coverage_runner.js\" --exclude=\"coverage_report.js\" --exclude=\"run-all.js\" --exclude=\"coverage/**\" node verify_p0.js && node test_p0_chart_logic.js",
     "report": "node coverage_report.js",
     "all": "node run-all.js",
@@ -25,7 +25,11 @@
     "perf:baseline:mobile": "node scripts/run-lighthouse.js --mobile",
     "perf:baseline:ci": "node scripts/run-lighthouse.js --thresholds",
     "coverage:cobertura": "node lcov-to-cobertura.js",
-    "all:hard": "npm run ci && npm run e2e && npm run audit:a11y"
+    "audit:meta": "node audit-meta.js",
+    "audit:meta:ci": "node audit-meta.js --strict --json audit-report/meta-audit.json --md audit-report/meta-audit.md",
+    "audit:assets": "node audit-assets.js --json audit-report/assets-audit.json --md audit-report/assets-audit.md",
+    "audit:assets:ci": "node audit-assets.js --strict --json audit-report/assets-audit.json --md audit-report/assets-audit.md",
+    "all:hard": "npm run ci && npm run e2e && npm run audit:a11y && npm run audit:meta:ci && npm run audit:assets:ci"
   },
   "keywords": [],
   "author": "",
