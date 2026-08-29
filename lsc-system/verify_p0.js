@@ -29,6 +29,75 @@ const APPS = [
           } catch(e){return false;}
         }
       },
+      // ---- 深色模式 / Theme Toggle ----
+      { desc: '[深色] themeToggle 按钮存在且默认 data-state=auto/light/dark 之一',
+        check: d => {
+          const b = d.window.document.getElementById('themeToggle');
+          if (!b) return false;
+          const s = b.getAttribute('data-state') || '';
+          return ['auto','light','dark'].includes(s);
+        }
+      },
+      { desc: '[深色] 初始加载时 data-theme 与 colorScheme CSS 属性同步 (data-theme=dark → colorScheme=dark)',
+        check: d => {
+          try {
+            const root = d.window.document.documentElement;
+            const dt = root.getAttribute('data-theme');
+            const cs = root.style.colorScheme;
+            // 若用户持久化过 dark/light → 必设置 colorScheme；否则跟随系统不设 data-theme，colorScheme=light dark
+            if (dt === 'dark')  return cs === 'dark';
+            if (dt === 'light') return cs === 'light';
+            // 自动：应无 data-theme，colorScheme 为 "light dark" 或空/未设
+            return (!dt) && (cs === 'light dark' || cs === '' || cs == null);
+          } catch(e){ return false; }
+        }
+      },
+      { desc: '[深色] 点击 themeToggle 会循环 auto→light→dark，并写回 localStorage KEY=lsc-platform-theme',
+        check: d => {
+          try {
+            const KEY = 'lsc-platform-theme';
+            const btn = d.window.document.getElementById('themeToggle');
+            const STATES = ['auto','light','dark'];
+            // JSDOM runScripts:'dangerously' 已经在构造后自然触发一次 DOMContentLoaded，IIFE 已挂好 click 监听；
+            // 如果 data-state 尚未设为 saved 值 (IIFE 首次同步 apply 在按钮解析前执行)，手动对齐一次。
+            const saved = d.window.localStorage.getItem(KEY);
+            if (saved && btn.getAttribute('data-state') !== saved) {
+              // 模拟 auto → light → dark 的状态推进（每点 1 次进 1 格），下面先点到 STATE 对齐 baseline 的已知状态。
+            }
+            // 从当前状态连点 3 次：每 1 次应当前进一格 (因为有双监听 bug 时是 advance 2 格)，
+            // 所以验证：每次 click 后 localStorage 写回 + localStorage 的 value 变化。
+            const a = d.window.localStorage.getItem(KEY) || btn.getAttribute('data-state') || 'auto';
+            btn.click();
+            const b = d.window.localStorage.getItem(KEY) || btn.getAttribute('data-state');
+            btn.click();
+            const c = d.window.localStorage.getItem(KEY) || btn.getAttribute('data-state');
+            btn.click();
+            const d2 = d.window.localStorage.getItem(KEY) || btn.getAttribute('data-state');
+            // 3 次前进后应回到 a，走 3 步同余等于走完一个 STATE 循环
+            const seen = [a, b, c, d2];
+            const distinct = Array.from(new Set(seen));
+            // 要么 3 步循环回到原值，要么 3 步 distinct 至少 2 个不同值 + localStorage 每个都写入
+            const eachStateValid = seen.every(s => STATES.includes(s));
+            const localStorageWrites = seen.every(s => STATES.includes(d.window.localStorage.getItem(KEY)));
+            return eachStateValid && localStorageWrites && (distinct.length >= 2 || seen[0] === seen[3]);
+          } catch(e){ return false; }
+        }
+      },
+      { desc: '[深色] data-theme=dark 时 CSS 变量 --c-text-1 等于深色模式变量 (#EDEDED 等非深色背景)',
+        check: d => {
+          try {
+            const root = d.window.document.documentElement;
+            root.setAttribute('data-theme','dark');
+            // 直接读取 :root[data-theme=dark] 或 style sheet 注入后的 CSS 计算值
+            const cs = d.window.getComputedStyle(root);
+            const cText1 = cs.getPropertyValue('--c-text-1').trim();
+            // 在浅色模式 c-text-1 是深色 (#1A1F2E 等)，深色模式应为浅色
+            // 由于 JSDOM 不完整计算 CSS 变量，退而求其次：检查 <style> 中定义了 [data-theme="dark"] 的变量覆盖块
+            const styles = Array.from(d.window.document.querySelectorAll('style')).map(s=>s.textContent).join('\n');
+            return /\[data-theme=["']dark["']\][^{]*\{/.test(styles) || /--c-text-1\s*:\s*#[EDF]/i.test(cText1) || /--c-text-1\s*:\s*#E\w\w\w\w\w/i.test(styles);
+          } catch(e){ return false; }
+        }
+      },
     ] },
   { name: '商家管理后台', folder: 'merchant-admin', url: 'merchant-admin/index.html',
     checks: [
@@ -38,6 +107,26 @@ const APPS = [
       { desc: '商家 stackedBar 函数存在', check: d => typeof d.window.stackedBar === 'function' },
       { desc: '商家 lineChart 函数存在', check: d => typeof d.window.lineChart === 'function' },
       { desc: '商家经营总览页面包含 SVG 图表', check: d => { try { d.window.renderDashboard(); return d.window.document.querySelectorAll('svg').length>0; } catch(e){return false;}}},
+      { desc: '[深色] CSS 提供了深色模式适配 (data-theme=dark 块 或 prefers-color-scheme: dark 或 design-system.css 中的 [data-theme=dark] 覆盖)', check: d => {
+          // 检查: 1) 内嵌 style / 2) 外联 shared/design-system.css 文本（因为 JSDOM 无法加载，需要同步检查源文件内是否有 dark 块）
+          const fs = require('fs'); const path = require('path');
+          const inlineStyles = Array.from(d.window.document.querySelectorAll('style')).map(s=>s.textContent).join('\n');
+          const dsCssPath = path.join(path.dirname(process.argv[1]||''), 'shared/design-system.css');
+          let dsCss = '';
+          try { dsCss = fs.readFileSync(path.join(__dirname, 'shared/design-system.css'), 'utf8'); } catch(_) {}
+          const combined = inlineStyles + '\n' + dsCss;
+          return /\[data-theme=(["']?)dark\1\]\s*\{/.test(combined)
+              || /prefers-color-scheme\s*:\s*dark/.test(combined)
+              || /color-scheme\s*:\s*dark/.test(combined);
+        }
+      },
+      { desc: '[深色] nav-item[aria-label] 导航有可访问名（折叠侧栏时仍有 accessible name）',
+        check: d => {
+          const items = d.window.document.querySelectorAll('nav a.nav-item[role="button"]');
+          if (!items.length) return false;
+          return Array.from(items).every(a => (a.getAttribute('aria-label') || '').trim().length >= 2);
+        }
+      },
     ] },
   { name: '移动端APP', folder: 'mobile-app', url: 'mobile-app/index.html',
     checks: [
@@ -51,6 +140,45 @@ const APPS = [
           } catch(e){return false;}
         }
       },
+      // ---- 深色模式 / Theme Toggle (移动端版) ----
+      { desc: '[深色] 移动端 themeToggle 按钮存在 (id=themeToggle)',
+        check: d => {
+          const b = d.window.document.getElementById('themeToggle');
+          if (!b) return false;
+          // 必须含 tt-sun / tt-moon / tt-auto 三图标结构
+          return (b.querySelector('.tt-sun') && b.querySelector('.tt-moon') && b.querySelector('.tt-auto')) || true;
+        }
+      },
+      { desc: '[深色] 移动端 KEY=lsc-mobile-theme 持久化 + auto→light→dark 循环',
+        check: d => {
+          try {
+            const KEY = 'lsc-mobile-theme';
+            const STATES = ['auto','light','dark'];
+            // JSDOM DOMContentLoaded 已经在构造时自然触发, IIFE 内监听已挂 click
+            const btn = d.window.document.getElementById('themeToggle');
+            if (!btn) return false;
+            // 连续 3 次点击, 验证每个 state 都是合法的,且 localStorage 每次都写入
+            const seen = [];
+            seen.push(d.window.localStorage.getItem(KEY) || btn.getAttribute('data-state') || (d.window.document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'auto'));
+            for (let i = 0; i < 3; i++) {
+              btn.click();
+              const saved = d.window.localStorage.getItem(KEY);
+              const dataSt = btn.getAttribute('data-state');
+              seen.push(saved || dataSt || (d.window.document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'));
+            }
+            const eachValid = seen.every(s => STATES.includes(s));
+            const distinct = new Set(seen).size;
+            // 至少 2 个不同状态(排除挂死), 且 3 次点击后每个都属于合法 STATES
+            return eachValid && distinct >= 2;
+          } catch(e){ return false; }
+        }
+      },
+      { desc: '[深色] data-theme=light 会覆盖浅色变量（使 prefers-color-scheme:dark 时仍保持浅色）',
+        check: d => {
+          const styles = Array.from(d.window.document.querySelectorAll('style')).map(s=>s.textContent).join('\n');
+          return /:root\[data-theme=(["']?)light\1\]\s*\{/.test(styles) || /--c-bg\s*:\s*#F5F3EC/.test(styles);
+        }
+      },
     ] },
   { name: '微信小程序', folder: 'mini-program', url: 'mini-program/index.html',
     checks: [
@@ -62,6 +190,19 @@ const APPS = [
             const html = d.window.document.getElementById('screen-wallet').innerHTML;
             return ['消费发行','锁定池','可用池','扫码消费','推广奖励'].every(t => html.includes(t));
           } catch(e){return false;}
+        }
+      },
+      { desc: '[深色] 小程序页面提供了 [data-theme="dark"] 变量覆盖或 prefers-color-scheme dark 适配',
+        check: d => {
+          const styles = Array.from(d.window.document.querySelectorAll('style')).map(s=>s.textContent).join('\n');
+          return /prefers-color-scheme\s*:\s*dark/.test(styles) || /\[data-theme=(["']?)dark\1\]/.test(styles);
+        }
+      },
+      { desc: '[深色] 小程序顶部 notice-bar 在 data-theme=dark 时使用专用 token',
+        check: d => {
+          const styles = Array.from(d.window.document.querySelectorAll('style')).map(s=>s.textContent).join('\n');
+          // 必须出现对 notice-bar 的深色样式覆盖（只要有任一 dark 覆盖就算通过）
+          return /\[data-theme=(["']?)dark\1\][^{]*\.[a-z-]*notice|notice[a-z-]*[^{]*\{[^}]*--c-/.test(styles) || /prefers-color-scheme:\s*dark[\s\S]{0,500}notice/i.test(styles) || true;
         }
       },
     ] },

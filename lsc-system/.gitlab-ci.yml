@@ -224,6 +224,7 @@ test:a11y:
     # ---- 4) 基线 Diff (MR 阻塞门) ----
     - echo "==> [A11Y 4/4] 与 master 基线 Diff 对比"
     - |
+      DIFF_RC=0
       if [ "${SKIP_BASELINE_DIFF:-0}" = "1" ]; then
         echo "  · (skip) 未提供 baseline, diff 步骤跳过"
       else
@@ -239,9 +240,7 @@ test:a11y:
         if [ "${NEED_COMMIT_BASELINE:-0}" = "1" ]; then
           cp -a audit-report/a11y-baseline.json audit-report/a11y-baseline.baseline.json
         fi
-        exit $DIFF_RC
       fi
-
     # ---- 5) 归档本次快照 / 日志到独立子目录, 汇总页面可直接浏览 ----
     - |
       OUTDIR="audit-report/$LSC_REPORT_SUBDIR"
@@ -250,6 +249,11 @@ test:a11y:
         [ -f "$f" ] && cp -a "$f" "$OUTDIR/" 2>/dev/null || true
       done
       ls -la "$OUTDIR" 2>/dev/null || true
+      # 最后把 diff 结果向上冒泡（保留 overall exit）
+      if [ -n "${DIFF_RC+x}" ] && [ "$DIFF_RC" -ne 0 ]; then
+        echo "==> [A11Y] diff 失败 (exit=$DIFF_RC), 阻塞当前 Job"
+        exit $DIFF_RC
+      fi
 
   artifacts:
     name: "lsc-a11y-$CI_COMMIT_SHORT_SHA"
