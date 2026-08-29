@@ -18,9 +18,12 @@
     "audit:a11y": "node audit-a11y-baseline.js",
     "audit:a11y:static": "node audit-a11y-static.js",
     "audit:a11y:install": "npx playwright install chromium --with-deps || npx playwright install chromium",
-    "audit:a11y:diff":    "node audit-a11y-diff.js",
-    "audit:a11y:ci":      "node audit-a11y-baseline.js --strict && node audit-a11y-diff.js",
+    "audit:a11y:diff": "node audit-a11y-diff.js",
+    "audit:a11y:ci": "node audit-a11y-baseline.js --strict && node audit-a11y-diff.js",
     "audit:a11y:baseline-save": "cp -f audit-report/a11y-baseline.json audit-report/a11y-baseline.baseline.json",
+    "perf:baseline": "node scripts/run-lighthouse.js",
+    "perf:baseline:mobile": "node scripts/run-lighthouse.js --mobile",
+    "perf:baseline:ci": "node scripts/run-lighthouse.js --thresholds",
     "coverage:cobertura": "node lcov-to-cobertura.js",
     "all:hard": "npm run ci && npm run e2e && npm run audit:a11y"
   },
@@ -43,6 +46,7 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "c8": "^12.0.0",
+    "node-static": "^0.7.11",
     "playwright": "^1.62.1"
   }
 }

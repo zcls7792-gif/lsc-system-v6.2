@@ -14,11 +14,18 @@ const navTitles = {
 const darkNavScreens = ['home','scan','wallet','me','promo'];
 
 function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active');
+    s.setAttribute('aria-hidden', 'true');
+  });
   const el = document.getElementById('screen-'+name);
-  if (el) { el.classList.add('active'); document.getElementById('wx-content').scrollTop=0; }
-  // tab 高亮
-  document.querySelectorAll('.wx-tab').forEach(t=>t.classList.toggle('active', t.dataset.screen===name));
+  if (el) { el.classList.add('active'); el.setAttribute('aria-hidden', 'false'); document.getElementById('wx-content').scrollTop=0; }
+  // tab 高亮 + aria-current
+  document.querySelectorAll('.wx-tab').forEach(t=>{
+    const is = t.dataset.screen===name;
+    t.classList.toggle('active', is);
+    if (is) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
+  });
   // 导航栏
   document.getElementById('wx-nav-title').textContent = navTitles[name] || '';
   const dark = darkNavScreens.includes(name);
@@ -31,9 +38,11 @@ function showScreen(name) {
   let back = navbar.querySelector('.wx-back');
   if (subScreens.includes(name)) {
     if (!back) {
-      back = document.createElement('div');
+      back = document.createElement('button');
+      back.type = 'button';
       back.className = 'wx-back';
-      back.innerHTML = '<span class="icon" data-i="back"></span>';
+      back.setAttribute('aria-label', '返回上一页');
+      back.innerHTML = '<span class="icon" data-i="back" aria-hidden="true"></span>';
       back.onclick = ()=>showScreen('me');
       navbar.appendChild(back);
       renderIcons(back);
@@ -47,6 +56,12 @@ function showScreen(name) {
 document.getElementById('wx-tabbar').addEventListener('click', e=>{
   const t = e.target.closest('.wx-tab');
   if (t) showScreen(t.dataset.screen);
+});
+document.getElementById('wx-tabbar').addEventListener('keydown', e=>{
+  if ((e.key==='Enter'||e.key===' ') && e.target.classList?.contains('wx-tab')) {
+    e.preventDefault();
+    showScreen(e.target.dataset.screen);
+  }
 });
 
 /* ===== 首页 ===== */

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-28T11:23:04.113Z",
+  "timestamp": "2026-08-29T01:33:12.141Z",
   "method": "jsdom + axe-core static (light + dark)",
   "apps": [
     {
@@ -7,8 +7,24 @@
       "appName": "平台管理后台",
       "axe": {
         "violations": [],
-        "passes": 33,
-        "incomplete": 2
+        "passes": 35,
+        "incomplete": 2,
+        "incompleteRules": [
+          {
+            "id": "landmark-one-main",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          },
+          {
+            "id": "page-has-heading-one",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          }
+        ]
       }
     },
     {
@@ -16,8 +32,24 @@
       "appName": "商家管理后台",
       "axe": {
         "violations": [],
-        "passes": 27,
-        "incomplete": 2
+        "passes": 34,
+        "incomplete": 2,
+        "incompleteRules": [
+          {
+            "id": "landmark-one-main",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          },
+          {
+            "id": "page-has-heading-one",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          }
+        ]
       }
     },
     {
@@ -25,8 +57,31 @@
       "appName": "移动端 APP",
       "axe": {
         "violations": [],
-        "passes": 24,
-        "incomplete": 2
+        "passes": 26,
+        "incomplete": 3,
+        "incompleteRules": [
+          {
+            "id": "color-contrast",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          },
+          {
+            "id": "landmark-one-main",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          },
+          {
+            "id": "page-has-heading-one",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          }
+        ]
       }
     },
     {
@@ -34,8 +89,31 @@
       "appName": "微信小程序",
       "axe": {
         "violations": [],
-        "passes": 24,
-        "incomplete": 2
+        "passes": 28,
+        "incomplete": 3,
+        "incompleteRules": [
+          {
+            "id": "color-contrast",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          },
+          {
+            "id": "landmark-one-main",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/landmark-one-main?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          },
+          {
+            "id": "page-has-heading-one",
+            "help": "https://dequeuniversity.com/rules/axe/4.9/page-has-heading-one?application=axeAPI",
+            "impact": null,
+            "count": 0,
+            "sample": []
+          }
+        ]
       }
     }
   ],
@@ -206,7 +284,7 @@
   ],
   "summary": {
     "totalViolations": 0,
-    "totalPasses": 108,
+    "totalPasses": 123,
     "byRule": {},
     "contrastLightPass": 9,
     "contrastLightFail": 0,

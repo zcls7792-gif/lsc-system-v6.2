@@ -129,7 +129,7 @@ async function auditOne(app) {
       if (typeof window.axe !== 'undefined') {
         const r = await window.axe.run(window.document, {
           runOnly: { type: 'tag', values: ['wcag2a','wcag2aa','best-practice'] },
-          resultTypes: ['violations'],
+          resultTypes: ['violations','incomplete'],
         });
         axeRes = {
           violations: r.violations.map(v => ({
@@ -138,6 +138,10 @@ async function auditOne(app) {
           })),
           passes: r.passes?.length || 0,
           incomplete: r.incomplete?.length || 0,
+          incompleteRules: (r.incomplete||[]).map(x => ({
+            id: x.id, help: x.helpUrl, impact: x.impact, count: x.nodes?.length || 0,
+            sample: (x.nodes||[]).slice(0, 2).map(n => ({ target: n.target?.[0] || '' })),
+          })),
         };
       }
     } catch (e) {

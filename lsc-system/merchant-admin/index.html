@@ -374,63 +374,66 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#view" aria-label="跳到主内容区">跳到主内容区</a>
+<a class="skip-link" href="#nav" aria-label="跳到主导航">跳到主导航</a>
 <div class="app-shell">
   <!-- ===== 侧边栏 ===== -->
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-logo">商</div>
+  <aside class="sidebar" aria-label="商家管理侧边栏">
+    <div class="brand" aria-label="锦华商家后台品牌标识" role="group">
+      <div class="brand-logo" aria-hidden="true">商</div>
       <div class="brand-text">
         <div class="brand-name">锦华商家后台</div>
         <div class="brand-sub">MERCHANT · V6.2</div>
       </div>
     </div>
-    <div class="balance-mini">
+    <section class="balance-mini" aria-label="LSC 账户速览">
       <div class="bm-label">可用 LSC 余额</div>
       <div class="bm-val">186,420.50</div>
       <div class="bm-sub"><span>锁定 385,200</span><span>信用 92分</span></div>
-    </div>
-    <nav class="nav" id="nav">
-      <div class="nav-section">经营</div>
-      <div class="nav-item active" data-view="dashboard"><span class="icon" data-i="overview"></span><span>经营总览</span></div>
-      <div class="nav-item" data-view="shop"><span class="icon" data-i="shop"></span><span>店铺管理</span></div>
-      <div class="nav-item" data-view="product"><span class="icon" data-i="product"></span><span>商品管理</span><span class="nav-badge">3</span></div>
-      <div class="nav-item" data-view="wallet"><span class="icon" data-i="wallet"></span><span>LSC账户</span></div>
-      <div class="nav-section">凭证流转</div>
-      <div class="nav-item" data-view="nh"><span class="icon" data-i="release"></span><span>核销管理</span></div>
-      <div class="nav-item" data-view="b2b"><span class="icon" data-i="b2b"></span><span>B2B交易</span><span class="nav-badge">2</span></div>
-      <div class="nav-section">增长</div>
-      <div class="nav-item" data-view="promotion"><span class="icon" data-i="promotion"></span><span>推广管理</span></div>
-      <div class="nav-item" data-view="credit"><span class="icon" data-i="credit"></span><span>信用中心</span></div>
-      <div class="nav-item" data-view="ai"><span class="icon" data-i="ai"></span><span>AI助手</span></div>
+    </section>
+    <nav class="nav" id="nav" aria-label="商家管理主导航">
+      <div class="nav-section" role="presentation">经营</div>
+      <a class="nav-item active" data-view="dashboard" role="button" tabindex="0" aria-current="page" aria-label="经营总览"><span class="icon" data-i="overview" aria-hidden="true"></span><span>经营总览</span></a>
+      <a class="nav-item" data-view="shop" role="button" tabindex="0" aria-label="店铺管理"><span class="icon" data-i="shop" aria-hidden="true"></span><span>店铺管理</span></a>
+      <a class="nav-item" data-view="product" role="button" tabindex="0" aria-label="商品管理（3 项待处理）"><span class="icon" data-i="product" aria-hidden="true"></span><span>商品管理</span><span class="sr-only">，3 项待处理</span><span class="nav-badge" aria-hidden="true">3</span></a>
+      <a class="nav-item" data-view="wallet" role="button" tabindex="0" aria-label="LSC账户"><span class="icon" data-i="wallet" aria-hidden="true"></span><span>LSC账户</span></a>
+      <div class="nav-section" role="presentation">凭证流转</div>
+      <a class="nav-item" data-view="nh" role="button" tabindex="0" aria-label="核销管理"><span class="icon" data-i="release" aria-hidden="true"></span><span>核销管理</span></a>
+      <a class="nav-item" data-view="b2b" role="button" tabindex="0" aria-label="B2B交易（2 条待处理）"><span class="icon" data-i="b2b" aria-hidden="true"></span><span>B2B交易</span><span class="sr-only">，2 条待处理</span><span class="nav-badge" aria-hidden="true">2</span></a>
+      <div class="nav-section" role="presentation">增长</div>
+      <a class="nav-item" data-view="promotion" role="button" tabindex="0" aria-label="推广管理"><span class="icon" data-i="promotion" aria-hidden="true"></span><span>推广管理</span></a>
+      <a class="nav-item" data-view="credit" role="button" tabindex="0" aria-label="信用中心"><span class="icon" data-i="credit" aria-hidden="true"></span><span>信用中心</span></a>
+      <a class="nav-item" data-view="ai" role="button" tabindex="0" aria-label="AI助手"><span class="icon" data-i="ai" aria-hidden="true"></span><span>AI助手</span></a>
     </nav>
-    <div class="sidebar-foot">
-      <span class="dot-live"></span><span>店铺在线 · 营业中</span>
+    <div class="sidebar-foot" role="group" aria-label="店铺状态">
+      <span class="dot-live" role="presentation"></span><span>店铺在线 · 营业中</span>
     </div>
   </aside>
 
   <!-- ===== 主区域 ===== -->
   <main class="main">
     <h1 class="sr-only">链盛通LSC商家管理后台</h1>
-    <header class="topbar">
-      <div class="breadcrumb">
+    <header class="topbar" role="group" aria-label="顶部操作栏">
+      <nav class="breadcrumb" aria-label="当前位置">
         <span>商家管理后台</span>
-        <span>/</span>
-        <span class="cur" id="crumb">店铺管理</span>
-      </div>
-      <div class="search-box">
-        <span class="icon icon-sm" data-i="search" style="color:var(--c-text-3)"></span>
-        <input placeholder="搜索商品/订单/流水...">
+        <span aria-hidden="true">/</span>
+        <span class="cur" id="crumb" aria-current="page">店铺管理</span>
+      </nav>
+      <div class="search-box" role="search" aria-label="全局搜索">
+        <span class="icon icon-sm" data-i="search" style="color:var(--c-text-3)" aria-hidden="true"></span>
+        <label for="merchant-search" class="sr-only">搜索商品、订单或流水</label>
+        <input id="merchant-search" placeholder="搜索商品/订单/流水..." aria-label="搜索商品、订单或流水">
       </div>
       <div class="topbar-actions">
-        <div class="icon-btn" title="生成收款码" onclick="navTo('nh')"><span class="icon" data-i="qr"></span></div>
-        <div class="icon-btn" title="通知"><span class="icon" data-i="bell"></span><span class="badge">3</span></div>
-        <div class="user-chip">
-          <div class="avatar avatar-gold">锦</div>
+        <button type="button" class="icon-btn" aria-label="生成收款码" onclick="navTo('nh')"><span class="icon" data-i="qr" aria-hidden="true"></span></button>
+        <button type="button" class="icon-btn" aria-label="通知，3 条未读"><span class="icon" data-i="bell" aria-hidden="true"></span><span class="badge" aria-hidden="true">3</span></button>
+        <div class="user-chip" role="group" aria-label="当前登录商家">
+          <div class="avatar avatar-gold" aria-hidden="true">锦</div>
           <div><div style="font-size:13px;font-weight:600;">锦华餐饮连锁</div><div style="font-size:11px;color:var(--c-text-3);">M20001 · A档商家</div></div>
         </div>
       </div>
     </header>
-    <div class="content" id="view" role="region" aria-label="主内容区"></div>
+    <section class="content" id="view" role="region" aria-label="主内容区"></section>
   </main>
 </div>
 

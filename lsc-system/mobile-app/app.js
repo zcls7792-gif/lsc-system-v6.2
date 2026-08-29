@@ -12,11 +12,18 @@ const subScreens = ['orders','promo','ai','paycode','product'];
 let curTab = 'home';
 
 function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active');
+    s.setAttribute('aria-hidden', 'true');
+  });
   const el = document.getElementById('screen-'+name);
-  if (el) { el.classList.add('active'); document.getElementById('content').scrollTop=0; }
-  // tab 高亮
-  document.querySelectorAll('.tab-item').forEach(t=>t.classList.toggle('active', t.dataset.screen===name));
+  if (el) { el.classList.add('active'); el.setAttribute('aria-hidden', 'false'); document.getElementById('content').scrollTop=0; }
+  // tab 高亮 + aria-current
+  document.querySelectorAll('.tab-item').forEach(t=>{
+    const is = t.dataset.screen===name;
+    t.classList.toggle('active', is);
+    if (is) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
+  });
   // 状态栏颜色
   const dark = ['home','scan','paycode','wallet','me','promo'].includes(name);
   document.getElementById('statusbar').classList.toggle('dark', dark);
@@ -25,10 +32,16 @@ function showScreen(name) {
   if (!subScreens.includes(name)) curTab = name;
 }
 
-/* Tab 点击 */
+/* Tab 点击/键盘 */
 document.getElementById('tabbar').addEventListener('click', e=>{
   const item = e.target.closest('.tab-item');
   if (item) { showScreen(item.dataset.screen); }
+});
+document.getElementById('tabbar').addEventListener('keydown', e=>{
+  if ((e.key==='Enter'||e.key===' ') && e.target.classList?.contains('tab-item')) {
+    e.preventDefault();
+    showScreen(e.target.dataset.screen);
+  }
 });
 
 /* ===== 首页 ===== */

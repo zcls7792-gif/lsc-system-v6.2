@@ -8,13 +8,24 @@ const crumbMap = { dashboard:'经营总览', shop:'店铺管理', product:'商�
 const views = { dashboard: renderDashboard, shop: renderShop, product: renderProduct, wallet: renderWallet, nh: renderNH, b2b: renderB2B, promotion: renderPromotion, credit: renderCredit, ai: renderAI };
 
 function navTo(view) {
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
-  document.getElementById('crumb').textContent = crumbMap[view];
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    const is = n.dataset.view===view;
+    n.classList.toggle('active', is);
+    if (is) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
+  });
+  const crumb = document.getElementById('crumb');
+  if (crumb) { crumb.textContent = crumbMap[view]; crumb.setAttribute('aria-current', 'page'); }
   views[view]();
 }
 document.getElementById('nav').addEventListener('click', e=>{
   const item = e.target.closest('.nav-item');
   if (item) navTo(item.dataset.view);
+});
+document.getElementById('nav').addEventListener('keydown', e=>{
+  if ((e.key==='Enter'||e.key===' ') && e.target.classList?.contains('nav-item')) {
+    e.preventDefault();
+    navTo(e.target.dataset.view);
+  }
 });
 
 function pageHead(title, desc, extra='') {

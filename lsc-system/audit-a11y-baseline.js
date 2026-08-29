@@ -75,7 +75,32 @@ fs.mkdirSync(OUT_DIR, { recursive: true });
 const JSON_OUT = path.join(OUT_DIR, 'a11y-baseline.json');
 const MD_OUT   = path.join(OUT_DIR, 'a11y-baseline.md');
 
-const BASE = process.env.LSC_E2E_BASE_URL || 'http://127.0.0.1:8765';
+let BASE = process.env.LSC_E2E_BASE_URL || '';
+let _staticServer = null;
+let _staticServerCloser = null;
+/** 异步启动静态服务器（端口=0 随机），失败回退 8765 */
+async function ensureStaticServer() {
+  if (BASE) return BASE;
+  try {
+    const http = require('http');
+    const ns = new (require('node-static').Server)(ROOT, { cache: 0, headers: { 'Cache-Control': 'no-cache' } });
+    _staticServer = http.createServer((req, res) => req.addListener('end', () => ns.serve(req, res)).resume());
+    await new Promise((resolve, reject) => {
+      _staticServer.once('error', reject);
+      _staticServer.listen(0, '127.0.0.1', resolve);
+    });
+    const port = _staticServer.address().port;
+    _staticServerCloser = () => { try { _staticServer.close(); } catch(_){} };
+    process.on('beforeExit', _staticServerCloser);
+    BASE = `http://127.0.0.1:${port}`;
+    console.log(`[a11y] 启动静态服务器 ${BASE} （根目录: ${ROOT}）`);
+    return BASE;
+  } catch (e) {
+    console.warn('[a11y] 无法启动静态服务器 (' + (e && e.message || e) + '), 回退端口 8765');
+    BASE = 'http://127.0.0.1:8765';
+    return BASE;
+  }
+}
 const APPS = [
   { id: 'platform',  name: '平台管理后台', path: '/platform-admin/index.html' },
   { id: 'merchant',  name: '商家管理后台', path: '/merchant-admin/index.html' },
@@ -318,7 +343,8 @@ async function auditOneJSDOM(app, size) {
 }
 
 async function main() {
-  console.log('[a11y] 准备 axe-core ...');
+  console.log('[a11y] 准备静态服务器 + axe-core ...');
+  await ensureStaticServer();
   try { await ensureAxe(); console.log('[a11y] axe-core OK (' + Math.round(fs.statSync(AXE_LOCAL).size/1024) + 'KB)'); }
   catch (e) { console.warn('[a11y] 警告:无法下载 axe-core, 跳过可访问性规则: ' + e.message); }
 

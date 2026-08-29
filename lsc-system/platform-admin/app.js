@@ -21,13 +21,24 @@ const views = {
 const crumbMap = { dashboard:'仪表盘',merchant:'商家管理',product:'商品审核',b2b:'B2B订单管理',risk:'风控管理',credit:'信用管理',release:'释放管理',reconcile:'对账管理',system:'系统管理',ai:'AI中心' };
 
 function navTo(view) {
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
-  document.getElementById('crumb').textContent = crumbMap[view] || view;
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    const is = n.dataset.view===view;
+    n.classList.toggle('active', is);
+    if (is) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
+  });
+  const crumb = document.getElementById('crumb');
+  if (crumb) { crumb.textContent = crumbMap[view] || view; crumb.setAttribute('aria-current', 'page'); }
   views[view]();
 }
 document.getElementById('nav').addEventListener('click', e=>{
   const item = e.target.closest('.nav-item');
   if (item) navTo(item.dataset.view);
+});
+document.getElementById('nav').addEventListener('keydown', e=>{
+  if ((e.key==='Enter'||e.key===' ') && e.target.classList?.contains('nav-item')) {
+    e.preventDefault();
+    navTo(e.target.dataset.view);
+  }
 });
 
 /* ============== 通用 HTML 片段 ============== */

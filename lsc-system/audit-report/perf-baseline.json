@@ -1,0 +1,102 @@
+{
+  "generatedAt": "2026-08-29T01:48:59.885Z",
+  "mode": "mobile",
+  "thresholds": false,
+  "summary": {
+    "avgPerf": 100,
+    "avgA11y": 100,
+    "maxLCP": 0,
+    "maxTBT": 0,
+    "maxCLS": 0
+  },
+  "results": [
+    {
+      "app": "platform",
+      "appName": "平台管理后台",
+      "mode": "playwright-native (fallback)",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "bestPractices": null,
+        "seo": null
+      },
+      "metrics": {
+        "FCP": 128,
+        "SI": 0,
+        "LCP": 0,
+        "TBT": 0,
+        "CLS": 0,
+        "TTI": 175,
+        "FP": 128,
+        "DCL": 172,
+        "load": 177
+      }
+    },
+    {
+      "app": "merchant",
+      "appName": "商家管理后台",
+      "mode": "playwright-native (fallback)",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "bestPractices": null,
+        "seo": null
+      },
+      "metrics": {
+        "FCP": 104,
+        "SI": 0,
+        "LCP": 0,
+        "TBT": 0,
+        "CLS": 0,
+        "TTI": 78,
+        "FP": 104,
+        "DCL": 77,
+        "load": 78
+      }
+    },
+    {
+      "app": "mobile",
+      "appName": "移动端 APP",
+      "mode": "playwright-native (fallback)",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "bestPractices": null,
+        "seo": null
+      },
+      "metrics": {
+        "FCP": 96,
+        "SI": 0,
+        "LCP": 0,
+        "TBT": 0,
+        "CLS": 0,
+        "TTI": 69,
+        "FP": 96,
+        "DCL": 67,
+        "load": 71
+      }
+    },
+    {
+      "app": "mini",
+      "appName": "微信小程序",
+      "mode": "playwright-native (fallback)",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "bestPractices": null,
+        "seo": null
+      },
+      "metrics": {
+        "FCP": 96,
+        "SI": 0,
+        "LCP": 0,
+        "TBT": 0,
+        "CLS": 0,
+        "TTI": 66,
+        "FP": 96,
+        "DCL": 63,
+        "load": 68
+      }
+    }
+  ]
+}

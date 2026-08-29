@@ -154,6 +154,28 @@ img { max-width: 100%; display: block; }
 .text-warning { color: var(--c-warning); }
 /* 屏幕阅读器专用: 视觉隐藏但可访问 */
 .sr-only { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
+
+/* 跳过链接: 默认视觉隐藏，获得焦点时显示 (WCAG 2.4.1 Bypass Blocks) */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 6px;
+  z-index: 9999;
+  padding: 8px 14px;
+  background: var(--c-primary-deep, #082E2C);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.skip-link:focus-visible,
+.skip-link:focus {
+  left: 10px;
+  outline: 3px solid var(--c-accent, #C8A24B);
+  outline-offset: 2px;
+}
 .mt-2 { margin-top: var(--sp-2); }
 .mt-3 { margin-top: var(--sp-3); }
 .mt-4 { margin-top: var(--sp-4); }

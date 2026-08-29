@@ -379,32 +379,34 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#content" aria-label="跳到主内容区">跳到主内容区</a>
+<a class="skip-link" href="#tabbar" aria-label="跳到主导航">跳到主导航</a>
 <div class="phone-frame">
   <div class="phone-screen">
     <!-- 状态栏 -->
     <div class="status-bar" id="statusbar" aria-hidden="true">
       <span>9:41</span>
       <div class="status-icons">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M2 22h2V10H2v12zm5 0h2V2H7v20zm5 0h2v-8h-2v8zm5 0h2V6h-2v16z"/></svg>
-        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 3C7 3 2.7 5.9 1 10c1.7 4.1 6 7 11 7s9.3-2.9 11-7c-1.7-4.1-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
-        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><rect x="2" y="7" width="18" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="4" y="9" width="14" height="6" rx="1"/><rect x="21" y="10" width="2" height="4" rx="1"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M2 22h2V10H2v12zm5 0h2V2H7v20zm5 0h2v-8h-2v8zm5 0h2V6h-2v16z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M12 3C7 3 2.7 5.9 1 10c1.7 4.1 6 7 11 7s9.3-2.9 11-7c-1.7-4.1-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><rect x="2" y="7" width="18" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="4" y="9" width="14" height="6" rx="1"/><rect x="21" y="10" width="2" height="4" rx="1"/></svg>
       </div>
     </div>
 
     <!-- 内容区 -->
-    <main class="app-content" id="content" role="main" aria-label="应用主内容">
+    <main class="app-content" id="content" aria-label="应用主内容">
       <h1 class="sr-only">链盛通LSC消费者APP</h1>
-      <div class="screen active" id="screen-home"></div>
-      <div class="screen" id="screen-mall"></div>
-      <div class="screen" id="screen-scan"></div>
-      <div class="screen" id="screen-wallet"></div>
-      <div class="screen" id="screen-me"></div>
+      <section class="screen active" id="screen-home" role="region" aria-label="首页"></section>
+      <section class="screen" id="screen-mall" role="region" aria-label="商城" aria-hidden="true"></section>
+      <section class="screen" id="screen-scan" role="region" aria-label="扫码支付" aria-hidden="true"></section>
+      <section class="screen" id="screen-wallet" role="region" aria-label="钱包" aria-hidden="true"></section>
+      <section class="screen" id="screen-me" role="region" aria-label="我的" aria-hidden="true"></section>
       <!-- 子页面(无tab) -->
-      <div class="screen" id="screen-orders"></div>
-      <div class="screen" id="screen-promo"></div>
-      <div class="screen" id="screen-ai"></div>
-      <div class="screen" id="screen-paycode"></div>
-      <div class="screen" id="screen-product"></div>
+      <section class="screen" id="screen-orders" role="region" aria-label="我的订单" aria-hidden="true"></section>
+      <section class="screen" id="screen-promo" role="region" aria-label="优惠活动" aria-hidden="true"></section>
+      <section class="screen" id="screen-ai" role="region" aria-label="AI 助手" aria-hidden="true"></section>
+      <section class="screen" id="screen-paycode" role="region" aria-label="付款码" aria-hidden="true"></section>
+      <section class="screen" id="screen-product" role="region" aria-label="商品详情" aria-hidden="true"></section>
     </main>
 
     <!-- 主题切换按钮 (三态: 自动 → 浅色 → 深色) -->
@@ -415,13 +417,13 @@
     </button>
 
     <!-- 底部 Tab -->
-    <div class="tab-bar" id="tabbar" role="navigation" aria-label="主导航">
-      <div class="tab-item active" data-screen="home"><span class="icon" data-i="home"></span><span>首页</span></div>
-      <div class="tab-item" data-screen="mall"><span class="icon" data-i="mall"></span><span>商城</span></div>
-      <div class="tab-item" data-screen="scan" style="flex:0.6;"><div class="tab-scan"><span class="icon" data-i="scan"></span></div><div class="tab-scan-label">扫码</div></div>
-      <div class="tab-item" data-screen="wallet"><span class="icon" data-i="wallet"></span><span>钱包</span></div>
-      <div class="tab-item" data-screen="me"><span class="icon" data-i="user"></span><span>我的</span></div>
-    </div>
+    <nav class="tab-bar" id="tabbar" role="navigation" aria-label="底部主导航">
+      <button type="button" class="tab-item active" data-screen="home" aria-current="page"><span class="icon" data-i="home" aria-hidden="true"></span><span>首页</span></button>
+      <button type="button" class="tab-item" data-screen="mall"><span class="icon" data-i="mall" aria-hidden="true"></span><span>商城</span></button>
+      <button type="button" class="tab-item" data-screen="scan" style="flex:0.6;" aria-label="扫码"><span class="tab-scan" aria-hidden="true"><span class="icon" data-i="scan"></span></span><span class="tab-scan-label">扫码</span></button>
+      <button type="button" class="tab-item" data-screen="wallet"><span class="icon" data-i="wallet" aria-hidden="true"></span><span>钱包</span></button>
+      <button type="button" class="tab-item" data-screen="me"><span class="icon" data-i="user" aria-hidden="true"></span><span>我的</span></button>
+    </nav>
   </div>
 </div>
 
