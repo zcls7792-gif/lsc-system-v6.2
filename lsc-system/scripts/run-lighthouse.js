@@ -278,15 +278,22 @@ function renderMD(payload) {
   return md;
 }
 
+// 门控阈值：默认值 avgPerf≥60 / LCP≤5000ms / CLS≤0.25，可通过环境变量覆盖（CI 中配置不同档位）
+const TH = {
+  minAvgPerf: +(process.env.LSC_PERF_MIN_AVGPERF ?? 60),
+  maxLCPms:   +(process.env.LSC_PERF_MAX_LCP_MS   ?? 5000),
+  maxCLS:     +(process.env.LSC_PERF_MAX_CLS      ?? 0.25),
+};
+
 function gate(payload) {
   if (!OPTS.thresholds) return 0;
   const { avgPerf, maxLCP, maxCLS } = payload.summary;
   const fails = [];
-  if (avgPerf < 60) fails.push(`avgPerf=${avgPerf} < 60`);
-  if (maxLCP > 5000)  fails.push(`maxLCP=${maxLCP}ms > 5000`);
-  if (maxCLS > 0.25)  fails.push(`maxCLS=${maxCLS} > 0.25`);
-  if (fails.length) { console.log('[perf] ❌ FAIL: ' + fails.join('; ')); return 2; }
-  console.log('[perf] ✅ PASS thresholds');
+  if (avgPerf < TH.minAvgPerf) fails.push(`avgPerf=${avgPerf} < ${TH.minAvgPerf}`);
+  if (maxLCP   > TH.maxLCPms)  fails.push(`maxLCP=${maxLCP}ms > ${TH.maxLCPms}`);
+  if (maxCLS   > TH.maxCLS)    fails.push(`maxCLS=${maxCLS} > ${TH.maxCLS}`);
+  if (fails.length) { console.log(`[perf] ❌ FAIL thresholds (minAvgPerf=${TH.minAvgPerf}, maxLCPms=${TH.maxLCPms}, maxCLS=${TH.maxCLS}): ` + fails.join('; ')); return 2; }
+  console.log(`[perf] ✅ PASS thresholds (minAvgPerf≥${TH.minAvgPerf}, maxLCP≤${TH.maxLCPms}ms, maxCLS≤${TH.maxCLS})`);
   return 0;
 }
 
