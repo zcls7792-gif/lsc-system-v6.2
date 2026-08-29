@@ -13,9 +13,9 @@
     "files": 6
   },
   "totals": {
-    "raw": 322926,
-    "gzip": 83061,
-    "compressRatio": 0.2572
+    "raw": 325902,
+    "gzip": 84184,
+    "compressRatio": 0.2583
   },
   "apps": {
     "platform-admin": {
@@ -74,19 +74,19 @@
         {
           "file": "mobile-app/app.js",
           "ext": "js",
-          "raw": 43538,
-          "gzip": 10959,
-          "ratio": 25.17
+          "raw": 46514,
+          "gzip": 12082,
+          "ratio": 25.97
         }
       ],
       "raw": {
-        "total": 43538,
-        "js": 43538,
+        "total": 46514,
+        "js": 46514,
         "css": 0
       },
       "gzip": {
-        "total": 10959,
-        "js": 10959,
+        "total": 12082,
+        "js": 12082,
         "css": 0
       }
     },
@@ -147,5 +147,5 @@
     }
   },
   "alerts": [],
-  "_generatedAt": "2026-08-29T08:48:55.827Z"
+  "_generatedAt": "2026-08-29T09:33:54.842Z"
 }

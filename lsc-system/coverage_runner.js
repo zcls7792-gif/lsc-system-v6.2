@@ -1333,6 +1333,116 @@ async function main() {
         const mask = w.document.querySelector('.modal-mask');
         if (mask) mask.remove();
         console.log(`  ${fp}: mobile-app 业务函数补测 OK (+F13-F17 5项热点)`);
+        // === F18. 严格发行规则: 仅人民币实付触发LSC发行, LSC抵扣不发行(3子场景) ===
+        // 覆盖: calcHybrid rmbPay 发行分支 + paySuccess 三种支付模式(人民币/混合/LSC全额抵扣) + 提示文案分支
+        try {
+          const runStrict = (label, amountStr, pctValue, expectMode, expectLscUse, expectRmb, expectIssue, expectAlertClass) => {
+            const r = execVM(w, `
+              // 清理旧 modal
+              document.querySelectorAll('.modal-mask').forEach(m=>m.remove());
+              _hybridPct = 0;
+              simulateScan();
+              // 填金额
+              const amt = document.getElementById('scan-amount');
+              amt.value = '${amountStr}';
+              // 强制滑块位置: 直接赋值 _hybridPct 并同步 DOM 避免跨 ctx
+              _hybridPct = ${pctValue};
+              const fill = document.getElementById('hybrid-fill');
+              const knob = document.getElementById('hybrid-knob');
+              if (fill) fill.style.width = (_hybridPct*100)+'%';
+              if (knob) knob.style.left = (_hybridPct*100)+'%';
+              calcHybrid();
+              // 读取 UI 值
+              const lscTxt  = document.getElementById('hybrid-lsc').textContent;
+              const rmbTxt  = document.getElementById('hybrid-rmb').textContent;
+              const getTxt  = document.getElementById('hybrid-get').textContent;
+              const finalTxt= document.getElementById('pay-final').textContent;
+              // 读取结算 dataset
+              const maskEl = document.body.querySelector('.modal-mask:last-of-type');
+              const ds = maskEl ? {
+                settleTotal: maskEl.dataset.settleTotal,
+                settleLscUse: maskEl.dataset.settleLscUse,
+                settleRmb: maskEl.dataset.settleRmb,
+                settleIssue: maskEl.dataset.settleIssue,
+              } : {};
+              return { lscTxt, rmbTxt, getTxt, finalTxt, ds };
+            `);
+            const ok1 = r.lscTxt === (expectLscUse.toFixed(2)+' LSC');
+            const ok2 = r.rmbTxt === '¥'+expectRmb.toFixed(2);
+            const ok3 = r.getTxt === '+'+expectIssue.toFixed(2);
+            const ok4 = r.finalTxt === expectRmb.toFixed(2);
+            const ok5 = (r.ds.settleTotal === expectLscUse + expectRmb ? expectLscUse + expectRmb : parseFloat(r.ds.settleTotal)).toFixed(2);
+            const ttl = (parseFloat(r.ds.settleTotal)||0);
+            const dsOk = Math.abs((expectLscUse+expectRmb) - ttl) < 0.001
+              && Math.abs(expectLscUse - (parseFloat(r.ds.settleLscUse)||0)) < 0.001
+              && Math.abs(expectRmb - (parseFloat(r.ds.settleRmb)||0)) < 0.001
+              && Math.abs(expectIssue - (parseFloat(r.ds.settleIssue)||0)) < 0.001;
+            assert(ok1, `${fp}.18${label}.a LSC抵扣=${expectLscUse.toFixed(2)} LSC (实际 ${r.lscTxt})`);
+            assert(ok2, `${fp}.18${label}.b 人民币实付=¥${expectRmb.toFixed(2)} (实际 ${r.rmbTxt})`);
+            assert(ok3, `${fp}.18${label}.c 发行LSC=+${expectIssue.toFixed(2)} (实际 ${r.getTxt}) — 严格规则: LSC抵扣不发行`);
+            assert(ok4, `${fp}.18${label}.d 确认支付按钮最终金额=¥${expectRmb.toFixed(2)} (实际 ${r.finalTxt})`);
+            assert(dsOk, `${fp}.18${label}.e mask.dataset 结算参数与UI一致 (total=${ttl}, lsc=${r.ds.settleLscUse}, rmb=${r.ds.settleRmb}, issue=${r.ds.settleIssue})`);
+            // 调用 paySuccess 校验模式和 alert 分支
+            const res = execVM(w, `
+              var buttons = document.querySelectorAll('.modal-mask .btn-primary');
+              var btn = buttons[buttons.length - 1];
+              paySuccess(btn);
+              var box = document.querySelector('.modal-mask .modal');
+              var html = box ? (box.innerHTML || '') : '';
+              var mode = '';
+              if (html.indexOf('LSC全额抵扣') >= 0) mode = 'LSC全额抵扣';
+              else if (html.indexOf('混合支付') >= 0 && html.indexOf('人民币实付') >= 0) mode = '混合支付';
+              else if (html.indexOf('人民币实付') >= 0) mode = '人民币支付';
+              var aS = 0, aW = 0;
+              if (box) {
+                var kids = box.querySelectorAll ? box.querySelectorAll('*') : [];
+                for (var kk = 0; kk < kids.length; kk++) {
+                  var cn = kids[kk].className || '';
+                  if (typeof cn !== 'string') continue;
+                  if (cn.indexOf('alert-success') >= 0) aS++;
+                  if (cn.indexOf('alert-warning') >= 0) aW++;
+                }
+                if (box.className && typeof box.className === 'string') {
+                  if (box.className.indexOf('alert-success') >= 0) aS++;
+                  if (box.className.indexOf('alert-warning') >= 0) aW++;
+                }
+              }
+              var alertClass = aS > 0 ? 'success' : (aW > 0 ? 'warning' : '');
+              var hasIssueNo = html.indexOf('不触发') >= 0 && html.indexOf('发行') >= 0;
+              var hasRmb = html.indexOf('人民币实付') >= 0;
+              return { mode: mode, alertClass: alertClass, html: html, _chk: { aS: aS, aW: aW, hasIssueNo: hasIssueNo, hasRmb: hasRmb } };
+            `);
+            assert(res.mode === expectMode, `${fp}.18${label}.f paySuccess 支付模式='${expectMode}' (实际 '${res.mode}')`);
+            assert(res.alertClass === expectAlertClass, `${fp}.18${label}.g paySuccess alert 类型='${expectAlertClass}' (rmb>0→success / rmb=0→warning) (实际='${res.alertClass}')`);
+            // 规则断言: rmb=0 时 alert-warning 内必须含 "不触发 LSC 发行"
+            if (expectAlertClass === 'warning') {
+              const noIssue = res.html.includes('不触发 LSC 发行') || res.html.includes('不 触发 发行');
+              // 宽松匹配: 必须含警告核心词
+              const warnCore = res.html.includes('不') && (res.html.includes('发行'));
+              assert(warnCore, `${fp}.18${label}.h 纯LSC抵扣警告文案必须含"不...发行" (实际HTML长度=${res.html.length})`);
+            } else {
+              // success 必须含 "人民币实付"
+              const okCore = res.html.includes('人民币实付');
+              assert(okCore, `${fp}.18${label}.h 人民币/混合支付成功提示必须含"人民币实付"来源`);
+            }
+          };
+          // (a) 场景: 全人民币 pct=0 → 发行=全额=100
+          runStrict('a', '100', 0, '人民币支付', 0, 100, 100, 'success');
+          // (b) 场景: 混合 50% → 订单100, 抵扣50, 实付50, 发行=50(≠100, 是严格规则核心验证点)
+          runStrict('b', '100', 0.5, '混合支付', 50, 50, 50, 'success');
+          // (c) 场景: 100% LSC抵扣, 可用余额 8640.5 ≥ min(100,8640.5) = 100 → rmb=0 → 发行=0, 警告+不发行提示
+          runStrict('c', '100', 1, 'LSC全额抵扣', 100, 0, 0, 'warning');
+          // (d) 场景: 抵扣超过余额上限？ pct=0.8 min(300,8640.5)=300 → lsc=240 rmb=60 issue=60
+          runStrict('d', '300', 0.8, '混合支付', 240, 60, 60, 'success');
+          // (e) 极端场景: LSC max 抵扣 min(1000,8640.5)=1000 全抵扣 → rmb=0 issue=0
+          runStrict('e', '1000', 1, 'LSC全额抵扣', 1000, 0, 0, 'warning');
+          // (f) 订单 499 元, pct=0 → 商城全款商品 人民币支付 → 发行 499
+          runStrict('f', '499', 0, '人民币支付', 0, 499, 499, 'success');
+          // 清理
+          const lastMask = w.document.querySelector('.modal-mask');
+          if (lastMask) lastMask.remove();
+          passed++;
+        } catch(e) { assert(false, `${fp}.18 严格发行规则(仅人民币实付→LSC发行, LSC抵扣不发行) 6场景 失败: `+e.message); }
       } else if (appName === 'mini-program') {
         // F1-F2. wxScanPay
         w.wxScanPay();

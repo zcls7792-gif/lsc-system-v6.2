@@ -222,15 +222,15 @@ function simulateScan() {
     <div class="modal-body">
       <label class="field-label">消费金额 (元)</label>
       <div class="input-group mb-3"><span style="color:var(--c-accent-deep);font-weight:700;font-size:20px;">¥</span><input class="input" id="scan-amount" value="100" style="font-size:20px;font-weight:700;" oninput="calcHybrid()"></div>
-      <div class="alert alert-info" style="font-size:12px;"><span class="icon icon-sm" data-i="unlock"></span>支付后将获得等量LSC进入锁定池(¥1=1LSC), 每日动态释放至可用池</div>
+      <div class="alert alert-info" style="font-size:12px;"><span class="icon icon-sm" data-i="unlock"></span>仅<strong>人民币实付部分</strong>按¥1=1LSC等量发行进入锁定池, LSC消费抵扣部分<strong>不</strong>触发发行</div>
       <div class="hybrid-pay" style="margin:14px 0 0;">
-        <div class="flex justify-between text-sm"><span>LSC 抵扣</span><b id="hybrid-lsc" style="color:var(--c-available);">0 LSC</b></div>
+        <div class="flex justify-between text-sm"><span>LSC 抵扣 (不发行)</span><b id="hybrid-lsc" style="color:var(--c-available);">0 LSC</b></div>
         <div class="hybrid-bar">
           <div class="hybrid-fill" id="hybrid-fill" style="width:0%;"></div>
           <div class="hybrid-knob" id="hybrid-knob" style="left:0%;"></div>
         </div>
-        <div class="pay-summary"><span>实付人民币</span><b id="hybrid-rmb" style="color:var(--c-accent-deep);">¥100.00</b></div>
-        <div class="pay-summary"><span>获得 LSC</span><b id="hybrid-get" style="color:var(--c-available);">+100.00</b></div>
+        <div class="pay-summary"><span>人民币实付 (发行依据)</span><b id="hybrid-rmb" style="color:var(--c-accent-deep);">¥100.00</b></div>
+        <div class="pay-summary"><span>发行 LSC (=人民币实付)</span><b id="hybrid-get" style="color:var(--c-locked);">+100.00</b></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -246,13 +246,27 @@ function simulateScan() {
     window.calcHybrid = function() {
       const total = parseFloat(document.getElementById('scan-amount').value) || 0;
       const lscUse = window._hybridPct * Math.min(total, 8640.5);
+      const rmbPay = Math.max(0, total - lscUse);
       document.getElementById('hybrid-lsc').textContent = lscUse.toFixed(2) + ' LSC';
-      document.getElementById('hybrid-rmb').textContent = '¥' + (total - lscUse).toFixed(2);
-      document.getElementById('hybrid-get').textContent = '+' + total.toFixed(2);
-      document.getElementById('pay-final').textContent = (total - lscUse).toFixed(2);
+      document.getElementById('hybrid-rmb').textContent = '¥' + rmbPay.toFixed(2);
+      // 发行规则严格化: 仅人民币实付部分 1:1 发行 LSC, LSC抵扣部分永不发行
+      document.getElementById('hybrid-get').textContent = '+' + rmbPay.toFixed(2);
+      document.getElementById('pay-final').textContent = rmbPay.toFixed(2);
+      // 将本次结算参数存入最近 modal, 供 paySuccess 使用, 避免硬编码 100
+      const mask = document.body.querySelector('.modal-mask:last-of-type');
+      if (mask) {
+        mask.dataset.settleTotal = total.toFixed(2);
+        mask.dataset.settleLscUse = lscUse.toFixed(2);
+        mask.dataset.settleRmb = rmbPay.toFixed(2);
+        mask.dataset.settleIssue = rmbPay.toFixed(2);
+      }
     };
   }
   if (!window._hybridPct) window._hybridPct = 0;
+  // 初始化一次, 同步结算参数 (使用setTimeout会在modal销毁后触发，导致元素不存在报错)
+  if (typeof calcHybrid === 'function') {
+    try { calcHybrid(); } catch(_e) { /* 元素尚不存在则跳过, 下一次 input/滑块 触发时会再算 */ }
+  }
 }
 function setupHybridSlider() {
   const bar = document.querySelector('.hybrid-bar');
@@ -273,13 +287,33 @@ function setupHybridSlider() {
 }
 function paySuccess(btn) {
   const mask = btn.closest('.modal-mask');
-  mask.querySelector('.modal').innerHTML = `<div style="padding:50px 30px;text-align:center;">
+  const total   = parseFloat(mask?.dataset?.settleTotal) || 100;
+  const lscUse  = parseFloat(mask?.dataset?.settleLscUse) || 0;
+  const rmbPay  = parseFloat(mask?.dataset?.settleRmb)   || (total - lscUse);
+  const issue   = parseFloat(mask?.dataset?.settleIssue) || rmbPay;
+  const totalFmt  = total.toFixed(2);
+  const lscUFmt   = lscUse.toFixed(2);
+  const rmbFmt    = rmbPay.toFixed(2);
+  const issueFmt  = issue.toFixed(2);
+  const payMode   = (rmbPay > 0 && lscUse > 0) ? '混合支付'
+                  : (rmbPay > 0) ? '人民币支付'
+                  : 'LSC全额抵扣';
+  // 严格规则表述:
+  //   若 rmbPay>0 → 按人民币实付额发行 LSC, 锁定池 +issue
+  //   若 rmbPay=0 → LSC抵扣, 无发行, 无锁定池入账
+  const issueBlock = rmbPay > 0
+    ? `<div class="alert alert-success mt-4" style="font-size:12px;text-align:left;"><span class="icon icon-sm" data-i="unlock"></span><b>${issueFmt} LSC</b> 已进入您的<b>锁定池</b> (来源: 人民币实付 ¥${rmbFmt} 1:1发行), 将按每日动态释放至可用池, 释放速率约0.0385%。</div>`
+    : `<div class="alert alert-warning mt-4" style="font-size:12px;text-align:left;"><span class="icon icon-sm" data-i="scan"></span>本次为<b>LSC消费抵扣(${lscUFmt} LSC)</b>, 不触发 LSC 发行, 无锁定池入账。发行仅在人民币实际支付时按 ¥1=1LSC 产生。</div>`;
+  const payBreak = lscUse > 0
+    ? `订单 ¥${totalFmt} · 抵扣 ${lscUFmt} LSC · 人民币实付 ¥${rmbFmt} · <span style="color:var(--c-locked);">发行 +${issueFmt} LSC</span>`
+    : `人民币支付 ¥${rmbFmt} · <span style="color:var(--c-locked);">发行 +${issueFmt} LSC</span>`;
+  mask.querySelector('.modal').innerHTML = `<div style="padding:42px 24px 28px;text-align:center;">
     <div style="width:72px;height:72px;border-radius:50%;background:var(--c-available);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
       <span class="icon icon-xl" data-i="check" style="width:36px;height:36px;color:#fff;"></span>
     </div>
-    <div style="font-size:18px;font-weight:700;">支付成功</div>
-    <div class="text-muted text-sm mt-2">消费 ¥100.00 · 获得 100.00 LSC</div>
-    <div class="alert alert-success mt-4" style="font-size:12px;text-align:left;"><span class="icon icon-sm" data-i="unlock"></span>100.00 LSC 已进入您的锁定池, 将按每日动态释放至可用池, 释放速率约0.0385%。</div>
+    <div style="font-size:18px;font-weight:700;">支付成功 · ${payMode}</div>
+    <div class="text-muted text-sm mt-2" style="line-height:1.7;">${payBreak}</div>
+    ${issueBlock}
     <button class="btn btn-primary btn-block mt-4" onclick="this.closest('.modal-mask').remove();showScreen('wallet');">查看我的钱包</button>
   </div>`;
   renderIcons(mask);
@@ -294,8 +328,8 @@ function renderPaycode() {
       <span style="font-size:16px;font-weight:600;">LSC 付款码</span>
     </div>
     <div class="paycode-tabs">
-      <div class="paycode-tab active">LSC付款码</div>
-      <div class="paycode-tab">混合付款</div>
+      <div class="paycode-tab active">LSC付款码 (不发行)</div>
+      <div class="paycode-tab">混合付款 (按人民币实付发行)</div>
     </div>
     <div class="paycode-amount">
       <div class="pa-label">LSC 可用余额</div>
@@ -314,7 +348,7 @@ function renderPaycode() {
     </div>
     <div style="margin-top:24px;background:rgba(255,255,255,0.1);border-radius:14px;padding:14px;font-size:12px;">
       <div style="font-weight:600;margin-bottom:6px;">使用说明</div>
-      <div style="opacity:0.85;line-height:1.6;">向商家出示此付款码, 商家扫描后输入金额即可扣减您的可用LSC余额。每笔消费将获得等量LSC进入锁定池。</div>
+      <div style="opacity:0.85;line-height:1.6;">向商家出示此付款码, 商家扫描后输入金额即从<b>可用余额</b>中扣减相应 LSC。<br><strong>重要</strong>: 纯 LSC 付款属于消费抵扣,<b>不会</b>触发 LSC 发行。只有人民币支付或混合付款中的人民币实付部分, 才按 ¥1=1LSC 发行进入锁定池。</div>
     </div>
   </div>`;
   renderIcons(document.getElementById('screen-paycode'));
@@ -324,8 +358,8 @@ function renderPaycode() {
 function renderWallet() {
   const txs = [
     {type:'释放', icon:'unlock', color:'var(--c-available)', amount:'+38.50', time:'今日 02:03', orderId:'REL20260827002'},
-    {type:'消费发行', icon:'mall', color:'var(--c-locked)', amount:'+100.00', time:'昨日 18:24', orderId:'ORD20260826008'},
-    {type:'线下消费', icon:'scan', color:'var(--c-info)', amount:'-50.00', time:'昨日 12:30', orderId:'OFF20260826003'},
+    {type:'消费发行(人民币实付)', icon:'mall', color:'var(--c-locked)', amount:'+100.00', time:'昨日 18:24', orderId:'ORD20260826008'},
+    {type:'线下消费(LSC抵扣,不发行)', icon:'scan', color:'var(--c-info)', amount:'-50.00', time:'昨日 12:30', orderId:'OFF20260826003'},
     {type:'推广奖励', icon:'promotion', color:'var(--c-accent)', amount:'+10.00', time:'前天 15:20', orderId:'PROMO20260824005'},
     {type:'每日释放', icon:'unlock', color:'var(--c-available)', amount:'+37.80', time:'前天 02:03', orderId:'REL20260825002'},
   ];
@@ -371,7 +405,7 @@ function renderWallet() {
         </defs>
         <!-- 节点:消费发行 -->
         <rect x="6" y="58" width="94" height="54" rx="10" fill="var(--c-primary-tint,rgba(14,77,74,0.08))" stroke="var(--c-primary)" stroke-width="1.5"/>
-        <text x="53" y="82" font-size="11" font-weight="700" fill="var(--c-primary)" text-anchor="middle">消费发行</text>
+        <text x="53" y="82" font-size="11" font-weight="700" fill="var(--c-primary)" text-anchor="middle">人民币消费发行</text>
         <text x="53" y="98" font-size="9" fill="var(--c-text-3)" text-anchor="middle" font-family="var(--ff-mono)">+24,800</text>
         <!-- 节点:锁定池 -->
         <rect x="156" y="50" width="94" height="70" rx="10" fill="rgba(255,177,61,0.10)" stroke="var(--c-warning)" stroke-width="2"/>
@@ -393,11 +427,11 @@ function renderWallet() {
         <text x="503" y="140" font-size="9" fill="var(--c-text-3)" text-anchor="middle" font-family="var(--ff-mono)">+320</text>
         <!-- 连线 -->
         <line x1="100" y1="85" x2="154" y2="85" stroke="var(--c-locked)" stroke-width="2" marker-end="url(#arrow-user-1)"/>
-        <text x="127" y="80" font-size="8" fill="var(--c-locked)" font-weight="600" text-anchor="middle">1:1发行</text>
+        <text x="127" y="80" font-size="8" fill="var(--c-locked)" font-weight="600" text-anchor="middle">人民币¥1=1LSC发行</text>
         <line x1="250" y1="85" x2="304" y2="85" stroke="var(--c-available)" stroke-width="2.5" marker-end="url(#arrow-user-2)"/>
         <text x="277" y="80" font-size="8" fill="var(--c-available)" font-weight="600" text-anchor="middle">每日缓释</text>
         <path d="M 374 68 Q 430 40 454 40" fill="none" stroke="var(--c-info)" stroke-width="2" marker-end="url(#arrow-user-3)"/>
-        <text x="415" y="44" font-size="8" fill="var(--c-info)" font-weight="600" text-anchor="middle">扫码抵扣</text>
+        <text x="415" y="44" font-size="8" fill="var(--c-info)" font-weight="600" text-anchor="middle">扫码抵扣·不发行</text>
         <path d="M 503 102 Q 503 90 400 90 Q 360 90 360 86" fill="none" stroke="var(--c-accent)" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#arrow-user-2)"/>
         <text x="450" y="94" font-size="7" fill="var(--c-accent-deep)" font-weight="600" text-anchor="middle">直接入账</text>
         <!-- 循环虚线 -->
@@ -504,7 +538,8 @@ function renderOrders() {
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:500;">线下扫码消费</div>
         <div class="text-xs text-muted mt-1">锦华餐饮连锁·总店</div>
-        <div class="text-xs text-available mt-1">LSC抵扣 50 · 人民币 ¥50</div>
+        <div class="text-xs mt-1" style="color:var(--c-info);">LSC抵扣 50 · 人民币实付 ¥50</div>
+        <div class="text-xs mt-0.5" style="color:var(--c-locked);">发行 +50.00 LSC (锁定池, 依据人民币实付 1:1)</div>
       </div>
       <div style="text-align:right;"><div style="font-family:var(--ff-mono);font-weight:700;">¥100</div><div class="text-xs text-muted">混合支付</div></div>
     </div>
@@ -619,7 +654,7 @@ function renderProduct(idx) {
       <span class="tag tag-available">可抵 ${p.price} LSC</span>
     </div>
     <div class="text-xs text-muted mt-2">${p.merchant} · 月销 ${p.sales}</div>
-    <div class="alert alert-info mt-3" style="font-size:12px;"><span class="icon icon-sm" data-i="unlock"></span>支付 ¥${p.price} 后, 您将获得 ${p.price} LSC 进入锁定池, 每日动态释放至可用池, 可用于未来消费抵扣。</div>
+    <div class="alert alert-info mt-3" style="font-size:12px;"><span class="icon icon-sm" data-i="unlock"></span>使用<strong>人民币</strong>支付 ¥${p.price} 后, 您将获得 <strong>${p.price} LSC</strong> 进入锁定池 (¥1=1LSC)。<br>如使用可用 LSC 抵扣, 抵扣部分不产生发行, 仅实付人民币部分按 1:1 发行。每日动态释放至可用池后可用于未来消费抵扣。</div>
     <!-- 商品属性 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
       <div style="background:var(--c-bg-soft);border-radius:10px;padding:10px;">

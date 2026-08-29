@@ -1,9 +1,9 @@
 # 链盛通 LSC 前端资产体量审计报告
 
-- 生成时间: 2026-08-29T08:48:55.829Z
+- 生成时间: 2026-08-29T09:33:54.844Z
 - 严格模式: 开启
 - 结果: FAIL=0 WARN=0  Score=100/100
-- 合计: RAW=315.36 KiB  GZIP=81.11 KiB  压缩率=25.7%
+- 合计: RAW=318.26 KiB  GZIP=82.21 KiB  压缩率=25.8%
 
 ## 阈值
 
@@ -12,7 +12,7 @@
 | 单应用 JS gzip 总和 | ≤200.00 KiB | - | - |
 | 单应用 CSS gzip 总和 | ≤50.00 KiB | - | - |
 | 单文件 gzip 绝对上限 | ≤180.00 KiB | - | - |
-| 全部应用+共享 gzip 总和 | ≤800.00 KiB | 81.11 KiB | PASS |
+| 全部应用+共享 gzip 总和 | ≤800.00 KiB | 82.21 KiB | PASS |
 
 ## 平台管理后台 (platform-admin)
 
@@ -39,13 +39,13 @@
 ## 消费者移动端APP (mobile-app)
 
 - 资源文件数: 1
-- RAW  total: 42.52 KiB  (JS 42.52 KiB / CSS 0 B)
-- GZIP total: 10.70 KiB (JS 10.70 KiB / CSS 0 B)
-- 压缩率: 25.2%
+- RAW  total: 45.42 KiB  (JS 45.42 KiB / CSS 0 B)
+- GZIP total: 11.80 KiB (JS 11.80 KiB / CSS 0 B)
+- 压缩率: 26.0%
 
 | 文件 | 类型 | RAW | GZIP | 压缩率 |
 |---|---|---:|---:|---:|
-| `mobile-app/app.js` | JS | 42.52 KiB | 10.70 KiB | 25.17% |
+| `mobile-app/app.js` | JS | 45.42 KiB | 11.80 KiB | 25.97% |
 
 ## 微信小程序端 (mini-program)
 
