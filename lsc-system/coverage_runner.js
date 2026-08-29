@@ -806,6 +806,234 @@ async function main() {
       assert(r53.doubleCloseNoThrow === true, 'A53g. closeModal多次无modal调用不抛 (m假分支)');
       passed++; console.log('  A53. openModal title/body假分支 + 空对象参数 + 无modal重复close OK');
     } catch(e){ assert(false, 'A53. openModal 参数默认值补测 err: '+e.message); }
+
+    // ========================================================================
+    // ---- A54: catch 分支追击 (L1400/L1441/L1462-1465 共5 catch + L1458 title假分支) ----
+    // ========================================================================
+    try {
+      const r54 = execVM(w, `
+        var res = {};
+        // ----------------------------------------------------------------
+        // A54a: L1458 opts.title 假分支 (dualApprovalModal 不传 title → 默认 "双人审批")
+        // ----------------------------------------------------------------
+        try {
+          dualApprovalModal({
+            title: null,  // falsy → 走 opts.title || '双人审批' 假分支
+            summary: '<p>L1458测试</p>',
+            payload: 'test',
+            onApprove: function(){}
+          });
+          var mt_a = document.querySelector('#global-modal .modal-title');
+          res.a54a_titleDefault = mt_a ? mt_a.textContent : '';
+          closeModal();
+          res.a54a_ok = true;
+        } catch(e_a) { res.a54a_ok = false; res.a54a_err = String(e_a); }
+
+        // ----------------------------------------------------------------
+        // A54b: L1400 catch 分支 (closeModal 中 m.__onClose() 抛错)
+        // ----------------------------------------------------------------
+        try {
+          // 打开一个普通 modal, 手动给 mask 元素设置 __onClose 为抛错函数
+          openModal({
+            title: 'L1400测试',
+            body: '<p>onClose抛错</p>',
+            onClose: function() { /* 正常回调, 后续会被覆盖为抛错函数 */ }
+          });
+          var mask_b = document.getElementById('global-modal');
+          // 覆盖 __onClose 为抛错函数
+          mask_b.__onClose = function() { throw new Error('L1400 forced onClose error'); };
+          // 调用 closeModal → 执行 m.__onClose() → 抛错 → 被 L1400 catch 捕获
+          closeModal();
+          res.a54b_modalRemoved = !document.getElementById('global-modal');
+          res.a54b_ok = true;
+        } catch(e_b) { res.a54b_ok = false; res.a54b_err = String(e_b); }
+
+        // ----------------------------------------------------------------
+        // A54c: L1441 catch 分支 (updateSig 中 window._dualSig.s1/s2 写入抛错)
+        // 方案: 先调用 dualApprovalModal 初始化, 然后用 Object.defineProperty
+        //       将 window._dualSig.s1 和 s2 设置为 setter 抛错, 再调 updateSig
+        // ----------------------------------------------------------------
+        try {
+          dualApprovalModal({
+            title: 'L1441测试',
+            summary: '<p>写入window._dualSig抛错</p>',
+            payload: 'test',
+            onApprove: function(){}
+          });
+          // 将 window._dualSig.s1 和 s2 的 setter 设置为抛错
+          Object.defineProperty(window._dualSig, 's1', {
+            configurable: true,
+            get: function() { return 'fake'; },
+            set: function(v) { throw new Error('L1441 forced s1 setter error'); }
+          });
+          Object.defineProperty(window._dualSig, 's2', {
+            configurable: true,
+            get: function() { return 'fake'; },
+            set: function(v) { throw new Error('L1441 forced s2 setter error'); }
+          });
+          // 调用 updateSig('sig1', ...) → 内部 window._dualSig.s1 = sig1 抛错 → L1441 catch
+          updateSig('sig1', 'admin01');
+          // 同时测试 sig2 分支
+          updateSig('sig2', 'admin02');
+          // 验证 UI 仍正常（catch后代码继续执行）
+          var sb1_c = document.getElementById('sig1-box');
+          res.a54c_sig1Verified = sb1_c ? sb1_c.classList.contains('verified') : false;
+          var sb2_c = document.getElementById('sig2-box');
+          res.a54c_sig2Verified = sb2_c ? sb2_c.classList.contains('verified') : false;
+          closeModal();
+          // 注意: 这里只改了 window._dualSig 对象内部 s1/s2 属性, 没有修改 window 顶层 _dualSig 属性描述符
+          //       所以顶层属性仍是默认 configurable:true, 不会影响后续子测试
+          res.a54c_ok = true;
+        } catch(e_c) { res.a54c_ok = false; res.a54c_err = String(e_c);
+          try { closeModal(); } catch(_){}
+        }
+
+        // ----------------------------------------------------------------
+        // A54f: Object.freeze 极端方案 + 未知 key 分支 (updateSig key 非 sig1/sig2)
+        // 放在属性污染类测试(A54de)之前执行, 避免 window._dualSig 描述符被污染
+        // 覆盖: L1436/1437 之外的未知 key 隐式 else 假分支 + freeze 方案验证
+        // ----------------------------------------------------------------
+        try {
+          dualApprovalModal({
+            title: 'Freeze+UnknownKey测试',
+            summary: '<p>未知key+freeze测试</p>',
+            payload: 'test',
+            onApprove: function(){}
+          });
+          // --- A54f-1: updateSig 未知 key (L1436 key!='sig1', L1437 key!='sig2' → 都不写入闭包) ---
+          window.updateSig('unknownKey', 'anything');
+          window.updateSig('', 'emptyKey');
+          window.updateSig(null, 'nullKey');
+          window.updateSig(undefined, 'undefKey');
+          // sig-box 仍保持等待状态 (未 verified)
+          var sb1_f = document.getElementById('sig1-box');
+          var sb2_f = document.getElementById('sig2-box');
+          res.a54f_unknownKeySig1NotVerified = sb1_f ? !sb1_f.classList.contains('verified') : false;
+          res.a54f_unknownKeySig2NotVerified = sb2_f ? !sb2_f.classList.contains('verified') : false;
+          // 再确认按钮仍 disabled
+          var btn_f = document.getElementById('dual-confirm');
+          res.a54f_btnStillDisabled = btn_f ? btn_f.disabled : false;
+
+          // --- A54f-2: Object.freeze(_dualSig) → 严格模式下属性修改抛 TypeError ---
+          if (window._dualSig && typeof window._dualSig === 'object') {
+            Object.freeze(window._dualSig);
+            try {
+              (function(){ "use strict"; window._dualSig.onApprove = 'x'; })();
+              res.a54f_freezeAssignThrow = false;
+            } catch(_fe) {
+              res.a54f_freezeAssignThrow = true;
+              res.a54f_freezeErrorType = String(_fe).slice(0, 50);
+            }
+          }
+          closeModal();
+          // 清理顶层引用 (正常情况下这两行应该能删掉属性)
+          try { delete window._dualSig; } catch(_){ try { window._dualSig = undefined; } catch(_2){} }
+          try { delete window.updateSig; } catch(_){ try { window.updateSig = undefined; } catch(_2){} }
+          res.a54f_ok = true;
+        } catch(e_f) { res.a54f_ok = false; res.a54f_err = String(e_f);
+          try { delete window._dualSig; } catch(_){ try { window._dualSig = undefined; } catch(_2){} }
+          try { delete window.updateSig; } catch(_){ try { window.updateSig = undefined; } catch(_2){} }
+          try { closeModal(); } catch(_){}
+        }
+
+        // =================================================================
+        // A54de: 三合一 catch 追击 (放在最后, 防止 window 属性描述符污染影响其他测试)
+        //   一次性覆盖:
+        //   - L1462 catch: delete window._dualSig 抛 configurable:false
+        //   - L1463 catch: delete window.updateSig 抛 configurable:false
+        //   - L1465 catch: window._dualSig = undefined 抛 setter locked TypeError
+        // 核心技巧: 在 dualApprovalModal 初始化后, window._dualSig 仍是默认
+        //           configurable:true 属性, 所以可以成功改为 accessor descriptor (getter/setter).
+        //           设置 configurable:false + setter 抛错, closeModal() 触发三合一 catch.
+        // 此子测试执行后 window 顶层属性描述符会被永久锁定 (configurable:false),
+        // 但这是 execVM 中最后一个子测试, 之后立即 return 不会再用.
+        // =================================================================
+        try {
+          dualApprovalModal({
+            title: '三合一catch测试',
+            summary: '<p>同时命中 L1462/L1463/L1465 三个catch</p>',
+            payload: 'test',
+            onApprove: function(){}
+          });
+          // 先确认此时 window._dualSig 是正常可配置 (否则前置子测试有泄漏, 需排查)
+          var _descDe = Object.getOwnPropertyDescriptor(window, '_dualSig');
+          res.a54de_beforeConfigurable = _descDe ? _descDe.configurable : 'noDesc';
+
+          // 保存原始值引用 (accessor getter 需要)
+          var _ds_de = window._dualSig;
+          var _us_de = window.updateSig;
+
+          // --- 配置 window._dualSig 为 accessor: configurable:false + setter 抛错 ---
+          // configurable:false → L1462 delete → TypeError → catch ✓
+          // setter throw       → L1465 =undefined → TypeError → catch ✓
+          Object.defineProperty(window, '_dualSig', {
+            configurable: false,
+            enumerable: true,
+            get: function(){ return _ds_de; },
+            set: function(v){ throw new TypeError('A54de _dualSig setter locked'); }
+          });
+
+          // --- 配置 window.updateSig: 同上 (L1463 delete + L1465 =undefined 都抛) ---
+          Object.defineProperty(window, 'updateSig', {
+            configurable: false,
+            enumerable: true,
+            get: function(){ return _us_de; },
+            set: function(v){ throw new TypeError('A54de updateSig setter locked'); }
+          });
+
+          // 触发 onClose:
+          //   1. L1462 try{delete window._dualSig}   → configurable=false → TypeError → catch
+          //   2. L1463 try{delete window.updateSig}  → configurable=false → TypeError → catch
+          //   3. L1465 try{window._dualSig=undefined; window.updateSig=undefined}
+          //          _dualSig setter → TypeError → 直接跳入 catch
+          closeModal();
+          res.a54de_modalRemoved = !document.getElementById('global-modal');
+
+          // 不需要清理 — 这是最后一个子测试
+          res.a54de_ok = true;
+        } catch(e_de) { res.a54de_ok = false; res.a54de_err = String(e_de);
+          try { closeModal(); } catch(_){}
+        }
+
+        return res;
+      `);
+
+      // ===== A54 断言 =====
+      // A54a: L1458 opts.title 假分支 (null → 默认 "双人审批")
+      assert(r54.a54a_ok === true, 'A54a. dualApprovalModal opts.title=null 无异常 err='+(r54.a54a_err||''));
+      assert(r54.a54a_titleDefault === '双人审批',
+        'A54a. L1458 opts.title=null → 默认标题 "双人审批" actual='+r54.a54a_titleDefault);
+
+      // A54b: L1400 closeModal 中 m.__onClose 抛错 catch
+      assert(r54.a54b_ok === true, 'A54b. L1400 __onClose抛错无异常向外泄漏 err='+(r54.a54b_err||''));
+      assert(r54.a54b_modalRemoved === true, 'A54b. L1400 catch后modal仍被正常移除');
+
+      // A54c: L1441 updateSig 中 window._dualSig.s1/s2 setter 抛错 catch
+      assert(r54.a54c_ok === true, 'A54c. L1441 _dualSig setter抛错无异常向外泄漏 err='+(r54.a54c_err||''));
+      assert(r54.a54c_sig1Verified === true, 'A54c. L1441 catch后sig1-box仍标记verified (UI逻辑继续) actual='+r54.a54c_sig1Verified);
+      assert(r54.a54c_sig2Verified === true, 'A54c. L1441 catch后sig2-box仍标记verified actual='+r54.a54c_sig2Verified);
+
+      // A54f: Object.freeze 极端方案 + updateSig 未知 key 隐式分支
+      assert(r54.a54f_ok === true, 'A54f. freeze+未知key测试无异常 err='+(r54.a54f_err||''));
+      assert(r54.a54f_freezeAssignThrow === true,
+        'A54f-1. freeze对象严格模式赋值抛TypeError errType='+(r54.a54f_freezeErrorType||'N/A'));
+      assert(r54.a54f_unknownKeySig1NotVerified === true,
+        'A54f-2. updateSig未知key后sig1-box未被verified actual='+r54.a54f_unknownKeySig1NotVerified);
+      assert(r54.a54f_unknownKeySig2NotVerified === true,
+        'A54f-3. updateSig未知key后sig2-box未被verified actual='+r54.a54f_unknownKeySig2NotVerified);
+      assert(r54.a54f_btnStillDisabled === true,
+        'A54f-4. 未知key调用后dual-confirm按钮仍disabled actual='+r54.a54f_btnStillDisabled);
+
+      // A54de: 三合一 catch 追击 (L1462 delete catch + L1463 delete catch + L1465 assign catch 同时命中)
+      assert(r54.a54de_ok === true, 'A54de. 三合一catch追击无异常向外泄漏 err='+(r54.a54de_err||''));
+      assert(r54.a54de_beforeConfigurable === true,
+        'A54de-1. 执行前window._dualSig顶层属性为configurable:true (无前置测试泄漏) actual='+r54.a54de_beforeConfigurable);
+      assert(r54.a54de_modalRemoved === true,
+        'A54de-2. closeModal触发三个catch后modal仍被正常移除 actual='+r54.a54de_modalRemoved);
+
+      passed++; console.log('  A54. catch分支追击 (L1400/L1441/L1462-1465 5-catch + L1458 title假分支) OK');
+    } catch(e){ assert(false, 'A54. catch分支追击 err: '+e.message); }
+
     cleanupSession(sess);
   }
 

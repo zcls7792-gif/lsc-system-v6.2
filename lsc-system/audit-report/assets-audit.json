@@ -13,9 +13,9 @@
     "files": 6
   },
   "totals": {
-    "raw": 326146,
-    "gzip": 84336,
-    "compressRatio": 0.2586
+    "raw": 326436,
+    "gzip": 84489,
+    "compressRatio": 0.2588
   },
   "apps": {
     "platform-admin": {
@@ -26,19 +26,19 @@
         {
           "file": "platform-admin/app.js",
           "ext": "js",
-          "raw": 119716,
-          "gzip": 29957,
-          "ratio": 25.02
+          "raw": 120006,
+          "gzip": 30110,
+          "ratio": 25.09
         }
       ],
       "raw": {
-        "total": 119716,
-        "js": 119716,
+        "total": 120006,
+        "js": 120006,
         "css": 0
       },
       "gzip": {
-        "total": 29957,
-        "js": 29957,
+        "total": 30110,
+        "js": 30110,
         "css": 0
       }
     },
@@ -147,5 +147,5 @@
     }
   },
   "alerts": [],
-  "_generatedAt": "2026-08-29T11:21:02.027Z"
+  "_generatedAt": "2026-08-29T11:54:58.918Z"
 }

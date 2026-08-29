@@ -1459,8 +1459,13 @@ function dualApprovalModal(opts) {
     body, footer,
     danger: opts.danger,
     onClose: ()=>{
-      try { delete window._dualSig; } catch(_){}
-      try { delete window.updateSig; } catch(_){}
+      // 严格模式 IIFE: 确保 delete configurable:false 属性时抛 TypeError,
+      // 以便下方 catch 块能在 (1) JSDOM WindowProxy 代理异常、
+      // (2) 属性被 Object.defineProperty 锁定等场景下真正被命中.
+      (function(){ "use strict";
+        try { delete window._dualSig; } catch(_){}
+        try { delete window.updateSig; } catch(_){}
+      })();
       // JSDOM WindowProxy 下 delete 可能失败, 兜底赋值 undefined 以确保 typeof 检测可靠
       try { window._dualSig = undefined; window.updateSig = undefined; } catch(_){}
     }
