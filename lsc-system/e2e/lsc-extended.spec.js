@@ -14,9 +14,12 @@
  *   场景 M: 小程序 · 首页 → 商品滚动列表 → 点击推荐商品跳转详情
  *   场景 N: 商家后台 · 经营总览 → 图表渲染 → 筛选条件切换
  *   场景 O: 移动端 · 首页 → AI 消费顾问推荐 → 点击卡片 → 商品详情跳转
+ *   场景 P: 平台后台 · 商家处罚双人审批弹窗 (showPenalty) → 签名输入 → 审批 → 结果弹窗
+ *   场景 Q: 平台后台 · 释放视图 人工熔断 (showCircuitBreaker) → 高危双人审批 → 结果弹窗
+ *   场景 R: 平台后台 · 风险视图 违规记录 撤销处罚 (showRevokePenalty) → 双人审批 → 撤销结果
  *
  * 项目配置:
- *   - chromium-headless: 场景 D/E/H/I/J/N (桌面)
+ *   - chromium-headless: 场景 D/E/H/I/J/N/P/Q/R (桌面 + 风险弹窗双人审批)
  *   - chromium-mobile:   场景 F/G/K/L/M/O (iPhone 14 尺寸, grep tag 匹配)
  */
 const { test, expect, devices } = require('@playwright/test');
@@ -277,6 +280,154 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
     const dashTxt = await page.locator('#view').innerText();
     expect(dashTxt.length).toBeGreaterThan(150);
     expect(dashTxt).toMatch(/营业额|核销|LSC|订单|TOP|排行|本月|今日/i);
+  });
+
+  // 辅助函数：打开双人审批 modal 后, 输入两位不同管理员签名 → 点击"验证并执行" → 返回结果 modal 文本
+  async function doDualApproval(page, opts = {}) {
+    const s1 = opts.sig1 || 'admin_a';
+    const s2 = opts.sig2 || 'admin_b';
+    await page.locator('#sig1-input').waitFor({ timeout: 6000 });
+    await page.fill('#sig1-input', s1);
+    await page.fill('#sig2-input', s2);
+    // 按钮从 disabled → enabled 依赖 oninput 触发 updateSig, Playwright fill 会派发 input 事件
+    const confirmBtn = page.locator('#dual-confirm');
+    await expect(confirmBtn).toBeEnabled({ timeout: 4000 });
+    await confirmBtn.click();
+    // 等待 onApprove → resultModal 替换当前 modal
+    const resultModal = page.locator('#global-modal');
+    await expect(resultModal).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(250);
+    return resultModal.innerText();
+  }
+
+  // ------------------------------------------------------------------
+  // 场景 P: 平台后台 · 商家处罚 · 双人审批弹窗 (showPenalty)
+  //   进入商家视图 → 点击任一"处罚"按钮 → 填写违规类型/扣分下拉/签名 → 执行审批 → 验证结果弹窗含"处罚执行成功"
+  // ------------------------------------------------------------------
+  test('场景P(桌面): 平台后台 商家处罚 双人审批 → 签名输入 → 结果弹窗', async ({ page }) => {
+    await page.goto(APPS.platform, { waitUntil: 'networkidle' });
+    await page.click('.nav-item[data-view="merchant"]', { timeout: 12000 });
+    await expect(page.locator('#crumb')).toHaveText(/商家|商户/, { timeout: 8000 });
+
+    // 1) 至少有一个"处罚"按钮 (红色 danger 风格)
+    const penaltyBtn = page.locator('#view span.row-btn.danger').filter({ hasText: /处罚/ }).first();
+    const btCount = await penaltyBtn.count().catch(() => 0);
+    expect(btCount).toBeGreaterThanOrEqual(1);
+    await penaltyBtn.click({ force: true });
+
+    // 2) 审批 modal 打开：标题为"执行商家处罚"，且为 danger 模式（红色按钮/背景）
+    const approval = page.locator('#global-modal');
+    await expect(approval).toBeVisible({ timeout: 5000 });
+    const aTxt = await approval.innerText();
+    expect(aTxt).toMatch(/执行商家处罚/);
+    expect(aTxt).toMatch(/双人审批/);
+    expect(aTxt).toMatch(/扣减信用分/);
+    expect(aTxt).toMatch(/两位管理员/);
+
+    // 3) 切换下拉值，验证 DOM 没有因 change 事件报错
+    const vioSel = page.locator('#vio-type');
+    if (await vioSel.isVisible().catch(()=>false)) await vioSel.selectOption({ label: '高核销率异常' });
+    const deductSel = page.locator('#deduct-score');
+    if (await deductSel.isVisible().catch(()=>false)) await deductSel.selectOption({ value: '10' });
+    const measureSel = page.locator('#measure');
+    if (await measureSel.isVisible().catch(()=>false)) await measureSel.selectOption({ label: '加强商品审核' });
+
+    // 4) 相同签名 → 按钮必须 disabled 并提示"不能相同"
+    await page.fill('#sig1-input', 'same_admin');
+    await page.fill('#sig2-input', 'same_admin');
+    await page.waitForTimeout(180);
+    const statusTxt = await page.locator('#dual-status').innerText().catch(()=>'');
+    if (statusTxt) expect(statusTxt).toMatch(/不能相同|两位管理员账号不能相同/);
+    const confirmBtnSame = page.locator('#dual-confirm');
+    await expect(confirmBtnSame).toBeDisabled();
+
+    // 5) 修正签名为不同 → 审批 → 结果弹窗含"处罚执行成功" + warning 色文字
+    const resultText = await doDualApproval(page, { sig1:'plat_sup_a', sig2:'plat_sup_b' });
+    expect(resultText).toMatch(/处罚执行成功/);
+    expect(resultText).toMatch(/审计日志/);
+    // 关闭结果
+    await page.locator('#global-modal button').filter({ hasText: /确定/ }).click({ force: true });
+  });
+
+  // ------------------------------------------------------------------
+  // 场景 Q: 平台后台 · 释放视图 人工熔断 · 双人审批 (showCircuitBreaker)
+  //   高危红色操作：进入 release 视图 → 点击"人工熔断" → 弹出带 alert-danger 提示 → 签名审批 → 验证结果"熔断已执行"
+  // ------------------------------------------------------------------
+  test('场景Q(桌面): 平台后台 人工熔断 双人审批 → alert-danger → 结果熔断已执行', async ({ page }) => {
+    await page.goto(APPS.platform, { waitUntil: 'networkidle' });
+    await page.click('.nav-item[data-view="release"]', { timeout: 12000 });
+    // crumbMap: release → 释放管理
+    await expect(page.locator('#crumb')).toHaveText(/释放管理|释放|参数|熔断/, { timeout: 8000 });
+
+    // 1) 存在红色"人工熔断"按钮（位于 pageHead extra, 在 #view 内部但可能不在表格区域）
+    const cbBtn = page.getByRole('button').filter({ hasText: /人工熔断/ }).first();
+    const bqCount = await cbBtn.count().catch(() => 0);
+    expect(bqCount).toBeGreaterThanOrEqual(1);
+    // 确认可见（即使 aria-hidden，用 force 兜底）
+    try { await expect(cbBtn).toBeVisible({ timeout: 3000 }); } catch(_) {}
+    await cbBtn.click({ force: true });
+
+    // 2) modal 中含 alert-danger 且有"高危操作"文字
+    const approval = page.locator('#global-modal');
+    await expect(approval).toBeVisible({ timeout: 5000 });
+    const aTxt = await approval.innerText();
+    expect(aTxt).toMatch(/人工熔断/);
+    expect(aTxt).toMatch(/高危操作/);
+    expect(aTxt).toMatch(/立即暂停当日释放/);
+    // 释放速率 / 核销率 k 存在
+    expect(aTxt).toMatch(/释放速率|核销率 k|当前释放速率/);
+
+    // 3) 测试"取消"分支 → 审批 modal 被关闭（current modal 不再有审批文案）
+    await page.locator('#global-modal button.btn-outline').filter({ hasText: /取消/ }).click({ force: true });
+    await page.waitForTimeout(350);
+    const afterCancel = page.locator('#global-modal');
+    const afterCount = await afterCancel.count().catch(() => 0);
+    if (afterCount > 0) {
+      // 如果仍存在（可能残留其他modal）, 至少确认不再是人工熔断审批框
+      const t = await afterCancel.innerText().catch(()=>'');
+      expect(t).not.toMatch(/立即暂停当日释放/);
+    }
+
+    // 4) 重新点击 → 正常审批 → 结果含"熔断已执行" + "已通知两名超级管理员"
+    await cbBtn.click({ force: true });
+    const resultText = await doDualApproval(page, { sig1:'breaker_a1', sig2:'breaker_b2' });
+    expect(resultText).toMatch(/熔断已执行/);
+    expect(resultText).toMatch(/超级管理员/);
+  });
+
+  // ------------------------------------------------------------------
+  // 场景 R: 平台后台 · 风险视图 违规记录 → 撤销处罚 · 双人审批 (showRevokePenalty)
+  //   进入 risk 视图 → 找到违规记录表格 → 点击"撤销" → 审批 → 结果弹窗含"处罚已撤销"
+  // ------------------------------------------------------------------
+  test('场景R(桌面): 平台后台 违规记录 撤销处罚 双人审批 → 结果处罚已撤销', async ({ page }) => {
+    await page.goto(APPS.platform, { waitUntil: 'networkidle' });
+    // 处罚撤销按钮在 renderCredit → nav data-view=credit, crumb=信用管理
+    await page.click('.nav-item[data-view="credit"]', { timeout: 12000 });
+    await expect(page.locator('#crumb')).toHaveText(/信用|违规|处罚/, { timeout: 8000 });
+
+    // 1) 视图有足够内容 + 在 MOCK.violations 表格中找到 row-btn danger 的撤销按钮
+    const view = page.locator('#view');
+    const viewTxt = await view.innerText();
+    expect(viewTxt.length).toBeGreaterThan(100);
+
+    const revokeBtn = page.locator('#view span.row-btn.danger, #view .row-btn').filter({ hasText: /撤销/ }).first();
+    const rCount = await revokeBtn.count().catch(() => 0);
+    expect(rCount).toBeGreaterThanOrEqual(1);
+    await revokeBtn.click({ force: true });
+
+    // 2) modal 含"撤销商家处罚"标题 + 违规记录ID
+    const approval = page.locator('#global-modal');
+    await expect(approval).toBeVisible({ timeout: 5000 });
+    const aTxt = await approval.innerText();
+    expect(aTxt).toMatch(/撤销商家处罚/);
+    expect(aTxt).toMatch(/违规记录ID|双人审批/);
+    expect(aTxt).toMatch(/请确认处罚确实为误判/);
+
+    // 3) 审批 → 结果弹窗含"处罚已撤销"与"商家信用分与核销权限已恢复"
+    const resultText = await doDualApproval(page, { sig1:'revoke_u1', sig2:'revoke_u2' });
+    expect(resultText).toMatch(/处罚已撤销/);
+    expect(resultText).toMatch(/信用分与核销权限已恢复|核销权限已恢复/);
+    expect(resultText).toMatch(/审计日志|上链存证/);
   });
 });
 

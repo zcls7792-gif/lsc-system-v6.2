@@ -123,12 +123,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2466,
+                      "duration": 2415,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-29T09:33:23.849Z",
+                      "startTime": "2026-08-29T09:59:36.828Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -157,12 +157,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1900,
+                      "duration": 1903,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-29T09:33:23.852Z",
+                      "startTime": "2026-08-29T09:59:36.825Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -191,12 +191,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2449,
+                      "duration": 2459,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-29T09:33:26.376Z",
+                      "startTime": "2026-08-29T09:59:39.279Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -223,7 +223,7 @@
         {
           "title": "LSC V6.2-AI · 桌面端深度扩展",
           "file": "lsc-extended.spec.js",
-          "line": 34,
+          "line": 37,
           "column": 6,
           "specs": [
             {
@@ -242,12 +242,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2392,
+                      "duration": 2775,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-29T09:33:26.950Z",
+                      "startTime": "2026-08-29T09:59:39.797Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -257,7 +257,7 @@
               ],
               "id": "aaed197fda9439e7798c-0b6e683de281aee1faaa",
               "file": "lsc-extended.spec.js",
-              "line": 40,
+              "line": 43,
               "column": 3
             },
             {
@@ -276,12 +276,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2070,
+                      "duration": 2154,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-29T09:33:28.867Z",
+                      "startTime": "2026-08-29T09:59:41.838Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -291,7 +291,7 @@
               ],
               "id": "aaed197fda9439e7798c-d9b1f38defe1d033f5a1",
               "file": "lsc-extended.spec.js",
-              "line": 87,
+              "line": 90,
               "column": 3
             },
             {
@@ -310,12 +310,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1646,
+                      "duration": 1658,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-29T09:33:29.366Z",
+                      "startTime": "2026-08-29T09:59:42.593Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -325,7 +325,7 @@
               ],
               "id": "aaed197fda9439e7798c-fdc15669eb643a2d3ecd",
               "file": "lsc-extended.spec.js",
-              "line": 114,
+              "line": 117,
               "column": 3
             },
             {
@@ -344,12 +344,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 4072,
+                      "duration": 4059,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-29T09:33:30.955Z",
+                      "startTime": "2026-08-29T09:59:44.021Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -359,7 +359,7 @@
               ],
               "id": "aaed197fda9439e7798c-77807c2e4e20d358ce67",
               "file": "lsc-extended.spec.js",
-              "line": 142,
+              "line": 145,
               "column": 3
             },
             {
@@ -378,12 +378,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2490,
+                      "duration": 2375,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-29T09:33:31.031Z",
+                      "startTime": "2026-08-29T09:59:44.272Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -393,7 +393,7 @@
               ],
               "id": "aaed197fda9439e7798c-cc7ed93633a23d9e4cc0",
               "file": "lsc-extended.spec.js",
-              "line": 197,
+              "line": 200,
               "column": 3
             },
             {
@@ -412,12 +412,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1427,
+                      "duration": 1337,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-29T09:33:33.544Z",
+                      "startTime": "2026-08-29T09:59:46.672Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -427,7 +427,109 @@
               ],
               "id": "aaed197fda9439e7798c-bde7f2070ef880a3d3e7",
               "file": "lsc-extended.spec.js",
-              "line": 250,
+              "line": 253,
+              "column": 3
+            },
+            {
+              "title": "场景P(桌面): 平台后台 商家处罚 双人审批 → 签名输入 → 结果弹窗",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2500,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T09:59:48.075Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-33ad326c3fa70a6272d5",
+              "file": "lsc-extended.spec.js",
+              "line": 307,
+              "column": 3
+            },
+            {
+              "title": "场景Q(桌面): 平台后台 人工熔断 双人审批 → alert-danger → 结果熔断已执行",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2800,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T09:59:48.098Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-9a52482f2c46a5754cf2",
+              "file": "lsc-extended.spec.js",
+              "line": 356,
+              "column": 3
+            },
+            {
+              "title": "场景R(桌面): 平台后台 违规记录 撤销处罚 双人审批 → 结果处罚已撤销",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1892,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T09:59:50.593Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-8821c6a7c16012285788",
+              "file": "lsc-extended.spec.js",
+              "line": 402,
               "column": 3
             }
           ]
@@ -437,9 +539,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-08-29T09:33:22.299Z",
-    "duration": 12933.054,
-    "expected": 9,
+    "startTime": "2026-08-29T09:59:35.313Z",
+    "duration": 17376.383,
+    "expected": 12,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
