@@ -1,22 +1,18 @@
 # ============================================================================
-# 链盛通 LSC V6.2-AI · A11y (axe-core 16 快照)  PR / Push CI 工作流
+# 链盛通 LSC V6.2-AI · 质量四重门控 PR / Push CI 工作流
 # ----------------------------------------------------------------------------
 # 触发:
 #   · 每个 push 到 master/main / release-*
 #   · 每个 pull_request (目标任意分支)
-#   · 手动 workflow_dispatch (支持传入 阈值 / 基线文件路径)
+#   · 手动 workflow_dispatch
 #
-# 步骤:
-#   1) 检出 + Node.js 22 + npm cache
-#   2) npm ci 安装依赖
-#   3) Playwright 安装 Chromium (actions/cache 缓存浏览器二进制, 省 ~30s)
-#   4) 如果 baseline 未内置 (首次跑) 直接固化; 否则 下载 master 的 baseline artifact 作为 对比基准
-#   5) `npm run audit:a11y:ci` = 16 快照 strict + 和 baseline diff
-#   6) 上传 a11y artifact (JSON / MD 报告 + 16×2 PNG 截图) 供 MR 查阅
-#   7) 把 Markdown Diff 通过 summary 写入 GitHub Job Summary, MR 直接可见
+# 门控 (4 job 并行, 任一失败 阻断合入):
+#   Job 1) coverage_gate    · c8 覆盖率硬阈值: Stmt≥99% / Branch≥95% / Func≥95%
+#   Job 2) assets_meta_gate · 资产体量 (单文件 ≤ 阈值) + 元数据审计 (SEO/OG/meta)
+#   Job 3) a11y_gate       · 16 快照 light/dark axe-core 严格 0 违规 + baseline diff
 # ============================================================================
 
-name: LSC V6.2-A11y Audit (16 snapshots · light/dark)
+name: LSC V6.2-Quality Gate (coverage · assets · meta · a11y 16 snap)
 
 on:
   push:
@@ -34,24 +30,36 @@ on:
   workflow_dispatch:
     inputs:
       maxViolations:
-        description: '允许的 violations 阈值 (default 0)'
+        description: '[A11y] 允许的 violations 阈值 (default 0)'
         required: false
         default: '0'
       maxConsoleE:
-        description: '允许的 console.error 阈值 (default 0)'
+        description: '[A11y] 允许的 console.error 阈值 (default 0)'
         required: false
         default: '0'
       maxNet:
-        description: '允许的 4xx/5xx 次数 (default 0)'
+        description: '[A11y] 允许的 4xx/5xx 次数 (default 0)'
         required: false
         default: '0'
       skipDiff:
-        description: '跳过 baseline diff (true / false, 默认 false, master 首次跑可开)'
+        description: '[A11y] 跳过 baseline diff (true / false, 默认 false, master 首次跑可开)'
         required: false
         default: 'false'
+      minStmt:
+        description: '[Coverage] 语句覆盖率下限 % (default 99)'
+        required: false
+        default: '99'
+      minBranch:
+        description: '[Coverage] 分支覆盖率下限 % (default 95)'
+        required: false
+        default: '95'
+      minFunc:
+        description: '[Coverage] 函数覆盖率下限 % (default 95)'
+        required: false
+        default: '95'
 
 concurrency:
-  group: a11y-audit-${{ github.ref }}
+  group: lsc-quality-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -60,14 +68,183 @@ env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/playwright-browsers
 
 jobs:
-  a11y-audit:
-    name: A11y 16-snapshot (Playwright Chromium + axe-core)
+
+  # =========================================================================
+  #  JOB 1 : Coverage Gate — c8 覆盖率硬阈值门控
+  # =========================================================================
+  coverage-gate:
+    name: Coverage Gate (Stmt≥${{ inputs.minStmt || 99 }}% / Branch≥${{ inputs.minBranch || 95 }}% / Func≥${{ inputs.minFunc || 95 }}%)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: 🔍 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 npm ci (frozen lockfile)
+        run: npm ci --no-audit --no-fund
+
+      - name: 🧪 运行 c8 覆盖率 (coverage_runner 378 断言 + 硬阈值门控)
+        id: cov
+        run: |
+          # 通过 c8 环境变量覆盖: 让 CI 输入参数或默认值真正生效
+          export C8_CHECK_COVERAGE=true
+          export C8_LINES=${{ inputs.minStmt || 99 }}
+          export C8_STATEMENTS=${{ inputs.minStmt || 99 }}
+          export C8_BRANCHES=${{ inputs.minBranch || 95 }}
+          export C8_FUNCTIONS=${{ inputs.minFunc || 95 }}
+          set -o pipefail
+          npm run coverage 2>&1 | tee coverage/coverage.log
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: 📤 上传 Coverage artifacts (HTML + lcov + summary)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lsc-coverage-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: ignore
+          path: |
+            coverage/
+
+      - name: 📋 写入 Coverage 摘要到 Job Summary
+        if: always()
+        run: |
+          {
+            echo "# 链盛通 LSC V6.2-AI · 覆盖率门控"
+            echo ""
+            echo "**退出码**: ${{ steps.cov.outputs.exit_code }}"
+            echo ""
+            echo "| 指标 | 要求 |"
+            echo "|---|---|"
+            echo "| Statements | ≥ ${{ inputs.minStmt || 99 }}% |"
+            echo "| Branches   | ≥ ${{ inputs.minBranch || 95 }}% |"
+            echo "| Functions  | ≥ ${{ inputs.minFunc || 95 }}% |"
+            echo ""
+            if [ -f coverage/coverage.log ]; then
+              echo "## c8 text-summary (末 40 行)"
+              echo ""
+              echo '```'
+              tail -n 40 coverage/coverage.log
+              echo '```'
+            fi
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: 🚦 重抛结果
+        if: always()
+        run: |
+          EXIT="${{ steps.cov.outputs.exit_code }}"
+          echo "coverage exit=$EXIT"
+          [ -z "$EXIT" ] && exit 2
+          [ "$EXIT" -ne 0 ] && exit "$EXIT"
+          exit 0
+
+  # =========================================================================
+  #  JOB 2 : Assets + Meta Gate — 资产体量 + 元数据审计
+  # =========================================================================
+  assets-meta-gate:
+    name: Assets & Meta Gate (体量阈值 + SEO/OG/schema 合规)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: 🔍 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 npm ci (frozen lockfile)
+        run: npm ci --no-audit --no-fund
+
+      - name: 📊 运行审计: 资产体量 (audit-assets) + 元数据合规 (audit-meta)
+        id: audits
+        run: |
+          set +e
+          echo "==> [1/2] audit:assets:ci  --strict (体量阈值门控)"
+          npm run audit:assets:ci
+          RC1=$?
+          echo ""
+          echo "==> [2/2] audit:meta:ci --strict (元数据合规门控)"
+          npm run audit:meta:ci
+          RC2=$?
+          echo ""
+          echo "assets_rc=$RC1  meta_rc=$RC2"
+          echo "assets_rc=$RC1" >> $GITHUB_OUTPUT
+          echo "meta_rc=$RC2"   >> $GITHUB_OUTPUT
+          if [ "$RC1" -ne 0 ] || [ "$RC2" -ne 0 ]; then exit 2; fi
+          exit 0
+
+      - name: 📤 上传审计报告 artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lsc-assets-meta-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: ignore
+          path: |
+            audit-report/assets-audit.*
+            audit-report/meta-audit.*
+
+      - name: 📋 写入 Assets+Meta 摘要到 Job Summary
+        if: always()
+        run: |
+          {
+            echo "# 链盛通 LSC V6.2-AI · 资产 / 元数据门控"
+            echo ""
+            echo "| 审计 | 退出码 | 说明 |"
+            echo "|---|---|---|"
+            echo "| audit:assets (体量) | ${{ steps.audits.outputs.assets_rc }} | 单文件/总大小阈值 + 缺失资源检测 |"
+            echo "| audit:meta (合规) | ${{ steps.audits.outputs.meta_rc }} | title/description/OG/Twitter/schema/alt/icon |"
+            echo ""
+            echo "---"
+            if [ -f audit-report/assets-audit.md ]; then
+              echo "## Assets Audit 摘要"
+              echo ""
+              cat audit-report/assets-audit.md
+            fi
+            echo "---"
+            if [ -f audit-report/meta-audit.md ]; then
+              echo "## Meta Audit 摘要"
+              echo ""
+              cat audit-report/meta-audit.md
+            fi
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: 🚦 重抛结果
+        if: always()
+        run: |
+          A="${{ steps.audits.outputs.assets_rc }}"
+          M="${{ steps.audits.outputs.meta_rc }}"
+          echo "assets=$A meta=$M"
+          [ -z "$A" ] || [ -z "$M" ] && exit 2
+          [ "$A" -ne 0 ] || [ "$M" -ne 0 ] && exit 2
+          exit 0
+
+  # =========================================================================
+  #  JOB 3 : A11y Gate — 16 快照 axe-core 严格 0 违规 + baseline diff
+  # =========================================================================
+  a11y-gate:
+    name: A11y 16-snapshot (Playwright Chromium + axe-core · light/dark)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
       contents: read
-      actions: read      # 下载 baseline artifact
-      checks: write      # 写 Job Summary
+      actions: read
+      checks: write
       pull-requests: write
     steps:
 
@@ -83,7 +260,6 @@ jobs:
       - name: 📦 npm ci (frozen lockfile)
         run: npm ci --no-audit --no-fund
 
-      # 缓存 Playwright 浏览器, 减少 1~2 分钟下载
       - name: 🎨 Cache Playwright Chromium
         uses: actions/cache@v4
         id:   pw-cache
@@ -99,7 +275,6 @@ jobs:
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
 
-      # ------- master baseline artifact (MR 场景) -------
       - name: 🧭 准备 baseline (从 master 最近成功 run 下载 artifact)
         if: ${{ github.event_name == 'pull_request' && inputs.skipDiff != 'true' }}
         id: baseline-artifact
@@ -112,7 +287,7 @@ jobs:
           branch: ${{ github.base_ref || (github.event.repository.default_branch) }}
           path: .a11y-baseline-artifact
 
-      - name: 🔗 链接 baseline 文件路径, 供 audit-a11y-diff 读取
+      - name: 🔗 链接 baseline 文件路径
         run: |
           mkdir -p audit-report
           if [ -f .a11y-baseline-artifact/a11y-baseline.baseline.json ]; then
@@ -125,10 +300,9 @@ jobs:
             echo "LSC_SKIP_DIFF=1" >> $GITHUB_ENV
           fi
 
-      # ------- 主步骤: 16 快照 + strict 断言 + diff -------
       - name: 🧪 运行 A11y 16 快照审计 (strict + diff)
         id: audit-run
-        continue-on-error: true     # 失败后仍能 artifact 上传 + 写 summary, 最后重新 fail
+        continue-on-error: true
         run: |
           LABEL="${GITHUB_SHA::7}"
           if [ -n "$GITHUB_HEAD_REF" ]; then LABEL="PR${{ github.event.pull_request.number }}-${LABEL}"; fi
@@ -154,7 +328,6 @@ jobs:
             STATUS2=0
           fi
 
-          # 综合 exit
           if [ $STATUS1 -ne 0 ] || [ $STATUS2 -ne 0 ]; then
             echo "FINAL_EXIT=2" >> $GITHUB_OUTPUT
             exit 2
@@ -164,10 +337,8 @@ jobs:
           fi
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          # color output for logs
           FORCE_COLOR: 3
 
-      # ------- master/tag 跑时: 把产物打包为 baseline artifact, 下次 MR 可下载 -------
       - name: 📤 保存 master baseline artifact (仅 master/main/tag)
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v4
@@ -180,7 +351,6 @@ jobs:
             audit-report/a11y-baseline.md
             audit-report/a11y-baseline.baseline.json
 
-      # ------- 上传本次 A11y 产物 (JSON / MD / 32 张 PNG + diff md) -------
       - name: 📤 Upload A11y artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -195,8 +365,7 @@ jobs:
             audit-report/a11y-diff.md
             audit-report/*.png
 
-      # ------- Job Summary: PR 页面内直接嵌入 Diff Markdown -------
-      - name: 📋 写入 GitHub Job Summary (PR 内直接可读)
+      - name: 📋 写入 A11y 摘要到 Job Summary
         if: always()
         run: |
           {
@@ -222,8 +391,7 @@ jobs:
             fi
           } >> $GITHUB_STEP_SUMMARY
 
-      # ------- 失败重抛: continue-on-error 之后需要手动设置结果 -------
-      - name: 🚦 汇总结果, 失败则 fail
+      - name: 🚦 重抛结果
         if: always()
         run: |
           STATUS1="${{ steps.audit-run.outputs.audit_status }}"

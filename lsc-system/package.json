@@ -36,7 +36,11 @@
   "license": "ISC",
   "type": "commonjs",
   "c8": {
-    "checkCoverage": false,
+    "checkCoverage": true,
+    "lines": 99,
+    "branches": 95,
+    "functions": 95,
+    "statements": 99,
     "reportDir": "coverage",
     "extension": [
       ".js"

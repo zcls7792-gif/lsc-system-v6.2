@@ -13,9 +13,9 @@
     "files": 6
   },
   "totals": {
-    "raw": 320762,
-    "gzip": 81979,
-    "compressRatio": 0.2556
+    "raw": 322926,
+    "gzip": 83061,
+    "compressRatio": 0.2572
   },
   "apps": {
     "platform-admin": {
@@ -26,19 +26,19 @@
         {
           "file": "platform-admin/app.js",
           "ext": "js",
-          "raw": 117705,
-          "gzip": 28983,
-          "ratio": 24.62
+          "raw": 119695,
+          "gzip": 29946,
+          "ratio": 25.02
         }
       ],
       "raw": {
-        "total": 117705,
-        "js": 117705,
+        "total": 119695,
+        "js": 119695,
         "css": 0
       },
       "gzip": {
-        "total": 28983,
-        "js": 28983,
+        "total": 29946,
+        "js": 29946,
         "css": 0
       }
     },
@@ -50,19 +50,19 @@
         {
           "file": "merchant-admin/app.js",
           "ext": "js",
-          "raw": 77661,
-          "gzip": 19878,
-          "ratio": 25.6
+          "raw": 77835,
+          "gzip": 19997,
+          "ratio": 25.69
         }
       ],
       "raw": {
-        "total": 77661,
-        "js": 77661,
+        "total": 77835,
+        "js": 77835,
         "css": 0
       },
       "gzip": {
-        "total": 19878,
-        "js": 19878,
+        "total": 19997,
+        "js": 19997,
         "css": 0
       }
     },
@@ -147,5 +147,5 @@
     }
   },
   "alerts": [],
-  "_generatedAt": "2026-08-29T03:03:13.149Z"
+  "_generatedAt": "2026-08-29T05:31:06.780Z"
 }

@@ -1,39 +1,38 @@
 # ====================================================================
-# 链盛通 LSC V6.2-AI · GitLab CI 片段
+# 链盛通 LSC V6.2-AI · GitLab CI · 全质量门控流水线
 # --------------------------------------------------------------------
-# 覆盖场景:
-#   1) test:chart-coverage — 对 P0 图表逻辑跑 4 步全流程
-#        基线 verify_p0(22) + TAP BUG 回归(8) + c8(42断言) + HTML 总览报告
-#        产物: coverage/ (逐行 html + lcov.info)、覆盖率总览 HTML、每步独立 logs
-#        指标: 用 c8 text-summary 的 Statements 百分比注入 MR badge
-#
-#   2) pages                  — (可选) 把 coverage/index.html + 总览报告部署到 GitLab Pages
-#                               仅在 master/main / tag 触发,依赖 test:chart-coverage 产物
-#
-# 关键变量约定:
-#   - $CI_COMMIT_SHORT_SHA  GitLab 内置,用于把每次运行的覆盖率/日志聚合到独立子目录,
-#                          符合"同一次执行一个目录"原则,避免跨 pipeline 混数据
-#   - $LSC_COVERAGE_MIN_STMT   (可选,在 CI/CD Variables 里设置)语句覆盖率下限(%)
-#   - $LSC_COVERAGE_MIN_BRANCH (可选)分支覆盖率下限(%)
+# Stage 顺序:
+#   1) build-ci     · P0 图表逻辑 + 回归 4 步全流程 + c8 覆盖率 + ASCI 汇总表
+#   2) quality      · (新增) 三重硬门控,任一失败 阻塞 MR
+#                     · coverage_gate    : c8 硬阈值 Stmt≥99% / Branch≥95% / Func≥95%
+#                     · assets_meta_gate : 体量阈值 + SEO/OG/Twitter/schema 合规
+#   3) a11y         · 16 快照 light/dark axe-core 严格 0 违规 + baseline diff
+#   4) pages        · (可选) GitLab Pages 部署: 覆盖率 HTML + A11y 报告首页
 #
 # 项目内脚本入口(已对齐 package.json):
-#   npm run ci        → node run-all.js  (4 步全流程,带 ASCI 汇总表)
-#   npm run report    → 生成 覆盖率报告_P0-图表逻辑_日期.html
+#   npm run coverage           → c8 门控 (内置 checkCoverage)
+#   npm run audit:assets:ci    → 资产体量严格审计
+#   npm run audit:meta:ci      → 元数据合规严格审计
+#   npm run audit:a11y         → Playwright 16 快照 axe-core
 # ====================================================================
 
 stages:
-  - test
+  - build-ci
+  - quality
   - a11y
   - pages
 
 # ---- 公共变量 -----------------------------------------------------------
 variables:
-  NODE_VERSION: "22-alpine"              # 也可用 20-alpine / 18-alpine
-  # 给 c8 / run-all.js 用:同一次 pipeline 统一一个报告目录
+  NODE_VERSION: "22-alpine"
   LSC_REPORT_SUBDIR: "$CI_COMMIT_SHORT_SHA"
-  FF_SCRIPT_SECTIONS: "true"             # GitLab 折叠 section,日志更清爽
+  FF_SCRIPT_SECTIONS: "true"
   NPM_CONFIG_AUDIT: "false"
   NPM_CONFIG_FUND: "false"
+  # 覆盖率硬阈值 (不依赖 CI 变量注入,直接写死保障 MR 安全)
+  LSC_MIN_STMT:   "99"
+  LSC_MIN_BRANCH: "95"
+  LSC_MIN_FUNC:   "95"
 
 # ---- 公共模板 -----------------------------------------------------------
 .node_setup:
@@ -58,56 +57,47 @@ variables:
         echo "==> 项目缺少 package-lock.json,回退到 npm install(不稳定,建议提交 lockfile)"
         npm install --no-audit --no-fund
       fi
-    # 子目录: 保证每次 pipeline 的覆盖率/日志隔离
-    - mkdir -p "coverage/$LSC_REPORT_SUBDIR" logs
+    - mkdir -p "coverage/$LSC_REPORT_SUBDIR" logs audit-report
     - echo "Commit $CI_COMMIT_SHA ($CI_COMMIT_SHORT_SHA) @ $(date -u +%FT%TZ)" > logs/CI_BUILD_INFO.txt
 
 # ====================================================================
-# Job 1 : 图表逻辑回归 + 覆盖率 + 总览报告
+# Stage 1 : 图表逻辑回归 + 覆盖率 + 总览报告 (原 test:chart-coverage)
 # ====================================================================
-test:chart-coverage:
+build-ci:chart-coverage:
   extends: [.node_setup]
-  stage: test
-  timeout: 20m                            # 经验 949301: 给长任务留足边界 + 日志独立落盘
+  stage: build-ci
+  timeout: 20m
   interruptible: true
   cache:
-    # 首次跑(或 lock 变更时)允许回写 cache,后续 runs 只 pull
     <<: *npm_cache
     policy: pull-push
   variables:
-    # 让 run-all 把每步 stdout/stderr 也 tee 到 logs/,便于任务卡住时直接下载分析
-    # (run-all 内部会判断 $GITLAB_CI=='true' 时启用 tee)
     GITLAB_CI: "true"
   script:
     - echo "==> STEP 1~5 全流程 (npm run ci == run-all.js)"
     - |
-      # run-all 是 5 个子进程串行;用 node 直接跑,保证 ash/bash 都兼容 (不用 PIPESTATUS)
-      node -e "
-        const { spawnSync } = require('child_process');
-        const fs = require('fs');
-        const LOG = 'logs/pipeline-run-all.log';
-        const p = spawnSync('npm', ['run', 'ci'], {
-          cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 80*1024*1024, env: process.env, shell: true
-        });
-        if (p.stdout) process.stdout.write(p.stdout);
-        if (p.stderr) process.stderr.write(p.stderr);
-        try { fs.writeFileSync(LOG, '# npm run ci\n' + (p.stdout||'') + (p.stderr?'\n---STDERR---\n'+p.stderr:'')); } catch(_){}
-        console.log('==> run-all 退出码:', p.status);
-        process.exit(p.status || 0);
-      "
+      const { spawnSync } = require('child_process');
+      const fs = require('fs');
+      const LOG = 'logs/pipeline-run-all.log';
+      const p = spawnSync('npm', ['run', 'ci'], {
+        cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 80*1024*1024, env: process.env, shell: true
+      });
+      if (p.stdout) process.stdout.write(p.stdout);
+      if (p.stderr) process.stderr.write(p.stderr);
+      try { fs.writeFileSync(LOG, '# npm run ci\n' + (p.stdout||'') + (p.stderr?'\n---STDERR---\n'+p.stderr:'')); } catch(_){}
+      console.log('==> run-all 退出码:', p.status);
+      process.exit(p.status || 0);
 
-    # ---- 覆盖率阈值门控(可选) + 子目录归档 ---------------------------
+    # ---- 覆盖率阈值门控(硬阈值,不依赖可选变量) ------------------------
     - |
-      echo "==> 覆盖率阈值检查 + GitLab MR diff cobertura 归档"
-      # run-all 第 5 步已经写 coverage/cobertura.xml;按本次 SHA 做副本
+      echo "==> 覆盖率硬阈值检查: Stmt≥${LSC_MIN_STMT}% Branch≥${LSC_MIN_BRANCH}% Func≥${LSC_MIN_FUNC}%"
       mkdir -p "coverage/$LSC_REPORT_SUBDIR"
       [ -f coverage/cobertura.xml ]        && cp -a coverage/cobertura.xml "coverage/$LSC_REPORT_SUBDIR/cobertura.xml" || true
       [ -f coverage/lcov.info ]            && cp -a coverage/lcov.info    "coverage/$LSC_REPORT_SUBDIR/lcov.info"    || true
       [ -f coverage/coverage-summary.json ]&& cp -a coverage/coverage-summary.json "coverage/$LSC_REPORT_SUBDIR/summary.json" || true
-      # metrics.json 手算 (lcov 聚合 4 个百分比, 任何环境都稳定)
       node -e "
         const fs=require('fs'),p=process.env.C8_REPORT_DIR ? process.env.C8_REPORT_DIR+'/lcov.info' : 'coverage/lcov.info';
-        if(!fs.existsSync(p)){console.error('lcov not found at',p);process.exit(0);}
+        if(!fs.existsSync(p)){console.error('lcov not found at',p);process.exit(2);}
         const s=fs.readFileSync(p,'utf8');let lf=0,lh=0,bf=0,bh=0,ff=0,fh=0;
         for(const l of s.split(/\r?\n/)){
           if(l.startsWith('LF:'))lf+=+l.slice(3);if(l.startsWith('LH:'))lh+=+l.slice(3);
@@ -119,63 +109,111 @@ test:chart-coverage:
         const out='coverage/'+(process.env.LSC_REPORT_SUBDIR||'')+'/metrics.json';
         fs.writeFileSync(out.replace(/\/+metrics/,'/metrics'), JSON.stringify(r,null,2));
         console.log(JSON.stringify(r));
+        const ms=+process.env.LSC_MIN_STMT, mb=+process.env.LSC_MIN_BRANCH, mf=+process.env.LSC_MIN_FUNC;
         let fail=[];
-        const mStmt=+process.env.LSC_COVERAGE_MIN_STMT, mBr=+process.env.LSC_COVERAGE_MIN_BRANCH;
-        if(mStmt && +r.stmts  < mStmt) fail.push('stmts '+r.stmts+'% < '+mStmt+'%');
-        if(mBr   && +r.branch < mBr)   fail.push('branch '+r.branch+'% < '+mBr+'%');
+        if(ms && +r.stmts  < ms) fail.push('stmts '+r.stmts+'% < '+ms+'%');
+        if(mb && +r.branch < mb) fail.push('branch '+r.branch+'% < '+mb+'%');
+        if(mf && +r.funcs  < mf) fail.push('funcs  '+r.funcs+'% < '+mf+'%');
         if(fail.length){ console.error('COVER THRESHOLD FAIL:',fail.join('; ')); process.exit(2); }
       "
 
-    # ---- 把产物移到本次提交子目录(便于归档比对) --------------------------
+    # ---- 产物归档 -----------------------------------------------------
     - |
       echo "==> 归档本次报告: coverage/$LSC_REPORT_SUBDIR/ 与 logs/"
-      if [ -d coverage/index.html.bak ]; then :; fi
-      # 拷贝 c8 html 报告到独立子目录/html
       [ -d coverage/html-report ] && mv coverage/html-report "coverage/$LSC_REPORT_SUBDIR/html" || true
       [ -d coverage/lcov-report ] && mv coverage/lcov-report "coverage/$LSC_REPORT_SUBDIR/lcov-html" || true
       [ -d coverage/platform-admin ] && cp -a coverage/platform-admin "coverage/$LSC_REPORT_SUBDIR/" || true
       [ -d coverage/shared ]         && cp -a coverage/shared         "coverage/$LSC_REPORT_SUBDIR/" || true
       [ -d coverage/base.css ]       && cp -a coverage/*.css coverage/*.js coverage/*.png coverage/index.html "coverage/$LSC_REPORT_SUBDIR/" 2>/dev/null || true
-      # 覆盖率总览 HTML (类似 覆盖率报告_P0-图表逻辑_日期.html)
       mv -f 覆盖率报告_P0-图表逻辑_*.html "coverage/$LSC_REPORT_SUBDIR/总览报告.html" 2>/dev/null || true
-  coverage: '/Statements\s*:\s*([\d.]+%)/'              # GitLab MR badge = c8 Statements %
+  coverage: '/Statements\s*:\s*([\d.]+%)/'
   artifacts:
     name: "lsc-coverage-$CI_COMMIT_SHORT_SHA"
-    when: always                                        # 即便失败也能拿 logs / 覆盖率半产物判断卡点
+    when: always
     expire_in: 30 days
     paths:
-      - coverage/                                       # 逐行 HTML / lcov / cobertura / 总览报告
-      - logs/                                           # 每步独立日志: 超时/skipped 时能直接离线分析
+      - coverage/
+      - logs/
     reports:
-      # GitLab 15.3+ 在 MR diff 中逐行绿/红高亮覆盖率
-      # run-all.js 第 5 步 lcov-to-cobertura.js 会生成 coverage/cobertura.xml
-      # (按 CI 子目录化,这里取归档后的同一路径)
       coverage_report:
         coverage_format: cobertura
         path: coverage/cobertura.xml
 
 # ====================================================================
-# Job 2 : 可访问性 16 快照审计 (4 应用 × 2 视口 × light/dark)
-#       · Step A: 跑 Playwright Chromium + axe-core 16 快照, --strict 断言 0 违规
-#       · Step B: 与 master 基线 (a11y-baseline.baseline.json) diff,
-#                 新增违规 → 阻塞 MR 合入
+# Stage 2a : Quality · Coverage 硬门控 (独立 Job, c8 checkCoverage 再次兜底)
 # ====================================================================
-test:a11y:
+quality:coverage_gate:
+  extends: [.node_setup]
+  stage: quality
+  timeout: 15m
+  interruptible: true
+  needs:
+    - job: build-ci:chart-coverage
+      artifacts: false
+  script:
+    - echo "==> Coverage Gate · c8 硬阈值 Stmt≥${LSC_MIN_STMT}% / Branch≥${LSC_MIN_BRANCH}% / Func≥${LSC_MIN_FUNC}%"
+    - |
+      # 用 c8 CLI 自己的 --check-coverage / --lines 等参数再次确保硬门控
+      # 注意: package.json 的 c8 配置里已内置 checkCoverage + 阈值,这里显式重设双重保险
+      set -o pipefail
+      npm run coverage 2>&1 | tee logs/coverage-gate.log
+      echo "==> c8 exit: ${PIPESTATUS[0]}"
+      exit ${PIPESTATUS[0]}
+  coverage: '/Statements\s*:\s*([\d.]+%)/'
+  artifacts:
+    name: "lsc-coverage-gate-$CI_COMMIT_SHORT_SHA"
+    when: always
+    expire_in: 14 days
+    paths:
+      - logs/coverage-gate.log
+      - coverage/coverage-summary.json
+
+# ====================================================================
+# Stage 2b : Quality · Assets (体量) + Meta (SEO/OG/schema) 双重严格门控
+# ====================================================================
+quality:assets_meta_gate:
+  extends: [.node_setup]
+  stage: quality
+  timeout: 12m
+  interruptible: true
+  needs: []
+  script:
+    - echo "==> [1/2] Assets Gate · audit:assets:ci --strict (单文件/总大小 + 缺失资源 + HTML/img 引用检测)"
+    - npm run audit:assets:ci 2>&1 | tee logs/assets-gate.log
+    - RC1=${PIPESTATUS[0]}
+    - echo ""
+    - echo "==> [2/2] Meta Gate · audit:meta:ci --strict (title/desc/keywords/OG/Twitter/schema/color-scheme)"
+    - npm run audit:meta:ci 2>&1 | tee logs/meta-gate.log
+    - RC2=${PIPESTATUS[0]}
+    - echo ""
+    - echo "==> assets exit=$RC1   meta exit=$RC2"
+    - if [ "$RC1" -ne 0 ] || [ "$RC2" -ne 0 ]; then echo "ASSETS_META_GATE_FAIL"; exit 2; fi
+    - echo "==> ASSETS_META_GATE_PASS ✅"
+  artifacts:
+    name: "lsc-assets-meta-$CI_COMMIT_SHORT_SHA"
+    when: always
+    expire_in: 14 days
+    paths:
+      - logs/assets-gate.log
+      - logs/meta-gate.log
+      - audit-report/assets-audit.*
+      - audit-report/meta-audit.*
+
+# ====================================================================
+# Stage 3 : A11y · 16 快照 light/dark 严格门控 (原 test:a11y)
+# ====================================================================
+a11y:gate_16snap:
   extends: [.node_setup]
   stage: a11y
   timeout: 25m
   interruptible: true
   cache:
-    # 复用 npm_cache 锚点, 但 Playwright Chromium 需要单独安装
     <<: *npm_cache
     policy: pull-push
   variables:
-    # 让 Playwright 将浏览器装到项目目录下,便于被 cache 命中,避免每任务下载 250MB+
     PLAYWRIGHT_BROWSERS_PATH: "$CI_PROJECT_DIR/.cache/playwright-browsers"
-    # audit-a11y-baseline 中 --strict 自动开启 (CI/GITLAB_CI 内置 true)
     LSC_A11Y_LABEL: "$CI_MERGE_REQUEST_IID ? \"MR-${CI_MERGE_REQUEST_IID}-${CI_COMMIT_SHORT_SHA}\" : \"${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}\""
   rules:
-    # 每次 MR 必跑; master/tag / 手动触发 / web 触发也跑
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_COMMIT_TAG'
@@ -183,10 +221,9 @@ test:a11y:
     - if: '$CI_PIPELINE_SOURCE == "web"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
   script:
-    # ---- 1) 安装 Chromium for Playwright (带系统依赖, alpine 需要 libstdc++/nss 等) ----
+    # ---- 1) Chromium + deps ----
     - echo "==> [A11Y 1/4] 准备 Playwright Chromium  ($PLAYWRIGHT_BROWSERS_PATH)"
     - |
-      # Alpine: Playwright 需要手动补系统库 (microsoft/playwright 官方镜像更全, 这里用 node:22-alpine 手工补)
       if grep -qi alpine /etc/os-release 2>/dev/null; then
         apk add --no-cache --virtual=.pw-deps \
           chromium chromium-chromedriver \
@@ -199,16 +236,14 @@ test:a11y:
     - npm run audit:a11y:install 2>&1 | tail -20
     - npx playwright install chromium --with-deps 2>&1 | tail -10 || true
 
-    # ---- 2) 固化 master 基线 (仅在 master/tag 分支保存为 baseline 文件) ----
+    # ---- 2) 固化 master 基线准备 ----
     - echo "==> [A11Y 2/4] 准备基线文件"
     - |
       mkdir -p audit-report
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ] || [ -n "$CI_COMMIT_TAG" ]; then
-        # master/tag: 本次跑完后自动固化为基线 (防止下次回归)
         echo "  · 当前为 $CI_COMMIT_BRANCH 分支/Tag, 跑完后将覆盖 a11y-baseline.baseline.json"
         NEED_COMMIT_BASELINE=1
       else
-        # MR/其他分支: 若项目内自带 .baseline.json 则用它, 否则从 $CI_DEFAULT_BRANCH 最新 job 尝试下载
         if [ -f audit-report/a11y-baseline.baseline.json ]; then
           echo "  · 使用项目内置 audit-report/a11y-baseline.baseline.json"
         else
@@ -217,7 +252,7 @@ test:a11y:
         fi
       fi
 
-    # ---- 3) 跑 16 快照严格审计 ----
+    # ---- 3) 16 快照严格审计 ----
     - echo "==> [A11Y 3/4] 跑 16 快照 (light + dark) · 严格模式: violations=0 / consoleE=0 / net=0 / missingAlt=0"
     - npm run audit:a11y -- --label="${LSC_A11Y_LABEL:-$CI_COMMIT_SHORT_SHA}"
 
@@ -228,20 +263,17 @@ test:a11y:
       if [ "${SKIP_BASELINE_DIFF:-0}" = "1" ]; then
         echo "  · (skip) 未提供 baseline, diff 步骤跳过"
       else
-        # 对 master/tag 分支: 因为刚生成的 current == baseline 内容 (或更优), 可以跑 diff 验证幂等
-        # 若还没 baseline.json, 直接把当前绿版复制一份作为基线 (首次 master 跑)
         if [ ! -f audit-report/a11y-baseline.baseline.json ]; then
           echo "  · ⓘ 首次 master 构建, 将 current 固化为 baseline"
           cp -a audit-report/a11y-baseline.json audit-report/a11y-baseline.baseline.json
         fi
         npm run audit:a11y:diff
         DIFF_RC=$?
-        # 把 master 产物覆盖写回 baseline (方便下一次 MR 对比)
         if [ "${NEED_COMMIT_BASELINE:-0}" = "1" ]; then
           cp -a audit-report/a11y-baseline.json audit-report/a11y-baseline.baseline.json
         fi
       fi
-    # ---- 5) 归档本次快照 / 日志到独立子目录, 汇总页面可直接浏览 ----
+    # ---- 5) 归档 + 冒泡 ----
     - |
       OUTDIR="audit-report/$LSC_REPORT_SUBDIR"
       mkdir -p "$OUTDIR"
@@ -249,7 +281,6 @@ test:a11y:
         [ -f "$f" ] && cp -a "$f" "$OUTDIR/" 2>/dev/null || true
       done
       ls -la "$OUTDIR" 2>/dev/null || true
-      # 最后把 diff 结果向上冒泡（保留 overall exit）
       if [ -n "${DIFF_RC+x}" ] && [ "$DIFF_RC" -ne 0 ]; then
         echo "==> [A11Y] diff 失败 (exit=$DIFF_RC), 阻塞当前 Job"
         exit $DIFF_RC
@@ -257,25 +288,30 @@ test:a11y:
 
   artifacts:
     name: "lsc-a11y-$CI_COMMIT_SHORT_SHA"
-    when: always                                          # 即便失败, 也能直接下载 PNG/MD 定位违规
+    when: always
     expire_in: 30 days
     paths:
-      - audit-report/                                     # 基线 / 当前 JSON、Markdown 报告、16 × 2 PNG 截图
+      - audit-report/
     expose_as: "A11y 审计报告"
-    # GitLab CI Accessibility Report (GitLab 16.0+) 直接把 a11y-baseline.json 当作 MR widget 附件
     reports:
       accessibility: audit-report/a11y-baseline.json
 
 # ====================================================================
-# Job 3 : Pages (可选,只在 master/tag 生成一次公开报告)
+# Stage 4 : Pages (可选,只在 master/tag 生成一次公开报告)
 # ====================================================================
 pages:
   stage: pages
   image: alpine:latest
   needs:
-    - job: test:chart-coverage
+    - job: build-ci:chart-coverage
       artifacts: true
-    - job: test:a11y
+    - job: quality:coverage_gate
+      artifacts: false
+      optional: true
+    - job: quality:assets_meta_gate
+      artifacts: true
+      optional: true
+    - job: a11y:gate_16snap
       artifacts: true
       optional: true
   rules:
@@ -284,19 +320,19 @@ pages:
   script:
     - echo "==> Assemble GitLab Pages public/"
     - mkdir -p public
-    # 最新一份(按 commit SHA) 总览报告放首页
     - |
       latest=$(find coverage -maxdepth 1 -mindepth 1 -type d | sort | tail -n1)
       echo "Using latest report dir: $latest"
       if [ -d "$latest/html" ];      then cp -a "$latest/html"          public/html-c8; fi
       if [ -d "$latest/lcov-html" ]; then cp -a "$latest/lcov-html"    public/lcov; fi
       if [ -f "$latest/总览报告.html" ]; then cp -a "$latest/总览报告.html" public/index.html; fi
-      # 兜底:如果没有按 SHA 归档成功,用根目录 coverage/index.html
       if [ ! -f public/index.html ] && [ -f coverage/index.html ]; then
         cp -a coverage public/coverage
         printf '<meta http-equiv="refresh" content="0; url=coverage/index.html" />\n' > public/index.html
       fi
-    - ls -la public/ || true
+      # A11y 报告归档目录
+      if [ -d audit-report ]; then cp -a audit-report public/audit-report; fi
+      ls -la public/ || true
   artifacts:
     name: "pages-$CI_COMMIT_SHORT_SHA"
     paths:

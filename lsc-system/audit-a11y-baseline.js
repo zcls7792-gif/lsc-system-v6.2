@@ -163,12 +163,29 @@ async function auditOne(browser, app, size, colorScheme = 'light') {
     locale: 'zh-CN',
   });
   const page = await ctx.newPage();
-  // 若为 dark: 在页面加载前就给 <html> 写 data-theme="dark",让 [data-theme="dark"] 令牌生效
-  if (colorScheme === 'dark') {
-    await page.addInitScript(() => {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    });
-  }
+  // 关键: 在页面执行前,把 <html> 主题属性 + 4 个应用的 localStorage theme KEY 都预先写入,
+  // 避免页面自身的 theme IIFE 读到空 localStorage 后 apply('auto') → removeAttribute('data-theme'),
+  // 从而破坏强制深色/浅色环境下 axe-core 的实际审计目标。
+  await page.addInitScript((scheme) => {
+    const THEME_KEYS = [
+      'lsc-platform-theme','lsc-merchant-theme','lsc-mobile-theme','lsc-mini-theme'
+    ];
+    try {
+      for (const k of THEME_KEYS) { localStorage.setItem(k, scheme); }
+    } catch(_) {}
+    const root = document.documentElement;
+    if (scheme === 'dark') {
+      root.setAttribute('data-theme','dark');
+      root.style.colorScheme = 'dark';
+    } else if (scheme === 'light') {
+      // 明确 data-theme=light 来兜住 prefers-color-scheme 时浏览器仍可能残留深色变量
+      root.setAttribute('data-theme','light');
+      root.style.colorScheme = 'light';
+    } else {
+      root.removeAttribute('data-theme');
+      root.style.colorScheme = 'light dark';
+    }
+  }, colorScheme);
   const cw = { warn: [], error: [] };
   const neterr = [];
   page.on('console', msg => {

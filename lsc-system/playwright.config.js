@@ -41,7 +41,9 @@ module.exports = defineConfig({
   },
   projects: [
     {
+      // 桌面端 project：排除移动端/小程序标签用例（那些由 chromium-mobile 承担）
       name: 'chromium-headless',
+      grepInvert: /移动端|小程序|\(mobile\)|\(mini\)/i,
       use: {
         ...devices['Desktop Chrome'],
         headless: true,
@@ -49,7 +51,7 @@ module.exports = defineConfig({
       },
     },
     {
-      // 用于移动端 / 小程序响应式模拟（iPhone 14 尺寸）
+      // 移动端 / 小程序响应式模拟（iPhone 14 尺寸）：仅跑带移动端/小程序标签的用例
       name: 'chromium-mobile',
       grep: /移动端|小程序|\(mobile\)|\(mini\)/i,
       use: {

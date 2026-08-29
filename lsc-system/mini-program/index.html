@@ -374,6 +374,36 @@
   [data-theme="dark"] .wx-search-inner { background:#1E293B; color:#F1F5F9; }
   [data-theme="dark"] .wx-search-inner input { color:#F1F5F9; }
   [data-theme="dark"] .wx-content { background:#0E1520; }
+
+  /* 主题切换按钮 (小程序端 - 放在左上角避开胶囊) */
+  .theme-toggle {
+    position: absolute; top: 58px; left: 12px; z-index: 30;
+    width: 34px; height: 34px; border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--c-bg-card, #fff);
+    color: var(--c-text-1);
+    border: 1px solid var(--c-border-soft);
+    box-shadow: var(--sh-card);
+    cursor: pointer;
+    padding: 0;
+  }
+  .theme-toggle:hover { transform: translateY(-1px); }
+  .theme-toggle .tt-icon { width: 18px; height: 18px; display:none; }
+  .theme-toggle[data-state="light"] .tt-sun  { display:block; }
+  .theme-toggle[data-state="dark"]  .tt-moon { display:block; }
+  .theme-toggle[data-state="auto"]  .tt-auto { display:block; }
+  @media (prefers-color-scheme: dark) {
+    .theme-toggle { background:#151E2E; color:#F1F5F9; border-color:#1E293B; }
+  }
+  [data-theme="dark"] .theme-toggle { background:#151E2E; color:#F1F5F9; border-color:#1E293B; }
+
+  /* data-theme=light 强制浅色兜底 */
+  :root[data-theme="light"] {
+    --c-bg:#F5F3EC;--c-bg-card:#FFFFFF;--c-bg-soft:#FAF8F2;--c-bg-dark:#082E2C;
+    --c-text-1:#1A1F2E;--c-text-2:#4B5563;--c-text-3:#525A66;
+    --c-text-inv:#FFFFFF;--c-text-on-colored:#FFFFFF;
+    --c-border:#E3DFD3;--c-border-soft:#EFEBE0;--c-divider:#EDE9DC;
+  }
 </style>
 </head>
 <body>
@@ -414,6 +444,13 @@
       <section class="screen" id="screen-product" role="region" aria-label="商品详情" aria-hidden="true"></section>
     </main>
 
+    <!-- 主题切换按钮 (三态: 自动 → 浅色 → 深色) -->
+    <button type="button" id="themeToggle" class="theme-toggle" aria-label="切换主题" title="切换主题">
+      <svg class="tt-icon tt-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="tt-icon tt-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="tt-icon tt-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 12h18"/></svg>
+    </button>
+
     <!-- TabBar -->
     <nav class="wx-tabbar" id="wx-tabbar" role="navigation" aria-label="底部主导航">
       <button type="button" class="wx-tab active" data-screen="home" aria-current="page"><span class="icon" data-i="home" aria-hidden="true"></span><span>首页</span></button>
@@ -427,5 +464,44 @@
 
 <script src="../shared/app-utils.js"></script>
 <script src="app.js"></script>
+<script>
+/* 小程序端主题切换: 三态 auto → light → dark, 持久化到 localStorage */
+(function(){
+  const KEY = 'lsc-mini-theme';
+  const STATES = ['auto','light','dark'];
+  const btn = document.getElementById('themeToggle');
+  function apply(mode){
+    const root = document.documentElement;
+    if (mode === 'dark') root.setAttribute('data-theme','dark');
+    else root.removeAttribute('data-theme');
+    if (mode === 'light') {
+      root.setAttribute('data-theme','light');
+      root.style.colorScheme = 'light';
+    } else if (mode === 'dark') {
+      root.style.colorScheme = 'dark';
+    } else {
+      root.style.colorScheme = 'light dark';
+    }
+    btn && btn.setAttribute('data-state', mode);
+    btn && btn.setAttribute('aria-pressed', mode !== 'auto');
+    const label = { auto: '跟随系统', light: '浅色模式', dark: '深色模式' }[mode];
+    btn && btn.setAttribute('aria-label', '切换主题，当前：' + label);
+  }
+  const saved = (localStorage.getItem(KEY) || 'auto');
+  apply(saved);
+  if (btn) {
+    btn.addEventListener('click', function(){
+      const cur = btn.getAttribute('data-state') || 'auto';
+      const next = STATES[(STATES.indexOf(cur) + 1) % STATES.length];
+      localStorage.setItem(KEY, next);
+      apply(next);
+    });
+  }
+  // data-theme=light 时,给硬编码的小程序界面提供浅色覆盖
+  const style = document.createElement('style');
+  style.textContent = ':root[data-theme="light"] .phone-screen{background:#f7f7f7;}:root[data-theme="light"] .wx-statusbar{background:#fff;}:root[data-theme="light"] .wx-navbar{background:#fff;color:#1a1a1a;border-bottom-color:#f0f0f0;}:root[data-theme="light"] .wx-tabbar{background:#fff;border-top-color:#f0f0f0;}';
+  document.head.appendChild(style);
+})();
+</script>
 </body>
 </html>

@@ -9,7 +9,7 @@ renderIcons();
 
 /* 子页面栈 */
 const subScreens = ['orders','promo','ai','paycode','product'];
-let curTab = 'home';
+var curTab = 'home';
 
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s=>{

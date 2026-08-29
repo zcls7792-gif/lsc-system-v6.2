@@ -14,8 +14,8 @@ function navTo(view) {
     if (is) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
   });
   const crumb = document.getElementById('crumb');
-  if (crumb) { crumb.textContent = crumbMap[view]; crumb.setAttribute('aria-current', 'page'); }
-  views[view]();
+  if (crumb) { crumb.textContent = crumbMap[view] || view; crumb.setAttribute('aria-current', 'page'); }
+  if (typeof views[view] === 'function') views[view]();
 }
 document.getElementById('nav').addEventListener('click', e=>{
   const item = e.target.closest('.nav-item');
@@ -966,13 +966,21 @@ function confirmModal(title, body, onConfirm, opts={}) {
   document.getElementById('confirm-yes').addEventListener('click', ()=>{ closeModal(); onConfirm && onConfirm(); });
 }
 
+/* B2B订单 + 商品 数据源 (提升到外层,便于测试注入覆盖不同status分支) */
+var ORDERS = {
+  'B2B20260824002': { counter:'御品茶业工坊', desc:'高端茶叶季度供应', rmb:96000, lsc:96000, contract:'HT-2026-0824-2', verify:3, match:0.98, status:'completed', time:'2026-08-24 14:32' },
+  'B2B20260822003': { counter:'恒通建材批发中心', desc:'装修材料采购', rmb:12000, lsc:12000, contract:'HT-2026-0822', verify:1, match:0.94, status:'completed', time:'2026-08-22 10:15' },
+  'B2B20260827009': { counter:'海纳科技公司', desc:'智能点餐系统采购', rmb:45000, lsc:45000, contract:'HT-2026-0827', verify:0, match:0, status:'pending', time:'2026-08-27 09:08' },
+};
+var PRODUCTS = {
+  'P001': { name:'精品双人套餐·周末限定', price:399, stock:500, status:'on', video:'ok', aiScore:0.92, aiTags:['真实','高清','合规'] },
+  'P002': { name:'单人元气午餐套餐', price:58, stock:800, status:'on', video:'none', aiScore:0.88, aiTags:['真实','合规'] },
+  'P003': { name:'招牌四菜一汤家宴', price:288, stock:200, status:'review', video:'ok', aiScore:0.65, aiTags:['需人工复核'] },
+};
+
 /* B2B订单详情 + AI核验进度 */
 function showB2BDetail(oid) {
-  const orders = {
-    'B2B20260824002': { counter:'御品茶业工坊', desc:'高端茶叶季度供应', rmb:96000, lsc:96000, contract:'HT-2026-0824-2', verify:3, match:0.98, status:'completed', time:'2026-08-24 14:32' },
-    'B2B20260822003': { counter:'恒通建材批发中心', desc:'装修材料采购', rmb:12000, lsc:12000, contract:'HT-2026-0822', verify:1, match:0.94, status:'completed', time:'2026-08-22 10:15' },
-    'B2B20260827009': { counter:'海纳科技公司', desc:'智能点餐系统采购', rmb:45000, lsc:45000, contract:'HT-2026-0827', verify:0, match:0, status:'pending', time:'2026-08-27 09:08' },
-  };
+  const orders = ORDERS;
   const o = orders[oid];
   if (!o) return;
   const verifyMap = { 0:{tag:'tag-info',label:'待核验'}, 1:{tag:'tag-success',label:'AI判定真实'}, 2:{tag:'tag-warning',label:'AI判定可疑'}, 3:{tag:'tag-success',label:'人工确认真实'}, 4:{tag:'tag-danger',label:'人工确认虚假'} };
@@ -1033,11 +1041,7 @@ function simulateVerify(oid) {
 
 /* 商品详情 */
 function showProductDetail(pid) {
-  const products = {
-    'P001': { name:'精品双人套餐·周末限定', price:399, stock:500, status:'on', video:'ok', aiScore:0.92, aiTags:['真实','高清','合规'] },
-    'P002': { name:'单人元气午餐套餐', price:58, stock:800, status:'on', video:'none', aiScore:0.88, aiTags:['真实','合规'] },
-    'P003': { name:'招牌四菜一汤家宴', price:288, stock:200, status:'review', video:'ok', aiScore:0.65, aiTags:['需人工复核'] },
-  };
+  const products = PRODUCTS;
   const p = products[pid];
   if (!p) return;
   const statusInfo = p.status==='on' ? {tag:'tag-success',label:'已上架'} : p.status==='review' ? {tag:'tag-warning',label:'审核中'} : {tag:'tag-info',label:'已下架'};
