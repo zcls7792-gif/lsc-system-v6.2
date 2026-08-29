@@ -1433,13 +1433,13 @@ function dualApprovalModal(opts) {
   window._dualSig = { s1:'', s2:'', onApprove: opts.onApprove };
   window.updateSig = function(key, val) {
     // 真实写入走局部 state 代理 (稳定), 同时镜像到 window._dualSig (用于外部检查 + delete 覆盖率)
-    if (key === 'sig1') sig1 = String(val);
-    else if (key === 'sig2') sig2 = String(val);
+    if (key === 'sig1') state.s1 = val;
+    else if (key === 'sig2') state.s2 = val;
     try {
-      if (key === 'sig1') window._dualSig.s1 = sig1;
-      else if (key === 'sig2') window._dualSig.s2 = sig2;
+      if (key === 'sig1') window._dualSig.s1 = state.s1;
+      else if (key === 'sig2') window._dualSig.s2 = state.s2;
     } catch(_) { /* JSDOM proxy 写入异常忽略, 真实数据仍在闭包 */ }
-    const s1L = sig1.length, s2L = sig2.length;
+    const s1L = state.s1.length, s2L = state.s2.length;
     const box1 = document.getElementById('sig1-box');
     const box2 = document.getElementById('sig2-box');
     box1.classList.toggle('verified', s1L>=2);
@@ -1471,7 +1471,7 @@ function dualApprovalModal(opts) {
     }
   });
   document.getElementById('dual-confirm').addEventListener('click', ()=>{
-    if (sig1.length>=2 && sig2.length>=2 && sig1!==sig2) {
+    if (state.s1.length>=2 && state.s2.length>=2 && state.s1!==state.s2) {
       // 先执行 onApprove（回调可能读取表单元素如 #new-param/#new-limit，DOM需仍在）
       const approvalModal = document.getElementById('global-modal');
       opts.onApprove && opts.onApprove();

@@ -65,7 +65,6 @@ function lineChart(opts) {
   const sy = ih/span;
   const px = i => pad.l + i*sx;
   const py = v => pad.t + ih - (v-mn)*sy;
-  const T = d => Array.isArray(d) ? d : [d];
   // Y轴刻度
   let axes='';
   for(let i=0;i<=yTicks;i++){

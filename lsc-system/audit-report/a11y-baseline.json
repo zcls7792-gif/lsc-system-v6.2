@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-08-29T11:54:57.869Z",
+    "generatedAt": "2026-08-29T15:54:12.205Z",
     "label": "",
     "strict": true,
     "thresholds": {
@@ -36,7 +36,7 @@
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
       "colorScheme": "light",
-      "url": "http://127.0.0.1:33671/platform-admin/index.html",
+      "url": "http://127.0.0.1:44933/platform-admin/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -48,7 +48,7 @@
         "img": 0,
         "svg": 37,
         "heading": 1,
-        "totalText": 1751
+        "totalText": 1727
       },
       "axe": {
         "violations": [],
@@ -65,7 +65,7 @@
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
       "colorScheme": "dark",
-      "url": "http://127.0.0.1:33671/platform-admin/index.html",
+      "url": "http://127.0.0.1:44933/platform-admin/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -77,7 +77,7 @@
         "img": 0,
         "svg": 37,
         "heading": 1,
-        "totalText": 1750
+        "totalText": 1759
       },
       "axe": {
         "violations": [],
@@ -94,7 +94,7 @@
       "height": 900,
       "sizeLabel": "桌面 1440×900",
       "colorScheme": "light",
-      "url": "http://127.0.0.1:33671/platform-admin/index.html",
+      "url": "http://127.0.0.1:44933/platform-admin/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -106,7 +106,7 @@
         "img": 0,
         "svg": 37,
         "heading": 1,
-        "totalText": 1880
+        "totalText": 1866
       },
       "axe": {
         "violations": [],
@@ -123,7 +123,7 @@
       "height": 900,
       "sizeLabel": "桌面 1440×900",
       "colorScheme": "dark",
-      "url": "http://127.0.0.1:33671/platform-admin/index.html",
+      "url": "http://127.0.0.1:44933/platform-admin/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -135,7 +135,7 @@
         "img": 0,
         "svg": 37,
         "heading": 1,
-        "totalText": 1877
+        "totalText": 1872
       },
       "axe": {
         "violations": [],
@@ -152,7 +152,7 @@
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
       "colorScheme": "light",
-      "url": "http://127.0.0.1:33671/merchant-admin/index.html",
+      "url": "http://127.0.0.1:44933/merchant-admin/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -164,7 +164,7 @@
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 953
+        "totalText": 954
       },
       "axe": {
         "violations": [],
@@ -181,7 +181,7 @@
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
       "colorScheme": "dark",
-      "url": "http://127.0.0.1:33671/merchant-admin/index.html",
+      "url": "http://127.0.0.1:44933/merchant-admin/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -210,7 +210,7 @@
       "height": 900,
       "sizeLabel": "桌面 1440×900",
       "colorScheme": "light",
-      "url": "http://127.0.0.1:33671/merchant-admin/index.html",
+      "url": "http://127.0.0.1:44933/merchant-admin/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -239,7 +239,7 @@
       "height": 900,
       "sizeLabel": "桌面 1440×900",
       "colorScheme": "dark",
-      "url": "http://127.0.0.1:33671/merchant-admin/index.html",
+      "url": "http://127.0.0.1:44933/merchant-admin/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -251,7 +251,7 @@
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 1104
+        "totalText": 1105
       },
       "axe": {
         "violations": [],
@@ -268,7 +268,7 @@
       "height": 740,
       "sizeLabel": "移动端 360×740 (iPhone SE)",
       "colorScheme": "light",
-      "url": "http://127.0.0.1:33671/mobile-app/index.html",
+      "url": "http://127.0.0.1:44933/mobile-app/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -297,7 +297,7 @@
       "height": 740,
       "sizeLabel": "移动端 360×740 (iPhone SE)",
       "colorScheme": "dark",
-      "url": "http://127.0.0.1:33671/mobile-app/index.html",
+      "url": "http://127.0.0.1:44933/mobile-app/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -326,7 +326,7 @@
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
       "colorScheme": "light",
-      "url": "http://127.0.0.1:33671/mobile-app/index.html",
+      "url": "http://127.0.0.1:44933/mobile-app/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -355,7 +355,7 @@
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
       "colorScheme": "dark",
-      "url": "http://127.0.0.1:33671/mobile-app/index.html",
+      "url": "http://127.0.0.1:44933/mobile-app/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -384,7 +384,7 @@
       "height": 740,
       "sizeLabel": "移动端 360×740 (iPhone SE)",
       "colorScheme": "light",
-      "url": "http://127.0.0.1:33671/mini-program/index.html",
+      "url": "http://127.0.0.1:44933/mini-program/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -413,7 +413,7 @@
       "height": 740,
       "sizeLabel": "移动端 360×740 (iPhone SE)",
       "colorScheme": "dark",
-      "url": "http://127.0.0.1:33671/mini-program/index.html",
+      "url": "http://127.0.0.1:44933/mini-program/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -442,7 +442,7 @@
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
       "colorScheme": "light",
-      "url": "http://127.0.0.1:33671/mini-program/index.html",
+      "url": "http://127.0.0.1:44933/mini-program/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],
@@ -471,7 +471,7 @@
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
       "colorScheme": "dark",
-      "url": "http://127.0.0.1:33671/mini-program/index.html",
+      "url": "http://127.0.0.1:44933/mini-program/index.html",
       "loadedOK": true,
       "consoleErrors": [],
       "consoleWarnings": [],

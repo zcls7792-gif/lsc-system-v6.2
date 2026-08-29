@@ -1034,6 +1034,111 @@ async function main() {
       passed++; console.log('  A54. catch分支追击 (L1400/L1441/L1462-1465 5-catch + L1458 title假分支) OK');
     } catch(e){ assert(false, 'A54. catch分支追击 err: '+e.message); }
 
+    // A55. platform-admin 剩余分支追击 (L146/L168/L179/L201-202/L209/L422/L436/L884/L1237/L1274/L1301/L1305)
+    try {
+      const r55 = execVM(w, `
+        var results = {};
+        // (a) L146 donutChart total=0 → ||1 兜底 + L168 total>=10000 万分支
+        try {
+          var svg0 = donutChart({ data: [{label:'A',value:0,color:'#f00'},{label:'B',value:0,color:'#0f0'}] });
+          results.a1 = svg0.indexOf('总计') >= 0 ? 'ok' : 'fail';
+          var svg10k = donutChart({ data: [{label:'大额',value:50000,color:'#f00'}], unit:'LSC' });
+          results.a2 = svg10k.indexOf('万') >= 0 ? 'ok' : 'fail:no-万';
+        } catch(ea) { results.a = 'err:'+ea.message; }
+        // (b) L179 heatmap 全0 → Math.max(...data.flat())||1 兜底
+        try {
+          var hm0 = heatmap({ rows:['r1'], cols:['c1','c2'], data:[[0,0]] });
+          results.b = hm0.indexOf('<svg') >= 0 ? 'ok' : 'fail';
+        } catch(eb) { results.b = 'err:'+eb.message; }
+        // (c) L201-202/L209 stackedBar: data[i] 缺失(L201||0/L209||0) + sums 全0(L202||1)
+        try {
+          var sb = stackedBar({
+            labels:['L1','L2'],
+            stacks:[
+              { name:'S1', color:'#f00', data:[0, undefined] },  // L201/L209 ||0
+              { name:'S2', color:'#0f0', data:[0, 0] }            // sums=[0,0] → L202 ||1
+            ]
+          });
+          results.c = (sb && sb.svg && sb.svg.indexOf('<svg') >= 0) ? 'ok' : 'fail';
+        } catch(ec) { results.c = 'err:'+ec.message; }
+        // (d) L422 renderDashboard 注入未知status → sMap[k]||k + sColor[k]||'var(--c-text-3)' 兜底
+        //   (L422 在 renderDashboard 内的 donutChart chart-card, 不在 renderB2B)
+        try {
+          var origOrders = MOCK.b2bOrders.slice();
+          MOCK.b2bOrders.push({ id:'B2B_UNKNOWN', from:'X', to:'Y', desc:'test', rmb:1, lsc:1, contract:'HT-X', aiVerify:1, aiMatch:0.5, status:'unknown_status' });
+          if (typeof renderDashboard === 'function') renderDashboard();
+          results.d = document.body.innerHTML.indexOf('unknown_status') >= 0 ? 'ok' : 'no-fallback';
+          MOCK.b2bOrders = origOrders;
+        } catch(ed) { results.d = 'err:'+ed.message; }
+        // (e) L436 renderDashboard 注入未知level → lName[k]||k + lColor[k]||'var(--c-text-3)' 兜底
+        //   (L436 在 renderDashboard 内的 donutChart chart-card, 不在 renderRisk)
+        try {
+          var origLogs = MOCK.riskLogs.slice();
+          MOCK.riskLogs.push({ id:'RL_UNKNOWN', user:'U0', type:'test', detail:'test', level:'unknown_level', score:0.5, action:'test', op:'test', ts:Date.now() });
+          if (typeof renderDashboard === 'function') renderDashboard();
+          results.e = document.body.innerHTML.indexOf('unknown_level') >= 0 ? 'ok' : 'no-fallback';
+          MOCK.riskLogs = origLogs;
+        } catch(ee) { results.e = 'err:'+ee.message; }
+        // (f) L884 renderCredit 注入 aiFound=false → 假分支 '人工'
+        try {
+          var origV = MOCK.violations.slice();
+          MOCK.violations.push({ id:'V_AI_FALSE', merchant:'M20001', type:'test', detail:'test', deduct:5, measure:'test', aiFound:false, start:Date.now(), end:Date.now()+86400000, op:'test' });
+          if (typeof renderCredit === 'function') renderCredit();
+          results.f = document.body.innerHTML.indexOf('人工') >= 0 ? 'ok' : 'no-false-branch';
+          MOCK.violations = origV;
+        } catch(ef) { results.f = 'err:'+ef.message; }
+        // (g) L1237 pushActivity 无 #ai-activity-feed → 早返回
+        try {
+          var feed = document.getElementById('ai-activity-feed');
+          if (feed) feed.remove();
+          pushActivity();
+          results.g = 'ok'; // 早返回无异常即通过
+        } catch(eg) { results.g = 'err:'+eg.message; }
+        // (h) L1274 redrawRateChart 无 #rate-chart → 早返回
+        try {
+          var rc = document.getElementById('rate-chart');
+          if (rc) rc.remove();
+          redrawRateChart();
+          results.h = 'ok';
+        } catch(eh) { results.h = 'err:'+eh.message; }
+        // (i) L1301 appendRatePoint 无 window._rateSeries → 早返回
+        try {
+          var savedSeries = window._rateSeries, savedLabels = window._rateLabels;
+          delete window._rateSeries;
+          appendRatePoint();
+          results.i = 'ok';
+          window._rateSeries = savedSeries; window._rateLabels = savedLabels;
+        } catch(ei) { results.i = 'err:'+ei.message; }
+        // (j) L1305 appendRatePoint parseInt(last,10) 为 NaN → ||0 兜底
+        //   需先有 _rateSeries, 然后把最后标签设为非数字字符串
+        try {
+          if (!window._rateSeries) {
+            window._rateSeries = { k:[0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005], rate:[0.0035,0.0035,0.0035,0.0035,0.0035,0.0035,0.0035,0.0035] };
+            window._rateLabels = ['0:00','1:00','2:00','3:00','4:00','5:00','6:00','NaN'];
+          } else {
+            var sv = window._rateLabels.slice();
+            window._rateLabels[window._rateLabels.length-1] = 'NaN';
+          }
+          appendRatePoint();
+          results.j = 'ok';
+          if (sv) window._rateLabels = sv;
+        } catch(ej) { results.j = 'err:'+ej.message; }
+        return results;
+      `);
+      assert(r55.a1 === 'ok', `A55a1. L146 donutChart total=0 → ||1 兜底 (${r55.a1})`);
+      assert(r55.a2 === 'ok', `A55a2. L168 donutChart total>=10000 万分支 (${r55.a2})`);
+      assert(r55.b === 'ok', `A55b. L179 heatmap 全0 → Math.max||1 兜底 (${r55.b})`);
+      assert(r55.c === 'ok', `A55c. L201-202/L209 stackedBar data缺+sums全0 兜底 (${r55.c})`);
+      assert(r55.d === 'ok', `A55d. L422 renderB2B 未知status → sMap||k 兜底 (${r55.d})`);
+      assert(r55.e === 'ok', `A55e. L436 renderRisk 未知level → lName||k 兜底 (${r55.e})`);
+      assert(r55.f === 'ok', `A55f. L884 renderCredit aiFound=false 假分支 (${r55.f})`);
+      assert(r55.g === 'ok', `A55g. L1237 pushActivity 无feed 早返回 (${r55.g})`);
+      assert(r55.h === 'ok', `A55h. L1274 redrawRateChart 无chartEl 早返回 (${r55.h})`);
+      assert(r55.i === 'ok', `A55i. L1301 appendRatePoint 无_rateSeries 早返回 (${r55.i})`);
+      assert(r55.j === 'ok', `A55j. L1305 appendRatePoint parseInt(NaN)||0 兜底 (${r55.j})`);
+      passed++; console.log('  A55. platform-admin 剩余分支追击 (L146/L168/L179/L201-202/L209/L422/L436/L884/L1237/L1274/L1301/L1305) OK');
+    } catch(e){ assert(false, 'A55. platform-admin 剩余分支追击 err: '+e.message); }
+
     cleanupSession(sess);
   }
 
@@ -1556,7 +1661,43 @@ async function main() {
           assert(beforeC === afterC, `${fp}.26b. .nav-item click → L22 if(item)真分支 (crumb before/after 相同)`);
           passed++;
         } catch(e){ assert(false, `${fp}.26 nav click item 真分支 err: `+e.message); }
-        console.log(`  ${fp}: merchant-admin 业务函数补测 OK (+F15-F26 12项热点)`);
+        // F27. merchant-admin L199 p.name.length>8 三元 真分支(>8 截断)+假分支(<=8 原样) + L621 range||1 (Math.max+min双覆盖)
+        try {
+          const r27 = execVM(w, `
+            var results = {};
+            // (a) L199: renderDashboard 用 MOCK.products.filter(p=>p.merchant===MOCK.merchants[0].name)
+            //   既有 P5001 '精品双人套餐·周末限定'(len10) 命中真分支(>8 截断 → …),
+            //   现注入短名商品(len<=8) 命中假分支(原样 p.name, 不出现 …)
+            var injected = false;
+            try {
+              if (typeof MOCK !== 'undefined' && Array.isArray(MOCK.products) && MOCK.merchants && MOCK.merchants[0]) {
+                var mname = MOCK.merchants[0].name;
+                MOCK.products.push({ id:'P_F27_SHORT', merchant:mname, name:'短名', price:9.9, stock:5, status:'ai_pass', aiTags:[], aiScore:0.85, video:'ok' });
+                injected = true;
+              }
+              if (typeof renderDashboard === 'function') renderDashboard();
+              else if (typeof renderShop === 'function') renderShop();
+              results.a = (injected && document.body.innerHTML.indexOf('短名') >= 0) ? 'ok' : (injected ? 'no-short-name' : 'skip:no-MOCK');
+            } catch(ea) { results.a = 'err:'+ea.message; }
+            finally { if (injected && typeof MOCK !== 'undefined') MOCK.products = MOCK.products.filter(p=>p.id !== 'P_F27_SHORT'); }
+            // (b) L621 renderWallet + L63 lineChart: 同时覆盖Math.max+Math.min使 max==min → range=0/span=0 → ||1
+            //     L63 在 lineChart 内(renderDashboard L179 调用), L621 在 renderWallet inline chart
+            var _max = Math.max, _min = Math.min;
+            Math.max = function() { return 385; };
+            Math.min = function() { return 385; };
+            try {
+              if (typeof renderDashboard === 'function') renderDashboard();
+              if (typeof renderWallet === 'function') renderWallet();
+              results.b = 'ok';
+            } catch(eb) { results.b = 'err:'+eb.message; }
+            Math.max = _max; Math.min = _min;
+            return results;
+          `);
+          assert(r27.a === 'ok' || r27.a.startsWith('skip'), `${fp}.27a. L199 短名三元假分支 (${r27.a})`);
+          assert(r27.b === 'ok', `${fp}.27b. L621+L63 range||1 Math.max+min双覆盖 (${r27.b})`);
+          passed++;
+        } catch(e){ assert(false, `${fp}.27 短名+range||1 err: `+e.message); }
+        console.log(`  ${fp}: merchant-admin 业务函数补测 OK (+F15-F27 13项热点)`);
       } else if (appName === 'mobile-app') {
         // F1-F4. simulateScan 创建混合支付 modal
         w.simulateScan();
@@ -1837,6 +1978,70 @@ async function main() {
           if (lastMask) lastMask.remove();
           passed++;
         } catch(e) { assert(false, `${fp}.18 严格发行规则(仅人民币实付→LSC发行, LSC抵扣不发行) 6场景 失败: `+e.message); }
+        // F19. L268 calcHybrid catch 分支 + L277 e.touches 真分支 + L290 ||100 兜底 + L451 range||1 + L647 p.tag 假分支
+        try {
+          const r19 = execVM(w, `
+            var results = {};
+            // (a) L268: calcHybrid 抛错 → catch 命中
+            document.querySelectorAll('.modal-mask').forEach(m=>m.remove());
+            var _origCH = window.calcHybrid;
+            window.calcHybrid = function() { throw new Error('F19-test-catch'); };
+            try { simulateScan(); } catch(_e) {}
+            window.calcHybrid = _origCH;
+            results.a = 'ok';
+            // (b) L277: e.touches 真分支 — dispatch mousedown with touches property
+            document.querySelectorAll('.modal-mask').forEach(m=>m.remove());
+            simulateScan();
+            var bar = document.querySelector('.hybrid-bar');
+            if (bar) {
+              bar.getBoundingClientRect = function() { return { left:0, width:100, right:100, top:0, bottom:0, height:10, x:0, y:0 }; };
+              var ev = new MouseEvent('mousedown', { clientX:50, bubbles:true });
+              Object.defineProperty(ev, 'touches', { value: [{ clientX:50 }], configurable:true });
+              bar.dispatchEvent(ev);
+              results.b = (_hybridPct > 0.4 && _hybridPct < 0.6) ? 'ok' : 'fail:pct='+_hybridPct;
+            } else { results.b = 'skip:no-bar'; }
+            document.querySelectorAll('.modal-mask').forEach(m=>m.remove());
+            // (c) L290: mask?.dataset?.settleTotal || 100 — mask无dataset属性 → ||100 兜底
+            var div = document.createElement('div');
+            div.className = 'modal-mask';
+            div.innerHTML = '<div class="modal"><button class="btn btn-primary">test</button></div>';
+            document.body.appendChild(div);
+            var btn = div.querySelector('.btn-primary');
+            try {
+              paySuccess(btn);
+              var modalHtml = div.querySelector('.modal').innerHTML;
+              results.c = modalHtml.indexOf('100.00') >= 0 ? 'ok' : 'no-default';
+            } catch(ec) { results.c = 'err:'+ec.message; }
+            div.remove();
+            // (d) L451: range=max-min||1 — 同时覆盖Math.max+Math.min使 max==min → range=0 → ||1
+            var _max = Math.max, _min = Math.min;
+            Math.max = function() { return 38; };
+            Math.min = function() { return 38; };
+            try { renderWallet(); results.d = 'ok'; } catch(ed) { results.d = 'err:'+ed.message; }
+            Math.max = _max; Math.min = _min;
+            // (e) L647: p.tag?...:'' — 在 PRODUCT_LIST 中找/注入无tag产品
+            var noTagIdx = -1;
+            for (var i = 0; i < PRODUCT_LIST.length; i++) {
+              if (!PRODUCT_LIST[i].tag) { noTagIdx = i; break; }
+            }
+            if (noTagIdx === -1) {
+              PRODUCT_LIST.push({ name:'无tag品', price:100, tag:'', merchant:'测试', sales:0, aiScore:100, stock:10 });
+              noTagIdx = PRODUCT_LIST.length - 1;
+            }
+            renderProduct(noTagIdx);
+            var prodBox = document.getElementById('screen-product');
+            var hasTagSpan = !!prodBox.querySelector('.tag.tag-accent');
+            results.e = !hasTagSpan ? 'ok' : 'fail:tag-exists';
+            if (noTagIdx >= 0 && PRODUCT_LIST[noTagIdx].name === '无tag品') PRODUCT_LIST.pop();
+            return results;
+          `);
+          assert(r19.a === 'ok', `${fp}.19a. L268 calcHybrid catch 命中 (${r19.a})`);
+          assert(r19.b === 'ok' || r19.b === 'skip:no-bar', `${fp}.19b. L277 e.touches 真分支 (${r19.b})`);
+          assert(r19.c === 'ok', `${fp}.19c. L290 mask无dataset → ||100 兜底 (${r19.c})`);
+          assert(r19.d === 'ok', `${fp}.19d. L451 Math.max覆盖 → range||1 (${r19.d})`);
+          assert(r19.e === 'ok', `${fp}.19e. L647 p.tag 假分支 (${r19.e})`);
+          passed++;
+        } catch(e) { assert(false, `${fp}.19 mobile-app 5分支追击 err: `+e.message); }
       } else if (appName === 'mini-program') {
         // F1-F2. wxScanPay
         w.wxScanPay();
