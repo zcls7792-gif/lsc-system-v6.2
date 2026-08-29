@@ -1,0 +1,567 @@
+{
+  "_generatedAt": "2026-08-29T03:01:04.720Z",
+  "apps": {
+    "platform-admin": {
+      "file": "platform-admin/app.js",
+      "summary": {
+        "LF": 1787,
+        "LH": 1754,
+        "coveragePct": 98.15,
+        "totalFns": 49,
+        "uncoveredFnCount": 6,
+        "partiallyCoveredFnCount": 4
+      },
+      "uncoveredFns": [
+        {
+          "name": "onApprove",
+          "start": 1695,
+          "end": 1709,
+          "totalLines": 15,
+          "uncoveredLines": 7,
+          "uncoveredRange": [
+            1696,
+            1697,
+            1698,
+            1702,
+            1703,
+            1704,
+            1705
+          ],
+          "hitCount": 0,
+          "coveragePct": 53.3
+        },
+        {
+          "name": "navTo",
+          "start": 23,
+          "end": 44,
+          "totalLines": 22,
+          "uncoveredLines": 6,
+          "uncoveredRange": [
+            34,
+            35,
+            38,
+            39,
+            40,
+            41
+          ],
+          "hitCount": 10,
+          "coveragePct": 72.7
+        },
+        {
+          "name": "onClose",
+          "start": 1443,
+          "end": 1453,
+          "totalLines": 11,
+          "uncoveredLines": 4,
+          "uncoveredRange": [
+            1446,
+            1447,
+            1448,
+            1449
+          ],
+          "hitCount": 0,
+          "coveragePct": 63.6
+        },
+        {
+          "name": "setView",
+          "start": 1326,
+          "end": 1352,
+          "totalLines": 27,
+          "uncoveredLines": 3,
+          "uncoveredRange": [
+            1335,
+            1336,
+            1337
+          ],
+          "hitCount": 28,
+          "coveragePct": 88.9
+        },
+        {
+          "name": "onApprove",
+          "start": 1537,
+          "end": 1544,
+          "totalLines": 8,
+          "uncoveredLines": 3,
+          "uncoveredRange": [
+            1538,
+            1539,
+            1540
+          ],
+          "hitCount": 0,
+          "coveragePct": 62.5
+        },
+        {
+          "name": "renderNotifList",
+          "start": 1353,
+          "end": 1375,
+          "totalLines": 23,
+          "uncoveredLines": 2,
+          "uncoveredRange": [
+            1367,
+            1368
+          ],
+          "hitCount": 5,
+          "coveragePct": 91.3
+        },
+        {
+          "name": "window.updateSig",
+          "start": 1423,
+          "end": 1442,
+          "totalLines": 20,
+          "uncoveredLines": 2,
+          "uncoveredRange": [
+            1436,
+            1437
+          ],
+          "hitCount": 10,
+          "coveragePct": 90
+        },
+        {
+          "name": "onApprove",
+          "start": 1570,
+          "end": 1576,
+          "totalLines": 7,
+          "uncoveredLines": 2,
+          "uncoveredRange": [
+            1571,
+            1572
+          ],
+          "hitCount": 0,
+          "coveragePct": 71.4
+        },
+        {
+          "name": "onApprove",
+          "start": 1753,
+          "end": 1759,
+          "totalLines": 7,
+          "uncoveredLines": 2,
+          "uncoveredRange": [
+            1754,
+            1755
+          ],
+          "hitCount": 0,
+          "coveragePct": 71.4
+        },
+        {
+          "name": "onApprove",
+          "start": 1769,
+          "end": null,
+          "totalLines": 98231,
+          "uncoveredLines": 2,
+          "uncoveredRange": [
+            1770,
+            1771
+          ],
+          "hitCount": 0,
+          "coveragePct": 100
+        }
+      ]
+    },
+    "merchant-admin": {
+      "file": "merchant-admin/app.js",
+      "summary": {
+        "LF": 1077,
+        "LH": 1056,
+        "coveragePct": 98.05,
+        "totalFns": 31,
+        "uncoveredFnCount": 3,
+        "partiallyCoveredFnCount": 2
+      },
+      "uncoveredFns": [
+        {
+          "name": "navTo",
+          "start": 10,
+          "end": 30,
+          "totalLines": 21,
+          "uncoveredLines": 6,
+          "uncoveredRange": [
+            21,
+            22,
+            25,
+            26,
+            27,
+            28
+          ],
+          "hitCount": 9,
+          "coveragePct": 71.4
+        },
+        {
+          "name": "apply",
+          "start": 449,
+          "end": 464,
+          "totalLines": 16,
+          "uncoveredLines": 6,
+          "uncoveredRange": [
+            450,
+            451,
+            452,
+            453,
+            454,
+            455
+          ],
+          "hitCount": 0,
+          "coveragePct": 62.5
+        },
+        {
+          "name": "showB2BDetail",
+          "start": 970,
+          "end": 1025,
+          "totalLines": 56,
+          "uncoveredLines": 6,
+          "uncoveredRange": [
+            1017,
+            1018,
+            1019,
+            1020,
+            1021,
+            1022
+          ],
+          "hitCount": 3,
+          "coveragePct": 89.3
+        },
+        {
+          "name": "window.calcNH",
+          "start": 718,
+          "end": 726,
+          "totalLines": 9,
+          "uncoveredLines": 3,
+          "uncoveredRange": [
+            719,
+            720,
+            721
+          ],
+          "hitCount": 0,
+          "coveragePct": 66.7
+        },
+        {
+          "name": "T",
+          "start": 68,
+          "end": 95,
+          "totalLines": 28,
+          "uncoveredLines": 0,
+          "uncoveredRange": [],
+          "hitCount": 0,
+          "coveragePct": 100
+        }
+      ]
+    },
+    "mobile-app": {
+      "file": "mobile-app/app.js",
+      "summary": {
+        "LF": 668,
+        "LH": 662,
+        "coveragePct": 99.1,
+        "totalFns": 22,
+        "uncoveredFnCount": 0,
+        "partiallyCoveredFnCount": 1
+      },
+      "uncoveredFns": [
+        {
+          "name": "showScreen",
+          "start": 14,
+          "end": 47,
+          "totalLines": 34,
+          "uncoveredLines": 6,
+          "uncoveredRange": [
+            37,
+            38,
+            41,
+            42,
+            43,
+            44
+          ],
+          "hitCount": 2,
+          "coveragePct": 82.4
+        }
+      ]
+    },
+    "mini-program": {
+      "file": "mini-program/app.js",
+      "summary": {
+        "LF": 490,
+        "LH": 484,
+        "coveragePct": 98.78,
+        "totalFns": 17,
+        "uncoveredFnCount": 0,
+        "partiallyCoveredFnCount": 1
+      },
+      "uncoveredFns": [
+        {
+          "name": "back.onclick",
+          "start": 46,
+          "end": 67,
+          "totalLines": 22,
+          "uncoveredLines": 6,
+          "uncoveredRange": [
+            57,
+            58,
+            61,
+            62,
+            63,
+            64
+          ],
+          "hitCount": 1,
+          "coveragePct": 72.7
+        }
+      ]
+    },
+    "shared": {
+      "file": "shared/app-utils.js",
+      "summary": {
+        "LF": 218,
+        "LH": 218,
+        "coveragePct": 100,
+        "totalFns": 14,
+        "uncoveredFnCount": 0,
+        "partiallyCoveredFnCount": 0
+      },
+      "uncoveredFns": []
+    }
+  },
+  "topHotspots": [
+    {
+      "app": "platform-admin",
+      "name": "onApprove",
+      "start": 1695,
+      "end": 1709,
+      "totalLines": 15,
+      "uncoveredLines": 7,
+      "uncoveredRange": [
+        1696,
+        1697,
+        1698,
+        1702,
+        1703,
+        1704,
+        1705
+      ],
+      "hitCount": 0,
+      "coveragePct": 53.3
+    },
+    {
+      "app": "platform-admin",
+      "name": "navTo",
+      "start": 23,
+      "end": 44,
+      "totalLines": 22,
+      "uncoveredLines": 6,
+      "uncoveredRange": [
+        34,
+        35,
+        38,
+        39,
+        40,
+        41
+      ],
+      "hitCount": 10,
+      "coveragePct": 72.7
+    },
+    {
+      "app": "merchant-admin",
+      "name": "navTo",
+      "start": 10,
+      "end": 30,
+      "totalLines": 21,
+      "uncoveredLines": 6,
+      "uncoveredRange": [
+        21,
+        22,
+        25,
+        26,
+        27,
+        28
+      ],
+      "hitCount": 9,
+      "coveragePct": 71.4
+    },
+    {
+      "app": "merchant-admin",
+      "name": "apply",
+      "start": 449,
+      "end": 464,
+      "totalLines": 16,
+      "uncoveredLines": 6,
+      "uncoveredRange": [
+        450,
+        451,
+        452,
+        453,
+        454,
+        455
+      ],
+      "hitCount": 0,
+      "coveragePct": 62.5
+    },
+    {
+      "app": "merchant-admin",
+      "name": "showB2BDetail",
+      "start": 970,
+      "end": 1025,
+      "totalLines": 56,
+      "uncoveredLines": 6,
+      "uncoveredRange": [
+        1017,
+        1018,
+        1019,
+        1020,
+        1021,
+        1022
+      ],
+      "hitCount": 3,
+      "coveragePct": 89.3
+    },
+    {
+      "app": "mobile-app",
+      "name": "showScreen",
+      "start": 14,
+      "end": 47,
+      "totalLines": 34,
+      "uncoveredLines": 6,
+      "uncoveredRange": [
+        37,
+        38,
+        41,
+        42,
+        43,
+        44
+      ],
+      "hitCount": 2,
+      "coveragePct": 82.4
+    },
+    {
+      "app": "mini-program",
+      "name": "back.onclick",
+      "start": 46,
+      "end": 67,
+      "totalLines": 22,
+      "uncoveredLines": 6,
+      "uncoveredRange": [
+        57,
+        58,
+        61,
+        62,
+        63,
+        64
+      ],
+      "hitCount": 1,
+      "coveragePct": 72.7
+    },
+    {
+      "app": "platform-admin",
+      "name": "onClose",
+      "start": 1443,
+      "end": 1453,
+      "totalLines": 11,
+      "uncoveredLines": 4,
+      "uncoveredRange": [
+        1446,
+        1447,
+        1448,
+        1449
+      ],
+      "hitCount": 0,
+      "coveragePct": 63.6
+    },
+    {
+      "app": "platform-admin",
+      "name": "setView",
+      "start": 1326,
+      "end": 1352,
+      "totalLines": 27,
+      "uncoveredLines": 3,
+      "uncoveredRange": [
+        1335,
+        1336,
+        1337
+      ],
+      "hitCount": 28,
+      "coveragePct": 88.9
+    },
+    {
+      "app": "platform-admin",
+      "name": "onApprove",
+      "start": 1537,
+      "end": 1544,
+      "totalLines": 8,
+      "uncoveredLines": 3,
+      "uncoveredRange": [
+        1538,
+        1539,
+        1540
+      ],
+      "hitCount": 0,
+      "coveragePct": 62.5
+    },
+    {
+      "app": "merchant-admin",
+      "name": "window.calcNH",
+      "start": 718,
+      "end": 726,
+      "totalLines": 9,
+      "uncoveredLines": 3,
+      "uncoveredRange": [
+        719,
+        720,
+        721
+      ],
+      "hitCount": 0,
+      "coveragePct": 66.7
+    },
+    {
+      "app": "platform-admin",
+      "name": "renderNotifList",
+      "start": 1353,
+      "end": 1375,
+      "totalLines": 23,
+      "uncoveredLines": 2,
+      "uncoveredRange": [
+        1367,
+        1368
+      ],
+      "hitCount": 5,
+      "coveragePct": 91.3
+    },
+    {
+      "app": "platform-admin",
+      "name": "window.updateSig",
+      "start": 1423,
+      "end": 1442,
+      "totalLines": 20,
+      "uncoveredLines": 2,
+      "uncoveredRange": [
+        1436,
+        1437
+      ],
+      "hitCount": 10,
+      "coveragePct": 90
+    },
+    {
+      "app": "platform-admin",
+      "name": "onApprove",
+      "start": 1570,
+      "end": 1576,
+      "totalLines": 7,
+      "uncoveredLines": 2,
+      "uncoveredRange": [
+        1571,
+        1572
+      ],
+      "hitCount": 0,
+      "coveragePct": 71.4
+    },
+    {
+      "app": "platform-admin",
+      "name": "onApprove",
+      "start": 1753,
+      "end": 1759,
+      "totalLines": 7,
+      "uncoveredLines": 2,
+      "uncoveredRange": [
+        1754,
+        1755
+      ],
+      "hitCount": 0,
+      "coveragePct": 71.4
+    }
+  ]
+}

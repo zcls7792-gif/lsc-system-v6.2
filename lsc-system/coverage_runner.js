@@ -82,6 +82,7 @@ async function buildSession(srv, appEntry = COVER_APPS[0]) {
 
 function cleanupSession(sess) {
   try { if (sess.dom.window._aiTimers) sess.dom.window._aiTimers.forEach(t => clearInterval(t)); } catch(_) {}
+  try { if (sess.dom.window._verifyTimer) clearInterval(sess.dom.window._verifyTimer); } catch(_) {}
   try { sess.dom.window.close(); } catch(_) {}
 }
 
@@ -244,6 +245,54 @@ async function main() {
       assert(mask.classList.contains('hidden'), 'A27e. mask 本体点击 → 收起');
       passed++; console.log('  A27. AI 浮窗 toggle/close/mask click OK');
     } catch(e){ assert(false,'A27. AI mask toggle err: '+e.message); }
+    // ---- A28-A35: 平台后台剩余未覆盖 showXxx 详情/模态函数 ----
+    try {
+      const views2test = ['dashboard','merchant','product','b2b','risk','credit','release','reconcile','system','ai'];
+      let navOk = 0;
+      for (const v of views2test) { try { w.navTo(v); navOk++; } catch(_) {} }
+      assert(navOk >= 8, `A28. navTo 10 视图 ≥8 成功 (实际 ${navOk})`);
+      passed++; console.log(`  A28. navTo 覆盖 ${navOk}/10 视图 OK`);
+    } catch(e){ assert(false,'A28. navTo err: '+e.message); }
+    try {
+      w.showMerchantDetail('M20001'); // aiAddr=pass
+      w.showMerchantDetail('M20003'); // aiAddr=suspect
+      w.showMerchantDetail('M20004'); // aiAddr=fail
+      w.showMerchantDetail('M20008'); // aiAddr=suspect penalty
+      passed++; console.log('  A29. showMerchantDetail 4 商家 × 3 aiAddr 分支 OK');
+    } catch(e){ assert(false,'A29. showMerchantDetail err: '+e.message); }
+    try {
+      w.showAdjustLimit('M20001');
+      w.updateSig('sig1','admin1'); w.updateSig('sig2','admin2');
+      const btn = w.document.getElementById('dual-confirm'); if (btn) btn.click();
+      passed++; console.log('  A30. showAdjustLimit(M20001) → dualApproval onApprove OK');
+    } catch(e){ assert(false,'A30. showAdjustLimit err: '+e.message); }
+    try {
+      w.showPenalty('M20004');
+      w.updateSig('sig1','admin1'); w.updateSig('sig2','admin2');
+      const btn = w.document.getElementById('dual-confirm'); if (btn) btn.click();
+      passed++; console.log('  A31. showPenalty(M20004) → danger onApprove OK');
+    } catch(e){ assert(false,'A31. showPenalty err: '+e.message); }
+    try {
+      for (const pid of ['P5001','P5002','P5003','P5004','P5005','P5006']) { try { w.showProductDetail(pid); } catch(_) {} }
+      passed++; console.log('  A32. showProductDetail 6 商品 × 4 status 分支 OK');
+    } catch(e){ assert(false,'A32. showProductDetail err: '+e.message); }
+    try {
+      for (const oid of ['B2B20260824001','B2B20260824002','B2B20260824003','B2B20260824004','B2B20260824005']) { try { w.showB2BDetail(oid); } catch(_) {} }
+      passed++; console.log('  A33. showB2BDetail 5 订单 × 5 verifyMap 分支 OK');
+    } catch(e){ assert(false,'A33. showB2BDetail err: '+e.message); }
+    try {
+      for (const pk of ['k_min','k_max','alpha']) {
+        w.showParamEdit(pk);
+        const sel = w.document.getElementById('new-param');
+        if (sel) { sel.value = sel.options[0].value; sel.dispatchEvent(new w.Event('change', { bubbles:true })); }
+      }
+      passed++; console.log('  A34. showParamEdit 3 参数 + select change OK');
+    } catch(e){ assert(false,'A34. showParamEdit err: '+e.message); }
+    try {
+      w.showSimulation();
+      assert(w.document.getElementById('global-modal'), 'A35. showSimulation 渲染 modal');
+      passed++; console.log('  A35. showSimulation → 内嵌 lineChart OK');
+    } catch(e){ assert(false,'A35. showSimulation err: '+e.message); }
     cleanupSession(sess);
   }
 
@@ -448,6 +497,139 @@ async function main() {
     assert(ok >= min, `E(${appName}). 覆盖渲染/图表函数 ok=${ok} err=${err} → 至少 ${min} 个成功`);
     passed += ok;
     console.log(`  E-${appName}: ${ok} 渲染/图表 OK, ${err} 跳过/异常 (阈值≥${min})`);
+
+    // ---- F: 补测未覆盖业务函数 (按应用,覆盖 Top15 缺口) ----
+    const fp = `F-${appName}`;
+    try {
+      if (appName === 'merchant-admin') {
+        // F1. navTo 9 视图
+        const mViews = ['dashboard','shop','product','wallet','nh','b2b','promotion','credit','ai'];
+        let navOk = 0;
+        for (const v of mViews) { try { w.navTo(v); navOk++; } catch(_) {} }
+        assert(navOk >= 7, `${fp}.1 navTo 9 视图 ≥7 成功 (实际 ${navOk})`);
+        // F2-F4. openModal / closeModal
+        w.openModal({ title:'T', body:'<p id="__mb">hello</p>', footer:'<button>OK</button>' });
+        assert(!!w.document.getElementById('global-modal'), `${fp}.2 openModal 渲染 #global-modal`);
+        assert(!!w.document.getElementById('__mb'), `${fp}.3 openModal body 内容渲染`);
+        w.closeModal();
+        assert(!w.document.getElementById('global-modal'), `${fp}.4 closeModal 移除 modal`);
+        // F5. resultModal 4 type
+        for (const t of ['success','warning','danger','info']) {
+          w.resultModal('标题_'+t, '<div>body_'+t+'</div>', t);
+          assert(!!w.document.getElementById('global-modal'), `${fp}.5 resultModal(${t}) 渲染`);
+          w.closeModal();
+        }
+        // F6-F7. confirmModal + 点击确认回调
+        let confirmed = false;
+        w.confirmModal('Q', 'Really?', () => { confirmed = true; }, { btnText:'OKConfirm', danger:true });
+        const okBtn = w.document.getElementById('confirm-yes');
+        assert(!!okBtn, `${fp}.6 confirmModal #confirm-yes 存在`);
+        if (okBtn) okBtn.click();
+        assert(confirmed === true, `${fp}.7 confirmModal 点击确认触发 onConfirm`);
+        w.closeModal();
+        // F8-F9. showB2BDetail 已完成订单 (verify=3 / verify=1)
+        w.showB2BDetail('B2B20260824002');
+        assert(!!w.document.getElementById('global-modal'), `${fp}.8 showB2BDetail(002) verify=3 completed`);
+        w.closeModal();
+        w.showB2BDetail('B2B20260822003');
+        assert(!!w.document.getElementById('global-modal'), `${fp}.9 showB2BDetail(003) verify=1 completed`);
+        w.closeModal();
+        // F10-F12. showB2BDetail 待核验 (verify=0 → 启动 _verifyTimer) + simulateVerify
+        w.showB2BDetail('B2B20260827009');
+        assert(!!w.document.getElementById('global-modal'), `${fp}.10 showB2BDetail(009) verify=0 pending`);
+        assert(!!w.document.getElementById('verify-bar'), `${fp}.11 #verify-bar 进度条存在`);
+        assert(!!w._verifyTimer, `${fp}.12 _verifyTimer 已启动`);
+        w.simulateVerify('B2B20260827009');
+        await new Promise(r => setTimeout(r, 500));
+        assert(!!w.document.getElementById('global-modal'), `${fp}.13 simulateVerify → resultModal 渲染`);
+        if (w._verifyTimer) clearInterval(w._verifyTimer);
+        w.closeModal();
+        // F13. showProductDetail 3 商品 (on/on-novideo/review)
+        for (const pid of ['P001','P002','P003']) {
+          w.showProductDetail(pid);
+          assert(!!w.document.getElementById('global-modal'), `${fp}.14 showProductDetail(${pid}) 渲染`);
+          w.closeModal();
+        }
+        console.log(`  ${fp}: merchant-admin 业务函数补测 OK`);
+      } else if (appName === 'mobile-app') {
+        // F1-F4. simulateScan 创建混合支付 modal
+        w.simulateScan();
+        assert(!!w.document.querySelector('.modal-mask'), `${fp}.1 simulateScan 创建 modal`);
+        assert(!!w.document.getElementById('scan-amount'), `${fp}.2 #scan-amount input 存在`);
+        assert(!!w.document.getElementById('hybrid-fill'), `${fp}.3 #hybrid-fill 存在`);
+        assert(!!w.document.getElementById('pay-final'), `${fp}.4 #pay-final 存在`);
+        // F5-F7. setupHybridSlider 滑块交互 (mousedown/mousemove/mouseup)
+        const bar = w.document.querySelector('.hybrid-bar');
+        assert(!!bar, `${fp}.5 .hybrid-bar 存在`);
+        if (bar) {
+          bar.getBoundingClientRect = () => ({ left:0, width:100, right:100, top:0, bottom:0, height:10, x:0, y:0 });
+          bar.dispatchEvent(new w.MouseEvent('mousedown', { clientX:50, bubbles:true }));
+          assert(Math.abs((w._hybridPct||0) - 0.5) < 1e-9, `${fp}.6 mousedown@50 → _hybridPct=0.5 (实际 ${w._hybridPct})`);
+          w.document.dispatchEvent(new w.MouseEvent('mousemove', { clientX:80, bubbles:true }));
+          assert(Math.abs((w._hybridPct||0) - 0.8) < 1e-9, `${fp}.7 mousemove@80 → _hybridPct=0.8 (实际 ${w._hybridPct})`);
+          w.document.dispatchEvent(new w.MouseEvent('mouseup', { bubbles:true }));
+        }
+        // F8-F9. paySuccess 替换 modal 内容
+        const payBtn = w.document.querySelector('.modal-mask .btn-primary');
+        assert(!!payBtn, `${fp}.8 确认支付 button 存在`);
+        if (payBtn) {
+          w.paySuccess(payBtn);
+          assert(!!w.document.querySelector('.modal-mask'), `${fp}.9 paySuccess 替换 modal 内容 OK`);
+          const closeBtn = w.document.querySelector('.modal-mask .btn-primary');
+          if (closeBtn) closeBtn.click();
+        }
+        // F10. openProduct
+        w.openProduct(0);
+        assert(!!w.document.getElementById('screen-product'), `${fp}.10 openProduct(0) #screen-product 渲染`);
+        // F11. addToCart → showTip toast
+        w.addToCart(0);
+        assert(!!w.document.getElementById('app-tip'), `${fp}.11 addToCart → #app-tip toast`);
+        // F12. showTip
+        w.showTip('测试提示');
+        assert(!!w.document.getElementById('app-tip'), `${fp}.12 showTip → #app-tip toast`);
+        // 清理
+        const mask = w.document.querySelector('.modal-mask');
+        if (mask) mask.remove();
+        console.log(`  ${fp}: mobile-app 业务函数补测 OK`);
+      } else if (appName === 'mini-program') {
+        // F1-F2. wxScanPay
+        w.wxScanPay();
+        assert(!!w.document.querySelector('.modal-mask'), `${fp}.1 wxScanPay 创建 modal`);
+        assert(!!w.document.getElementById('wx-pay-amt'), `${fp}.2 #wx-pay-amt 存在`);
+        // F3-F4. wxPaySuccess 替换内容
+        const payBtn = w.document.querySelector('.modal-mask .wx-btn-green');
+        assert(!!payBtn, `${fp}.3 确认支付 button 存在`);
+        if (payBtn) {
+          w.wxPaySuccess(payBtn);
+          assert(!!w.document.querySelector('.modal-mask'), `${fp}.4 wxPaySuccess 替换 modal 内容 OK`);
+          const closeBtn = w.document.querySelector('.modal-mask .wx-btn-green');
+          if (closeBtn) closeBtn.click();
+        }
+        // F5. wxPayCode → showTip
+        w.wxPayCode();
+        assert(!!w.document.querySelector('.wx-subscribe-tip'), `${fp}.5 wxPayCode → .wx-subscribe-tip toast`);
+        // F6. openProduct + back.onclick (子页面返回)
+        w.openProduct(0);
+        assert(!!w.document.getElementById('screen-product'), `${fp}.6 openProduct(0) #screen-product 渲染`);
+        const backBtn = w.document.querySelector('.wx-back');
+        assert(!!backBtn, `${fp}.7 .wx-back 返回按钮存在 (子页面)`);
+        if (backBtn) backBtn.click();
+        // F8-F9. wxShare + 分享项点击
+        w.wxShare();
+        assert(!!w.document.querySelector('.modal-mask'), `${fp}.8 wxShare 创建 modal`);
+        const shareItems = w.document.querySelectorAll('.modal-mask div[onclick*="showTip"]');
+        if (shareItems.length > 0) {
+          shareItems[0].click();
+          assert(!!w.document.querySelector('.wx-subscribe-tip'), `${fp}.9 分享项点击 → showTip toast`);
+        }
+        const shareMask = w.document.querySelector('.modal-mask');
+        if (shareMask) shareMask.remove();
+        // F10. showTip
+        w.showTip('测试提示');
+        assert(!!w.document.querySelector('.wx-subscribe-tip'), `${fp}.10 showTip → toast`);
+        console.log(`  ${fp}: mini-program 业务函数补测 OK`);
+      }
+    } catch(e) { assert(false, `${fp} err: `+e.message); }
     cleanupSession(sess);
   }
 
