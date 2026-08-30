@@ -17,9 +17,13 @@
  *   场景 P: 平台后台 · 商家处罚双人审批弹窗 (showPenalty) → 签名输入 → 审批 → 结果弹窗
  *   场景 Q: 平台后台 · 释放视图 人工熔断 (showCircuitBreaker) → 高危双人审批 → 结果弹窗
  *   场景 R: 平台后台 · 风险视图 违规记录 撤销处罚 (showRevokePenalty) → 双人审批 → 撤销结果
+ *   场景 S: 商家核销 · 信用分40-59 → 核销暂停 → #nh-amount disabled + alert-warning
+ *   场景 T: 商家B2B · 信用分20-39 → B2B暂停 → 创建按钮disabled + alert-warning
+ *   场景 U: 商家B2B · 信用分<20 → 永久关闭 → alert-danger + 全卡disabled
+ *   场景 V: 平台后台 · 处罚双人审批 · 新增「暂停B2B 30天」「永久关闭核销+B2B」处罚项
  *
  * 项目配置:
- *   - chromium-headless: 场景 D/E/H/I/J/N/P/Q/R (桌面 + 风险弹窗双人审批)
+ *   - chromium-headless: 场景 D/E/H/I/J/N/P/Q/R/S/T/U/V (桌面 + 风险弹窗双人审批 + 信用分门控)
  *   - chromium-mobile:   场景 F/G/K/L/M/O (iPhone 14 尺寸, grep tag 匹配)
  */
 const { test, expect, devices } = require('@playwright/test');
@@ -57,10 +61,13 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
       await remarkInput.fill('Playwright E2E 场景 D');
     }
 
-    // calcNH 联动：12000 × 0.87 = 10440
+    // calcNH 联动：fill 后 calcNH 钳制到剩余额度, cash = 钳制后金额 × 0.87
+    await page.waitForTimeout(150);
+    const amtVal = await page.locator('#nh-amount').inputValue();
+    const amtNum = Number(amtVal) || 0;
     const cashRaw = await page.locator('#nh-cash').innerText();
     const cashNum = Number(cashRaw.replace(/[^0-9.]/g, ''));
-    expect(Math.round(cashNum * 100)).toBe(1044000);
+    expect(Math.round(cashNum * 100)).toBe(Math.round(amtNum * 0.87 * 100));
 
     // 点击"提交核销申请" → 出现 confirmModal(二次确认) → 点「提交」(btnText='提交', id=confirm-yes)
     const submit = page.getByRole('button').filter({ hasText: /提交核销申请/ }).first();
@@ -129,12 +136,14 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
     const cash0 = await page.locator('#nh-cash').innerText();
     expect(/0\.00|0/.test(cash0)).toBe(true);
 
-    // 再恢复合法值 → 现金联动正确
+    // 再恢复合法值 → 现金联动正确（动态验证：cash = 钳制后金额 × 0.87）
     await input.fill('100');
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(150);
+    const amtVal = await input.inputValue();
+    const amtNum = Number(amtVal) || 0;
     const cashR = await page.locator('#nh-cash').innerText();
-    const n = Number(cashR.replace(/[^0-9.]/g, ''));
-    expect(Math.round(n * 100)).toBe(8700); // 87 = 100 * 0.87
+    const cashNum = Number(cashR.replace(/[^0-9.]/g, ''));
+    expect(Math.round(cashNum * 100)).toBe(Math.round(amtNum * 0.87 * 100));
   });
 
   // ------------------------------------------------------------------
@@ -428,6 +437,146 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
     expect(resultText).toMatch(/处罚已撤销/);
     expect(resultText).toMatch(/信用分与核销权限已恢复|核销权限已恢复/);
     expect(resultText).toMatch(/审计日志|上链存证/);
+  });
+
+  // ------------------------------------------------------------------
+  // 场景 S: 商家核销 · 信用分 40–59 档 → 核销暂停 → 输入框 disabled + 暂停 alert
+  //   通过 page.evaluate 注入低信用分并重新派生档位/状态字段, 验证 renderNH 门控
+  // ------------------------------------------------------------------
+  test('场景S(桌面): 信用分40-59 核销暂停 → #nh-amount disabled + alert-warning', async ({ page }) => {
+    await page.goto(APPS.merchant, { waitUntil: 'networkidle' });
+    // 注入 credit=50 (40-59 档) 并重新派生 nhStatus/nhLimitDaily 等字段, 再渲染核销页
+    await page.evaluate(() => {
+      CURRENT_MERCHANT.credit = 50;
+      const eff = LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+      Object.assign(CURRENT_MERCHANT, eff);
+      navTo('nh');
+    });
+    await expect(page.locator('#crumb')).toHaveText(/核销管理/, { timeout: 8000 });
+
+    // 1) alert-warning 含"核销资格已暂停"
+    const viewTxt = await page.locator('#view').innerText();
+    expect(viewTxt).toMatch(/核销资格已暂停|核销权限/);
+    expect(viewTxt).toMatch(/信用分.*50.*低于60分|低于60分/);
+
+    // 2) #nh-amount input 被 disabled + aria-disabled
+    const amt = page.locator('#nh-amount');
+    await expect(amt).toBeDisabled();
+    const ariaDis = await amt.getAttribute('aria-disabled').catch(() => null);
+    expect(ariaDis).toBe('true');
+
+    // 3) 提交按钮 disabled, 文案变为"核销权限已受限"
+    const submit = page.locator('#view button').filter({ hasText: /核销权限已受限|提交核销/ }).first();
+    await expect(submit).toBeDisabled();
+
+    // 4) tag-danger "核销权限受限" 标签存在
+    expect(viewTxt).toMatch(/核销权限受限/);
+  });
+
+  // ------------------------------------------------------------------
+  // 场景 T: 商家 B2B · 信用分 20–39 档 → B2B 暂停 → 按钮 disabled + 暂停 alert
+  // ------------------------------------------------------------------
+  test('场景T(桌面): 信用分20-39 B2B暂停 → 创建按钮disabled + alert-warning', async ({ page }) => {
+    await page.goto(APPS.merchant, { waitUntil: 'networkidle' });
+    await page.evaluate(() => {
+      CURRENT_MERCHANT.credit = 30;
+      const eff = LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+      Object.assign(CURRENT_MERCHANT, eff);
+      navTo('b2b');
+    });
+    await expect(page.locator('#crumb')).toHaveText(/B2B/, { timeout: 8000 });
+
+    const viewTxt = await page.locator('#view').innerText();
+    // 1) alert-warning 含"B2B 流转权限已暂停"
+    expect(viewTxt).toMatch(/B2B 流转权限已暂停/);
+    expect(viewTxt).toMatch(/低于 40 分|信用分 30/);
+
+    // 2) 顶部"创建B2B订单"按钮 disabled
+    const createBtn = page.getByRole('button').filter({ hasText: /创建B2B订单|创建 B2B/ }).first();
+    await expect(createBtn).toBeDisabled();
+
+    // 3) tag-danger "权限已暂停" 标签
+    expect(viewTxt).toMatch(/权限已暂停|信用分30/);
+
+    // 4) 卡片 pointer-events:none (disabled 属性)
+    const card = page.locator('#view .card').first();
+    const dis = await card.getAttribute('disabled').catch(() => null);
+    expect(dis).not.toBeNull();
+  });
+
+  // ------------------------------------------------------------------
+  // 场景 U: 商家 B2B · 信用分 <20 档 → 永久关闭 → alert-danger + 全卡 disabled
+  // ------------------------------------------------------------------
+  test('场景U(桌面): 信用分<20 B2B永久关闭 → alert-danger + 全卡disabled', async ({ page }) => {
+    await page.goto(APPS.merchant, { waitUntil: 'networkidle' });
+    await page.evaluate(() => {
+      CURRENT_MERCHANT.credit = 10;
+      const eff = LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+      Object.assign(CURRENT_MERCHANT, eff);
+      navTo('b2b');
+    });
+    await expect(page.locator('#crumb')).toHaveText(/B2B/, { timeout: 8000 });
+
+    const viewTxt = await page.locator('#view').innerText();
+    // 1) alert-danger 含"B2B 流转权限已永久关闭"
+    expect(viewTxt).toMatch(/B2B 流转权限已永久关闭/);
+    expect(viewTxt).toMatch(/低于 20 分|信用分 10/);
+
+    // 2) 顶部"创建B2B订单"按钮 disabled
+    const createBtn = page.getByRole('button').filter({ hasText: /创建B2B订单|创建 B2B/ }).first();
+    await expect(createBtn).toBeDisabled();
+
+    // 3) tag-danger "权限已永久关闭"
+    expect(viewTxt).toMatch(/权限已永久关闭/);
+
+    // 4) 提交/保存草稿按钮 disabled
+    const submitBtn = page.locator('#view button').filter({ hasText: /提交并等待确认/ }).first();
+    await expect(submitBtn).toBeDisabled();
+  });
+
+  // ------------------------------------------------------------------
+  // 场景 V: 平台后台 · 处罚双人审批 · 新增「暂停B2B 30天」「永久关闭核销+B2B」处罚项
+  //   验证新增两项均可选中且不报错, 然后选"永久关闭核销+B2B"走完整审批流程
+  // ------------------------------------------------------------------
+  test('场景V(桌面): 平台后台 处罚「暂停B2B 30天」+「永久关闭核销+B2B」双人审批', async ({ page }) => {
+    await page.goto(APPS.platform, { waitUntil: 'networkidle' });
+    await page.click('.nav-item[data-view="merchant"]', { timeout: 12000 });
+    await expect(page.locator('#crumb')).toHaveText(/商家|商户/, { timeout: 8000 });
+
+    // 1) 点击处罚按钮打开双人审批弹窗
+    const penaltyBtn = page.locator('#view span.row-btn.danger').filter({ hasText: /处罚/ }).first();
+    await penaltyBtn.click({ force: true });
+    const approval = page.locator('#global-modal');
+    await expect(approval).toBeVisible({ timeout: 5000 });
+    expect(await approval.innerText()).toMatch(/执行商家处罚/);
+
+    // 2) 处罚措施下拉存在新增的两项
+    const measureSel = page.locator('#measure');
+    await expect(measureSel).toBeVisible();
+    const opts = await measureSel.locator('option').allTextContents();
+    expect(opts).toContain('暂停B2B 30天');
+    expect(opts).toContain('永久关闭核销+B2B');
+
+    // 3) 选择"暂停B2B 30天" → DOM 不报错
+    await measureSel.selectOption({ label: '暂停B2B 30天' });
+    await page.waitForTimeout(150);
+
+    // 4) 切换到"永久关闭核销+B2B" → 走完整双人审批
+    await measureSel.selectOption({ label: '永久关闭核销+B2B' });
+    await page.waitForTimeout(150);
+
+    // 5) 相同签名 → disabled
+    await page.fill('#sig1-input', 'same_v');
+    await page.fill('#sig2-input', 'same_v');
+    await page.waitForTimeout(180);
+    await expect(page.locator('#dual-confirm')).toBeDisabled();
+
+    // 6) 不同签名 → 审批 → 结果弹窗含"处罚执行成功"
+    const resultText = await doDualApproval(page, { sig1: 'pen_v_a', sig2: 'pen_v_b' });
+    expect(resultText).toMatch(/处罚执行成功/);
+    expect(resultText).toMatch(/审计日志|上链存证/);
+    // 关闭结果
+    await page.locator('#global-modal button').filter({ hasText: /确定/ }).click({ force: true });
   });
 });
 

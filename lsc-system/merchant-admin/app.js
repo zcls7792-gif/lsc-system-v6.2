@@ -758,7 +758,7 @@ function renderB2B() {
   const dis = b2bDisabled ? ' disabled style="opacity:0.55;cursor:not-allowed;pointer-events:none;"' : '';
   const disInput = b2bDisabled ? ' disabled style="background:var(--c-bg-soft);cursor:not-allowed;"' : '';
   const html = pageHead('B2B交易', '商家间LSC流转 · 必须绑定真实B2B订单 · AI核验贸易凭证 · 1:1金额对应', `
-    <button class="btn btn-primary btn-sm"${b2bDisabled?' disabled style="opacity:0.55;cursor:not-allowed;" onclick="event.preventDefault();alert(\'B2B 流转权限已'+(isPermanent?'永久关闭':'暂停')+'，信用分'+(isPermanent?'<20':'<40')+'分，暂不可创建新订单。\');"':'><span class="icon icon-sm" data-i="b2b"></span>创建B2B订单</button>'}`) + `
+    <button class="btn btn-primary btn-sm"${b2bDisabled?' disabled style="opacity:0.55;cursor:not-allowed;" onclick="event.preventDefault();alert(\'B2B 流转权限已'+(isPermanent?'永久关闭':'暂停')+'，信用分'+(isPermanent?'<20':'<40')+'分，暂不可创建新订单。\');"':''}><span class="icon icon-sm" data-i="b2b"></span>创建B2B订单</button>`) + `
   ${b2bGateHTML}
   <div class="card mb-5"${dis}>
     <div class="card-head"><div class="card-title">创建 B2B 流转订单</div><span class="tag ${b2bDisabled?'tag-danger':'tag-warning'}">${b2bDisabled?'权限已'+(isPermanent?'永久关闭':'暂停')+' (信用分'+CURRENT_MERCHANT.credit+')':'流转有效期365天重置'}</span></div>

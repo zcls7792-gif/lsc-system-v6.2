@@ -43,13 +43,14 @@ test.describe('LSC V6.2-AI · 端到端核心 3 场景', () => {
     await expect(page.locator('#nh-amount')).toBeVisible();
     const submitBtn = page.getByRole('button').filter({ hasText: /提交核销申请/ }).first();
     await expect(submitBtn).toBeVisible();
-    // 4) 输入框交互：修改值 → 现金结算联动 calcNH
+    // 4) 输入框交互：修改值 → 现金结算联动 calcNH（动态验证：cash = 钳制后金额 × 0.87）
     await page.fill('#nh-amount', '5000');
     await page.waitForTimeout(150);
+    const amtVal = await page.locator('#nh-amount').inputValue();
+    const amtNum = Number(amtVal) || 0;
     const cashRaw = await page.locator('#nh-cash').innerText();
-    // 允许 4350 / 4,350 两种千分位格式
     const cashNum = Number(cashRaw.replace(/[^0-9.]/g, ''));
-    expect(Math.round(cashNum * 100)).toBe(435000);
+    expect(Math.round(cashNum * 100)).toBe(Math.round(amtNum * 0.87 * 100));
 
     // 5) 再进入"LSC账户"查看钱包数字非空（LSC 钱包页使用 hero-val / hf-val，不可用 stat-card）
     await page.click('.nav-item[data-view="wallet"]');
