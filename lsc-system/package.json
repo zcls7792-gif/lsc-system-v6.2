@@ -32,6 +32,9 @@
     "audit:sr": "node audit-screenreader.js",
     "audit:sr:ci": "node audit-screenreader.js --strict",
     "audit:sr:checklist": "node audit-screenreader.js --checklist",
+    "e2e:sr": "npx playwright test e2e/lsc-screenreader.spec.js --workers=2",
+    "e2e:sr:desktop": "npx playwright test e2e/lsc-screenreader.spec.js --project=chromium-headless --workers=2",
+    "e2e:sr:mobile": "npx playwright test e2e/lsc-screenreader.spec.js --project=chromium-mobile --workers=2",
     "all:hard": "npm run ci && npm run e2e && npm run audit:a11y && npm run audit:meta:ci && npm run audit:assets:ci && npm run audit:sr:ci"
   },
   "keywords": [],

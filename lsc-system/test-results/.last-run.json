@@ -1,30 +1,4 @@
 {
-  "status": "failed",
-  "failedTests": [
-    "381d9a03cfaa35a94702-e9a8cb855379d376fde8",
-    "381d9a03cfaa35a94702-90e67d462f84787d0bd1",
-    "381d9a03cfaa35a94702-6d563e871c6eae2f0c72",
-    "aaed197fda9439e7798c-0b6e683de281aee1faaa",
-    "aaed197fda9439e7798c-d9b1f38defe1d033f5a1",
-    "aaed197fda9439e7798c-fdc15669eb643a2d3ecd",
-    "aaed197fda9439e7798c-77807c2e4e20d358ce67",
-    "aaed197fda9439e7798c-cc7ed93633a23d9e4cc0",
-    "aaed197fda9439e7798c-bde7f2070ef880a3d3e7",
-    "aaed197fda9439e7798c-33ad326c3fa70a6272d5",
-    "aaed197fda9439e7798c-9a52482f2c46a5754cf2",
-    "aaed197fda9439e7798c-8821c6a7c16012285788",
-    "aaed197fda9439e7798c-53a5377c3009ee11a4a8",
-    "aaed197fda9439e7798c-4b1fc0c3fa113461881b",
-    "aaed197fda9439e7798c-21c6c20d1c82e2e2be20",
-    "aaed197fda9439e7798c-355a6fa27a157cb4a856",
-    "aaed197fda9439e7798c-e9694ec1d85d68fbb0f4",
-    "aaed197fda9439e7798c-08dbf0db63357235f92e",
-    "aaed197fda9439e7798c-bafa62fe2eb6873673df",
-    "aaed197fda9439e7798c-4ae23d9533cb552d3501",
-    "aaed197fda9439e7798c-56fbf8559807e3f399b3",
-    "aaed197fda9439e7798c-dce8260181f819fd0060",
-    "aaed197fda9439e7798c-e4a30c1d7378fad18a43",
-    "aaed197fda9439e7798c-06aa664836d1ecbed651",
-    "aaed197fda9439e7798c-7e73eff0a166fa9b6d55"
-  ]
+  "status": "passed",
+  "failedTests": []
 }
