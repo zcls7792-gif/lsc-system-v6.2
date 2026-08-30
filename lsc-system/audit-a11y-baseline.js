@@ -43,7 +43,7 @@ function parseArgs(argv) {
     else if (a.startsWith('--max-net='))       opts.maxNet        = +a.split('=')[1];
     else if (a === '-h' || a === '--help') {
       console.log(`
-LSC V6.2-AI · A11y(axe-core) 16 快照审计 (4 app × 2 size × light/dark)
+LSC V6.2-AI · A11y(axe-core) 24 快照审计 (16 基础:4 app × 2 size × light/dark + 8 扩展:档位/B2B 门控/处罚弹窗)
 
 用法:  node audit-a11y-baseline.js [选项]
 
@@ -128,6 +128,54 @@ const SIZE_BY_APP = {
   mini:     ['sm','md'],
 };
 
+// ---- 扩展视图: 档位变化 + B2B 门控 + 处罚 视图 (在 16 基础上 + 8 项快照) ----
+// 每条指定: app / sizeId / schemeSet / view(fn) / idSuffix / label
+const EXTRA_VIEWS = [
+  // (1-2) 商家后台 · 核销视图(信用分=55 → 核销暂停): light + dark
+  { appId: 'merchant', sizeId: 'md', schemes: ['light','dark'], id: 'nh-suspend-55', title: '商家·核销·信用55暂停',
+    async nav(page) {
+      await page.evaluate(() => {
+        CURRENT_MERCHANT.credit = 55;
+        const eff = LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+        Object.assign(CURRENT_MERCHANT, eff);
+        navTo('nh');
+      });
+    }
+  },
+  // (3-4) 商家后台 · B2B 视图(信用分=30 → B2B 暂停): light + dark
+  { appId: 'merchant', sizeId: 'md', schemes: ['light','dark'], id: 'b2b-suspend-30', title: '商家·B2B·信用30暂停',
+    async nav(page) {
+      await page.evaluate(() => {
+        CURRENT_MERCHANT.credit = 30;
+        const eff = LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+        Object.assign(CURRENT_MERCHANT, eff);
+        navTo('b2b');
+      });
+    }
+  },
+  // (5-6) 商家后台 · B2B 视图(信用分=15 → 永久关闭核销+B2B): light + dark
+  { appId: 'merchant', sizeId: 'md', schemes: ['light','dark'], id: 'b2b-close-15', title: '商家·B2B·信用15永久关闭',
+    async nav(page) {
+      await page.evaluate(() => {
+        CURRENT_MERCHANT.credit = 15;
+        const eff = LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+        Object.assign(CURRENT_MERCHANT, eff);
+        navTo('b2b');
+      });
+    }
+  },
+  // (7-8) 平台后台 · 商家处罚双人审批弹窗 (含暂停B2B 30天 + 永久关闭): light + dark
+  { appId: 'platform', sizeId: 'lg', schemes: ['light','dark'], id: 'platform-penalty-modal', title: '平台·处罚双人审批弹窗',
+    async nav(page) {
+      await page.click('.nav-item[data-view="merchant"]', { timeout: 12000 }).catch(() => undefined);
+      await page.waitForTimeout(300);
+      const btn = page.locator('#view span.row-btn.danger').filter({ hasText: /处罚/ }).first();
+      await btn.click({ force: true }).catch(() => undefined);
+      await page.waitForTimeout(250);
+    }
+  },
+];
+
 const AXE_CDN = 'https://cdn.jsdelivr.net/npm/axe-core@4.9.1/axe.min.js';
 
 // --- 下载 axe-core 本地缓存（避免每次请求 CDN） ---
@@ -156,7 +204,7 @@ function mdEscape(s) {
   return String(s).replace(/\|/g, '\\|').replace(/\n/g, ' ');
 }
 
-async function auditOne(browser, app, size, colorScheme = 'light') {
+async function auditOne(browser, app, size, colorScheme = 'light', extra = null) {
   const ctx = await browser.newContext({
     viewport: { width: size.w, height: size.h },
     colorScheme: colorScheme,           // 'light' | 'dark'
@@ -206,6 +254,21 @@ async function auditOne(browser, app, size, colorScheme = 'light') {
     loadedOK = false;
     cw.error.push(`goto failed: ${e && e.message || e}`);
   }
+  // EXTRA 视图后处理: 导航到 nh/b2b/处罚弹窗 等目标态
+  let extraKind = '';
+  let extraTitle = '';
+  if (loadedOK && extra && typeof extra.nav === 'function') {
+    try {
+      await extra.nav(page);
+      await page.waitForTimeout(extra.waitMs || 400);
+      extraKind = extra.id || '';
+      extraTitle = extra.title || '';
+      cw._extraApplied = true;
+    } catch (e) {
+      cw.error.push(`extra nav failed: ${e && e.message || e}`);
+      loadedOK = false;
+    }
+  }
   // 页面内容: 统计关键节点
   let counts = { a: 0, button: 0, input: 0, img: 0, svg: 0, heading: 0, totalText: 0 };
   try {
@@ -252,8 +315,8 @@ async function auditOne(browser, app, size, colorScheme = 'light') {
     }
   }
 
-  // 截图 - 加入颜色方案后缀避免覆盖
-  const suffix = colorScheme === 'dark' ? '__dark' : '';
+  // 截图 - 加入颜色方案后缀 + extra id 避免覆盖
+  const suffix = (colorScheme === 'dark' ? '__dark' : '') + (extraKind ? '__'+extraKind : '');
   const shot = path.join(OUT_DIR, `${app.id}__${size.id}__${size.w}x${size.h}${suffix}.png`);
   try {
     await page.screenshot({ path: shot, fullPage: true, timeout: 8000 });
@@ -263,6 +326,8 @@ async function auditOne(browser, app, size, colorScheme = 'light') {
   return {
     app: app.id, appName: app.name, size: size.id, width: size.w, height: size.h, sizeLabel: size.label,
     colorScheme,                                 // 记录 light / dark
+    extra: extraKind,                            // EXTRA_VIEWS 的 id (如 nh-suspend-55)
+    extraTitle,                                  // EXTRA_VIEWS 的可读标题
     url,
     loadedOK,
     consoleErrors: cw.error.slice(0, 50),
@@ -386,6 +451,7 @@ async function main() {
   const results = [];
   const pairs = [];
   const SCHEMES = ['light', 'dark'];          // light + dark 双色方案
+  // ---- 1) 基础 16 快照 = 4 应用 × 2 size × light/dark ----
   for (const app of APPS) {
     for (const sid of SIZE_BY_APP[app.id]) {
       const size = SIZES.find(s => s.id === sid);
@@ -394,12 +460,22 @@ async function main() {
       }
     }
   }
-  for (const { app, size, scheme } of pairs) {
-    const k = `${app.id}@${size.w}x${size.h}[${scheme}]`;
-    process.stdout.write(`  ${k.padEnd(32)} → `);
+  // ---- 2) 扩展 8 快照 = 档位变化 + B2B 门控 + 处罚视图 (EXTRA_VIEWS) ----
+  for (const ev of EXTRA_VIEWS || []) {
+    const app = APPS.find(a => a.id === ev.appId);
+    if (!app) continue;
+    const size = SIZES.find(s => s.id === ev.sizeId);
+    if (!size) continue;
+    for (const scheme of (ev.schemes && ev.schemes.length ? ev.schemes : SCHEMES)) {
+      pairs.push({ app, size, scheme, extra: ev });
+    }
+  }
+  for (const { app, size, scheme, extra } of pairs) {
+    const kPad = extra ? `${app.id}@${size.w}x${size.h}[${scheme}]·${extra.id}` : `${app.id}@${size.w}x${size.h}[${scheme}]`;
+    process.stdout.write(`  ${kPad.padEnd(48)} → `);
     const r = mode === 'jsdom'
       ? await auditOneJSDOM(app, size)
-      : await auditOne(browser, app, size, scheme);
+      : await auditOne(browser, app, size, scheme, extra || null);
     // jsdom fallback 无 colorScheme 信息补齐
     if (!r.colorScheme) r.colorScheme = scheme;
     const v = (r.axe && r.axe.violations) ? r.axe.violations.length : '-';
@@ -454,7 +530,7 @@ async function main() {
   const lines = [];
   lines.push('# 链盛通 LSC V6.2-AI · 可访问性 & 响应式基线审计 (快照 · Light + Dark)');
   lines.push('');
-  lines.push(`> 生成于 **${new Date().toISOString()}** · axe-core wcag2a+wcag2aa+best-practice · 4 应用 × 2 视口 × 2 色方案 = 共 16 项快照`);
+  lines.push(`> 生成于 **${new Date().toISOString()}** · axe-core wcag2a+wcag2aa+best-practice · 基础 4 应用 × 2 视口 × 2 色方案=16 快照 + 8 扩展(档位+B2B 门控+处罚弹窗) · 合计 **${i}** 项快照`);
   lines.push('');
   lines.push('## 汇总表');
   lines.push('');
@@ -474,7 +550,7 @@ async function main() {
     const schemeBadge = (r.colorScheme === 'dark') ? '🌙 dark' : '☀️ light';
     lines.push(`| ${i} | ${mdEscape(r.appName)} | ${r.width}×${r.height} | ${schemeBadge} | ${r.loadedOK?'✅':'❌'} | ${v} | ${inc} | ${pass} | ${ce} | ${cw} | ${ne} | ${mi} | ${r.counts.totalText} |`);
   }
-  lines.push(`| — | **合计 16** | — | light(${statsByScheme.light.v})/dark(${statsByScheme.dark.v}) | — | **${tv}** | — | — | **${terr}** | **${twarn}** | **${tnet}** | **${timg}** | — |`);
+  lines.push(`| — | **合计 ${i}** | — | light(${statsByScheme.light.v})/dark(${statsByScheme.dark.v}) | — | **${tv}** | — | — | **${terr}** | **${twarn}** | **${tnet}** | **${timg}** | — |`);
   lines.push('');
   lines.push(`> 子统计: Light 模式违规=${statsByScheme.light.v}  通过规则=${statsByScheme.light.pass}   Dark 模式违规=${statsByScheme.dark.v}  通过规则=${statsByScheme.dark.pass}`);
   lines.push('');

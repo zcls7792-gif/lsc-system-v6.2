@@ -44,8 +44,64 @@ document.getElementById('tabbar').addEventListener('keydown', e=>{
   }
 });
 
+/* ===== 首页 · 商家档位+信用分卡片辅助 ===== */
+function _getMerchantByName(name) {
+  if (typeof MOCK === 'undefined' || !MOCK || !MOCK.merchants) return null;
+  return MOCK.merchants.find(m => m.name === name) || null;
+}
+function _creditTagClass(color) {
+  const m = { success: 'tag-success', warning: 'tag-warning', danger: 'tag-danger' };
+  return m[color] || 'tag-default';
+}
+function _tierTagClass(level) {
+  if (level === '初始') return 'tag tag-default';
+  const order = 'ABCDEFGHIJKLMNOPQ'.indexOf(level);
+  if (order >= 12) return 'tag tag-primary';   // M-Q 头部
+  if (order >= 7)  return 'tag tag-accent';    // H-L 中高
+  if (order >= 3)  return 'tag tag-available'; // D-G 中
+  return 'tag tag-info';                        // A-C / 未知
+}
+function renderMerchantCard(m, opts = {}) {
+  const name = m.name;
+  const logo = (name || '商').trim()[0];
+  const distance = opts.distance || '500m';
+  const rating = opts.rating != null ? opts.rating : 4.8;
+  const credit = m.credit != null ? m.credit : null;
+  const tier = m.nhLevel || '初始';
+  const color = m.creditColor || 'success';
+  const label = m.statusLabel || '';
+  // 暂停/关闭态：整卡置灰 + disabled
+  const disabled = (m.nhStatus === 'suspended' || m.nhStatus === 'closed_perm') ? 'true' : null;
+  const dimCls = disabled ? ' merchant-m-disabled' : '';
+  const tierCls = _tierTagClass(tier);
+  const creditCls = 'tag ' + _creditTagClass(color);
+  const creditLine = credit != null
+    ? `<span class="${creditCls}" role="img" aria-label="信用分${credit}分，${label}" title="信用分 ${credit} 分">信用 ${credit}·${label}</span>`
+    : '';
+  const tierLine = `<span class="${tierCls}" role="img" aria-label="档位${tier}" title="档位 ${tier} · 月营业额 ${m.minRevenue != null ? '≥' + (m.minRevenue / 10000).toFixed(0) + '万' : '未满2万'}">档位 ${tier}</span>`;
+  return `<div class="merchant-m${dimCls}" role="link" aria-label="${name}${disabled ? ' 核销权限受限' : ''}"${disabled ? ' aria-disabled="true"' : ''} onclick="${disabled ? '' : "showScreen('scan')"}">
+    <div class="merchant-m-logo">${logo}</div>
+    <div class="merchant-m-info">
+      <div class="merchant-m-name">${name}${tierLine}</div>
+      <div class="merchant-m-meta">${m.type || '零售'} · 评分${rating} · 营业中${creditLine}</div>
+      <div class="merchant-m-dist"><span class="icon" data-i="location"></span>距您 ${distance} · 支持LSC消费</div>
+    </div>
+  </div>`;
+}
+
 /* ===== 首页 ===== */
 function renderHome() {
+  // 首页附近商家（按距离 / 信用分排序：信用分高优先）
+  const jh = _getMerchantByName('锦华餐饮连锁·总店') || { name:'锦华餐饮连锁·总店', type:'餐饮', credit:92, nhLevel:'D', creditColor:'success', statusLabel:'100%标准执行', minRevenue:200000 };
+  const yp = _getMerchantByName('御品茶业工坊')   || { name:'御品茶业工坊',   type:'零售', credit:96, nhLevel:'B', creditColor:'success', statusLabel:'100%标准执行', minRevenue:50000 };
+  const xz = _getMerchantByName('鲜之源生鲜超市') || { name:'鲜之源生鲜超市', type:'零售', credit:78, nhLevel:'D', creditColor:'warning', statusLabel:'50%限额执行', minRevenue:200000 };
+  const ys = _getMerchantByName('云裳服饰有限公司') || { name:'云裳服饰有限公司', type:'服装', credit:55, nhLevel:'D', creditColor:'warning', statusLabel:'暂停核销权限', minRevenue:200000, nhStatus:'suspended' };
+
+  const jhCard = renderMerchantCard(jh, { distance: '280m', rating: 4.9 });
+  const ypCard = renderMerchantCard(yp, { distance: '650m', rating: 4.8 });
+  const xzCard = renderMerchantCard(xz, { distance: '1.2km', rating: 4.6 });
+  const ysCard = renderMerchantCard(ys, { distance: '2.1km', rating: 4.2 });
+
   document.getElementById('screen-home').innerHTML = `
   <div class="home-hero">
     <div class="home-top">
@@ -111,22 +167,10 @@ function renderHome() {
       <div class="section-title">附近商家</div>
       <div class="section-more">全部 <span class="icon icon-sm" data-i="arrowRight"></span></div>
     </div>
-    <div class="merchant-m" onclick="showScreen('scan')">
-      <div class="merchant-m-logo">锦</div>
-      <div class="merchant-m-info">
-        <div class="merchant-m-name">锦华餐饮连锁·总店</div>
-        <div class="merchant-m-meta">餐饮 · 评分4.9 · 营业中</div>
-        <div class="merchant-m-dist"><span class="icon" data-i="location"></span>距您 280m · 支持LSC消费</div>
-      </div>
-    </div>
-    <div class="merchant-m" onclick="showScreen('scan')">
-      <div class="merchant-m-logo" style="background:linear-gradient(135deg,var(--c-available),var(--c-available-soft));">御</div>
-      <div class="merchant-m-info">
-        <div class="merchant-m-name">御品茶业工坊</div>
-        <div class="merchant-m-meta">零售 · 评分4.8 · 营业中</div>
-        <div class="merchant-m-dist"><span class="icon" data-i="location"></span>距您 650m · 支持LSC消费</div>
-      </div>
-    </div>
+    ${jhCard}
+    ${ypCard}
+    ${xzCard}
+    ${ysCard}
 
     <div style="text-align:center;margin:18px 0 6px;font-size:11px;color:var(--c-text-3);">— 链盛通LSC · 消费创造权益 —</div>
   </div>`;

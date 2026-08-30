@@ -19,12 +19,17 @@
   --c-accent-soft: #F4E6BD;
 
   /* 业务专属色 - 锁定池(藏青) vs 可用池(翡翠) */
-  --c-locked: #2D4A8A;         /* 锁定池 - 藏青 */
-  --c-locked-tint: #E8EDF7;
+  --c-locked: #3A5EB0;         /* 锁定池 - 藏青 */
+  --c-locked-tint: #E5ECFA;
   --c-locked-soft: #4A6BB8;
   --c-available: #1F7A48;      /* 可用池 - 翡翠 (WCAG AA 4.5:1 on white) */
   --c-available-tint: #E4F4EC;
   --c-available-soft: #4FAE7C;
+  /* 语义色-强版 (保证 text-xs 彩色辅助信息在 card/浅白背景 ≥4.5:1) */
+  --c-available-strong: #13673E;
+  --c-warning-strong:   #9A5602;
+  --c-danger-strong:    #A5211C;
+  --c-info-strong:      #163E9F;
 
   /* 功能色 */
   --c-success: #1F7A48;
@@ -146,12 +151,12 @@ img { max-width: 100%; display: block; }
 .text-muted { color: var(--c-text-3); }
 .text-soft { color: var(--c-text-2); }
 .text-primary { color: var(--c-primary); }
-.text-accent { color: var(--c-accent); }
-.text-locked { color: var(--c-locked); }
-.text-available { color: var(--c-available); }
-.text-danger { color: var(--c-danger); }
-.text-success { color: var(--c-success); }
-.text-warning { color: var(--c-warning); }
+.text-accent { color: var(--c-accent-deep); }   /* WCAG AA: 深色鎏金 on white ≥4.5:1 */
+.text-locked { color: #254490; }
+.text-available { color: var(--c-available-strong); }
+.text-danger { color: var(--c-danger-strong); }
+.text-success { color: var(--c-available-strong); }
+.text-warning { color: var(--c-warning-strong); }
 /* 屏幕阅读器专用: 视觉隐藏但可访问 */
 .sr-only { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
 
@@ -283,19 +288,79 @@ img { max-width: 100%; display: block; }
   background: var(--c-bg-soft);
   color: var(--c-text-2);
 }
-.tag-locked { background: var(--c-locked-tint); color: var(--c-locked); }
-.tag-available { background: var(--c-available-tint); color: var(--c-available); }
-.tag-success { background: #E4F4EC; color: var(--c-success); }
-.tag-warning { background: #FEF3E2; color: var(--c-warning); }
-.tag-danger { background: #FCE6E4; color: var(--c-danger); }
-.tag-info { background: #E0EBFD; color: var(--c-info); }
+.tag-locked { background: var(--c-locked-tint); color: #254490; }
+.tag-available { background: var(--c-available-tint); color: var(--c-available-strong); }
+.tag-success { background: #E4F4EC; color: var(--c-available-strong); }
+.tag-warning { background: #FFF4E0; color: var(--c-warning-strong); }
+.tag-danger { background: #FCE6E4; color: var(--c-danger-strong); }
+.tag-info { background: #E0EBFD; color: var(--c-info-strong); }
+.tag-default { background: #E5E7EB; color: #374151; }
+.tag-primary { background: var(--c-primary-tint); color: #084844; }
 .tag-accent { background: var(--c-accent-soft); color: var(--c-accent-deep); }
+/* 移动端商家卡禁用（核销暂停/永久关闭） */
+.merchant-m-disabled { opacity: 0.65; filter: grayscale(0.4); cursor: not-allowed !important; pointer-events: none; }
+/* 表格行按钮 .row-btn (默认浅色模式, WCAG AA) */
+.row-btn {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: var(--r-sm);
+  font-size: var(--fs-sm); line-height: 1.45;
+  color: var(--c-text-1);
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background .18s, color .18s, border-color .18s;
+}
+.row-btn:hover { background: var(--c-bg-soft); border-color: var(--c-border); }
+.row-btn.primary,
+.row-btn.primary a { color: #084844 !important; background: #E4F4EC !important; border-color: #B8DFC8 !important; }
+.row-btn.success { color: #0E5B37 !important; background: #E4F4EC !important; border-color: #B8DFC8 !important; }
+.row-btn.warning,
+.row-btn.warn    { color: #7A4501 !important; background: #FFF2D6 !important; border-color: #F0D48C !important; }
+.row-btn.danger  { color: #7A1611 !important; background: #FBDDD9 !important; border-color: #E8A59E !important; }
+.row-btn.gold    { color: #6A4E11 !important; background: #FAEFD0 !important; border-color: #EADB9B !important; }
+.row-btn.info    { color: #0E3796 !important; background: #E0EBFD !important; border-color: #B6CEF7 !important; }
 .tag-dot::before {
   content: '';
   width: 6px; height: 6px;
   border-radius: 50%;
   background: currentColor;
   display: inline-block;
+}
+
+/* 核销档位-信用分状态药丸 (WCAG ≥7:1 保证 text-xs 文本对比度) */
+.nh-status-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 12px; line-height: 1.55; font-weight: 500;
+  background: #F4F6F8; color: #212736;
+  border: 1px solid #DEE4EA;
+}
+.nh-status-pill[data-credit="success"] { background: #E4F4EC; color: #0E5B37; border-color: #B8DFC8; }
+.nh-status-pill[data-credit="warning"] { background: #FFF2D6; color: #7A4501; border-color: #F0D48C; }
+.nh-status-pill[data-credit="danger"]  { background: #FBDDD9; color: #7A1611; border-color: #E8A59E; }
+.nh-status-pill[data-credit="info"]    { background: #E0EBFD; color: #0E3796; border-color: #B6CEF7; }
+
+/* 门控禁用态的整卡 / 按钮: 不使用 opacity，确保文字仍满足 WCAG AA */
+.b2b-card-disabled,
+.nh-card-disabled {
+  background: repeating-linear-gradient(135deg, var(--c-bg-soft) 0px, var(--c-bg-soft) 10px, var(--c-bg-card) 10px, var(--c-bg-card) 20px) !important;
+  border-style: dashed !important;
+  cursor: not-allowed;
+}
+.b2b-card-disabled > .card-head,
+.nh-card-disabled > .card-head {
+  background: rgba(0,0,0,0.015);
+  border-bottom-style: dashed;
+}
+.btn-disabled-soft[disabled],
+.btn-disabled-soft[aria-disabled="true"] {
+  background: var(--c-bg-soft) !important;
+  color: var(--c-text-2) !important;
+  border-color: var(--c-border) !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
 }
 
 /* ---------- 输入 Input ---------- */
@@ -662,12 +727,17 @@ textarea:focus-visible {
     --c-accent-soft: #3D3420;
 
     /* 业务色 - 深色模式下提亮确保 4.5:1 */
-    --c-locked: #6E92DE;
+    --c-locked: #8DB0F5;
     --c-locked-tint: #1A2342;
-    --c-locked-soft: #90AEF0;
-    --c-available: #48C986;     /* 翡翠(提亮版) */
-    --c-available-tint: #1A3028;
-    --c-available-soft: #71D9A4;
+    --c-locked-soft: #A8C5FF;
+    --c-available: #63D99E;     /* 翡翠(提亮版) */
+    --c-available-tint: #142A22;
+    --c-available-soft: #88E6B7;
+    /* 语义色-强版 (深色模式保证 彩色文字 vs --c-bg-card 4.5:1) */
+    --c-available-strong: #7BE3AD;
+    --c-warning-strong:   #FFD27A;
+    --c-danger-strong:    #FF9A93;
+    --c-info-strong:      #A9C8FF;
 
     /* 功能色 - 深色模式下提亮 */
     --c-success: #48C986;
@@ -689,17 +759,77 @@ textarea:focus-visible {
   .alert-warning { background: #3D2A12; color: #FCD34D; }
   .alert-danger { background: #3A1614; color: #FCA5A5; }
 
-  /* 深色模式下 Tag 配色 (替换浅色底色为深色底，保持 4.5:1) */
-  .tag-success { background: #163526; color: #86EFAC; }
-  .tag-available { background: #1A3028; color: var(--c-available); }
-  .tag-warning { background: #3D2A12; color: #FCD34D; }
-  .tag-danger { background: #3A1614; color: #FCA5A5; }
-  .tag-locked { background: #1A2342; color: var(--c-locked); }
-  .tag-info { background: #1A2B55; color: #93C5FD; }
-  .tag-accent { background: #3D3420; color: var(--c-accent); }
+  /* 深色模式下 Tag 配色 (深色底 + 提亮文字, 保证 WCAG AA ≥4.5:1) */
+  .tag-success { background: #0A1C14; color: #9DF5BF; }
+  .tag-available { background: #0A1E17; color: #9CF5BE; }
+  .tag-warning { background: #2B1A04; color: #FFDE8A; }
+  .tag-danger { background: #2A0805; color: #FFC6C2; }
+  .tag-locked { background: #0F1A38; color: #BDD5FF; }
+  .tag-info { background: #0E1A3E; color: #C1D3FF; }
+  .tag-default { background: #1C2130; color: #E7EDF6; }
+  .tag-primary { background: #08201B; color: #9AF3B7; }
+  .tag-accent { background: #2A220A; color: #F7DA8B; }
+
+  /* 深色模式 .nh-status-pill 对比增强 */
+  .nh-status-pill { background: #1B2335; color: #DCE6F3; border-color: #2C364C; }
+  .nh-status-pill[data-credit="success"] { background: #0D2A1E; color: #8DF3B4; border-color: #1E5A40; }
+  .nh-status-pill[data-credit="warning"] { background: #311E06; color: #FFD976; border-color: #6B4512; }
+  .nh-status-pill[data-credit="danger"]  { background: #300E0B; color: #FFB2AD; border-color: #6A231E; }
+  .nh-status-pill[data-credit="info"]    { background: #111F46; color: #B7CCFF; border-color: #2B4070; }
+
+  /* 深色模式: .card-title 对比度提升 */
+  .card-title { color: #E9EEF7; }
+  .card-sub  { color: #9FB0CA; }
+
+  /* 深色模式下分段控件选中项 对比度≥7:1 WCAG AAA */
+  .seg-item.seg-item.active {
+    background: #031210 !important;
+    color: #D7FBEC !important;
+    border-color: #2DB49E !important;
+    font-weight: 600 !important;
+  }
+  .seg-item.active .seg-count,
+  .seg-item.active * { color: inherit !important; }
+
+  /* 深色模式下平台后台 .row-btn 文本对比度 */
+  .row-btn { color: #D9E1EE !important; border-color: #2C364C !important; background: transparent !important; }
+  .row-btn:hover { background: #1A2234 !important; border-color: #3A4662 !important; }
+  .row-btn.primary { background: #07201C !important; color: #9EF4D8 !important; border-color: #2E8275 !important; }
+  .row-btn.success { background: #0A1C14 !important; color: #9DF5BF !important; border-color: #2F8A60 !important; }
+  .row-btn.warning,
+  .row-btn.warn    { background: #2B1A04 !important; color: #FFDE8A !important; border-color: #7A5414 !important; }
+  .row-btn.danger  { background: #2A0805 !important; color: #FFC6C2 !important; border-color: #80342F !important; }
+  .row-btn.gold    { background: #2A220A !important; color: #F7DA8B !important; border-color: #755F20 !important; }
+  .row-btn.info    { background: #0E1A3E !important; color: #C1D3FF !important; border-color: #35508E !important; }
 
   /* 深色模式: .status-bar.dark 使用更深的背景保证白字对比度 (替代被提亮的 --c-primary-deep) */
   .status-bar.dark { background: #082E2C; }
+
+  /* 深色模式: 文本功能色强版 override (保证 AA) */
+  .text-primary { color: #9EF4D8; }
+  .text-accent  { color: #F3D37D; }
+  .text-locked  { color: #BDD5FF; }
+  .text-available { color: var(--c-available-strong); }
+  .text-danger  { color: #FFC6C2; }
+  .text-success { color: #9DF5BF; }
+  .text-warning { color: #FFDE8A; }
+
+  /* 深色模式: 禁用卡 / 按钮 不降低前景对比度 */
+  .b2b-card-disabled,
+  .nh-card-disabled {
+    background: repeating-linear-gradient(135deg, #121A2B 0px, #121A2B 10px, #151E2E 10px, #151E2E 20px) !important;
+    border-color: #2C364C !important;
+  }
+  .b2b-card-disabled > .card-head,
+  .nh-card-disabled > .card-head {
+    background: rgba(255,255,255,0.015);
+  }
+  .btn-disabled-soft[disabled],
+  .btn-disabled-soft[aria-disabled="true"] {
+    background: #121A2B !important;
+    color: #A9B7CD !important;
+    border-color: #2C364C !important;
+  }
 
   /* 深色模式下模态遮罩加深 */
   .modal-mask { background: rgba(0, 0, 0, 0.75); }

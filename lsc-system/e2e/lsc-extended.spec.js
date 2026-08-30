@@ -588,7 +588,7 @@ test.describe('LSC V6.2-AI · 移动端 (mobile)', () => {
   // 注意: viewport/isMobile/hasTouch 由 chromium-mobile project 注入,这里仅补色 (不包含 defaultBrowserType)
   test.use({ colorScheme: 'light' });
 
-  test('场景F(移动端): 5 Tab 切换 + 首页 Hero + 钱包 LSC 余额 非空', async ({ page }) => {
+  test('场景F(移动端): 5 Tab 切换 + 首页 Hero + 钱包 LSC 余额 非空 + 档位/信用分卡片 4 张', async ({ page }) => {
     await page.goto(APPS.mobile, { waitUntil: 'networkidle' });
 
     // 初始在"首页"
@@ -596,6 +596,67 @@ test.describe('LSC V6.2-AI · 移动端 (mobile)', () => {
     // Hero 区域必须有 LSC 可用余额
     const heroTxt = await page.locator('body').innerText();
     expect(heroTxt).toMatch(/可用|LSC|余额/i);
+
+    // ------------------------------------------------------------
+    // 档位 + 信用分消费端卡片 断言 (首页附近商家 ≥4 张)
+    // ------------------------------------------------------------
+    const homeScreen = page.locator('#screen-home');
+    const mCards = homeScreen.locator('.merchant-m');
+    const cardCount = await mCards.count();
+    expect(cardCount).toBeGreaterThanOrEqual(4);
+
+    // 1) 档位标签: 每张卡都含「档位 X」 文本 (X 为 A–Q / 初始)
+    const tierTexts = await mCards.locator('.merchant-m-name').allInnerTexts();
+    expect(tierTexts.length).toBeGreaterThanOrEqual(4);
+    for (const t of tierTexts) {
+      expect(t).toMatch(/档位 (初始|[A-Q])/);
+    }
+
+    // 2) 信用分非空 + 颜色态：meta 行必须带「信用 NN」 数字 (NN=0–100)；且 tag 类名匹配颜色
+    const creditInfo = await homeScreen.evaluate(() => {
+      const result = [];
+      document.querySelectorAll('#screen-home .merchant-m').forEach(card => {
+        const meta = card.querySelector('.merchant-m-meta');
+        if (!meta) return;
+        const text = meta.textContent || '';
+        const match = text.match(/信用\s*(\d+)/);
+        const creditVal = match ? Number(match[1]) : null;
+        // 读取信用分 span 的 class
+        const creditTag = [...meta.querySelectorAll('span.tag')]
+          .filter(s => /信用/.test(s.textContent || ''))[0];
+        const cls = creditTag ? creditTag.className : '';
+        // 档位 span 类
+        const tierTag = [...card.querySelectorAll('.merchant-m-name span.tag')]
+          .filter(s => /档位/.test(s.textContent || ''))[0];
+        const tierCls = tierTag ? tierTag.className : '';
+        result.push({
+          text,
+          creditVal,
+          creditHasTagClass: /tag-success|tag-warning|tag-danger|tag-default/.test(cls),
+          tierHasTagClass: /tag-primary|tag-accent|tag-available|tag-info|tag-default/.test(tierCls),
+          hasDisabled: card.classList.contains('merchant-m-disabled'),
+          ariaDisabled: card.getAttribute('aria-disabled') === 'true',
+        });
+      });
+      return result;
+    });
+    expect(creditInfo.length).toBeGreaterThanOrEqual(4);
+    // 信用分数字非空且在 0–100 区间, color tag 类存在, tier tag 类存在
+    for (const c of creditInfo) {
+      expect(c.creditVal).not.toBeNull();
+      expect(c.creditVal).toBeGreaterThanOrEqual(0);
+      expect(c.creditVal).toBeLessThanOrEqual(100);
+      expect(c.creditHasTagClass).toBe(true);
+      expect(c.tierHasTagClass).toBe(true);
+    }
+    // 颜色语义合规: credit≥80 → success, 60-79 → warning, 40-59 → warning, <40 → danger
+    // 已知 4 张: 锦华 92(success), 御品 96(success), 鲜之源 78(warning), 云裳 55(warning+suspended disabled)
+    const successCards = creditInfo.filter(c => c.creditVal >= 80);
+    const warningCards = creditInfo.filter(c => c.creditVal >= 60 && c.creditVal < 80 || c.creditVal >= 40 && c.creditVal < 60);
+    const suspendCards = creditInfo.filter(c => c.hasDisabled || c.ariaDisabled);
+    expect(successCards.length).toBeGreaterThanOrEqual(2); // 锦华 + 御品
+    expect(warningCards.length).toBeGreaterThanOrEqual(1); // 鲜之源
+    expect(suspendCards.length).toBeGreaterThanOrEqual(1); // 云裳 55 暂停核销
 
     // Tab 切换: 商城 / 扫码 / 钱包 / 我的  (扫码头会返回屏幕 home 以外)
     const tabs = [

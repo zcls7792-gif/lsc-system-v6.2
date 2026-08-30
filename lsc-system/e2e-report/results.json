@@ -4,8 +4,7 @@
       "/root/.nvm/versions/node/v24.1.0/bin/node",
       "/workspace/lsc-system/node_modules/.bin/playwright",
       "test",
-      "--project=chromium-headless",
-      "--retries=0"
+      "--workers=2"
     ],
     "configFile": "/workspace/lsc-system/playwright.config.js",
     "rootDir": "/workspace/lsc-system/e2e",
@@ -26,7 +25,7 @@
       {
         "outputDir": "/workspace/lsc-system/test-results",
         "repeatEach": 1,
-        "retries": 0,
+        "retries": 2,
         "metadata": {
           "actualWorkers": 2
         },
@@ -42,7 +41,7 @@
       {
         "outputDir": "/workspace/lsc-system/test-results",
         "repeatEach": 1,
-        "retries": 0,
+        "retries": 2,
         "metadata": {
           "actualWorkers": 2
         },
@@ -124,12 +123,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2300,
+                      "duration": 2221,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:21.747Z",
+                      "startTime": "2026-08-30T07:31:10.413Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -158,12 +157,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1751,
+                      "duration": 1705,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:21.749Z",
+                      "startTime": "2026-08-30T07:31:10.431Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -173,7 +172,7 @@
               ],
               "id": "381d9a03cfaa35a94702-90e67d462f84787d0bd1",
               "file": "lsc-core.spec.js",
-              "line": 69,
+              "line": 70,
               "column": 3
             },
             {
@@ -192,12 +191,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2593,
+                      "duration": 2322,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:24.086Z",
+                      "startTime": "2026-08-30T07:31:12.644Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -207,7 +206,7 @@
               ],
               "id": "381d9a03cfaa35a94702-6d563e871c6eae2f0c72",
               "file": "lsc-core.spec.js",
-              "line": 100,
+              "line": 101,
               "column": 3
             }
           ]
@@ -224,7 +223,7 @@
         {
           "title": "LSC V6.2-AI · 桌面端深度扩展",
           "file": "lsc-extended.spec.js",
-          "line": 37,
+          "line": 41,
           "column": 6,
           "specs": [
             {
@@ -243,12 +242,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2619,
+                      "duration": 2836,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:24.659Z",
+                      "startTime": "2026-08-30T07:31:13.178Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -258,7 +257,7 @@
               ],
               "id": "aaed197fda9439e7798c-0b6e683de281aee1faaa",
               "file": "lsc-extended.spec.js",
-              "line": 43,
+              "line": 47,
               "column": 3
             },
             {
@@ -277,12 +276,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2101,
+                      "duration": 1932,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:26.716Z",
+                      "startTime": "2026-08-30T07:31:15.020Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -292,7 +291,7 @@
               ],
               "id": "aaed197fda9439e7798c-d9b1f38defe1d033f5a1",
               "file": "lsc-extended.spec.js",
-              "line": 90,
+              "line": 97,
               "column": 3
             },
             {
@@ -311,12 +310,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1647,
+                      "duration": 1517,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:27.295Z",
+                      "startTime": "2026-08-30T07:31:16.035Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -326,7 +325,7 @@
               ],
               "id": "aaed197fda9439e7798c-fdc15669eb643a2d3ecd",
               "file": "lsc-extended.spec.js",
-              "line": 117,
+              "line": 124,
               "column": 3
             },
             {
@@ -345,12 +344,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 3985,
+                      "duration": 4065,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:28.836Z",
+                      "startTime": "2026-08-30T07:31:16.970Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -360,7 +359,7 @@
               ],
               "id": "aaed197fda9439e7798c-77807c2e4e20d358ce67",
               "file": "lsc-extended.spec.js",
-              "line": 145,
+              "line": 154,
               "column": 3
             },
             {
@@ -379,12 +378,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2603,
+                      "duration": 2639,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:28.968Z",
+                      "startTime": "2026-08-30T07:31:17.579Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -394,7 +393,7 @@
               ],
               "id": "aaed197fda9439e7798c-cc7ed93633a23d9e4cc0",
               "file": "lsc-extended.spec.js",
-              "line": 200,
+              "line": 209,
               "column": 3
             },
             {
@@ -413,12 +412,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1281,
+                      "duration": 1251,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:31.596Z",
+                      "startTime": "2026-08-30T07:31:20.255Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -428,7 +427,7 @@
               ],
               "id": "aaed197fda9439e7798c-bde7f2070ef880a3d3e7",
               "file": "lsc-extended.spec.js",
-              "line": 253,
+              "line": 262,
               "column": 3
             },
             {
@@ -447,12 +446,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2625,
+                      "duration": 2594,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:32.855Z",
+                      "startTime": "2026-08-30T07:31:21.057Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -462,7 +461,7 @@
               ],
               "id": "aaed197fda9439e7798c-33ad326c3fa70a6272d5",
               "file": "lsc-extended.spec.js",
-              "line": 307,
+              "line": 316,
               "column": 3
             },
             {
@@ -481,12 +480,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2713,
+                      "duration": 2791,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:32.896Z",
+                      "startTime": "2026-08-30T07:31:21.539Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -496,7 +495,7 @@
               ],
               "id": "aaed197fda9439e7798c-9a52482f2c46a5754cf2",
               "file": "lsc-extended.spec.js",
-              "line": 356,
+              "line": 365,
               "column": 3
             },
             {
@@ -515,12 +514,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1766,
+                      "duration": 2338,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T00:01:35.499Z",
+                      "startTime": "2026-08-30T07:31:23.675Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -530,7 +529,363 @@
               ],
               "id": "aaed197fda9439e7798c-8821c6a7c16012285788",
               "file": "lsc-extended.spec.js",
-              "line": 402,
+              "line": 411,
+              "column": 3
+            },
+            {
+              "title": "场景S(桌面): 信用分40-59 核销暂停 → #nh-amount disabled + alert-warning",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1131,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:24.349Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-53a5377c3009ee11a4a8",
+              "file": "lsc-extended.spec.js",
+              "line": 446,
+              "column": 3
+            },
+            {
+              "title": "场景T(桌面): 信用分20-39 B2B暂停 → 创建按钮disabled + alert-warning",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1093,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:25.501Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-4b1fc0c3fa113461881b",
+              "file": "lsc-extended.spec.js",
+              "line": 479,
+              "column": 3
+            },
+            {
+              "title": "场景U(桌面): 信用分<20 B2B永久关闭 → alert-danger + 全卡disabled",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1105,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:26.025Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-21c6c20d1c82e2e2be20",
+              "file": "lsc-extended.spec.js",
+              "line": 510,
+              "column": 3
+            },
+            {
+              "title": "场景V(桌面): 平台后台 处罚「暂停B2B 30天」+「永久关闭核销+B2B」双人审批",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2827,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:26.622Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-355a6fa27a157cb4a856",
+              "file": "lsc-extended.spec.js",
+              "line": 541,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "LSC V6.2-AI · 移动端 (mobile)",
+          "file": "lsc-extended.spec.js",
+          "line": 587,
+          "column": 6,
+          "specs": [
+            {
+              "title": "场景F(移动端): 5 Tab 切换 + 首页 Hero + 钱包 LSC 余额 非空 + 档位/信用分卡片 4 张",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-mobile",
+                  "projectName": "chromium-mobile",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2045,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:28.297Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-bafa62fe2eb6873673df",
+              "file": "lsc-extended.spec.js",
+              "line": 591,
+              "column": 3
+            },
+            {
+              "title": "场景K(移动端): 商城 Tab → 商品列表 4+ 卡片 → 点击商品 → 详情页显示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-mobile",
+                  "projectName": "chromium-mobile",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1708,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:30.340Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-4ae23d9533cb552d3501",
+              "file": "lsc-extended.spec.js",
+              "line": 692,
+              "column": 3
+            },
+            {
+              "title": "场景L(移动端): 扫码页 → 四角边框 + 扫描线动画 → 手动输入核销码 → 结果提示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-mobile",
+                  "projectName": "chromium-mobile",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2160,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:31.009Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-56fbf8559807e3f399b3",
+              "file": "lsc-extended.spec.js",
+              "line": 755,
+              "column": 3
+            },
+            {
+              "title": "场景O(移动端): 首页 AI 推荐模块 → 2+ 推荐卡 → 点击跳转商品详情页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-mobile",
+                  "projectName": "chromium-mobile",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2231,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:32.597Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-dce8260181f819fd0060",
+              "file": "lsc-extended.spec.js",
+              "line": 815,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "LSC V6.2-AI · 微信小程序 (mini)",
+          "file": "lsc-extended.spec.js",
+          "line": 858,
+          "column": 6,
+          "specs": [
+            {
+              "title": "场景G(小程序): 首页 + 核销码 + 我的 视图切换 & 关键内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-mobile",
+                  "projectName": "chromium-mobile",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1547,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:33.186Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-06aa664836d1ecbed651",
+              "file": "lsc-extended.spec.js",
+              "line": 862,
+              "column": 3
+            },
+            {
+              "title": "场景M(小程序): 首页商品横滑 + 点击推荐商品 → 详情页渲染非空白",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-mobile",
+                  "projectName": "chromium-mobile",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2031,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-30T07:31:34.748Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-7e73eff0a166fa9b6d55",
+              "file": "lsc-extended.spec.js",
+              "line": 916,
               "column": 3
             }
           ]
@@ -540,9 +895,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-08-30T00:01:20.158Z",
-    "duration": 17352.923000000003,
-    "expected": 12,
+    "startTime": "2026-08-30T07:31:08.895Z",
+    "duration": 28030.142,
+    "expected": 22,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

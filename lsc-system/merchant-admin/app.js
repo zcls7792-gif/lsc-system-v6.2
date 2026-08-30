@@ -660,7 +660,7 @@ function renderNH() {
     <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="release"></span></div><div class="stat-label">今日已核销</div><div class="stat-value">${LSC.fmtNum(NH_USED_TODAY_LSC)} LSC</div><div class="text-xs text-muted mt-1">×0.87结算 ≈ 现金 ¥${LSC.fmtNum(NH_USED_TODAY_LSC*0.87)}</div></div>
     <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="unlock"></span></div><div class="stat-label">剩余额度</div><div class="stat-value">${LSC.fmtNum(Math.max(0,CURRENT_MERCHANT.nhLimitDaily-NH_USED_TODAY_LSC))} LSC</div><div class="progress mt-2"><div class="progress-bar-gold progress-bar" style="width:${Math.max(0,Math.min(100, CURRENT_MERCHANT.nhLimitDaily>0 ? NH_USED_TODAY_LSC/CURRENT_MERCHANT.nhLimitDaily*100 : 0))}%;"></div></div></div>
     <div class="stat-card green"><div class="sc-icon"><span class="icon" data-i="wallet"></span></div><div class="stat-label">监管账户余额</div><div class="stat-value">¥86,400</div><div class="text-xs text-muted mt-1">14%暂扣 · 可核销释放</div></div>
-    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="credit"></span></div><div class="stat-label">核销档位</div><div class="stat-value">${CURRENT_MERCHANT.nhLevel}档</div><div class="text-xs mt-1" style="color:${CURRENT_MERCHANT.creditColor==='success'?'var(--c-available)':CURRENT_MERCHANT.creditColor==='warning'?'var(--c-warning)':'var(--c-danger)'};">额度 ${LSC.fmtNum(CURRENT_MERCHANT.nhLimitDaily)} LSC/日 · ${CURRENT_MERCHANT.statusLabel}</div></div>
+    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="credit"></span></div><div class="stat-label">核销档位</div><div class="stat-value">${CURRENT_MERCHANT.nhLevel}档</div><div class="nh-status-pill mt-1" data-credit="${CURRENT_MERCHANT.creditColor||'info'}">额度 ${LSC.fmtNum(CURRENT_MERCHANT.nhLimitDaily)} LSC/日 · ${CURRENT_MERCHANT.statusLabel}</div></div>
   </div>
 
   <div class="grid-2-eq mb-5">
@@ -755,12 +755,14 @@ function renderB2B() {
     : (isPermanent
         ? `<div class="alert alert-danger mb-4" style="font-size:13px;"><span class="icon icon-sm" data-i="lock"></span><b>B2B 流转权限已永久关闭</b>: 信用分 ${CURRENT_MERCHANT.credit} 分低于 20 分，核销与B2B 权限均已永久关闭。请联系平台运营进行申诉复核后再恢复。</div>`
         : `<div class="alert alert-warning mb-4" style="font-size:13px;"><span class="icon icon-sm" data-i="warning"></span><b>B2B 流转权限已暂停</b>: 信用分 ${CURRENT_MERCHANT.credit} 分低于 40 分。请通过合规经营或申诉恢复信用分至 40 分以上后再发起 B2B 流转。</div>`);
-  const dis = b2bDisabled ? ' disabled style="opacity:0.55;cursor:not-allowed;pointer-events:none;"' : '';
+  // 禁用时不使用整卡 opacity(这会降低所有子元素文本 AA 对比度),改用 class=b2b-card-disabled 柔化边框背景
+  const disCardClass = b2bDisabled ? ' b2b-card-disabled' : '';
+  const dis = '';
   const disInput = b2bDisabled ? ' disabled style="background:var(--c-bg-soft);cursor:not-allowed;"' : '';
   const html = pageHead('B2B交易', '商家间LSC流转 · 必须绑定真实B2B订单 · AI核验贸易凭证 · 1:1金额对应', `
-    <button class="btn btn-primary btn-sm"${b2bDisabled?' disabled style="opacity:0.55;cursor:not-allowed;" onclick="event.preventDefault();alert(\'B2B 流转权限已'+(isPermanent?'永久关闭':'暂停')+'，信用分'+(isPermanent?'<20':'<40')+'分，暂不可创建新订单。\');"':''}><span class="icon icon-sm" data-i="b2b"></span>创建B2B订单</button>`) + `
+    <button class="btn btn-primary btn-sm${b2bDisabled?' btn-disabled-soft':''}"${b2bDisabled?' disabled aria-disabled="true" title="B2B 流转权限已'+(isPermanent?'永久关闭':'暂停')+'，信用分'+(isPermanent?'<20':'<40')+'分"':''}><span class="icon icon-sm" data-i="b2b"></span>创建B2B订单</button>`) + `
   ${b2bGateHTML}
-  <div class="card mb-5"${dis}>
+  <div class="card mb-5${disCardClass}"${b2bDisabled?' disabled aria-disabled="true" role="group"':''}>
     <div class="card-head"><div class="card-title">创建 B2B 流转订单</div><span class="tag ${b2bDisabled?'tag-danger':'tag-warning'}">${b2bDisabled?'权限已'+(isPermanent?'永久关闭':'暂停')+' (信用分'+CURRENT_MERCHANT.credit+')':'流转有效期365天重置'}</span></div>
     <div class="card-body">
       <div class="steps">
@@ -770,14 +772,14 @@ function renderB2B() {
         <div class="step"><div class="step-circle">4</div><div class="step-label">LSC流转</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div><label class="field-label field-required">对手方商家</label>
-          <select class="select"${disInput}><option>御品茶业工坊 (M20005)</option><option>恒通建材批发中心 (M20002)</option><option>海纳科技公司 (M20007)</option></select>
+        <div><label class="field-label field-required" for="b2b-counterparty">对手方商家</label>
+          <select id="b2b-counterparty" class="select" aria-label="对手方商家"${disInput}><option>御品茶业工坊 (M20005)</option><option>恒通建材批发中心 (M20002)</option><option>海纳科技公司 (M20007)</option></select>
         </div>
-        <div><label class="field-label field-required">交易描述</label><input class="input" value="高端茶叶季度供应"${disInput}></div>
-        <div><label class="field-label field-required">人民币金额</label><div class="input-group"><span style="color:var(--c-accent-deep);font-weight:700;">¥</span><input class="input" value="96000"${disInput} oninput="this.parentElement.parentElement.nextElementSibling.querySelector('input').value=this.value"></div></div>
-        <div><label class="field-label">LSC金额 (1:1自动)</label><div class="input-group"><span style="color:var(--c-primary);font-weight:700;">L</span><input class="input" value="96000" readonly style="background:var(--c-bg-soft);"${disInput}></div></div>
-        <div><label class="field-label">合同编号</label><input class="input" value="HT-2026-0824-2"${disInput}></div>
-        <div><label class="field-label">过期时间</label><input class="input" type="date" value="2026-09-24"${disInput}></div>
+        <div><label class="field-label field-required" for="b2b-desc">交易描述</label><input id="b2b-desc" class="input" value="高端茶叶季度供应"${disInput}></div>
+        <div><label class="field-label field-required" for="b2b-rmb">人民币金额</label><div class="input-group"><span aria-hidden="true" style="color:var(--c-accent-deep);font-weight:700;">¥</span><input id="b2b-rmb" class="input" value="96000"${disInput} oninput="document.getElementById('b2b-lsc').value=this.value"></div></div>
+        <div><label class="field-label" for="b2b-lsc">LSC金额 (1:1自动)</label><div class="input-group"><span aria-hidden="true" style="color:var(--c-primary);font-weight:700;">L</span><input id="b2b-lsc" class="input" value="96000" readonly style="background:var(--c-bg-soft);"${disInput}></div></div>
+        <div><label class="field-label" for="b2b-contract">合同编号</label><input id="b2b-contract" class="input" value="HT-2026-0824-2"${disInput}></div>
+        <div><label class="field-label" for="b2b-expire">过期时间</label><input id="b2b-expire" class="input" type="date" value="2026-09-24"${disInput}></div>
         <div style="grid-column:1/3;"><label class="field-label">贸易凭证 (合同/发票/物流单)</label>
           <div style="border:1px dashed var(--c-border);border-radius:8px;padding:20px;text-align:center;${b2bDisabled?'opacity:0.55;cursor:not-allowed;pointer-events:none;':'cursor:pointer;'}" onclick="resultModal('凭证上传','已调用凭证上传, AI将自动进行OCR提取、字段匹配与真伪核验。','info')">
             <span class="icon icon-lg" data-i="doc" style="color:var(--c-text-3);"></span>
@@ -787,7 +789,7 @@ function renderB2B() {
         </div>
       </div>
       <div class="alert alert-warning mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="warning"></span>消费者会员间禁止LSC流转 · 消费者→商家支付允许 · 商家→消费者反向流转禁止。流转后接收方LSC有效期重置为365天。</div>
-      <div class="flex justify-end gap-3 mt-3"><button class="btn btn-outline btn-sm"${dis} onclick="resultModal('已保存草稿','B2B订单草稿已保存, 可稍后继续编辑。','info')">保存草稿</button><button class="btn btn-primary btn-sm"${dis} onclick="confirmModal('提交B2B订单','确认提交订单? 提交后进入待对手方确认状态, AI将并行核验凭证真伪。',()=>resultModal('订单已提交','B2B订单已提交, 等待对手方确认。AI核验同步进行中。','success'),{btnText:'提交'})">提交并等待确认</button></div>
+      <div class="flex justify-end gap-3 mt-3"><button class="btn btn-outline btn-sm${b2bDisabled?' btn-disabled-soft':''}"${b2bDisabled?' disabled aria-disabled="true"':''} onclick="resultModal('已保存草稿','B2B订单草稿已保存, 可稍后继续编辑。','info')">保存草稿</button><button class="btn btn-primary btn-sm${b2bDisabled?' btn-disabled-soft':''}"${b2bDisabled?' disabled aria-disabled="true"':''} onclick="confirmModal('提交B2B订单','确认提交订单? 提交后进入待对手方确认状态, AI将并行核验凭证真伪。',()=>resultModal('订单已提交','B2B订单已提交, 等待对手方确认。AI核验同步进行中。','success'),{btnText:'提交'})">提交并等待确认</button></div>
     </div>
   </div>
 
@@ -958,21 +960,28 @@ function openModal(opts) {
   const mask = document.createElement('div');
   mask.className = 'modal-mask';
   mask.id = 'global-modal';
-  mask.innerHTML = `<div class="modal modal-detail">
+  mask.__onClose = typeof opts.onClose === 'function' ? opts.onClose : null;
+  const mid = 'mt-' + Date.now().toString(36);
+  mask.innerHTML = `<div class="modal modal-detail" role="dialog" aria-modal="true" aria-labelledby="${mid}">
     <div class="modal-head">
-      <div class="modal-title">${opts.title || '详情'}</div>
-      <span class="icon" data-i="close" id="gm-close" style="cursor:pointer;color:var(--c-text-3);"></span>
+      <div class="modal-title" id="${mid}">${opts.title || '详情'}</div>
+      <button type="button" class="icon-btn gm-close-btn" id="gm-close" aria-label="关闭对话框" style="cursor:pointer;color:var(--c-text-3);background:none;border:none;padding:4px 6px;border-radius:6px;">
+        <span class="icon" data-i="close" aria-hidden="true"></span>
+      </button>
     </div>
-    <div class="modal-body">${opts.body || ''}</div>
+    <div class="modal-body" role="document">${opts.body || ''}</div>
     ${opts.footer ? `<div class="modal-foot">${opts.footer}</div>` : ''}
   </div>`;
   document.body.appendChild(mask);
   mask.querySelectorAll('.icon[data-i]').forEach(el=>{ const k=el.getAttribute('data-i'); if(ICONS[k]) el.innerHTML=ICONS[k]; });
-  mask.addEventListener('click', e=>{ if (e.target===mask || e.target.id==='gm-close') closeModal(); });
+  mask.addEventListener('click', e=>{ if (e.target===mask || e.target.closest('#gm-close')) closeModal(); });
 }
 function closeModal() {
   const m = document.getElementById('global-modal');
-  if (m) m.remove();
+  if (m) {
+    try { if (typeof m.__onClose === 'function') m.__onClose(); } catch(_) {}
+    m.remove();
+  }
 }
 function resultModal(title, body, type='success') {
   const iconMap = { success:'check', warning:'warning', danger:'warning', info:'ai' };

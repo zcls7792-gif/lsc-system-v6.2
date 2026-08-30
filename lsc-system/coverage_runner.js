@@ -2378,6 +2378,94 @@ async function main() {
           assert(r19.e === 'ok', `${fp}.19e. L647 p.tag 假分支 (${r19.e})`);
           passed++;
         } catch(e) { assert(false, `${fp}.19 mobile-app 5分支追击 err: `+e.message); }
+        // === F20. 档位 + 信用分消费端卡片 (renderMerchantCard / _tierTagClass / _creditTagClass / _getMerchantByName 全分支) ===
+        try {
+          const r20 = execVM(w, `
+            var res = {};
+            // (a) _getMerchantByName 真分支 → 取到 MOCK.merchants 中"锦华餐饮连锁·总店"
+            var jh = _getMerchantByName('锦华餐饮连锁·总店');
+            res.a_jh_exists = !!jh ? 'ok' : 'fail';
+            // (b) _getMerchantByName 假分支 → 未知商家 return null
+            var unknown = _getMerchantByName('这家店不存在__');
+            res.b_unknown_null = (unknown === null) ? 'ok' : 'fail';
+            // (c) _getMerchantByName MOCK.merchants 假分支 (通过临时置空 merchants 让函数内 !MOCK.merchants 命中 return null)
+            try {
+              var _bakA = MOCK.merchants;
+              MOCK.merchants = null; // _getMerchantByName 内 !MOCK.merchants === true → return null
+              var noMock = _getMerchantByName('锦华餐饮连锁·总店');
+              MOCK.merchants = _bakA;
+              res.c_nomock_null = (noMock === null) ? 'ok' : 'fail:'+typeof noMock;
+            } catch(_c) { res.c_nomock_null = 'err:'+_c.message; }
+            // (d) _creditTagClass success/warning/danger/default
+            res.d1_success = (_creditTagClass('success') === 'tag-success') ? 'ok' : 'fail';
+            res.d2_warning = (_creditTagClass('warning') === 'tag-warning') ? 'ok' : 'fail';
+            res.d3_danger  = (_creditTagClass('danger')  === 'tag-danger')  ? 'ok' : 'fail';
+            res.d4_unknown = (_creditTagClass('xx')      === 'tag-default') ? 'ok' : 'fail';
+            // (e) _tierTagClass: 初始档 / A-C(info) / D-G(available) / H-L(accent) / M-Q(primary)
+            var tiers = [
+              ['初始','tag-default'],
+              ['A', 'tag-info'],      ['C', 'tag-info'],
+              ['D', 'tag-available'], ['G', 'tag-available'],
+              ['H', 'tag-accent'],    ['L', 'tag-accent'],
+              ['M', 'tag-primary'],   ['Q', 'tag-primary'],
+            ];
+            res.e_tier = 'ok';
+            for (var t of tiers) {
+              var actual = _tierTagClass(t[0]);
+              if (actual.indexOf(t[1]) < 0) { res.e_tier = 'fail:'+t[0]+'→'+actual; break; }
+            }
+            // (f) 高信用商家卡(credit=96 success) → 档位 tag A/C/D-G/M-Q + 信用 tag-success + 无 disabled
+            var m96 = { name:'御品茶业工坊-高信', type:'零售', credit:96, nhLevel:'C', creditColor:'success', statusLabel:'100%标准执行', minRevenue:100000 };
+            var c96 = renderMerchantCard(m96, { distance:'100m', rating:4.9 });
+            res.f1_tierC = (c96.indexOf('档位 C') >= 0 && c96.indexOf('tag-info') >= 0) ? 'ok' : 'fail';
+            res.f2_credit96 = (c96.indexOf('信用 96') >= 0 && c96.indexOf('tag-success') >= 0) ? 'ok' : 'fail';
+            res.f3_enabled = (c96.indexOf('merchant-m-disabled') < 0 && c96.indexOf('aria-disabled') < 0) ? 'ok' : 'fail';
+            // (g) 中低信用(78 warning 50%限额)
+            var m78 = { name:'鲜之源生鲜超市-中信', type:'零售', credit:78, nhLevel:'D', creditColor:'warning', statusLabel:'50%限额执行', minRevenue:200000 };
+            var c78 = renderMerchantCard(m78, { distance:'800m', rating:4.5 });
+            res.g_tierD = (c78.indexOf('档位 D') >= 0 && c78.indexOf('tag-available') >= 0) ? 'ok' : 'fail';
+            res.g_warning = (c78.indexOf('信用 78') >= 0 && c78.indexOf('tag-warning') >= 0) ? 'ok' : 'fail';
+            // (h) 低信用(55 暂停核销) → merchant-m-disabled + aria-disabled + onlick空
+            var m55 = { name:'云裳服饰-暂停', type:'服装', credit:55, nhLevel:'D', creditColor:'warning', statusLabel:'暂停核销权限', minRevenue:200000, nhStatus:'suspended' };
+            var c55 = renderMerchantCard(m55, { distance:'2km', rating:4.0 });
+            res.h1_disabled_cls = (c55.indexOf('merchant-m-disabled') >= 0) ? 'ok' : 'fail';
+            res.h2_aria = (c55.indexOf('aria-disabled="true"') >= 0) ? 'ok' : 'fail';
+            res.h3_onclick = (c55.indexOf('权限受限') >= 0) ? 'ok' : 'fail';
+            // (i) 永久关闭(15 closed_perm) + 初始档位 credit=null 缺省
+            var m15 = { name:'星耀数码-关', type:'数码', credit:15, nhLevel:'初始', creditColor:'danger', statusLabel:'永久关闭核销与B2B流转', nhStatus:'closed_perm' };
+            var c15 = renderMerchantCard(m15); // opts空 → distance=500m rating=4.8
+            res.i1_danger = (c15.indexOf('信用 15') >= 0 && c15.indexOf('tag-danger') >= 0) ? 'ok' : 'fail';
+            res.i2_init_tier = (c15.indexOf('档位 初始') >= 0 && c15.indexOf('tag-default') >= 0) ? 'ok' : 'fail';
+            res.i3_closed_disabled = (c15.indexOf('merchant-m-disabled') >= 0 && c15.indexOf('aria-disabled="true"') >= 0) ? 'ok' : 'fail';
+            // (j) renderHome 渲染成功 → 4 张商家卡 (锦华/御品/鲜之源/云裳) 存在 + 首页不报错
+            document.querySelectorAll('.modal-mask').forEach(m=>m.remove());
+            try {
+              renderHome();
+              var homeHtml = document.getElementById('screen-home').innerHTML;
+              var cardCount = (homeHtml.match(/merchant-m/g) || []).length;
+              res.j1_cards4 = (cardCount >= 4) ? 'ok' : 'fail:count='+cardCount;
+              res.j2_tierD = (homeHtml.indexOf('档位 D') >= 0) ? 'ok' : 'fail';
+              // j3: 档位标签存在 (锦华=D档=≥20万, 御品=B档=≥5万<10万, 鲜之源=D档, 云裳=D档)
+              var tierMatches = homeHtml.match(/档位 [A-共末初][始P]?/g) || [];
+              res.j3_tiers = (tierMatches.length >= 4) ? 'ok' : 'fail:matches='+tierMatches.join('|');
+              res.j4_credit92 = (homeHtml.indexOf('信用 92') >= 0) ? 'ok' : 'fail';
+              res.j5_warn_card = (homeHtml.indexOf('merchant-m-disabled') >= 0) ? 'ok' : 'fail';
+            } catch(eh) { res.j_err = 'err:'+eh.message; }
+            return res;
+          `);
+          const mk = (label, r, ...keys) => keys.forEach(k => assert(r[k] === 'ok', `${fp}.20 ${label} #${k}: ${r[k]}`));
+          mk('getMerchantByName', r20, 'a_jh_exists', 'b_unknown_null', 'c_nomock_null');
+          mk('creditTagClass', r20, 'd1_success', 'd2_warning', 'd3_danger', 'd4_unknown');
+          assert(r20.e_tier === 'ok', `${fp}.20 _tierTagClass 9 档位: ${r20.e_tier}`);
+          mk('高信96卡', r20, 'f1_tierC', 'f2_credit96', 'f3_enabled');
+          mk('中信78卡', r20, 'g_tierD', 'g_warning');
+          mk('低信55卡(暂停)', r20, 'h1_disabled_cls', 'h2_aria', 'h3_onclick');
+          mk('15分永久关闭', r20, 'i1_danger', 'i2_init_tier', 'i3_closed_disabled');
+          if (r20.j_err) throw new Error(r20.j_err);
+          mk('renderHome首页4卡', r20, 'j1_cards4', 'j2_tierD', 'j3_tiers', 'j4_credit92', 'j5_warn_card');
+          passed++;
+        } catch(e) { assert(false, `${fp}.20 档位+信用分消费端卡片 15 子场景 失败: `+e.message); }
+        console.log(`  ${fp}: mobile-app 业务函数补测 OK (+F13-F20 档位+信用分卡片热点)`);
       } else if (appName === 'mini-program') {
         // F1-F2. wxScanPay
         w.wxScanPay();

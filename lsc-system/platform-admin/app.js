@@ -574,7 +574,7 @@ function renderMerchant() {
         <div class="text-xs text-muted">${m.type} · ${m.addr}</div>
       </td>
       <td><span class="status-pill ${m.status==='normal'?'tag-success':m.status==='warning'?'tag-warning':'tag-danger'} tag-dot">${m.status==='normal'?'正常':m.status==='warning'?'预警':'处罚中'}</span></td>
-      <td><b style="color:${m.credit>=80?'var(--c-available)':m.credit>=60?'var(--c-warning)':m.credit>=40?'var(--c-warning)':m.credit>=20?'var(--c-danger)':'var(--c-danger)'};font-family:var(--ff-mono);border-bottom:2px dotted ${m.credit>=80?'var(--c-available)':m.credit>=60?'var(--c-warning)':m.credit>=40?'var(--c-warning)':m.credit>=20?'var(--c-danger)':'#8b0000'};padding:0 2px;">${m.credit}</b> <span class="text-xs" style="color:${m.credit>=80?'var(--c-available)':m.credit>=60?'var(--c-warning)':m.credit>=40?'var(--c-warning)':m.credit>=20?'var(--c-danger)':'#8b0000'};">${m.credit>=80?'100%':m.credit>=60?'×50%':m.credit>=40?'暂停':m.credit>=20?'双停':'永久'}</span></td>
+      <td><b style="color:${m.credit>=80?'var(--c-available-strong)':m.credit>=60?'var(--c-warning-strong)':m.credit>=40?'var(--c-warning-strong)':'var(--c-danger-strong)'};font-family:var(--ff-mono);border-bottom:2px dotted ${m.credit>=80?'var(--c-available-strong)':m.credit>=60?'var(--c-warning-strong)':m.credit>=40?'var(--c-warning-strong)':'var(--c-danger-strong)'};padding:0 2px;">${m.credit}</b> <span class="text-xs" style="color:${m.credit>=80?'var(--c-available-strong)':m.credit>=60?'var(--c-warning-strong)':m.credit>=40?'var(--c-warning-strong)':'var(--c-danger-strong)'};">${m.credit>=80?'100%':m.credit>=60?'×50%':m.credit>=40?'暂停':m.credit>=20?'双停':'永久'}</span></td>
       <td>
         <div style="display:flex;align-items:center;gap:6px;">
           <div class="ai-score-bar" style="width:60px;margin:0;"><div style="width:${m.aiRisk}%;background:${m.aiRisk>60?'var(--c-danger)':m.aiRisk>30?'var(--c-warning)':'var(--c-available)'};"></div></div>
@@ -890,9 +890,9 @@ function renderCredit() {
     <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="export"></span>导出</button>
   `) + `
   <div class="grid-3 mb-5">
-    <div class="stat-card"><div class="stat-label">A档信用商家</div><div class="stat-value" style="color:var(--c-available);">3</div><div class="text-xs text-muted">≥80分 · 5万/日核销</div></div>
-    <div class="stat-card"><div class="stat-label">B档信用商家</div><div class="stat-value" style="color:var(--c-warning);">3</div><div class="text-xs text-muted">60-79分 · 3万/日核销</div></div>
-    <div class="stat-card"><div class="stat-label">C档/处罚中</div><div class="stat-value" style="color:var(--c-danger);">2</div><div class="text-xs text-muted">&lt;60分 · 1万/日或暂停</div></div>
+    <div class="stat-card"><div class="stat-label">A档信用商家</div><div class="stat-value" style="color:var(--c-available-strong);">3</div><div class="text-xs text-muted">≥80分 · 5万/日核销</div></div>
+    <div class="stat-card"><div class="stat-label">B档信用商家</div><div class="stat-value" style="color:var(--c-warning-strong);">3</div><div class="text-xs text-muted">60-79分 · 3万/日核销</div></div>
+    <div class="stat-card"><div class="stat-label">C档/处罚中</div><div class="stat-value" style="color:var(--c-danger-strong);">2</div><div class="text-xs text-muted">&lt;60分 · 1万/日或暂停</div></div>
   </div>
   <div class="card">
     <div class="card-head"><div class="card-title">商家违规记录</div><div class="card-sub">违规追溯 · 扣分留痕 · 处罚执行</div></div>
@@ -1172,7 +1172,7 @@ function renderAI() {
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
         <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
           <div class="text-xs text-muted">当前 k 值</div>
-          <div id="rate-k-val" style="font-size:16px;font-weight:700;color:var(--c-warning);font-family:var(--ff-mono);">0.72%</div>
+          <div id="rate-k-val" style="font-size:16px;font-weight:700;color:var(--c-warning-strong);font-family:var(--ff-mono);">0.72%</div>
         </div>
         <div style="background:var(--c-bg-soft);border-radius:8px;padding:8px;text-align:center;">
           <div class="text-xs text-muted">当前 rate</div>
@@ -1381,18 +1381,21 @@ function openModal(opts) {
   mask.id = 'global-modal';
   // 将 onClose 挂载到 DOM 元素上，closeModal() 调用时统一触发（无论通过点击遮罩/close 图标还是直接调用 closeModal()）
   mask.__onClose = typeof opts.onClose === 'function' ? opts.onClose : null;
-  mask.innerHTML = `<div class="modal modal-detail">
+  const mid = 'mt-' + Date.now().toString(36);
+  mask.innerHTML = `<div class="modal modal-detail" role="dialog" aria-modal="true" aria-labelledby="${mid}">
     <div class="modal-head">
-      <div class="modal-title">${opts.title || '详情'}</div>
-      <span class="icon" data-i="close" id="gm-close" style="cursor:pointer;color:var(--c-text-3);"></span>
+      <div class="modal-title" id="${mid}">${opts.title || '详情'}</div>
+      <button type="button" class="icon-btn gm-close-btn" id="gm-close" aria-label="关闭对话框" style="cursor:pointer;color:var(--c-text-3);background:none;border:none;padding:4px 6px;border-radius:6px;">
+        <span class="icon" data-i="close" aria-hidden="true"></span>
+      </button>
     </div>
-    <div class="modal-body">${opts.body || ''}</div>
+    <div class="modal-body" role="document">${opts.body || ''}</div>
     ${opts.footer ? `<div class="modal-foot">${opts.footer}</div>` : ''}
   </div>`;
   document.body.appendChild(mask);
   mask.querySelectorAll('.icon[data-i]').forEach(el=>{ const k=el.getAttribute('data-i'); if(ICONS[k]) el.innerHTML=ICONS[k]; });
-  // click mask / close 图标 → 统一调 closeModal(), closeModal 内部会调用 __onClose（避免重复触发）
-  mask.addEventListener('click', e=>{ if (e.target===mask || e.target.id==='gm-close') { closeModal(); } });
+  // click mask / close 图标 → 统一调 closeModal(), closeModal 内部会触发 __onClose（避免重复触发）
+  mask.addEventListener('click', e=>{ if (e.target===mask || e.target.closest('#gm-close')) { closeModal(); } });
 }
 function closeModal() {
   const m = document.getElementById('global-modal');
@@ -1412,15 +1415,15 @@ function dualApprovalModal(opts) {
   const state = { get s1() { return sig1; }, get s2() { return sig2; }, set s1(v){ sig1 = String(v); }, set s2(v){ sig2 = String(v); }, onApprove: opts.onApprove };
   const body = `
     ${opts.summary || ''}
-    <div class="alert alert-warning mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="lock"></span>此操作需双人审批签名验证。verifyDualApproval(sig1, sig2, payload) 要求两位管理员<b>不同</b>且各自签名通过。所有签名操作记录审计并上链存证。</div>
+    <div class="alert alert-warning mt-4" role="note" style="font-size:12px;"><span class="icon icon-sm" data-i="lock" aria-hidden="true"></span>此操作需双人审批签名验证。verifyDualApproval(sig1, sig2, payload) 要求两位管理员<b>不同</b>且各自签名通过。所有签名操作记录审计并上链存证。</div>
     <div class="dual-sign-grid mt-3">
       <div class="sign-box" id="sig1-box">
-        <div class="sign-role">第一管理员签名</div>
-        <div class="sign-input"><input class="input" id="sig1-input" placeholder="输入管理员账号" oninput="updateSig('sig1', this.value)"></div>
+        <label class="sign-role" for="sig1-input">第一管理员签名</label>
+        <div class="sign-input"><input class="input" id="sig1-input" placeholder="输入管理员账号" autocomplete="off" oninput="updateSig('sig1', this.value)"></div>
       </div>
       <div class="sign-box" id="sig2-box">
-        <div class="sign-role">第二管理员签名</div>
-        <div class="sign-input"><input class="input" id="sig2-input" placeholder="输入管理员账号" oninput="updateSig('sig2', this.value)"></div>
+        <label class="sign-role" for="sig2-input">第二管理员签名</label>
+        <div class="sign-input"><input class="input" id="sig2-input" placeholder="输入管理员账号" autocomplete="off" oninput="updateSig('sig2', this.value)"></div>
       </div>
     </div>
     <div class="text-xs text-muted mt-3" id="dual-status">等待两位管理员输入账号...</div>
@@ -1598,19 +1601,19 @@ function showPenalty(mid) {
     danger: true,
     summary: `<div class="detail-grid">
       <div class="detail-field"><div class="detail-label">商家</div><div class="detail-value">${m.name} (${m.id})</div></div>
-      <div class="detail-field"><div class="detail-label">当前信用分</div><div class="detail-value" style="color:${m.credit>=80?'var(--c-available)':m.credit>=40?'var(--c-warning)':'var(--c-danger)'};">${m.credit} <span class="text-xs">(信用分联动: ${m.credit>=80?'100%标准':m.credit>=60?'×50%限额':m.credit>=40?'暂停核销':m.credit>=20?'暂停核销+B2B':'永久关闭'})</span></div></div>
-      <div class="detail-field"><div class="detail-label">违规类型</div><div class="detail-value">
-        <select class="select" id="vio-type" style="padding:6px 10px;">
+      <div class="detail-field"><div class="detail-label" id="pfield-curcredit">当前信用分</div><div class="detail-value" style="color:${m.credit>=80?'var(--c-available-strong)':m.credit>=40?'var(--c-warning-strong)':'var(--c-danger-strong)'};">${m.credit} <span class="text-xs">(信用分联动: ${m.credit>=80?'100%标准':m.credit>=60?'×50%限额':m.credit>=40?'暂停核销':m.credit>=20?'暂停核销+B2B':'永久关闭'})</span></div></div>
+      <div class="detail-field"><div class="detail-label" id="pfield-viotype">违规类型</div><div class="detail-value">
+        <select class="select" id="vio-type" style="padding:6px 10px;" aria-labelledby="pfield-viotype">
           <option>虚假地址</option><option>高核销率异常</option><option>信用异常</option><option>商品违规</option><option>套现嫌疑</option><option>B2B违规流转</option>
         </select>
       </div></div>
-      <div class="detail-field"><div class="detail-label">扣减信用分</div><div class="detail-value">
-        <select class="select" id="deduct-score" style="padding:6px 10px;">
+      <div class="detail-field"><div class="detail-label" id="pfield-deduct">扣减信用分</div><div class="detail-value">
+        <select class="select" id="deduct-score" style="padding:6px 10px;" aria-labelledby="pfield-deduct">
           <option value="5">-5 分</option><option value="10">-10 分</option><option value="15" selected>-15 分</option><option value="20">-20 分</option><option value="40">-40 分 (重度)</option>
         </select>
       </div></div>
-      <div class="detail-field" style="grid-column:1/3;"><div class="detail-label">处罚措施</div>
-        <div class="detail-value"><select class="select" id="measure" style="padding:6px 10px;">
+      <div class="detail-field" style="grid-column:1/3;"><div class="detail-label" id="pfield-measure">处罚措施</div>
+        <div class="detail-value"><select class="select" id="measure" style="padding:6px 10px;" aria-labelledby="pfield-measure">
           <option>暂停核销30天</option><option>核销限额降至1万/日</option><option>加强商品审核</option><option>冻结账户</option><option>暂停B2B 30天</option><option>永久关闭核销+B2B</option>
         </select></div>
       </div>
@@ -1796,7 +1799,7 @@ function showCircuitBreaker() {
       <div class="detail-field"><div class="detail-label">当前释放速率</div><div class="detail-value mono">0.0468%‱</div></div>
       <div class="detail-field"><div class="detail-label">当前核销率 k</div><div class="detail-value mono">0.72%</div></div>
       <div class="detail-field"><div class="detail-label">今日已释放</div><div class="detail-value mono">${LSC.fmtNum(MOCK.dashboard.todayRelease)} LSC</div></div>
-      <div class="detail-field"><div class="detail-label">待释放</div><div class="detail-value mono" style="color:var(--c-warning);">0 LSC</div></div>
+      <div class="detail-field"><div class="detail-label">待释放</div><div class="detail-value mono" style="color:var(--c-warning-strong);">0 LSC</div></div>
     </div>`,
     onApprove: ()=>{
       resultModal('熔断已执行', '当日释放任务已暂停。<br>熔断操作已记录审计日志并上链存证。<br>已通知两名超级管理员。', 'warning');
