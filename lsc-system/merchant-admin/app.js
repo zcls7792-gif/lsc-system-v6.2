@@ -6,6 +6,11 @@ document.querySelectorAll('.icon[data-i]').forEach(el=>{
 
 const crumbMap = { dashboard:'经营总览', shop:'店铺管理', product:'商品管理', wallet:'LSC账户', nh:'核销管理', b2b:'B2B交易', promotion:'推广管理', credit:'信用中心', ai:'AI助手' };
 const views = { dashboard: renderDashboard, shop: renderShop, product: renderProduct, wallet: renderWallet, nh: renderNH, b2b: renderB2B, promotion: renderPromotion, credit: renderCredit, ai: renderAI };
+/* 当前登录商家（单一商家视图 · 档位/限额已在 shared/app-utils.js 通过 LSC.applyTierAndCredit 派生） */
+const CURRENT_MERCHANT = MOCK.merchants.find(m => m.id === 'M20001') || MOCK.merchants[0];
+const currentNhEff = () => LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+/* 核销演示用：模拟今日已核销 LSC 数量，保持 已用/限额 比例合理 */
+const NH_USED_TODAY_LSC = 164;
 
 function navTo(view) {
   document.querySelectorAll('.nav-item').forEach(n=>{
@@ -163,8 +168,8 @@ function renderDashboard() {
   <!-- 核心指标 -->
   <div class="stat-grid mb-5 stagger">
     <div class="stat-card"><div class="stat-label">今日营收</div><div class="stat-value">¥${LSC.fmtNum(18200)}</div><div class="stat-trend up"><span class="icon icon-sm" data-i="arrow-up"></span>12.4% vs 昨日</div></div>
-    <div class="stat-card"><div class="stat-label">今日核销LSC</div><div class="stat-value" style="color:var(--c-available);">${LSC.fmtNum(17500)}</div><div class="stat-trend up"><span class="icon icon-sm" data-i="arrow-up"></span>9.8%</div></div>
-    <div class="stat-card"><div class="stat-label">核销订单数</div><div class="stat-value">${LSC.fmtNum(86)}</div><div class="stat-trend up"><span class="icon icon-sm" data-i="arrow-up"></span>6.2%</div></div>
+    <div class="stat-card"><div class="stat-label">今日核销LSC</div><div class="stat-value" style="color:var(--c-available);">${LSC.fmtNum(NH_USED_TODAY_LSC)}</div><div class="stat-trend up"><span class="icon icon-sm" data-i="arrow-up"></span>9.8%</div></div>
+    <div class="stat-card"><div class="stat-label">核销订单数</div><div class="stat-value">${LSC.fmtNum(26)}</div><div class="stat-trend up"><span class="icon icon-sm" data-i="arrow-up"></span>6.2%</div></div>
     <div class="stat-card"><div class="stat-label">B2B采购(30日)</div><div class="stat-value" style="color:var(--c-accent-deep);">¥${LSC.fmtNum(286000)}</div><div class="stat-trend down"><span class="icon icon-sm" data-i="arrow-down"></span>3.1%</div></div>
   </div>
 
@@ -430,7 +435,7 @@ function renderShop() {
   </div>
 
   <div class="stat-grid">
-    <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="release"></span></div><div class="stat-label">今日核销额度</div><div class="stat-value">¥50,000</div><div class="text-xs text-muted mt-2">A档 · 已用 ¥18,200</div></div>
+    <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="release"></span></div><div class="stat-label">今日核销额度</div><div class="stat-value">${LSC.fmtNum(CURRENT_MERCHANT.nhLimitDaily)} LSC</div><div class="text-xs text-muted mt-2">${CURRENT_MERCHANT.nhLevel}档 · 已用 ${LSC.fmtNum(NH_USED_TODAY_LSC)} LSC · ${CURRENT_MERCHANT.statusLabel||''}</div></div>
     <div class="stat-card green"><div class="sc-icon"><span class="icon" data-i="unlock"></span></div><div class="stat-label">监管账户余额</div><div class="stat-value">¥86,400</div><div class="text-xs text-muted mt-2">14% 暂扣 · 可核销释放</div></div>
     <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="merchant"></span></div><div class="stat-label">本月营业额</div><div class="stat-value">¥385,000</div><div class="text-xs text-available mt-2">+12.4% 环比</div></div>
     <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="promotion"></span></div><div class="stat-label">推荐用户数</div><div class="stat-value">248</div><div class="text-xs text-muted mt-2">活跃 186</div></div>
@@ -652,10 +657,10 @@ function renderNH() {
     <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="release"></span>申请核销</button>
   `) + `
   <div class="stat-grid mb-5">
-    <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="release"></span></div><div class="stat-label">今日已核销</div><div class="stat-value">¥18,200</div><div class="text-xs text-muted mt-1">LSC 20,919 · ×0.87结算</div></div>
-    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="unlock"></span></div><div class="stat-label">剩余额度</div><div class="stat-value">¥31,800</div><div class="progress mt-2"><div class="progress-bar-gold progress-bar" style="width:36.4%;"></div></div></div>
+    <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="release"></span></div><div class="stat-label">今日已核销</div><div class="stat-value">${LSC.fmtNum(NH_USED_TODAY_LSC)} LSC</div><div class="text-xs text-muted mt-1">×0.87结算 ≈ 现金 ¥${LSC.fmtNum(NH_USED_TODAY_LSC*0.87)}</div></div>
+    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="unlock"></span></div><div class="stat-label">剩余额度</div><div class="stat-value">${LSC.fmtNum(Math.max(0,CURRENT_MERCHANT.nhLimitDaily-NH_USED_TODAY_LSC))} LSC</div><div class="progress mt-2"><div class="progress-bar-gold progress-bar" style="width:${Math.max(0,Math.min(100, CURRENT_MERCHANT.nhLimitDaily>0 ? NH_USED_TODAY_LSC/CURRENT_MERCHANT.nhLimitDaily*100 : 0))}%;"></div></div></div>
     <div class="stat-card green"><div class="sc-icon"><span class="icon" data-i="wallet"></span></div><div class="stat-label">监管账户余额</div><div class="stat-value">¥86,400</div><div class="text-xs text-muted mt-1">14%暂扣 · 可核销释放</div></div>
-    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="credit"></span></div><div class="stat-label">核销档位</div><div class="stat-value">A档</div><div class="text-xs text-available mt-1">额度 ¥50,000/日</div></div>
+    <div class="stat-card"><div class="sc-icon"><span class="icon" data-i="credit"></span></div><div class="stat-label">核销档位</div><div class="stat-value">${CURRENT_MERCHANT.nhLevel}档</div><div class="text-xs mt-1" style="color:${CURRENT_MERCHANT.creditColor==='success'?'var(--c-available)':CURRENT_MERCHANT.creditColor==='warning'?'var(--c-warning)':'var(--c-danger)'};">额度 ${LSC.fmtNum(CURRENT_MERCHANT.nhLimitDaily)} LSC/日 · ${CURRENT_MERCHANT.statusLabel}</div></div>
   </div>
 
   <div class="grid-2-eq mb-5">
@@ -682,18 +687,24 @@ function renderNH() {
       </div>
     </div>
     <div class="card">
-      <div class="card-head"><div class="card-title">核销申请</div><span class="tag tag-info">需校验资格</span></div>
+      <div class="card-head"><div class="card-title">核销申请</div><span class="tag ${(CURRENT_MERCHANT.nhStatus==='allowed'||CURRENT_MERCHANT.nhStatus==='allowed_half')?'tag-info':'tag-danger'}">${(CURRENT_MERCHANT.nhStatus==='allowed'||CURRENT_MERCHANT.nhStatus==='allowed_half')?'需校验资格':'核销权限受限'}</span></div>
       <div class="card-body">
-        <div class="alert alert-success mb-3" style="font-size:12px;"><span class="icon icon-sm" data-i="check"></span>核销资格校验通过: 监管协议已签 · 信用92分 · 监管账户正常</div>
-        <div class="mb-3"><label class="field-label field-required">核销 LSC 金额</label><div class="input-group"><span style="color:var(--c-primary);font-weight:700;">L</span><input class="input" id="nh-amount" placeholder="输入核销LSC数量" value="10000" oninput="calcNH()"></div></div>
+        ${
+          (CURRENT_MERCHANT.nhStatus==='allowed'||CURRENT_MERCHANT.nhStatus==='allowed_half')
+            ? `<div class="alert alert-success mb-3" style="font-size:12px;"><span class="icon icon-sm" data-i="check"></span>核销资格校验通过: 监管协议已签 · 信用${CURRENT_MERCHANT.credit}分(${CURRENT_MERCHANT.statusLabel}) · 监管账户正常</div>`
+            : (CURRENT_MERCHANT.nhStatus==='suspended'
+                ? `<div class="alert alert-warning mb-3" style="font-size:12px;"><span class="icon icon-sm" data-i="warning"></span>核销资格已暂停: 信用分${CURRENT_MERCHANT.credit}分低于60分。${CURRENT_MERCHANT.credit<40?'（同时 B2B 流转权限已暂停）':''}请申诉或通过合规经营恢复信用分后重试。</div>`
+                : `<div class="alert alert-danger mb-3" style="font-size:12px;"><span class="icon icon-sm" data-i="lock"></span>核销权限已永久关闭: 信用分${CURRENT_MERCHANT.credit}分低于20分，同时 B2B 流转亦已永久关闭。请联系平台运营进行申诉复核。</div>`)
+        }
+        <div class="mb-3"><label class="field-label field-required">核销 LSC 金额</label><div class="input-group"><span style="color:var(--c-primary);font-weight:700;">L</span><input class="input" id="nh-amount" placeholder="输入核销LSC数量" value="${Math.max(0, Math.min(CURRENT_MERCHANT.nhLimitDaily-NH_USED_TODAY_LSC, 100))}" oninput="calcNH()" ${(CURRENT_MERCHANT.nhStatus==='allowed'||CURRENT_MERCHANT.nhStatus==='allowed_half')?'':'disabled aria-disabled="true"'}></div></div>
         <div class="mb-3" style="padding:14px;background:var(--c-bg-soft);border-radius:10px;">
-          <div class="flex justify-between text-sm mb-2"><span class="text-muted">核销 LSC 数量</span><b id="nh-lsc" style="font-family:var(--ff-mono);">10,000.00 LSC</b></div>
-          <div class="flex justify-between text-sm mb-2"><span class="text-muted">现金结算 (×0.87)</span><b id="nh-cash" style="font-family:var(--ff-mono);color:var(--c-accent-deep);">¥8,700.00</b></div>
-          <div class="flex justify-between text-sm mb-2"><span class="text-muted">扣减可用 LSC</span><b style="color:var(--c-danger);">-10,000.00</b></div>
-          <div class="flex justify-between text-sm"><span class="text-muted">监管账户→主账户</span><b style="color:var(--c-available);">+¥8,700.00</b></div>
+          <div class="flex justify-between text-sm mb-2"><span class="text-muted">核销 LSC 数量</span><b id="nh-lsc" style="font-family:var(--ff-mono);">${Math.max(0,Math.min(CURRENT_MERCHANT.nhLimitDaily-NH_USED_TODAY_LSC,100)).toFixed(2)} LSC</b></div>
+          <div class="flex justify-between text-sm mb-2"><span class="text-muted">现金结算 (×0.87)</span><b id="nh-cash" style="font-family:var(--ff-mono);color:var(--c-accent-deep);">¥${(Math.max(0,Math.min(CURRENT_MERCHANT.nhLimitDaily-NH_USED_TODAY_LSC,100))*0.87).toFixed(2)}</b></div>
+          <div class="flex justify-between text-sm mb-2"><span class="text-muted">扣减可用 LSC</span><b style="color:var(--c-danger);">-${Math.max(0,Math.min(CURRENT_MERCHANT.nhLimitDaily-NH_USED_TODAY_LSC,100)).toFixed(2)}</b></div>
+          <div class="flex justify-between text-sm"><span class="text-muted">监管账户→主账户</span><b style="color:var(--c-available);">+¥${(Math.max(0,Math.min(CURRENT_MERCHANT.nhLimitDaily-NH_USED_TODAY_LSC,100))*0.87).toFixed(2)}</b></div>
         </div>
-        <div class="alert alert-info mb-3" style="font-size:11px;"><span class="icon icon-sm" data-i="info"></span>核销资金来源: 商家14%监管账户划拨至主账户。平台2%技术服务费已在消费分账时由支付机构直接清分, 与核销资金无关。</div>
-        <button class="btn btn-primary btn-block" onclick="confirmModal('提交核销申请','核销资金来源: 商家14%监管账户划拨至主账户。提交后采用订单号+版本号乐观锁双重幂等校验。',()=>resultModal('核销申请已提交','核销申请已提交, 系统将校验幂等性并执行资金划拨。','success'),{btnText:'提交'})">提交核销申请</button>
+        <div class="alert alert-info mb-3" style="font-size:11px;"><span class="icon icon-sm" data-i="info"></span>核销资金来源: 商家14%监管账户划拨至主账户。平台2%技术服务费已在消费分账时由支付机构直接清分, 与核销资金无关。${CURRENT_MERCHANT.creditFactor<1 && CURRENT_MERCHANT.creditFactor>0 ? `<br>当前信用分 ${CURRENT_MERCHANT.credit} 属 60-79 区间，单日核销上限按档位标准 ${CURRENT_MERCHANT.baseDailyLsc||CURRENT_MERCHANT.nhLimitDaily*2} ×50% = ${CURRENT_MERCHANT.nhLimitDaily} LSC 执行。`:''}</div>
+        <button class="btn btn-primary btn-block" ${(CURRENT_MERCHANT.nhStatus==='allowed'||CURRENT_MERCHANT.nhStatus==='allowed_half')?'':'disabled aria-disabled="true" style="opacity:.5;cursor:not-allowed;"'} onclick="confirmModal('提交核销申请','核销资金来源: 商家14%监管账户划拨至主账户。提交后采用订单号+版本号乐观锁双重幂等校验。',()=>resultModal('核销申请已提交','核销申请已提交, 系统将校验幂等性并执行资金划拨。','success'),{btnText:'提交'})">${(CURRENT_MERCHANT.nhStatus==='allowed'||CURRENT_MERCHANT.nhStatus==='allowed_half')?'提交核销申请':'核销权限已受限'}</button>
       </div>
     </div>
   </div>
@@ -704,9 +715,9 @@ function renderNH() {
     <table class="table">
       <thead><tr><th>核销单号</th><th>核销LSC</th><th>现金结算</th><th>核销前可用</th><th>核销后可用</th><th>状态</th><th>时间</th></tr></thead>
       <tbody>
-        <tr><td style="font-family:var(--ff-mono);font-size:11px;">NH20260827008</td><td><b>5,000.00</b></td><td style="color:var(--c-accent-deep);font-weight:600;">¥4,350.00</td><td>191,420</td><td>186,420</td><td><span class="tag tag-success">已完成</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-3600000)}</td></tr>
-        <tr><td style="font-family:var(--ff-mono);font-size:11px;">NH20260824001</td><td><b>5,000.00</b></td><td style="color:var(--c-accent-deep);font-weight:600;">¥4,350.00</td><td>196,035</td><td>191,035</td><td><span class="tag tag-success">已完成</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-86400000)}</td></tr>
-        <tr><td style="font-family:var(--ff-mono);font-size:11px;">NH20260820003</td><td><b>8,000.00</b></td><td style="color:var(--c-accent-deep);font-weight:600;">¥6,960.00</td><td>204,035</td><td>196,035</td><td><span class="tag tag-success">已完成</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-7*86400000)}</td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">NH20260827008</td><td><b>80.00</b></td><td style="color:var(--c-accent-deep);font-weight:600;">¥69.60</td><td>470</td><td>390</td><td><span class="tag tag-success">已完成</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-3600000)}</td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">NH20260824001</td><td><b>50.00</b></td><td style="color:var(--c-accent-deep);font-weight:600;">¥43.50</td><td>520</td><td>470</td><td><span class="tag tag-success">已完成</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-86400000)}</td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">NH20260820003</td><td><b>34.00</b></td><td style="color:var(--c-accent-deep);font-weight:600;">¥29.58</td><td>554</td><td>520</td><td><span class="tag tag-success">已完成</span></td><td class="text-xs text-muted">${LSC.fmtTime(Date.now()-7*86400000)}</td></tr>
       </tbody>
     </table>
     </div>
@@ -715,38 +726,60 @@ function renderNH() {
   setView(html);
   if (!window.calcNH) {
     window.calcNH = function() {
-      const v = parseFloat(document.getElementById('nh-amount').value) || 0;
+      const eff = LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+      const limit = Math.max(0, (eff.nhLimitDaily || 0) - NH_USED_TODAY_LSC);
+      let v = parseFloat(document.getElementById('nh-amount').value) || 0;
+      // 钳制：0 到 剩余额度；若权限被暂停则锁0
+      const susp = eff.nhStatus!=='allowed' && eff.nhStatus!=='allowed_half';
+      if (susp || v < 0) v = 0;
+      if (v > limit) v = limit;
       document.getElementById('nh-lsc').textContent = v.toFixed(2) + ' LSC';
       document.getElementById('nh-cash').textContent = '¥' + (v * 0.87).toFixed(2);
+      // 回写输入框（钳制后的值），保证所见即幂等
+      const inp = document.getElementById('nh-amount');
+      if (inp && parseFloat(inp.value) !== v) inp.value = v;
     };
+  } else {
+    // 已挂载，触发一次渲染对齐钳制后的值
+    setTimeout(window.calcNH, 0);
   }
 }
 
 /* ============== B2B交易 ============== */
 function renderB2B() {
+  const eff = LSC.getCreditEffect(CURRENT_MERCHANT.credit);
+  const b2bDisabled = eff.b2b === 'suspended' || eff.b2b === 'closed_perm';
+  const isPermanent = eff.b2b === 'closed_perm';
+  const b2bGateHTML = !b2bDisabled
+    ? ''
+    : (isPermanent
+        ? `<div class="alert alert-danger mb-4" style="font-size:13px;"><span class="icon icon-sm" data-i="lock"></span><b>B2B 流转权限已永久关闭</b>: 信用分 ${CURRENT_MERCHANT.credit} 分低于 20 分，核销与B2B 权限均已永久关闭。请联系平台运营进行申诉复核后再恢复。</div>`
+        : `<div class="alert alert-warning mb-4" style="font-size:13px;"><span class="icon icon-sm" data-i="warning"></span><b>B2B 流转权限已暂停</b>: 信用分 ${CURRENT_MERCHANT.credit} 分低于 40 分。请通过合规经营或申诉恢复信用分至 40 分以上后再发起 B2B 流转。</div>`);
+  const dis = b2bDisabled ? ' disabled style="opacity:0.55;cursor:not-allowed;pointer-events:none;"' : '';
+  const disInput = b2bDisabled ? ' disabled style="background:var(--c-bg-soft);cursor:not-allowed;"' : '';
   const html = pageHead('B2B交易', '商家间LSC流转 · 必须绑定真实B2B订单 · AI核验贸易凭证 · 1:1金额对应', `
-    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="b2b"></span>创建B2B订单</button>
-  `) + `
-  <div class="card mb-5">
-    <div class="card-head"><div class="card-title">创建 B2B 流转订单</div><span class="tag tag-warning">流转有效期365天重置</span></div>
+    <button class="btn btn-primary btn-sm"${b2bDisabled?' disabled style="opacity:0.55;cursor:not-allowed;" onclick="event.preventDefault();alert(\'B2B 流转权限已'+(isPermanent?'永久关闭':'暂停')+'，信用分'+(isPermanent?'<20':'<40')+'分，暂不可创建新订单。\');"':'><span class="icon icon-sm" data-i="b2b"></span>创建B2B订单</button>'}`) + `
+  ${b2bGateHTML}
+  <div class="card mb-5"${dis}>
+    <div class="card-head"><div class="card-title">创建 B2B 流转订单</div><span class="tag ${b2bDisabled?'tag-danger':'tag-warning'}">${b2bDisabled?'权限已'+(isPermanent?'永久关闭':'暂停')+' (信用分'+CURRENT_MERCHANT.credit+')':'流转有效期365天重置'}</span></div>
     <div class="card-body">
       <div class="steps">
         <div class="step done"><div class="step-circle"><span class="icon icon-sm" data-i="check"></span></div><div class="step-label">创建订单</div></div>
-        <div class="step active"><div class="step-circle">2</div><div class="step-label">对手方确认</div></div>
+        <div class="step ${b2bDisabled?'':'active'}"><div class="step-circle">2</div><div class="step-label">对手方确认</div></div>
         <div class="step"><div class="step-circle">3</div><div class="step-label">AI核验凭证</div></div>
         <div class="step"><div class="step-circle">4</div><div class="step-label">LSC流转</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div><label class="field-label field-required">对手方商家</label>
-          <select class="select"><option>御品茶业工坊 (M20005)</option><option>恒通建材批发中心 (M20002)</option><option>海纳科技公司 (M20007)</option></select>
+          <select class="select"${disInput}><option>御品茶业工坊 (M20005)</option><option>恒通建材批发中心 (M20002)</option><option>海纳科技公司 (M20007)</option></select>
         </div>
-        <div><label class="field-label field-required">交易描述</label><input class="input" value="高端茶叶季度供应"></div>
-        <div><label class="field-label field-required">人民币金额</label><div class="input-group"><span style="color:var(--c-accent-deep);font-weight:700;">¥</span><input class="input" value="96000" oninput="this.parentElement.parentElement.nextElementSibling.querySelector('input').value=this.value"></div></div>
-        <div><label class="field-label">LSC金额 (1:1自动)</label><div class="input-group"><span style="color:var(--c-primary);font-weight:700;">L</span><input class="input" value="96000" readonly style="background:var(--c-bg-soft);"></div></div>
-        <div><label class="field-label">合同编号</label><input class="input" value="HT-2026-0824-2"></div>
-        <div><label class="field-label">过期时间</label><input class="input" type="date" value="2026-09-24"></div>
+        <div><label class="field-label field-required">交易描述</label><input class="input" value="高端茶叶季度供应"${disInput}></div>
+        <div><label class="field-label field-required">人民币金额</label><div class="input-group"><span style="color:var(--c-accent-deep);font-weight:700;">¥</span><input class="input" value="96000"${disInput} oninput="this.parentElement.parentElement.nextElementSibling.querySelector('input').value=this.value"></div></div>
+        <div><label class="field-label">LSC金额 (1:1自动)</label><div class="input-group"><span style="color:var(--c-primary);font-weight:700;">L</span><input class="input" value="96000" readonly style="background:var(--c-bg-soft);"${disInput}></div></div>
+        <div><label class="field-label">合同编号</label><input class="input" value="HT-2026-0824-2"${disInput}></div>
+        <div><label class="field-label">过期时间</label><input class="input" type="date" value="2026-09-24"${disInput}></div>
         <div style="grid-column:1/3;"><label class="field-label">贸易凭证 (合同/发票/物流单)</label>
-          <div style="border:1px dashed var(--c-border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;" onclick="resultModal('凭证上传','已调用凭证上传, AI将自动进行OCR提取、字段匹配与真伪核验。','info')">
+          <div style="border:1px dashed var(--c-border);border-radius:8px;padding:20px;text-align:center;${b2bDisabled?'opacity:0.55;cursor:not-allowed;pointer-events:none;':'cursor:pointer;'}" onclick="resultModal('凭证上传','已调用凭证上传, AI将自动进行OCR提取、字段匹配与真伪核验。','info')">
             <span class="icon icon-lg" data-i="doc" style="color:var(--c-text-3);"></span>
             <div class="text-sm text-muted mt-2">点击上传贸易凭证图片 (支持多张)</div>
             <div class="text-xs text-accent mt-1">AI将提取合同编号/金额并与订单匹配</div>
@@ -754,12 +787,12 @@ function renderB2B() {
         </div>
       </div>
       <div class="alert alert-warning mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="warning"></span>消费者会员间禁止LSC流转 · 消费者→商家支付允许 · 商家→消费者反向流转禁止。流转后接收方LSC有效期重置为365天。</div>
-      <div class="flex justify-end gap-3 mt-3"><button class="btn btn-outline btn-sm" onclick="resultModal('已保存草稿','B2B订单草稿已保存, 可稍后继续编辑。','info')">保存草稿</button><button class="btn btn-primary btn-sm" onclick="confirmModal('提交B2B订单','确认提交订单? 提交后进入待对手方确认状态, AI将并行核验凭证真伪。',()=>resultModal('订单已提交','B2B订单已提交, 等待对手方确认。AI核验同步进行中。','success'),{btnText:'提交'})">提交并等待确认</button></div>
+      <div class="flex justify-end gap-3 mt-3"><button class="btn btn-outline btn-sm"${dis} onclick="resultModal('已保存草稿','B2B订单草稿已保存, 可稍后继续编辑。','info')">保存草稿</button><button class="btn btn-primary btn-sm"${dis} onclick="confirmModal('提交B2B订单','确认提交订单? 提交后进入待对手方确认状态, AI将并行核验凭证真伪。',()=>resultModal('订单已提交','B2B订单已提交, 等待对手方确认。AI核验同步进行中。','success'),{btnText:'提交'})">提交并等待确认</button></div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-head"><div class="card-title">B2B 订单记录</div></div>
+    <div class="card-head"><div class="card-title">B2B 订单记录</div><span class="tag tag-info">当前联动效果: ${eff.label}${b2bDisabled?' · 仅可查看历史记录':''}</span></div>
     <div style="overflow-x:auto;">
     <table class="table">
       <thead><tr><th>订单号</th><th>对手方</th><th>描述</th><th>金额</th><th>AI核验</th><th>状态</th><th>操作</th></tr></thead>
@@ -852,7 +885,7 @@ function renderCredit() {
         <div class="mt-3">
           <span class="tag tag-success tag-dot" style="font-size:13px;padding:5px 14px;">信用优秀</span>
         </div>
-        <div class="text-xs text-muted mt-3">信用分≥80 → A档 (5万/日核销) · 60-79 → B档 · &lt;60 → C档</div>
+        <div class="text-xs text-muted mt-3">信用分 80–100 → 档位标准 100% 执行 · 60–79 → 限额 ×50% · 40–59 → 暂停核销 · 20–39 → 暂停核销+B2B · &lt;20 → 永久关闭核销与B2B</div>
       </div>
     </div>
     <div class="card">

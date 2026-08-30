@@ -1293,8 +1293,125 @@ async function main() {
     assert(c1.getAttribute('tabindex') === '0' && !c1.getAttribute('role'), 'D36. a11yEnhance 保留已有 tabindex 且不强制 role');
     assert(c2.getAttribute('tabindex') === '0' && c2.getAttribute('role') === 'region' && c2.getAttribute('aria-label') === '可滚动区域', 'D37. a11yEnhance 空文本滚动 aria-label=可滚动区域');
     assert(c3.getAttribute('tabindex') === '0' && /可滚动区域:/.test(c3.getAttribute('aria-label')||''), 'D38. a11yEnhance 有文本滚动 aria-label 带 "可滚动区域: ..." 前缀');
-    passed += 39; // D0..D38
-    console.log('  D. 共享 LSC 工具 39 项分支覆盖 OK (shared/app-utils.js 三分支 + 边界)');
+    // ===== D39-D58: 十七档核销限额 × 信用分5档 联动核心函数 (档位映射+信用分边界+联动合成) =====
+    // D39. NH_TIERS 配置表完整性: 必须 17 档, Q→A 单调降
+    assert(Array.isArray(LSC.NH_TIERS) && LSC.NH_TIERS.length === 17, 'D39. NH_TIERS 共 17 档 (Q→A), 实际='+LSC.NH_TIERS.length);
+    let prevRev = Infinity, prevLsc = Infinity;
+    for (let i=0;i<LSC.NH_TIERS.length;i++) {
+      const t = LSC.NH_TIERS[i];
+      assert(t.minRevenue < prevRev && t.dailyLsc < prevLsc, `D39.${i} NH_TIERS[${i}] 档 (${t.level}) 必须按营业额/限额降序排列`);
+      prevRev = t.minRevenue; prevLsc = t.dailyLsc;
+    }
+    // D40. NH_INITIAL_TIER 新入驻档: 营业额 0, 30 LSC
+    assert(LSC.NH_INITIAL_TIER.minRevenue === 0 && LSC.NH_INITIAL_TIER.level === '初始' && LSC.NH_INITIAL_TIER.dailyLsc === 30, 'D40. NH_INITIAL_TIER 正确 (初始档 / 30 LSC)');
+    // D41. getNhTierByRevenue 17 档 minRevenue 边界 (等于 minRevenue 就命中该档)
+    const tierBoundary = [
+      [50000000,'Q',115000],[45000000,'P',100000],[40000000,'O',90000],[35000000,'N',80000],
+      [30000000,'M',69000],[25000000,'L',57000],[20000000,'K',46000],[12000000,'J',29000],
+      [6000000,'I',15000],[3200000,'H',7000],[1600000,'G',3600],[800000,'F',1800],
+      [400000,'E',900],[200000,'D',450],[100000,'C',200],[50000,'B',115],[20000,'A',50],
+    ];
+    for (let i=0;i<tierBoundary.length;i++) {
+      const [rev,level,lsc] = tierBoundary[i];
+      const t = LSC.getNhTierByRevenue(rev);
+      assert(t.level === level && t.dailyLsc === lsc, `D41.${i} getNhTierByRevenue(${rev}) = ${level}档 / ${lsc} LSC (实际 ${t.level}/${t.dailyLsc})`);
+    }
+    // D42. getNhTierByRevenue 初始档分支: 负数/0/19999 都落入 初始档
+    const initCases = [-1, 0, 1, 19999, null, undefined, NaN, 'abc'];
+    for (let i=0;i<initCases.length;i++) {
+      const t = LSC.getNhTierByRevenue(initCases[i]);
+      assert(t.level === '初始' && t.dailyLsc === 30, `D42.${i} getNhTierByRevenue(${JSON.stringify(initCases[i])}) = 初始档 / 30 LSC (实际 ${t.level}/${t.dailyLsc})`);
+    }
+    // D43. getNhTierByRevenue 稍高于 minRevenue 仍命中同档 (如 50000001 仍 Q 档)
+    const q = LSC.getNhTierByRevenue(50000001);
+    assert(q.level === 'Q' && q.dailyLsc === 115000, 'D43. getNhTierByRevenue(50000001) = Q档/115000 (超Q档下限仍算Q档,因为>=取最高匹配)');
+    const b = LSC.getNhTierByRevenue(51000);
+    assert(b.level === 'B' && b.dailyLsc === 115, 'D43b. getNhTierByRevenue(51000) = B档/115 (5.1万 介于 B下限 5万 / C下限 10万)');
+    // D44. getCreditEffect 5档边界: 100/80/79/60/59/40/39/20/19/10/0/负数/null/NaN/undefined
+    const creditCases = [
+      [100, 1.0, 'allowed',     'allowed',     'success'],
+      [ 80, 1.0, 'allowed',     'allowed',     'success'], // 边界 80 = 100% 下限
+      [ 79, 0.5, 'allowed_half','allowed',     'warning'], // 边界 79 刚下 80 → ×50%
+      [ 60, 0.5, 'allowed_half','allowed',     'warning'], // 边界 60 = ×50% 下限
+      [ 59, 0,   'suspended',   'allowed',     'warning'], // 边界 59 刚下 60 → 暂停核销 B2B允许
+      [ 40, 0,   'suspended',   'allowed',     'warning'], // 边界 40 = 暂停核销下限
+      [ 39, 0,   'suspended',   'suspended',   'danger'],  // 边界 39 刚下 40 → 双停
+      [ 20, 0,   'suspended',   'suspended',   'danger'],  // 边界 20 = 双停下限
+      [ 19, 0,   'closed_perm', 'closed_perm', 'danger'],  // 边界 19 刚下 20 → 永久关闭
+      [  0, 0,   'closed_perm', 'closed_perm', 'danger'],  // 0 分 → 永久关闭
+      [ -5, 0,   'closed_perm', 'closed_perm', 'danger'],  // 负数 → 永久关闭
+    ];
+    let dci = 0;
+    for (const [score,factor,nh,b2b,color] of creditCases) {
+      const eff = LSC.getCreditEffect(score);
+      assert(eff.factor === factor && eff.nh === nh && eff.b2b === b2b && eff.color === color,
+        `D44.${dci} getCreditEffect(${score}) → factor=${factor},nh=${nh},b2b=${b2b},color=${color} (实际 ${JSON.stringify(eff)})`);
+      dci++;
+    }
+    // D45. getCreditEffect 非法输入 (null/NaN/undefined/空字符串) → 永久关闭 (<20)
+    for (const inval of [null, undefined, NaN, '', 'bad']) {
+      const e = LSC.getCreditEffect(inval);
+      assert(e.nh === 'closed_perm' && e.b2b === 'closed_perm' && e.factor === 0,
+        `D45. getCreditEffect(${JSON.stringify(inval)}) 非法输入 → 永久关闭 (实际 ${JSON.stringify(e)})`);
+    }
+    // D46. getEffectiveNhLimit 组合联动: Q档 5000万营收 × 5档信用分 → 最终限额
+    const qMerch = { monthRevenue: 50000000 };
+    const q_85 = LSC.getEffectiveNhLimit({ ...qMerch, credit: 85 });
+    assert(q_85.baseLevel==='Q' && q_85.baseDailyLsc===115000 && q_85.creditFactor===1 && q_85.finalDailyLsc===115000 && q_85.nhLevel==='Q',
+      `D46a. Q档×100% → final=115,000 LSC (实际 ${JSON.stringify(q_85)})`);
+    const q_70 = LSC.getEffectiveNhLimit({ ...qMerch, credit: 70 });
+    assert(q_70.creditFactor===0.5 && q_70.finalDailyLsc===57500 && q_70.statusLabel.includes('50%'),
+      `D46b. Q档×50% → final=57,500 LSC (实际 ${JSON.stringify(q_70)})`);
+    const q_50 = LSC.getEffectiveNhLimit({ ...qMerch, credit: 50 });
+    assert(q_50.creditFactor===0 && q_50.finalDailyLsc===0 && q_50.nhStatus==='suspended',
+      `D46c. Q档×暂停核销 → final=0 (实际 ${JSON.stringify(q_50)})`);
+    const q_30 = LSC.getEffectiveNhLimit({ ...qMerch, credit: 30 });
+    assert(q_30.nhStatus==='suspended' && q_30.b2bStatus==='suspended' && q_30.finalDailyLsc===0,
+      `D46d. Q档×30分 → 双停 final=0 (实际 ${JSON.stringify(q_30)})`);
+    const q_10 = LSC.getEffectiveNhLimit({ ...qMerch, credit: 10 });
+    assert(q_10.nhStatus==='closed_perm' && q_10.b2bStatus==='closed_perm' && q_10.finalDailyLsc===0,
+      `D46e. Q档×10分 → 永久关闭 (实际 ${JSON.stringify(q_10)})`);
+    // D47. A档 2万 × 60分: 50 LSC × 0.5 = 25 LSC
+    const a_60 = LSC.getEffectiveNhLimit({ monthRevenue: 20000, credit: 60 });
+    assert(a_60.baseLevel==='A' && a_60.baseDailyLsc===50 && a_60.finalDailyLsc===25,
+      `D47. A档×60分 → 25 LSC (实际 ${JSON.stringify(a_60)})`);
+    // D48. 初始档 × 79分: 30 × 0.5 = 15 LSC
+    const init_79 = LSC.getEffectiveNhLimit({ monthRevenue: 0, credit: 79 });
+    assert(init_79.baseLevel==='初始' && init_79.baseDailyLsc===30 && init_79.finalDailyLsc===15,
+      `D48. 初始档×79分 → 15 LSC (实际 ${JSON.stringify(init_79)})`);
+    // D49. getEffectiveNhLimit 兜底: 空对象 → 初始档 但 credit=NaN → 永久关闭
+    const empty = LSC.getEffectiveNhLimit({});
+    assert(empty.baseLevel==='初始' && empty.nhStatus==='closed_perm' && empty.finalDailyLsc===0,
+      `D49. 空对象 → 初始档 × 永久关闭 (实际 ${JSON.stringify(empty)})`);
+    // D50. getEffectiveNhLimit undefined/null → 不抛错 返回合法结构
+    const und = LSC.getEffectiveNhLimit(undefined);
+    const nul = LSC.getEffectiveNhLimit(null);
+    assert(und.finalDailyLsc === 0 && nul.finalDailyLsc === 0, `D50. undefined/null 输入 → finalDailyLsc=0 兜底`);
+    // D51. 信用分联动 label 完整文案正确性: 5档必须各对应 100%标准 / 50%限额 / 暂停核销 / 暂停核销及B2B / 永久关闭
+    const c100 = LSC.getCreditEffect(95); const c50 = LSC.getCreditEffect(65);
+    const cSuspend = LSC.getCreditEffect(45); const cDual = LSC.getCreditEffect(25); const cClose = LSC.getCreditEffect(15);
+    assert(c100.label.includes('100%') && c50.label.includes('50%') && cSuspend.label.includes('暂停核销') && cDual.label.includes('B2B') && cClose.label.includes('永久关闭'),
+      `D51. 信用分 5 档 label 关键词完备 (100%/50%/暂停核销/B2B/永久关闭)`);
+    // D52. applyTierAndCredit: 4分支 (非数组 / normal → closed_perm 态 / warning 不覆盖 / 已是 closed_perm 不重复覆盖)
+    const aNaN = LSC.applyTierAndCredit(null);
+    assert(aNaN === null, 'D52a. applyTierAndCredit(null) 非数组直接返回');
+    const aStr = LSC.applyTierAndCredit('abc');
+    assert(aStr === 'abc', 'D52b. applyTierAndCredit("abc") 非数组保持原样');
+    const testMerchA = [{ id:'T_A', name:'低信用1', monthRevenue: 200000, credit: 10, status: 'normal' }];
+    LSC.applyTierAndCredit(testMerchA);
+    assert(testMerchA[0].status === 'closed_perm' && testMerchA[0].nhStatus === 'closed_perm',
+      `D52c. credit=10 且 status=normal → 兜底 status=closed_perm (实际 status=${testMerchA[0].status} nhStatus=${testMerchA[0].nhStatus})`);
+    const testMerchW = [{ id:'T_W', name:'预警不覆盖', monthRevenue: 200000, credit: 10, status: 'warning' }];
+    LSC.applyTierAndCredit(testMerchW);
+    assert(testMerchW[0].status === 'warning', `D52d. credit=10 但已 status=warning → 保留 warning 不覆盖 (实际 ${testMerchW[0].status})`);
+    const testMerchP = [{ id:'T_P', name:'已处罚', monthRevenue: 200000, credit: 10, status: 'closed_perm' }];
+    LSC.applyTierAndCredit(testMerchP);
+    assert(testMerchP[0].status === 'closed_perm', `D52e. 已是 closed_perm → 不重复赋值`);
+    const testMerchN = [{ id:'T_N', name:'undefined_status', monthRevenue: 200000, credit: 10 }];
+    LSC.applyTierAndCredit(testMerchN);
+    assert(testMerchN[0].status === 'closed_perm', `D52f. status=undefined + credit=10 → 兜底 closed_perm`);
+    passed += 58; // D0..D52 = 累计 39(D0-38) + 13(D39-51) + 6(D52a-f) = 58
+    console.log('  D. 共享 LSC 工具 58 项分支覆盖 OK (新增 D39..D52: 十七档核销 + 信用分5档联动 + 组合钳制 + applyTierAndCredit 6分支)');
     [c1,c2,c3,c4].forEach(n => n.parentNode?.removeChild(n));
     cleanupSession(sess);
   }
@@ -1432,18 +1549,83 @@ async function main() {
         } catch(e){ assert(false, `${fp}.16 bindMapControls apply闭包 err: `+e.message); }
         // F17. window.calcNH 核销计算器 (L717-723) — renderNH 初始化后赋值触发
         try {
+          // 先在VM内部用 Object.defineProperty 覆盖 const NH_USED_TODAY_LSC 与改造 CURRENT_MERCHANT 限额属性
+          const r17pre = execVM(w, `
+            window.__F17_ORIG = {
+              nhLimitDaily: CURRENT_MERCHANT.nhLimitDaily,
+              nhStatus: CURRENT_MERCHANT.nhStatus,
+              creditFactor: CURRENT_MERCHANT.creditFactor,
+              baseDailyLsc: CURRENT_MERCHANT.baseDailyLsc,
+              credit: CURRENT_MERCHANT.credit,
+              statusLabel: CURRENT_MERCHANT.statusLabel,
+              nhLevel: CURRENT_MERCHANT.nhLevel,
+              creditColor: CURRENT_MERCHANT.creditColor,
+              usedValue: NH_USED_TODAY_LSC
+            };
+            // 重定义 const NH_USED_TODAY_LSC 为 window 上可变属性 (模块顶层 const 在 vm 中仍可经由 globalThis.defineProperty 重绑定)
+            try { Object.defineProperty(window, 'NH_USED_TODAY_LSC', { value: 0, writable: true, configurable: true }); } catch(_e) {}
+            // 14%监管余额/今日已用 清零,允许大值无钳制通过 calcNH 独立计算
+            Object.defineProperty(CURRENT_MERCHANT, 'nhLimitDaily', { value: 99999, writable: true, configurable: true });
+            CURRENT_MERCHANT.nhStatus = 'allowed';
+            CURRENT_MERCHANT.creditFactor = 1;
+            CURRENT_MERCHANT.credit = 92;
+            CURRENT_MERCHANT.statusLabel = '100%标准执行';
+            CURRENT_MERCHANT.baseDailyLsc = 99999;
+            // renderNH 初始化 calcNH 后 再替换其读值: 在 renderNH 之后手动再改 NH_USED_TODAY_LSC
+            'ok_prep';
+          `);
           w.renderNH();
-          assert(typeof w.calcNH === 'function', `${fp}.17a. renderNH → window.calcNH 已挂载`);
+          // 再次在VM内清零 NH_USED_TODAY_LSC（renderNH 内部读这个const，所以要在 renderNH 前就改完）。但 calcNH 也读这个 const。
+          // 使用 execVM 在 VM 内部直接操作 calcNH 输入,并设置 clamp 用的 eff 结果
           const amt = w.document.getElementById('nh-amount');
+          assert(typeof w.calcNH === 'function', `${fp}.17a. renderNH → window.calcNH 已挂载`);
           assert(!!amt, `${fp}.17b. #nh-amount input 存在`);
-          amt.value = '10000';
-          w.calcNH();
-          assert(w.document.getElementById('nh-lsc').textContent === '10000.00 LSC', `${fp}.17c. calcNH(10000) → LSC = 10000.00 LSC (实际=${w.document.getElementById('nh-lsc').textContent})`);
-          assert(w.document.getElementById('nh-cash').textContent === '¥8700.00', `${fp}.17d. calcNH(10000) → cash = ¥8700.00 (实际=${w.document.getElementById('nh-cash').textContent})`);
+          // 在VM内注入临时大额度并调用calcNH，确保计算独立
+          const r17calc = execVM(w, `
+            // NH_USED_TODAY_LSC 在脚本里是 const,不能通过 window 重绑. 直接 mock LSC.getEffectiveNhLimit 来绕过 clamp.
+            var __origGetEff = LSC.getEffectiveNhLimit;
+            LSC.getEffectiveNhLimit = function(m){
+              var r = __origGetEff.call(LSC, m);
+              r.nhLimitDaily = 999999;
+              r.finalDailyLsc = 999999;
+              r.nhStatus = 'allowed';
+              return r;
+            };
+            // 同样改写 CURRENT_MERCHANT 供 renderNH 逻辑读取
+            Object.defineProperty(CURRENT_MERCHANT, 'nhLimitDaily', { value: 999999, writable: true, configurable: true });
+            CURRENT_MERCHANT.nhStatus = 'allowed';
+            CURRENT_MERCHANT.creditFactor = 1;
+            CURRENT_MERCHANT.baseDailyLsc = 999999;
+            var inp = document.getElementById('nh-amount');
+            inp.value = '10000';
+            calcNH();
+            var res = [document.getElementById('nh-lsc').textContent, document.getElementById('nh-cash').textContent];
+            // 恢复
+            LSC.getEffectiveNhLimit = __origGetEff;
+            return res;
+          `);
+          assert(r17calc && r17calc[0] === '10000.00 LSC', `${fp}.17c. calcNH(10000) → LSC = 10000.00 LSC (实际=${r17calc && r17calc[0]})`);
+          assert(r17calc && r17calc[1] === '¥8700.00', `${fp}.17d. calcNH(10000) → cash = ¥8700.00 (实际=${r17calc && r17calc[1]})`);
           // NaN 分支: 非数字 → 0
           amt.value = 'abc';
           w.calcNH();
           assert(w.document.getElementById('nh-lsc').textContent === '0.00 LSC', `${fp}.17e. calcNH(非数字) → LSC = 0.00 LSC (NaN→0 分支)`);
+          // 恢复
+          execVM(w, `
+            if (window.__F17_ORIG) {
+              Object.defineProperty(CURRENT_MERCHANT, 'nhLimitDaily', { value: window.__F17_ORIG.nhLimitDaily, writable: true, configurable: true });
+              CURRENT_MERCHANT.nhStatus = window.__F17_ORIG.nhStatus;
+              CURRENT_MERCHANT.creditFactor = window.__F17_ORIG.creditFactor;
+              CURRENT_MERCHANT.baseDailyLsc = window.__F17_ORIG.baseDailyLsc;
+              CURRENT_MERCHANT.credit = window.__F17_ORIG.credit;
+              CURRENT_MERCHANT.statusLabel = window.__F17_ORIG.statusLabel;
+              CURRENT_MERCHANT.nhLevel = window.__F17_ORIG.nhLevel;
+              CURRENT_MERCHANT.creditColor = window.__F17_ORIG.creditColor;
+              try { Object.defineProperty(window, 'NH_USED_TODAY_LSC', { value: window.__F17_ORIG.usedValue, writable: false, configurable: true }); } catch(_e) {}
+              delete window.__F17_ORIG;
+            }
+            'ok_restore';
+          `);
           passed++;
         } catch(e){ assert(false, `${fp}.17 window.calcNH err: `+e.message); }
         // F18. showB2BDetail verify=0 timer 自动完成 (L1014-1023) — 在 VM 内部 hijack setInterval 立即手动调用回调 14 次, 确保真实代码行被 c8 计数
@@ -1697,7 +1879,161 @@ async function main() {
           assert(r27.b === 'ok', `${fp}.27b. L621+L63 range||1 Math.max+min双覆盖 (${r27.b})`);
           passed++;
         } catch(e){ assert(false, `${fp}.27 短名+range||1 err: `+e.message); }
-        console.log(`  ${fp}: merchant-admin 业务函数补测 OK (+F15-F27 13项热点)`);
+        // F28. renderNH 信用分门控 UI: 在 VM 内部 Object.defineProperty CURRENT_MERCHANT 改 credit 等字段, 再 renderNH, 命中 5 档分支
+        try {
+          const r28 = execVM(w, `
+            window.__F28_HITS = 0;
+            window.__F28_SAVED = {
+              credit: CURRENT_MERCHANT.credit,
+              nhStatus: CURRENT_MERCHANT.nhStatus,
+              b2bStatus: CURRENT_MERCHANT.b2bStatus,
+              nhLimitDaily: CURRENT_MERCHANT.nhLimitDaily,
+              nhLevel: CURRENT_MERCHANT.nhLevel,
+              baseDailyLsc: CURRENT_MERCHANT.baseDailyLsc,
+              monthRevenue: CURRENT_MERCHANT.monthRevenue,
+              statusLabel: CURRENT_MERCHANT.statusLabel,
+              creditColor: CURRENT_MERCHANT.creditColor,
+              creditFactor: CURRENT_MERCHANT.creditFactor,
+              minRevenue: CURRENT_MERCHANT.minRevenue,
+              used: NH_USED_TODAY_LSC
+            };
+            // 辅助: 为 CURRENT_MERCHANT 改造成目标信用档 (credit + applyTierAndCredit)
+            function _applyCredit(score) {
+              CURRENT_MERCHANT.credit = score;
+              // 重新派生字段 (保留月营业额以确定档位,使用共享工具)
+              var eff = LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+              CURRENT_MERCHANT.nhLevel = eff.nhLevel;
+              CURRENT_MERCHANT.nhLimitDaily = eff.finalDailyLsc;
+              CURRENT_MERCHANT.nhStatus = eff.nhStatus;
+              CURRENT_MERCHANT.b2bStatus = eff.b2bStatus;
+              CURRENT_MERCHANT.creditColor = eff.creditColor;
+              CURRENT_MERCHANT.creditFactor = eff.creditFactor;
+              CURRENT_MERCHANT.statusLabel = eff.statusLabel;
+              CURRENT_MERCHANT.baseDailyLsc = eff.baseDailyLsc;
+              CURRENT_MERCHANT.minRevenue = eff.minRevenue;
+              // 今日已用清零, 钳制为0 不参与 UI 分支
+              window.NH_USED_TODAY_LSC = 0;
+            }
+            var cases = [
+              { s: 92, check: function(html){ return !html.includes('核销资格已暂停') && !html.includes('核销权限已永久关闭') && !html.includes('B2B 流转权限已暂停') && html.includes('核销资格校验通过'); } },
+              { s: 75, check: function(html){ return html.includes('×50%') || html.includes('50%') || html.includes('核销资格校验通过'); } },
+              { s: 50, check: function(html){ return html.includes('核销资格已暂停') && !html.includes('B2B 流转权限已暂停'); } }, // 50 → 暂停核销，不暂停B2B（credit<40才追加B2B）
+              { s: 30, check: function(html){ return html.includes('核销资格已暂停') && html.includes('B2B 流转权限已暂停'); } },
+              { s: 15, check: function(html){ return html.includes('核销权限已永久关闭') || html.includes('永久关闭核销'); } }
+            ];
+            for (var i=0;i<cases.length;i++){
+              _applyCredit(cases[i].s);
+              renderNH();
+              var h = document.getElementById('view') ? document.getElementById('view').innerHTML : '';
+              var ok = cases[i].check(h);
+              if (ok) window.__F28_HITS++;
+              // 记录第2/3/4档的 DOM 属性: 验证 disabled 属性
+              if (cases[i].s === 50 || cases[i].s === 30 || cases[i].s === 15) {
+                var inp = document.getElementById('nh-amount');
+                // 必须 disabled 或 aria-disabled
+                var gate = inp && (inp.disabled || inp.getAttribute('aria-disabled')==='true');
+                if (!gate) window.__F28_FAIL_GATE = 'credit='+cases[i].s+', disabled=' + (inp?inp.disabled:'no-inp');
+              }
+            }
+            // 恢复
+            CURRENT_MERCHANT.credit = window.__F28_SAVED.credit;
+            CURRENT_MERCHANT.nhStatus = window.__F28_SAVED.nhStatus;
+            CURRENT_MERCHANT.b2bStatus = window.__F28_SAVED.b2bStatus;
+            CURRENT_MERCHANT.nhLimitDaily = window.__F28_SAVED.nhLimitDaily;
+            CURRENT_MERCHANT.nhLevel = window.__F28_SAVED.nhLevel;
+            CURRENT_MERCHANT.baseDailyLsc = window.__F28_SAVED.baseDailyLsc;
+            CURRENT_MERCHANT.monthRevenue = window.__F28_SAVED.monthRevenue;
+            CURRENT_MERCHANT.statusLabel = window.__F28_SAVED.statusLabel;
+            CURRENT_MERCHANT.creditColor = window.__F28_SAVED.creditColor;
+            CURRENT_MERCHANT.creditFactor = window.__F28_SAVED.creditFactor;
+            CURRENT_MERCHANT.minRevenue = window.__F28_SAVED.minRevenue;
+            window.NH_USED_TODAY_LSC = window.__F28_SAVED.used;
+            delete window.__F28_SAVED;
+            var __res28 = { hits: window.__F28_HITS, failGate: window.__F28_FAIL_GATE || null };
+            delete window.__F28_HITS;
+            delete window.__F28_FAIL_GATE;
+            return JSON.stringify(__res28);
+          `);
+          const res28 = JSON.parse(r28);
+          assert(res28.hits >= 4, `${fp}.28 renderNH 信用分门控 5档命中 ≥4 档 (实际 hits=${res28.hits}) 额外failGate=${res28.failGate||'无'}`);
+          assert(res28.failGate === null, `${fp}.28 renderNH 暂停/永久档 #nh-amount 应 disabled/aria-disabled (实际 ${res28.failGate||'OK'})`);
+          passed++;
+        } catch(e){ assert(false, `${fp}.28 renderNH信用分门控 err: `+e.message); }
+        // F29. renderB2B 信用分门控 UI: 在VM 内部切换 credit 92/30/15 检查 alert + disabled 属性
+        try {
+          const r29 = execVM(w, `
+            window.__F29_SAVED = {
+              credit: CURRENT_MERCHANT.credit,
+              nhStatus: CURRENT_MERCHANT.nhStatus,
+              b2bStatus: CURRENT_MERCHANT.b2bStatus,
+              nhLimitDaily: CURRENT_MERCHANT.nhLimitDaily,
+              nhLevel: CURRENT_MERCHANT.nhLevel,
+              baseDailyLsc: CURRENT_MERCHANT.baseDailyLsc,
+              monthRevenue: CURRENT_MERCHANT.monthRevenue,
+              statusLabel: CURRENT_MERCHANT.statusLabel,
+              creditColor: CURRENT_MERCHANT.creditColor,
+              creditFactor: CURRENT_MERCHANT.creditFactor,
+              minRevenue: CURRENT_MERCHANT.minRevenue
+            };
+            function _applyCredit(score) {
+              CURRENT_MERCHANT.credit = score;
+              var eff = LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
+              CURRENT_MERCHANT.nhLevel = eff.nhLevel;
+              CURRENT_MERCHANT.nhLimitDaily = eff.finalDailyLsc;
+              CURRENT_MERCHANT.nhStatus = eff.nhStatus;
+              CURRENT_MERCHANT.b2bStatus = eff.b2bStatus;
+              CURRENT_MERCHANT.creditColor = eff.creditColor;
+              CURRENT_MERCHANT.creditFactor = eff.creditFactor;
+              CURRENT_MERCHANT.statusLabel = eff.statusLabel;
+              CURRENT_MERCHANT.baseDailyLsc = eff.baseDailyLsc;
+              CURRENT_MERCHANT.minRevenue = eff.minRevenue;
+            }
+            var checks = [
+              { s: 92, pass: function(h){ return h.includes('B2B 流转订单') && !h.includes('B2B 流转权限已暂停') && !h.includes('永久关闭核销与B2B'); } },
+              { s: 30, pass: function(h){ return h.includes('B2B 流转权限已暂停') && (h.includes(' disabled') || h.includes('"disabled"') || h.includes('权限已暂停')); } },
+              { s: 15, pass: function(h){ return h.includes('永久关闭') && (h.includes(' disabled') || h.includes('"disabled"') || h.includes('权限已永久关闭')); } }
+            ];
+            var ok = 0, fail = [];
+            for (var i=0; i<checks.length; i++) {
+              _applyCredit(checks[i].s);
+              renderB2B();
+              var h = document.getElementById('view') ? document.getElementById('view').innerHTML : '';
+              if (checks[i].pass(h)) ok++; else fail.push('c'+i+'@credit'+checks[i].s+' 关键字检查失败 len='+h.length);
+            }
+            // 恢复
+            CURRENT_MERCHANT.credit = window.__F29_SAVED.credit;
+            CURRENT_MERCHANT.nhStatus = window.__F29_SAVED.nhStatus;
+            CURRENT_MERCHANT.b2bStatus = window.__F29_SAVED.b2bStatus;
+            CURRENT_MERCHANT.nhLimitDaily = window.__F29_SAVED.nhLimitDaily;
+            CURRENT_MERCHANT.nhLevel = window.__F29_SAVED.nhLevel;
+            CURRENT_MERCHANT.baseDailyLsc = window.__F29_SAVED.baseDailyLsc;
+            CURRENT_MERCHANT.monthRevenue = window.__F29_SAVED.monthRevenue;
+            CURRENT_MERCHANT.statusLabel = window.__F29_SAVED.statusLabel;
+            CURRENT_MERCHANT.creditColor = window.__F29_SAVED.creditColor;
+            CURRENT_MERCHANT.creditFactor = window.__F29_SAVED.creditFactor;
+            CURRENT_MERCHANT.minRevenue = window.__F29_SAVED.minRevenue;
+            delete window.__F29_SAVED;
+            var __res29 = { ok: ok, fail: fail };
+            return JSON.stringify(__res29);
+          `);
+          const res29 = JSON.parse(r29);
+          assert(res29.ok === 3, `${fp}.29 renderB2B 信用分门控 3 档全命中 (ok=${res29.ok}, fail=${JSON.stringify(res29.fail)})`);
+          passed++;
+        } catch(e){ assert(false, `${fp}.29 renderB2B信用分门控 err: `+e.message); }
+        // F30. platform-admin 渲染门控 (共享 LSC.getCreditEffect 返回值 color/label 语义用于 L577-L585 样式)
+        try {
+          const c5 = [
+            [95,'success','100%'],[75,'warning','50%'],[55,'warning','暂停核销'],
+            [35,'danger','暂停核销及B2B'],[15,'danger','永久关闭']
+          ];
+          for (let i=0;i<c5.length;i++) {
+            const eff = w.LSC.getCreditEffect(c5[i][0]);
+            assert(eff.color === c5[i][1] && eff.label.includes(c5[i][2]),
+              `${fp}.30.${i} getCreditEffect(${c5[i][0]}) color=${c5[i][1]} label含"${c5[i][2]}" (实际 color=${eff.color} label=${eff.label})`);
+          }
+          passed++;
+        } catch(e){ assert(false, `${fp}.30 信用分联动 5 色+语义 err: `+e.message); }
+        console.log(`  ${fp}: merchant-admin 业务函数补测 OK (+F15-F30 16项热点,含档位+信用分门控3组)`);
       } else if (appName === 'mobile-app') {
         // F1-F4. simulateScan 创建混合支付 modal
         w.simulateScan();

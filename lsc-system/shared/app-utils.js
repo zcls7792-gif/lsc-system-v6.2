@@ -49,6 +49,84 @@ const LSC = {
     if (k >= 0.01)  return 0.0003;   // k≥1.0%  → rate_min = 0.03%
     return 0.0009 - 0.06 * k;        // 线性插值: rate = 0.09% - 0.06×k
   },
+  /* ---- 十七档核销限额配置 (唯一权威来源 · 按 minRevenue 从高到低排列) ---- */
+  NH_TIERS: [
+    { minRevenue: 50000000, level: 'Q', dailyLsc: 115000 }, // ≥5000万
+    { minRevenue: 45000000, level: 'P', dailyLsc: 100000 }, // ≥4500万
+    { minRevenue: 40000000, level: 'O', dailyLsc:  90000 }, // ≥4000万
+    { minRevenue: 35000000, level: 'N', dailyLsc:  80000 }, // ≥3500万
+    { minRevenue: 30000000, level: 'M', dailyLsc:  69000 }, // ≥3000万
+    { minRevenue: 25000000, level: 'L', dailyLsc:  57000 }, // ≥2500万
+    { minRevenue: 20000000, level: 'K', dailyLsc:  46000 }, // ≥2000万
+    { minRevenue: 12000000, level: 'J', dailyLsc:  29000 }, // ≥1200万
+    { minRevenue:  6000000, level: 'I', dailyLsc:  15000 }, // ≥600万
+    { minRevenue:  3200000, level: 'H', dailyLsc:   7000 }, // ≥320万
+    { minRevenue:  1600000, level: 'G', dailyLsc:   3600 }, // ≥160万
+    { minRevenue:   800000, level: 'F', dailyLsc:   1800 }, // ≥80万
+    { minRevenue:   400000, level: 'E', dailyLsc:    900 }, // ≥40万
+    { minRevenue:   200000, level: 'D', dailyLsc:    450 }, // ≥20万
+    { minRevenue:   100000, level: 'C', dailyLsc:    200 }, // ≥10万
+    { minRevenue:    50000, level: 'B', dailyLsc:    115 }, // ≥5万
+    { minRevenue:    20000, level: 'A', dailyLsc:     50 }, // ≥2万
+  ],
+  NH_INITIAL_TIER: { minRevenue: 0, level: '初始', dailyLsc: 30 }, // 新入驻未满2万
+  // 根据月营业额(元)匹配档位
+  getNhTierByRevenue(monthRevenue) {
+    const rev = Number(monthRevenue) || 0;
+    for (const t of LSC.NH_TIERS) if (rev >= t.minRevenue) return { ...t };
+    return { ...LSC.NH_INITIAL_TIER };
+  },
+  // 信用分 → 执行系数 + 权限（统一5档：<20 永久关闭 / 20–39 暂停核销+B2B / 40–59 暂停核销 / 60–79 ×50% / 80–100 ×100%）
+  getCreditEffect(credit) {
+    const c = Number(credit);
+    if (!(c >= 0) || c < 20)  return { factor: 0,   nh: 'closed_perm', b2b: 'closed_perm', label: '永久关闭核销与B2B流转', color: 'danger' };
+    if (c < 40)               return { factor: 0,   nh: 'suspended',   b2b: 'suspended',   label: '暂停核销及B2B流转',       color: 'danger' };
+    if (c < 60)               return { factor: 0,   nh: 'suspended',   b2b: 'allowed',     label: '暂停核销权限',              color: 'warning' };
+    if (c < 80)               return { factor: 0.5, nh: 'allowed_half',b2b: 'allowed',     label: '50%限额执行',              color: 'warning' };
+    return                            { factor: 1.0, nh: 'allowed',     b2b: 'allowed',     label: '100%标准执行',             color: 'success' };
+  },
+  // 组合: 给定商家对象 → 档位+信用分合成结果 (同时回填兼容字段 nhLevel/nhLimitDaily)
+  getEffectiveNhLimit(merchant) {
+    const m = merchant || {};
+    const tier = LSC.getNhTierByRevenue(m.monthRevenue);
+    const eff  = LSC.getCreditEffect(m.credit);
+    const finalDailyLsc = Math.max(0, Math.floor(tier.dailyLsc * eff.factor));
+    return {
+      // 语义字段
+      baseLevel: tier.level,
+      baseDailyLsc: tier.dailyLsc,
+      minRevenue: tier.minRevenue,
+      creditFactor: eff.factor,
+      finalDailyLsc,
+      nhStatus: eff.nh,
+      b2bStatus: eff.b2b,
+      statusLabel: eff.label,
+      creditColor: eff.color,
+      // 兼容字段: 保证现有 m.nhLevel / m.nhLimitDaily 模板不改即生效
+      nhLevel: tier.level,
+      nhLimitDaily: finalDailyLsc,
+    };
+  },
+  // 对商家数组批量派生 nhLevel / nhLimitDaily / status 等字段(覆盖旧硬编码值)
+  applyTierAndCredit(merchants) {
+    if (!Array.isArray(merchants)) return merchants;
+    for (const m of merchants) {
+      const eff = LSC.getEffectiveNhLimit(m);
+      m.nhLevel = eff.nhLevel;
+      m.nhLimitDaily = eff.nhLimitDaily;
+      m.nhStatus = eff.nhStatus;
+      m.b2bStatus = eff.b2bStatus;
+      m.creditColor = eff.creditColor;
+      m.creditFactor = eff.creditFactor;
+      m.statusLabel = eff.statusLabel;
+      // 若处罚/永久关闭态，反映到 status 字段供 UI 打标
+      if (eff.nhStatus === 'closed_perm' && m.status !== 'closed_perm') {
+        // 不强制覆盖已有的 penalty/warning，仅当没有更细粒度态时兜底
+        if (!m.status || m.status === 'normal') m.status = 'closed_perm';
+      }
+    }
+    return merchants;
+  },
   // 简易 SPA 路由
   router(routes, defaultRoute) {
     const go = (name, params) => {
@@ -128,6 +206,10 @@ const MOCK = {
     { id:'M20006', name:'金泰百货商行', type:'百货', credit:71, aiRisk:52, monthRevenue:542000, nhLevel:'B', nhLimitDaily:30000, status:'warning', addr:'南京市玄武区中山路200号', aiAddr:'pass' },
     { id:'M20007', name:'海纳科技公司', type:'数码', credit:88, aiRisk:25, monthRevenue:2160000, nhLevel:'A', nhLimitDaily:50000, status:'normal', addr:'北京市海淀区中关村大街1号', aiAddr:'pass' },
     { id:'M20008', name:'云裳服饰有限公司', type:'服装', credit:55, aiRisk:75, monthRevenue:428000, nhLevel:'C', nhLimitDaily:10000, status:'penalty', addr:'广州市天河区天河北路90号', aiAddr:'suspect' },
+    // 边界样本1: 新入驻未满2万 → 初始档 30 LSC/日
+    { id:'M20009', name:'阳光社区便利铺', type:'零售', credit:85, aiRisk:12, monthRevenue:12800, nhLevel:'初始', nhLimitDaily:30, status:'normal', addr:'成都市锦江区春熙路18号', aiAddr:'pass' },
+    // 边界样本2: 信用分<20 → 永久关闭核销+B2B (无论营业额多少)
+    { id:'M20010', name:'星耀数码(已永久关停)', type:'数码', credit:15, aiRisk:96, monthRevenue:2800000, nhLevel:'H', nhLimitDaily:0, status:'normal', addr:'武汉市洪山区珞喻路88号', aiAddr:'fail' },
   ],
   // 商品审核列表
   products: [
@@ -169,6 +251,9 @@ const MOCK = {
     { id:'A26005', admin:'财务·陈工', role:'运营管理员', op:'对账核查', detail:'查询8月23日对账报告', ip:'114.55.12.74', device:'Win10·Chrome', aiFlag:false, ts:Date.now()-90000000 },
   ],
 };
+
+/* ---- 十七档+信用分联动 (唯一权威派生: 覆盖 MOCK.merchants 中所有硬编码的 nhLevel/nhLimitDaily/statusLabel) ---- */
+LSC.applyTierAndCredit(MOCK.merchants);
 
 /* ---------- 简易 SVG 图标库 (线性) ---------- */
 const ICONS = {

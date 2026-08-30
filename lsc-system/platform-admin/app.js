@@ -574,7 +574,7 @@ function renderMerchant() {
         <div class="text-xs text-muted">${m.type} · ${m.addr}</div>
       </td>
       <td><span class="status-pill ${m.status==='normal'?'tag-success':m.status==='warning'?'tag-warning':'tag-danger'} tag-dot">${m.status==='normal'?'正常':m.status==='warning'?'预警':'处罚中'}</span></td>
-      <td><b style="color:${m.credit>=80?'var(--c-available)':m.credit>=60?'var(--c-warning)':'var(--c-danger)'};font-family:var(--ff-mono);">${m.credit}</b></td>
+      <td><b style="color:${m.credit>=80?'var(--c-available)':m.credit>=60?'var(--c-warning)':m.credit>=40?'var(--c-warning)':m.credit>=20?'var(--c-danger)':'var(--c-danger)'};font-family:var(--ff-mono);border-bottom:2px dotted ${m.credit>=80?'var(--c-available)':m.credit>=60?'var(--c-warning)':m.credit>=40?'var(--c-warning)':m.credit>=20?'var(--c-danger)':'#8b0000'};padding:0 2px;">${m.credit}</b> <span class="text-xs" style="color:${m.credit>=80?'var(--c-available)':m.credit>=60?'var(--c-warning)':m.credit>=40?'var(--c-warning)':m.credit>=20?'var(--c-danger)':'#8b0000'};">${m.credit>=80?'100%':m.credit>=60?'×50%':m.credit>=40?'暂停':m.credit>=20?'双停':'永久'}</span></td>
       <td>
         <div style="display:flex;align-items:center;gap:6px;">
           <div class="ai-score-bar" style="width:60px;margin:0;"><div style="width:${m.aiRisk}%;background:${m.aiRisk>60?'var(--c-danger)':m.aiRisk>30?'var(--c-warning)':'var(--c-available)'};"></div></div>
@@ -582,7 +582,7 @@ function renderMerchant() {
         </div>
       </td>
       <td>${LSC.fmtMoney(m.monthRevenue)}</td>
-      <td><span class="tag ${m.nhLevel==='A'?'tag-success':m.nhLevel==='B'?'tag-warning':'tag-danger'}">${m.nhLevel}档</span> <span class="text-xs text-muted">/日${LSC.fmtNum(m.nhLimitDaily)}</span></td>
+      <td><span class="tag ${m.nhLevel==='A'?'tag-success':m.nhLevel==='B'||m.nhLevel==='C'?'tag-warning':'tag-info'}">${m.nhLevel}档</span> <span class="text-xs text-muted">/日${LSC.fmtNum(m.nhLimitDaily)} LSC</span></td>
       <td><span class="tag ${m.aiAddr==='pass'?'tag-success':m.aiAddr==='suspect'?'tag-warning':'tag-danger'} tag-dot">${m.aiAddr==='pass'?'核验通过':'核验可疑'}</span></td>
       <td><div class="row-actions">
         <span class="row-btn" onclick="showMerchantDetail('${m.id}')">资质</span>
@@ -1558,18 +1558,33 @@ function showAdjustLimit(mid) {
     summary: `<div class="detail-grid">
       <div class="detail-field"><div class="detail-label">商家</div><div class="detail-value">${m.name} (${m.id})</div></div>
       <div class="detail-field"><div class="detail-label">当前核销档位</div><div class="detail-value">${m.nhLevel}档</div></div>
-      <div class="detail-field"><div class="detail-label">当前日限额</div><div class="detail-value mono">¥${LSC.fmtNum(m.nhLimitDaily)}</div></div>
+      <div class="detail-field"><div class="detail-label">当前日限额</div><div class="detail-value mono">${LSC.fmtNum(m.nhLimitDaily)} LSC</div></div>
       <div class="detail-field"><div class="detail-label">调整后日限额</div><div class="detail-value">
         <select class="select" id="new-limit" style="padding:6px 10px;">
-          <option value="10000">¥10,000 (C档)</option>
-          <option value="30000">¥30,000 (B档)</option>
-          <option value="50000" selected>¥50,000 (A档)</option>
+          <option value="30">30 LSC (初始档 · 新入驻)</option>
+          <option value="50">50 LSC (A档 · ≥2万)</option>
+          <option value="115">115 LSC (B档 · ≥5万)</option>
+          <option value="200">200 LSC (C档 · ≥10万)</option>
+          <option value="450">450 LSC (D档 · ≥20万)</option>
+          <option value="900">900 LSC (E档 · ≥40万)</option>
+          <option value="1800">1,800 LSC (F档 · ≥80万)</option>
+          <option value="3600">3,600 LSC (G档 · ≥160万)</option>
+          <option value="7000">7,000 LSC (H档 · ≥320万)</option>
+          <option value="15000">15,000 LSC (I档 · ≥600万)</option>
+          <option value="29000">29,000 LSC (J档 · ≥1200万)</option>
+          <option value="46000">46,000 LSC (K档 · ≥2000万)</option>
+          <option value="57000">57,000 LSC (L档 · ≥2500万)</option>
+          <option value="69000">69,000 LSC (M档 · ≥3000万)</option>
+          <option value="80000">80,000 LSC (N档 · ≥3500万)</option>
+          <option value="90000">90,000 LSC (O档 · ≥4000万)</option>
+          <option value="100000">100,000 LSC (P档 · ≥4500万)</option>
+          <option value="115000" selected>115,000 LSC (Q档 · ≥5000万)</option>
         </select>
       </div></div>
     </div>`,
     onApprove: ()=>{
       const newLimit = document.getElementById('new-limit') ? document.getElementById('new-limit').value : m.nhLimitDaily;
-      resultModal('核销额度调整成功', `商家 ${m.name} (${m.id}) 的日核销限额已由 ¥${LSC.fmtNum(m.nhLimitDaily)} 调整为 <b>¥${LSC.fmtNum(newLimit)}</b>。<br>操作已记录审计日志并上链存证。`);
+      resultModal('核销额度调整成功', `商家 ${m.name} (${m.id}) 的日核销限额已由 ${LSC.fmtNum(m.nhLimitDaily)} LSC 调整为 <b>${LSC.fmtNum(newLimit)} LSC</b>。<br>操作已记录审计日志并上链存证。`);
     }
   });
 }
@@ -1583,20 +1598,20 @@ function showPenalty(mid) {
     danger: true,
     summary: `<div class="detail-grid">
       <div class="detail-field"><div class="detail-label">商家</div><div class="detail-value">${m.name} (${m.id})</div></div>
-      <div class="detail-field"><div class="detail-label">当前信用分</div><div class="detail-value" style="color:${m.credit>=60?'var(--c-warning)':'var(--c-danger)'};">${m.credit}</div></div>
+      <div class="detail-field"><div class="detail-label">当前信用分</div><div class="detail-value" style="color:${m.credit>=80?'var(--c-available)':m.credit>=40?'var(--c-warning)':'var(--c-danger)'};">${m.credit} <span class="text-xs">(信用分联动: ${m.credit>=80?'100%标准':m.credit>=60?'×50%限额':m.credit>=40?'暂停核销':m.credit>=20?'暂停核销+B2B':'永久关闭'})</span></div></div>
       <div class="detail-field"><div class="detail-label">违规类型</div><div class="detail-value">
         <select class="select" id="vio-type" style="padding:6px 10px;">
-          <option>虚假地址</option><option>高核销率异常</option><option>信用异常</option><option>商品违规</option>
+          <option>虚假地址</option><option>高核销率异常</option><option>信用异常</option><option>商品违规</option><option>套现嫌疑</option><option>B2B违规流转</option>
         </select>
       </div></div>
       <div class="detail-field"><div class="detail-label">扣减信用分</div><div class="detail-value">
         <select class="select" id="deduct-score" style="padding:6px 10px;">
-          <option value="5">-5 分</option><option value="10">-10 分</option><option value="15" selected>-15 分</option><option value="20">-20 分</option>
+          <option value="5">-5 分</option><option value="10">-10 分</option><option value="15" selected>-15 分</option><option value="20">-20 分</option><option value="40">-40 分 (重度)</option>
         </select>
       </div></div>
       <div class="detail-field" style="grid-column:1/3;"><div class="detail-label">处罚措施</div>
         <div class="detail-value"><select class="select" id="measure" style="padding:6px 10px;">
-          <option>暂停核销30天</option><option>核销限额降至1万/日</option><option>加强商品审核</option><option>冻结账户</option>
+          <option>暂停核销30天</option><option>核销限额降至1万/日</option><option>加强商品审核</option><option>冻结账户</option><option>暂停B2B 30天</option><option>永久关闭核销+B2B</option>
         </select></div>
       </div>
     </div>`,
