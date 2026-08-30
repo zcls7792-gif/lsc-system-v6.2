@@ -546,7 +546,7 @@
         <button type="button" class="icon-btn" id="ai-toggle" aria-label="打开 AI 助手"><span class="icon" data-i="ai" aria-hidden="true"></span></button>
         <div class="notif-wrap">
           <button type="button" class="icon-btn" id="notif-toggle" aria-label="打开通知中心，3 条未读"><span class="icon" data-i="bell" aria-hidden="true"></span><span class="badge" aria-hidden="true">3</span></button>
-          <div class="notif-panel hidden" id="notif-panel" role="region" aria-label="通知列表">
+          <div class="notif-panel hidden" id="notif-panel" role="region" aria-label="通知列表" aria-live="polite">
             <div class="notif-head"><div style="font-weight:600;font-size:14px;">通知中心</div><span class="tag tag-accent">3条未读</span></div>
             <div class="notif-list" id="notif-list"></div>
             <div class="notif-foot"><a href="javascript:void(0)" onclick="document.getElementById('notif-panel').classList.add('hidden')">查看全部通知</a></div>

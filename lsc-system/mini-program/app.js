@@ -17,9 +17,10 @@ function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s=>{
     s.classList.remove('active');
     s.setAttribute('aria-hidden', 'true');
+    s.setAttribute('inert', '');
   });
   const el = document.getElementById('screen-'+name);
-  if (el) { el.classList.add('active'); el.setAttribute('aria-hidden', 'false'); document.getElementById('wx-content').scrollTop=0; }
+  if (el) { el.classList.add('active'); el.setAttribute('aria-hidden', 'false'); el.removeAttribute('inert'); document.getElementById('wx-content').scrollTop=0; }
   // tab 高亮 + aria-current
   document.querySelectorAll('.wx-tab').forEach(t=>{
     const is = t.dataset.screen===name;

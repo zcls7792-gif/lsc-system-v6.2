@@ -1481,7 +1481,22 @@ async function main() {
       }
       passed += 2;
     }
-    console.log(`  ${fp}: meta theme-color + themeToggle 三态补测 OK (TM1+TM2 8断言)`);
+    // SR1. dual-status role=status + aria-live
+    try {
+      const statusEl = w.document.getElementById('dual-status');
+      if (statusEl) {
+        assert(statusEl.getAttribute('role') === 'status', `${fp}.SR1a dual-status role=status`);
+        assert(statusEl.getAttribute('aria-live') === 'polite', `${fp}.SR1b dual-status aria-live=polite`);
+        passed += 2;
+      }
+      // SR2. notif-panel aria-live
+      const notifEl = w.document.getElementById('notif-panel');
+      if (notifEl) {
+        assert(notifEl.getAttribute('aria-live') === 'polite', `${fp}.SR2 notif-panel aria-live=polite`);
+        passed += 1;
+      }
+    } catch(e) { assert(false, `${fp}.SR aria-live err: `+e.message); }
+    console.log(`  ${fp}: meta theme-color + themeToggle 三态补测 OK (TM1+TM2 8断言 + SR aria-live)`);
     cleanupSession(sess);
   }
 
@@ -2619,7 +2634,30 @@ async function main() {
           assert(/position:\s*fixed/.test(cssSeg) && /z-index:\s*9999/.test(cssSeg), `${fp}.TM2 fixed+z9999 CSS 实际: `+cssSeg.replace(/\s+/g,' ').slice(0,120));
           passed += 2;
         } catch(e) { assert(false, `${fp}.TM meta/fixed err: `+e.message); }
-        console.log(`  ${fp}: mobile-app 业务函数补测 OK (+F13-F20 档位+信用分卡片热点 + TM meta+fixed)`);
+        // SR1. showScreen inert 属性: 隐藏 screen 有 inert, 活动 screen 无 inert
+        try {
+          w.showScreen('home');
+          const hiddenScreen = w.document.getElementById('screen-mall');
+          const activeScreen = w.document.getElementById('screen-home');
+          assert(!!hiddenScreen && hiddenScreen.hasAttribute('inert'), `${fp}.SR1a 隐藏 screen 有 inert`);
+          assert(!!activeScreen && !activeScreen.hasAttribute('inert'), `${fp}.SR1b 活动 screen 无 inert`);
+          // 切换后验证
+          w.showScreen('mall');
+          const prevHidden = w.document.getElementById('screen-home');
+          const nowActive = w.document.getElementById('screen-mall');
+          assert(!!prevHidden && prevHidden.hasAttribute('inert'), `${fp}.SR1c 切换后原 screen 有 inert`);
+          assert(!!nowActive && !nowActive.hasAttribute('inert'), `${fp}.SR1d 切换后新 screen 无 inert`);
+          passed += 4;
+        } catch(e) { assert(false, `${fp}.SR inert err: `+e.message); }
+        // SR2. dual-status role=status + aria-live (platform-admin 共享代码, mobile 验证自有按钮)
+        try {
+          // mobile-app AI 按钮有 aria-label
+          w.renderAI && w.renderAI();
+          const aiBtn = w.document.querySelector('#screen-ai button[aria-label="发送消息"]');
+          assert(!!aiBtn, `${fp}.SR2 AI 发送按钮有 aria-label`);
+          passed += 1;
+        } catch(e) { assert(false, `${fp}.SR2 aria err: `+e.message); }
+        console.log(`  ${fp}: mobile-app 业务函数补测 OK (+F13-F20 档位+信用分卡片热点 + TM meta+fixed + SR inert+aria)`);
       } else if (appName === 'mini-program') {
         // F1-F2. wxScanPay
         w.wxScanPay();
@@ -2846,7 +2884,21 @@ async function main() {
           assert(/z-index:\s*9999/.test(cssSeg), `${fp}.TM2 z9999 CSS 实际: `+cssSeg.replace(/\s+/g,' ').slice(0,120));
           passed += 2;
         } catch(e) { assert(false, `${fp}.TM meta/z err: `+e.message); }
-        console.log(`  ${fp}: mini-program 业务函数补测 OK (+F11-F15 5项热点 + TM meta+z9999)`);
+        // SR1. showScreen inert 属性: 隐藏 screen 有 inert, 活动 screen 无 inert
+        try {
+          w.showScreen('home');
+          const hiddenScreen = w.document.getElementById('screen-mall');
+          const activeScreen = w.document.getElementById('screen-home');
+          assert(!!hiddenScreen && hiddenScreen.hasAttribute('inert'), `${fp}.SR1a 隐藏 screen 有 inert`);
+          assert(!!activeScreen && !activeScreen.hasAttribute('inert'), `${fp}.SR1b 活动 screen 无 inert`);
+          w.showScreen('wallet');
+          const prevHidden = w.document.getElementById('screen-home');
+          const nowActive = w.document.getElementById('screen-wallet');
+          assert(!!prevHidden && prevHidden.hasAttribute('inert'), `${fp}.SR1c 切换后原 screen 有 inert`);
+          assert(!!nowActive && !nowActive.hasAttribute('inert'), `${fp}.SR1d 切换后新 screen 无 inert`);
+          passed += 4;
+        } catch(e) { assert(false, `${fp}.SR inert err: `+e.message); }
+        console.log(`  ${fp}: mini-program 业务函数补测 OK (+F11-F15 5项热点 + TM meta+z9999 + SR inert)`);
       }
     } catch(e) { assert(false, `${fp} err: `+e.message); }
     cleanupSession(sess);

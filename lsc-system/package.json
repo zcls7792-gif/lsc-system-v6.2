@@ -29,7 +29,10 @@
     "audit:meta:ci": "node audit-meta.js --strict --json audit-report/meta-audit.json --md audit-report/meta-audit.md",
     "audit:assets": "node audit-assets.js --json audit-report/assets-audit.json --md audit-report/assets-audit.md",
     "audit:assets:ci": "node audit-assets.js --strict --json audit-report/assets-audit.json --md audit-report/assets-audit.md",
-    "all:hard": "npm run ci && npm run e2e && npm run audit:a11y && npm run audit:meta:ci && npm run audit:assets:ci"
+    "audit:sr": "node audit-screenreader.js",
+    "audit:sr:ci": "node audit-screenreader.js --strict",
+    "audit:sr:checklist": "node audit-screenreader.js --checklist",
+    "all:hard": "npm run ci && npm run e2e && npm run audit:a11y && npm run audit:meta:ci && npm run audit:assets:ci && npm run audit:sr:ci"
   },
   "keywords": [],
   "author": "",

@@ -160,6 +160,10 @@ img { max-width: 100%; display: block; }
 /* 屏幕阅读器专用: 视觉隐藏但可访问 */
 .sr-only { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
 
+/* inert 属性兜底: 隐藏元素不可聚焦/不可点击 (浏览器原生 inert 兜底) */
+[inert] { pointer-events: none; cursor: default; }
+[inert] * { pointer-events: none; }
+
 /* 跳过链接: 默认视觉隐藏，获得焦点时显示 (WCAG 2.4.1 Bypass Blocks) */
 .skip-link {
   position: absolute;

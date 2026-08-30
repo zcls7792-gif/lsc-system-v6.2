@@ -1426,7 +1426,7 @@ function dualApprovalModal(opts) {
         <div class="sign-input"><input class="input" id="sig2-input" placeholder="输入管理员账号" autocomplete="off" oninput="updateSig('sig2', this.value)"></div>
       </div>
     </div>
-    <div class="text-xs text-muted mt-3" id="dual-status">等待两位管理员输入账号...</div>
+    <div class="text-xs text-muted mt-3" id="dual-status" role="status" aria-live="polite">等待两位管理员输入账号...</div>
   `;
   const footer = `
     <button class="btn btn-outline btn-sm" onclick="closeModal()">取消</button>

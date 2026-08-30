@@ -15,9 +15,10 @@ function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s=>{
     s.classList.remove('active');
     s.setAttribute('aria-hidden', 'true');
+    s.setAttribute('inert', '');
   });
   const el = document.getElementById('screen-'+name);
-  if (el) { el.classList.add('active'); el.setAttribute('aria-hidden', 'false'); document.getElementById('content').scrollTop=0; }
+  if (el) { el.classList.add('active'); el.setAttribute('aria-hidden', 'false'); el.removeAttribute('inert'); document.getElementById('content').scrollTop=0; }
   // tab 高亮 + aria-current
   document.querySelectorAll('.tab-item').forEach(t=>{
     const is = t.dataset.screen===name;
@@ -671,7 +672,7 @@ function renderAI() {
     </div>
     <div class="ai-chat-input">
       <input class="input" placeholder="输入您的问题..." style="flex:1;">
-      <button class="m-btn m-btn-primary" style="padding:8px 14px;"><span class="icon icon-sm" data-i="arrowRight" style="width:18px;height:18px;"></span></button>
+      <button class="m-btn m-btn-primary" style="padding:8px 14px;" aria-label="发送消息"><span class="icon icon-sm" data-i="arrowRight" style="width:18px;height:18px;" aria-hidden="true"></span></button>
     </div>
   </div>`;
   renderIcons(document.getElementById('screen-ai'));
