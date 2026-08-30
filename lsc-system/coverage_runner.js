@@ -77,6 +77,29 @@ async function buildSession(srv, appEntry = COVER_APPS[0]) {
     { filename: path.join(ROOT, 'coverage/__LSC_expose__.js'), displayErrors: true }
   );
   exposeHelper.runInContext(ctx);
+  // 额外执行 HTML 中所有 <script> 内联代码（theme toggle IIFE 等在 HTML inline，outside-only 模式下默认不跑，手动注入）
+  try {
+    const doc = dom.window.document;
+    const inlineScripts = Array.from(doc.querySelectorAll('script:not([src])'));
+    for (let i = 0; i < inlineScripts.length; i++) {
+      const inlineSrc = inlineScripts[i].textContent || '';
+      if (!inlineSrc.trim()) continue;
+      // 跳过 JSON-LD
+      if (inlineScripts[i].getAttribute('type') && inlineScripts[i].getAttribute('type') !== 'text/javascript' && inlineScripts[i].getAttribute('type') !== 'module' && inlineScripts[i].getAttribute('type') !== '') {
+        continue;
+      }
+      const abs = path.join(ROOT, appEntry[0], `__inline_${i}__.js`);
+      const s = new vm.Script(inlineSrc + `\n//# sourceURL=file://${abs}`, {
+        filename: abs,
+        displayErrors: true,
+      });
+      s.runInContext(ctx);
+    }
+    // 通知 DOMContentLoaded（platform/merchant 用 DOMContentLoaded 挂 theme listener）
+    doc.dispatchEvent(new dom.window.Event('DOMContentLoaded', { bubbles: true }));
+  } catch (eInline) {
+    errors.push('INLINE:' + String(eInline && eInline.message || eInline));
+  }
   return { dom, errors, app: appEntry[0] };
 }
 
@@ -1416,6 +1439,52 @@ async function main() {
     cleanupSession(sess);
   }
 
+  // ---------- F-platform-admin: meta theme-color + 桌面端 themeToggle 三态 + z 层 + 标签 ----------
+  {
+    const sess = await buildSession(srv, COVER_APPS[0]);
+    const w = sess.dom.window;
+    const fp = 'F-platform-admin';
+    // TM1. 初始双 meta 存在
+    const metas0 = Array.from(w.document.querySelectorAll('meta[name="theme-color"]'));
+    assert(metas0.length === 2, `${fp}.TM1a 初始 theme-color meta=2 张 (实际 ${metas0.length})`);
+    const mediaList0 = metas0.map(m => (m.getAttribute('media') || '').toLowerCase());
+    assert(mediaList0.some(m => m.includes('light')), `${fp}.TM1b light meta 存在 (${JSON.stringify(mediaList0)})`);
+    assert(mediaList0.some(m => m.includes('dark')), `${fp}.TM1c dark meta 存在 (${JSON.stringify(mediaList0)})`);
+    // TM2. 按钮 click → light/dark/auto：meta 同色 或 media 复原 — 用 VM 内 dispatch DOMContentLoaded + click
+    const btnP = w.document.getElementById('themeToggle');
+    assert(!!btnP, `${fp}.TM2a #themeToggle 存在`);
+    if (btnP) {
+      execVM(w, `document.dispatchEvent(new Event('DOMContentLoaded', { bubbles:true }));`);
+      const step = () => execVM(w, `
+        var btn = document.getElementById('themeToggle');
+        var before = btn && btn.getAttribute('data-state');
+        btn && btn.dispatchEvent(new Event('click', { bubbles:true }));
+        var after = btn ? btn.getAttribute('data-state') : null;
+        var cs = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(m){ return m.getAttribute('content'); });
+        var ms = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(m){ return (m.getAttribute('media')||'').toLowerCase(); });
+        return { before:before, after:after, cs:cs, ms:ms };
+      `);
+      const r1 = step();
+      const s1 = r1.after;
+      const ok1 = s1 !== 'auto' ? r1.cs.every(x => x === (s1==='dark' ? '#082E2C':'#F5F3EC')) : true;
+      assert(ok1, `${fp}.TM2b s1=${s1} before=${r1.before} cs=${r1.cs.join(',')}`);
+      const r2 = step();
+      const s2 = r2.after;
+      const ok2 = s2 !== 'auto' ? r2.cs.every(x => x === (s2==='dark' ? '#082E2C':'#F5F3EC')) : (r2.cs.length===2);
+      assert(ok2, `${fp}.TM2c s2=${s2} cs=${r2.cs.join(',')}`);
+      if (s2 === 'auto') {
+        assert(r2.ms.some(m=>m.includes('light')) && r2.ms.some(m=>m.includes('dark')), `${fp}.TM2d s2=auto ms=${r2.ms.join(',')}`);
+      }
+      const r3 = step();
+      if (r3.after === 'auto') {
+        assert(r3.ms.some(m=>m.includes('light')) && r3.ms.some(m=>m.includes('dark')), `${fp}.TM2e s3=auto ms=${r3.ms.join(',')}`);
+      }
+      passed += 2;
+    }
+    console.log(`  ${fp}: meta theme-color + themeToggle 三态补测 OK (TM1+TM2 8断言)`);
+    cleanupSession(sess);
+  }
+
   // ---------- E: 其他 3 应用 (商家/移动/小程序) 渲染函数全覆盖 ----------
   const EXTRA_RENDER = {
     'merchant-admin': [
@@ -2033,7 +2102,45 @@ async function main() {
           }
           passed++;
         } catch(e){ assert(false, `${fp}.30 信用分联动 5 色+语义 err: `+e.message); }
-        console.log(`  ${fp}: merchant-admin 业务函数补测 OK (+F15-F30 16项热点,含档位+信用分门控3组)`);
+        // TM1. meta theme-color + merchant 端 themeToggle 三态 (8断言) — desktop 用 DOMContentLoaded listener，JSDOM 下需 VM 内 dispatch
+        try {
+          const metas = Array.from(w.document.querySelectorAll('meta[name="theme-color"]'));
+          assert(metas.length === 2, `${fp}.TM1a theme-color meta=2 (${metas.length})`);
+          const mediaInit = metas.map(m => (m.getAttribute('media') || '').toLowerCase());
+          assert(mediaInit.some(m=>m.includes('light')) && mediaInit.some(m=>m.includes('dark')), `${fp}.TM1b init media`);
+          const b = w.document.getElementById('themeToggle');
+          assert(!!b, `${fp}.TM1c themeToggle 存在`);
+          if (b) {
+            // 触发 DOMContentLoaded（若 listener 尚未挂），再 VM 内 dispatch
+            execVM(w, `document.dispatchEvent(new Event('DOMContentLoaded', { bubbles:true }));`);
+            const step = (label) => execVM(w, `
+              var btn = document.getElementById('themeToggle');
+              var before = btn && btn.getAttribute('data-state');
+              btn && btn.dispatchEvent(new Event('click', { bubbles:true }));
+              var after = btn ? btn.getAttribute('data-state') : null;
+              var cs = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(m){ return m.getAttribute('content'); });
+              var ms = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(m){ return (m.getAttribute('media')||'').toLowerCase(); });
+              return { before:before, after:after, cs:cs, ms:ms };
+            `);
+            const r1 = step('r1');
+            const s1 = r1.after;
+            const ok1 = s1 !== 'auto' ? r1.cs.every(x => x === (s1==='dark' ? '#082E2C' : '#F5F3EC')) : true;
+            assert(ok1, `${fp}.TM1d s1=${s1} before=${r1.before} cs=${r1.cs.join(',')}`);
+            const r2 = step('r2');
+            const s2 = r2.after;
+            const ok2 = s2 !== 'auto' ? r2.cs.every(x => x === (s2==='dark' ? '#082E2C' : '#F5F3EC')) : (r2.cs.length===2);
+            assert(ok2, `${fp}.TM1e s2=${s2} cs=${r2.cs.join(',')}`);
+            if (s2 === 'auto') {
+              assert(r2.ms.some(m=>m.includes('light')) && r2.ms.some(m=>m.includes('dark')), `${fp}.TM1f s2=auto media ${r2.ms.join(',')}`);
+            }
+            const r3 = step('r3');
+            if (r3.after === 'auto') {
+              assert(r3.ms.some(m=>m.includes('light')) && r3.ms.some(m=>m.includes('dark')), `${fp}.TM1g s3=auto media ${r3.ms.join(',')}`);
+            }
+          }
+          passed += 2;
+        } catch(e){ assert(false, `${fp}.TM meta theme-color err: `+e.message); }
+        console.log(`  ${fp}: merchant-admin 业务函数补测 OK (+F15-F30 16项热点,含档位+信用分门控3组 + TM meta)`);
       } else if (appName === 'mobile-app') {
         // F1-F4. simulateScan 创建混合支付 modal
         w.simulateScan();
@@ -2470,7 +2577,49 @@ async function main() {
           mk('renderHome首页4卡', r20, 'j1_cards4', 'j2_tierD', 'j3_tiers', 'j4_credit92', 'j5_warn_card');
           passed++;
         } catch(e) { assert(false, `${fp}.20 档位+信用分消费端卡片 15 子场景 失败: `+e.message); }
-        console.log(`  ${fp}: mobile-app 业务函数补测 OK (+F13-F20 档位+信用分卡片热点)`);
+        // TM1. meta theme-color + mobile 端 themeToggle 三态 + fixed+z9999
+        try {
+          const metas = Array.from(w.document.querySelectorAll('meta[name="theme-color"]'));
+          assert(metas.length === 2, `${fp}.TM1a meta=2 (${metas.length})`);
+          const mediaInit = metas.map(m => (m.getAttribute('media') || '').toLowerCase());
+          assert(mediaInit.some(m=>m.includes('light')) && mediaInit.some(m=>m.includes('dark')), `${fp}.TM1b init media`);
+          const b = w.document.getElementById('themeToggle');
+          assert(!!b, `${fp}.TM1c themeToggle 存在`);
+          if (b) {
+            // 移动端 IIFE: btn.addEventListener 在 IIFE 内部同步挂; VM 内 dispatch event 确保 listener 在 window context 内调用
+            const step = () => execVM(w, `
+              var btn = document.getElementById('themeToggle');
+              var before = btn && btn.getAttribute('data-state');
+              btn && btn.dispatchEvent(new Event('click', { bubbles:true }));
+              var after = btn ? btn.getAttribute('data-state') : null;
+              var cs = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(m){ return m.getAttribute('content'); });
+              var ms = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(m){ return (m.getAttribute('media')||'').toLowerCase(); });
+              return { before:before, after:after, cs:cs, ms:ms };
+            `);
+            const r1 = step();
+            const s1 = r1.after;
+            const ok1 = s1 !== 'auto' ? r1.cs.every(x => x === (s1==='dark' ? '#082E2C' : '#F5F3EC')) : true;
+            assert(ok1, `${fp}.TM1d s1=${s1} before=${r1.before} cs=${r1.cs.join(',')}`);
+            const r2 = step();
+            const s2 = r2.after;
+            const ok2 = s2 !== 'auto' ? r2.cs.every(x => x === (s2==='dark' ? '#082E2C' : '#F5F3EC')) : (r2.cs.length===2);
+            assert(ok2, `${fp}.TM1e s2=${s2} cs=${r2.cs.join(',')}`);
+            if (s2 === 'auto') {
+              assert(r2.ms.some(m=>m.includes('light')) && r2.ms.some(m=>m.includes('dark')), `${fp}.TM1f s2=auto media ${r2.ms.join(',')}`);
+            }
+            const r3 = step();
+            if (r3.after === 'auto') {
+              assert(r3.ms.some(m=>m.includes('light')) && r3.ms.some(m=>m.includes('dark')), `${fp}.TM1g s3=auto media ${r3.ms.join(',')}`);
+            }
+          }
+          // TM2. mobile CSS fixed + z9999
+          const html = fs.readFileSync(path.join(ROOT, 'mobile-app/index.html'), 'utf8');
+          const cssStart = html.indexOf('.theme-toggle {');
+          const cssSeg = html.slice(cssStart, cssStart + 260);
+          assert(/position:\s*fixed/.test(cssSeg) && /z-index:\s*9999/.test(cssSeg), `${fp}.TM2 fixed+z9999 CSS 实际: `+cssSeg.replace(/\s+/g,' ').slice(0,120));
+          passed += 2;
+        } catch(e) { assert(false, `${fp}.TM meta/fixed err: `+e.message); }
+        console.log(`  ${fp}: mobile-app 业务函数补测 OK (+F13-F20 档位+信用分卡片热点 + TM meta+fixed)`);
       } else if (appName === 'mini-program') {
         // F1-F2. wxScanPay
         w.wxScanPay();
@@ -2655,7 +2804,49 @@ async function main() {
         } catch(e){ assert(false, `${fp}.15 wxShare mask自身click / product.tag空 分支 err: `+e.message); }
         const allMasks = w.document.querySelectorAll('.modal-mask');
         allMasks.forEach(m => m.remove());
-        console.log(`  ${fp}: mini-program 业务函数补测 OK (+F11-F15 5项热点)`);
+        // TM1. meta theme-color + mini 端 themeToggle 三态 + z9999
+        try {
+          const metas = Array.from(w.document.querySelectorAll('meta[name="theme-color"]'));
+          assert(metas.length === 2, `${fp}.TM1a meta=2 (${metas.length})`);
+          const mediaInit = metas.map(m => (m.getAttribute('media') || '').toLowerCase());
+          assert(mediaInit.some(m=>m.includes('light')) && mediaInit.some(m=>m.includes('dark')), `${fp}.TM1b init media`);
+          const b = w.document.getElementById('themeToggle');
+          assert(!!b, `${fp}.TM1c themeToggle 存在`);
+          if (b) {
+            const step = () => execVM(w, `
+              var btn = document.getElementById('themeToggle');
+              var before = btn && btn.getAttribute('data-state');
+              btn && btn.dispatchEvent(new Event('click', { bubbles:true }));
+              var after = btn ? btn.getAttribute('data-state') : null;
+              var cs = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(m){ return m.getAttribute('content'); });
+              var ms = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(m){ return (m.getAttribute('media')||'').toLowerCase(); });
+              return { before:before, after:after, cs:cs, ms:ms };
+            `);
+            const r1 = step();
+            const s1 = r1.after;
+            const ok1 = s1 !== 'auto' ? r1.cs.every(x => x === (s1==='dark' ? '#082E2C' : '#F5F3EC')) : true;
+            assert(ok1, `${fp}.TM1d s1=${s1} before=${r1.before} cs=${r1.cs.join(',')}`);
+            const r2 = step();
+            const s2 = r2.after;
+            const ok2 = s2 !== 'auto' ? r2.cs.every(x => x === (s2==='dark' ? '#082E2C' : '#F5F3EC')) : (r2.cs.length===2);
+            assert(ok2, `${fp}.TM1e s2=${s2} cs=${r2.cs.join(',')}`);
+            if (s2 === 'auto') {
+              assert(r2.ms.some(m=>m.includes('light')) && r2.ms.some(m=>m.includes('dark')), `${fp}.TM1f s2=auto media ${r2.ms.join(',')}`);
+            }
+            const r3 = step();
+            if (r3.after === 'auto') {
+              assert(r3.ms.some(m=>m.includes('light')) && r3.ms.some(m=>m.includes('dark')), `${fp}.TM1g s3=auto media ${r3.ms.join(',')}`);
+            }
+          }
+          // TM2. mini CSS z9999
+          const html = fs.readFileSync(path.join(ROOT, 'mini-program/index.html'), 'utf8');
+          const idx = html.indexOf('小程序端');
+          const cssPos = idx >= 0 ? html.indexOf('.theme-toggle {', idx) : html.indexOf('.theme-toggle {');
+          const cssSeg = html.slice(cssPos, cssPos + 260);
+          assert(/z-index:\s*9999/.test(cssSeg), `${fp}.TM2 z9999 CSS 实际: `+cssSeg.replace(/\s+/g,' ').slice(0,120));
+          passed += 2;
+        } catch(e) { assert(false, `${fp}.TM meta/z err: `+e.message); }
+        console.log(`  ${fp}: mini-program 业务函数补测 OK (+F11-F15 5项热点 + TM meta+z9999)`);
       }
     } catch(e) { assert(false, `${fp} err: `+e.message); }
     cleanupSession(sess);

@@ -4,7 +4,7 @@
       "/root/.nvm/versions/node/v24.1.0/bin/node",
       "/workspace/lsc-system/node_modules/.bin/playwright",
       "test",
-      "--workers=2"
+      "--workers=4"
     ],
     "configFile": "/workspace/lsc-system/playwright.config.js",
     "rootDir": "/workspace/lsc-system/e2e",
@@ -18,7 +18,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 2
+      "actualWorkers": 4
     },
     "preserveOutput": "always",
     "projects": [
@@ -27,7 +27,7 @@
         "repeatEach": 1,
         "retries": 2,
         "metadata": {
-          "actualWorkers": 2
+          "actualWorkers": 4
         },
         "id": "chromium-headless",
         "name": "chromium-headless",
@@ -43,7 +43,7 @@
         "repeatEach": 1,
         "retries": 2,
         "metadata": {
-          "actualWorkers": 2
+          "actualWorkers": 4
         },
         "id": "chromium-mobile",
         "name": "chromium-mobile",
@@ -84,7 +84,7 @@
     "updateSnapshots": "missing",
     "updateSourceMethod": "patch",
     "version": "1.62.1",
-    "workers": 2,
+    "workers": 4,
     "webServer": {
       "command": "python3 -m http.server 8765 --bind 0.0.0.0",
       "url": "http://127.0.0.1:8765/",
@@ -123,12 +123,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2159,
+                      "duration": 5139,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:24.216Z",
+                      "startTime": "2026-08-30T10:17:20.692Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -157,12 +157,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1754,
+                      "duration": 4306,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:24.209Z",
+                      "startTime": "2026-08-30T10:17:20.433Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -188,15 +188,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 2527,
+                      "duration": 5874,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:26.514Z",
+                      "startTime": "2026-08-30T10:17:20.466Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -239,15 +239,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 2734,
+                      "duration": 7777,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:26.930Z",
+                      "startTime": "2026-08-30T10:17:20.463Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -276,12 +276,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2226,
+                      "duration": 5187,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:29.090Z",
+                      "startTime": "2026-08-30T10:17:26.193Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -310,12 +310,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1673,
+                      "duration": 3254,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:29.682Z",
+                      "startTime": "2026-08-30T10:17:27.465Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -341,15 +341,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 4087,
+                      "duration": 13505,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:31.378Z",
+                      "startTime": "2026-08-30T10:17:27.675Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -375,15 +375,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 2551,
+                      "duration": 5779,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:31.384Z",
+                      "startTime": "2026-08-30T10:17:29.503Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -393,7 +393,7 @@
               ],
               "id": "aaed197fda9439e7798c-cc7ed93633a23d9e4cc0",
               "file": "lsc-extended.spec.js",
-              "line": 212,
+              "line": 237,
               "column": 3
             },
             {
@@ -412,12 +412,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1460,
+                      "duration": 2810,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:33.948Z",
+                      "startTime": "2026-08-30T10:17:30.796Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -427,7 +427,7 @@
               ],
               "id": "aaed197fda9439e7798c-bde7f2070ef880a3d3e7",
               "file": "lsc-extended.spec.js",
-              "line": 265,
+              "line": 290,
               "column": 3
             },
             {
@@ -443,15 +443,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2562,
+                      "duration": 5586,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:35.428Z",
+                      "startTime": "2026-08-30T10:17:31.466Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -461,7 +461,7 @@
               ],
               "id": "aaed197fda9439e7798c-33ad326c3fa70a6272d5",
               "file": "lsc-extended.spec.js",
-              "line": 319,
+              "line": 344,
               "column": 3
             },
             {
@@ -477,15 +477,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2888,
+                      "duration": 4901,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:35.489Z",
+                      "startTime": "2026-08-30T10:17:33.682Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -495,7 +495,7 @@
               ],
               "id": "aaed197fda9439e7798c-9a52482f2c46a5754cf2",
               "file": "lsc-extended.spec.js",
-              "line": 368,
+              "line": 393,
               "column": 3
             },
             {
@@ -511,15 +511,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 2120,
+                      "duration": 4310,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:38.001Z",
+                      "startTime": "2026-08-30T10:17:35.363Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -529,7 +529,7 @@
               ],
               "id": "aaed197fda9439e7798c-8821c6a7c16012285788",
               "file": "lsc-extended.spec.js",
-              "line": 414,
+              "line": 439,
               "column": 3
             },
             {
@@ -548,12 +548,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1101,
+                      "duration": 2101,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:38.422Z",
+                      "startTime": "2026-08-30T10:17:37.128Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -563,7 +563,7 @@
               ],
               "id": "aaed197fda9439e7798c-53a5377c3009ee11a4a8",
               "file": "lsc-extended.spec.js",
-              "line": 449,
+              "line": 474,
               "column": 3
             },
             {
@@ -579,15 +579,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1194,
+                      "duration": 1921,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:39.539Z",
+                      "startTime": "2026-08-30T10:17:38.617Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -597,7 +597,7 @@
               ],
               "id": "aaed197fda9439e7798c-4b1fc0c3fa113461881b",
               "file": "lsc-extended.spec.js",
-              "line": 482,
+              "line": 507,
               "column": 3
             },
             {
@@ -613,15 +613,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1239,
+                      "duration": 2159,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:40.144Z",
+                      "startTime": "2026-08-30T10:17:39.302Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -631,7 +631,7 @@
               ],
               "id": "aaed197fda9439e7798c-21c6c20d1c82e2e2be20",
               "file": "lsc-extended.spec.js",
-              "line": 513,
+              "line": 538,
               "column": 3
             },
             {
@@ -647,15 +647,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 2925,
+                      "duration": 5237,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:40.746Z",
+                      "startTime": "2026-08-30T10:17:39.725Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -665,7 +665,7 @@
               ],
               "id": "aaed197fda9439e7798c-355a6fa27a157cb4a856",
               "file": "lsc-extended.spec.js",
-              "line": 544,
+              "line": 569,
               "column": 3
             },
             {
@@ -684,12 +684,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2484,
+                      "duration": 5026,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:41.420Z",
+                      "startTime": "2026-08-30T10:17:40.618Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -699,7 +699,7 @@
               ],
               "id": "aaed197fda9439e7798c-e9694ec1d85d68fbb0f4",
               "file": "lsc-extended.spec.js",
-              "line": 589,
+              "line": 614,
               "column": 3
             },
             {
@@ -715,15 +715,15 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1139,
+                      "duration": 2973,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:43.687Z",
+                      "startTime": "2026-08-30T10:17:41.230Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -733,7 +733,7 @@
               ],
               "id": "aaed197fda9439e7798c-08dbf0db63357235f92e",
               "file": "lsc-extended.spec.js",
-              "line": 644,
+              "line": 669,
               "column": 3
             }
           ]
@@ -741,7 +741,7 @@
         {
           "title": "LSC V6.2-AI · 移动端 (mobile)",
           "file": "lsc-extended.spec.js",
-          "line": 682,
+          "line": 707,
           "column": 6,
           "specs": [
             {
@@ -757,15 +757,15 @@
                   "projectName": "chromium-mobile",
                   "results": [
                     {
-                      "workerIndex": 2,
-                      "parallelIndex": 0,
+                      "workerIndex": 4,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2373,
+                      "duration": 5103,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:44.949Z",
+                      "startTime": "2026-08-30T10:17:45.670Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -775,7 +775,7 @@
               ],
               "id": "aaed197fda9439e7798c-bafa62fe2eb6873673df",
               "file": "lsc-extended.spec.js",
-              "line": 686,
+              "line": 711,
               "column": 3
             },
             {
@@ -791,15 +791,15 @@
                   "projectName": "chromium-mobile",
                   "results": [
                     {
-                      "workerIndex": 3,
-                      "parallelIndex": 1,
+                      "workerIndex": 5,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1703,
+                      "duration": 3975,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:46.001Z",
+                      "startTime": "2026-08-30T10:17:47.287Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -809,7 +809,7 @@
               ],
               "id": "aaed197fda9439e7798c-4ae23d9533cb552d3501",
               "file": "lsc-extended.spec.js",
-              "line": 787,
+              "line": 812,
               "column": 3
             },
             {
@@ -825,15 +825,15 @@
                   "projectName": "chromium-mobile",
                   "results": [
                     {
-                      "workerIndex": 2,
-                      "parallelIndex": 0,
+                      "workerIndex": 6,
+                      "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 2112,
+                      "duration": 4570,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:47.841Z",
+                      "startTime": "2026-08-30T10:17:47.535Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -843,7 +843,7 @@
               ],
               "id": "aaed197fda9439e7798c-56fbf8559807e3f399b3",
               "file": "lsc-extended.spec.js",
-              "line": 850,
+              "line": 875,
               "column": 3
             },
             {
@@ -859,15 +859,15 @@
                   "projectName": "chromium-mobile",
                   "results": [
                     {
-                      "workerIndex": 3,
-                      "parallelIndex": 1,
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2353,
+                      "duration": 5104,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:48.218Z",
+                      "startTime": "2026-08-30T10:17:48.199Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -877,7 +877,7 @@
               ],
               "id": "aaed197fda9439e7798c-dce8260181f819fd0060",
               "file": "lsc-extended.spec.js",
-              "line": 910,
+              "line": 935,
               "column": 3
             },
             {
@@ -893,15 +893,15 @@
                   "projectName": "chromium-mobile",
                   "results": [
                     {
-                      "workerIndex": 2,
-                      "parallelIndex": 0,
+                      "workerIndex": 4,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 4197,
+                      "duration": 5675,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:49.965Z",
+                      "startTime": "2026-08-30T10:17:51.802Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -911,7 +911,7 @@
               ],
               "id": "aaed197fda9439e7798c-e4a30c1d7378fad18a43",
               "file": "lsc-extended.spec.js",
-              "line": 953,
+              "line": 978,
               "column": 3
             }
           ]
@@ -919,7 +919,7 @@
         {
           "title": "LSC V6.2-AI · 微信小程序 (mini)",
           "file": "lsc-extended.spec.js",
-          "line": 1021,
+          "line": 1046,
           "column": 6,
           "specs": [
             {
@@ -935,15 +935,15 @@
                   "projectName": "chromium-mobile",
                   "results": [
                     {
-                      "workerIndex": 3,
-                      "parallelIndex": 1,
+                      "workerIndex": 5,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1714,
+                      "duration": 2705,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:50.585Z",
+                      "startTime": "2026-08-30T10:17:52.808Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -953,7 +953,7 @@
               ],
               "id": "aaed197fda9439e7798c-06aa664836d1ecbed651",
               "file": "lsc-extended.spec.js",
-              "line": 1025,
+              "line": 1050,
               "column": 3
             },
             {
@@ -969,15 +969,15 @@
                   "projectName": "chromium-mobile",
                   "results": [
                     {
-                      "workerIndex": 3,
-                      "parallelIndex": 1,
+                      "workerIndex": 6,
+                      "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 2113,
+                      "duration": 3223,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T07:53:52.317Z",
+                      "startTime": "2026-08-30T10:17:53.595Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -987,7 +987,7 @@
               ],
               "id": "aaed197fda9439e7798c-7e73eff0a166fa9b6d55",
               "file": "lsc-extended.spec.js",
-              "line": 1079,
+              "line": 1104,
               "column": 3
             }
           ]
@@ -997,8 +997,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-08-30T07:53:22.699Z",
-    "duration": 31872.66,
+    "startTime": "2026-08-30T10:17:17.562Z",
+    "duration": 40142.118,
     "expected": 25,
     "skipped": 0,
     "unexpected": 0,

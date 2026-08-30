@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="format-detection" content="telephone=no, email=no, address=no">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#2E7D5C" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#102A1F" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F5F3EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#082E2C" media="(prefers-color-scheme: dark)">
 <meta name="description" content="链盛通LSC消费权益凭证循环系统 V6.2 — AI增强版商家管理后台：商品上架、核销、数据看板、AI选品、B2B采购、营销活动与商家信用分一站式管理。">
 <meta name="keywords" content="链盛通,LSC,商家后台,核销,商品管理,营销活动,商家信用,B2B,AI选品,商家看板,权益凭证,V6.2">
 <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -507,6 +507,19 @@
 /* 商家后台主题切换：三态 auto → light → dark, localStorage 持久化 */
 (function(){
   const KEY = 'lsc-merchant-theme';
+  // ---- theme-color meta 快照 ----
+  const metas = Array.from(document.querySelectorAll('meta[name="theme-color"]'));
+  const savedMeta = metas.map(m => ({ el:m, media:m.getAttribute('media') || '', content:m.getAttribute('content') || '' }));
+  function applyMetaColor(mode){
+    if (!savedMeta.length) return;
+    if (mode === 'light') {
+      savedMeta.forEach(s => { s.el.setAttribute('media','all'); s.el.setAttribute('content','#F5F3EC'); });
+    } else if (mode === 'dark') {
+      savedMeta.forEach(s => { s.el.setAttribute('media','all'); s.el.setAttribute('content','#082E2C'); });
+    } else {
+      savedMeta.forEach(s => { s.el.setAttribute('media', s.media); s.el.setAttribute('content', s.content); });
+    }
+  }
   const STATES = ['auto','light','dark'];
   function apply(mode){
     const root = document.documentElement;
@@ -527,6 +540,7 @@
       btn.setAttribute('aria-label', '切换主题，当前：' + label);
       btn.setAttribute('title', '切换主题（当前：' + label + '）');
     }
+    applyMetaColor(mode);
   }
   const saved = (localStorage.getItem(KEY) || 'auto');
   apply(saved);

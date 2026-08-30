@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#07C160" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0A1F14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F5F3EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#082E2C" media="(prefers-color-scheme: dark)">
 <meta name="description" content="链盛通LSC消费权益凭证循环系统 V6.2 — AI增强版微信小程序：微信扫码核销、权益商城、卡包、账单查询、好友分享与AI消费推荐，微信生态无缝接入。">
 <meta name="keywords" content="链盛通,LSC,微信小程序,消费权益,凭证,扫码支付,微信支付,卡包,好友分享,权益商城,AI推荐,V6.2">
 <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -377,7 +377,7 @@
 
   /* 主题切换按钮 (小程序端 - 放在左上角避开胶囊) */
   .theme-toggle {
-    position: absolute; top: 58px; left: 12px; z-index: 30;
+    position: absolute; top: 58px; left: 12px; z-index: 9999;
     width: 34px; height: 34px; border-radius: 50%;
     display:flex; align-items:center; justify-content:center;
     background: var(--c-bg-card, #fff);
@@ -469,6 +469,19 @@
 (function(){
   const KEY = 'lsc-mini-theme';
   const STATES = ['auto','light','dark'];
+  // ---- theme-color meta 快照 ----
+  const metas = Array.from(document.querySelectorAll('meta[name="theme-color"]'));
+  const savedMeta = metas.map(m => ({ el:m, media:m.getAttribute('media') || '', content:m.getAttribute('content') || '' }));
+  function applyMetaColor(mode){
+    if (!savedMeta.length) return;
+    if (mode === 'light') {
+      savedMeta.forEach(s => { s.el.setAttribute('media','all'); s.el.setAttribute('content','#F5F3EC'); });
+    } else if (mode === 'dark') {
+      savedMeta.forEach(s => { s.el.setAttribute('media','all'); s.el.setAttribute('content','#082E2C'); });
+    } else {
+      savedMeta.forEach(s => { s.el.setAttribute('media', s.media); s.el.setAttribute('content', s.content); });
+    }
+  }
   const btn = document.getElementById('themeToggle');
   function apply(mode){
     const root = document.documentElement;
@@ -486,6 +499,7 @@
     btn && btn.setAttribute('aria-pressed', mode !== 'auto');
     const label = { auto: '跟随系统', light: '浅色模式', dark: '深色模式' }[mode];
     btn && btn.setAttribute('aria-label', '切换主题，当前：' + label);
+    applyMetaColor(mode);
   }
   const saved = (localStorage.getItem(KEY) || 'auto');
   apply(saved);

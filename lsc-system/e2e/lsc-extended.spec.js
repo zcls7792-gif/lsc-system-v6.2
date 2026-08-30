@@ -159,6 +159,8 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
     const appCases = [
       { name: 'platform-admin', url: APPS.platform,  key: 'lsc-platform-theme' },
       { name: 'merchant-admin', url: APPS.merchant,  key: 'lsc-merchant-theme' },
+      { name: 'mobile-app',     url: APPS.mobile,    key: 'lsc-mobile-theme' },
+      { name: 'mini-program',   url: APPS.mini,      key: 'lsc-mini-theme' },
     ];
     for (const app of appCases) {
       await page.goto(app.url, { waitUntil: 'networkidle' });
@@ -166,6 +168,7 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
       // 1) 按钮必须存在且可点击
       const tBtn = page.locator('#themeToggle, .theme-toggle').first();
       await expect(tBtn).toBeVisible({ timeout: 8000 });
+      await expect(tBtn).toBeEnabled({ timeout: 4000 });
 
       // 2) 初始态 = auto（localStorage 为空时默认）
       const initState = await tBtn.getAttribute('data-state');
@@ -184,6 +187,12 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
       } else if (s1 === 'dark') {
         expect(['dark',null]).toContain(root1); // 或通过 prefers-color-scheme 体现
       }
+      // 主题色 meta 校验：只要用户不是 auto 态，两张 meta 必须同色
+      if (s1 !== 'auto') {
+        const expected1 = s1 === 'dark' ? '#082E2C' : '#F5F3EC';
+        const contents1 = await page.evaluate(() => Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(m => m.getAttribute('content')));
+        expect(contents1.every(c => c && c.toLowerCase() === expected1.toLowerCase())).toBe(true);
+      }
 
       // 4) 点击第二次 → light → dark
       await tBtn.click();
@@ -192,12 +201,28 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
       const ls2 = await page.evaluate(k => localStorage.getItem(k), app.key);
       expect(['light','dark','auto']).toContain(s2);
       if (s2) expect(ls2).toBe(s2);
+      if (s2 !== 'auto') {
+        const expected2 = s2 === 'dark' ? '#082E2C' : '#F5F3EC';
+        const contents2 = await page.evaluate(() => Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(m => m.getAttribute('content')));
+        expect(contents2.every(c => c && c.toLowerCase() === expected2.toLowerCase())).toBe(true);
+      } else {
+        // auto 态：两张 meta media 必须是 prefers-color-scheme
+        const mediasAuto = await page.evaluate(() => Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(m => (m.getAttribute('media')||'').toLowerCase()));
+        expect(mediasAuto.some(m => m.includes('light'))).toBe(true);
+        expect(mediasAuto.some(m => m.includes('dark'))).toBe(true);
+      }
 
       // 5) 点击第三次 → dark → auto（回到跟随系统）
       await tBtn.click();
       await page.waitForTimeout(120);
       const s3 = await tBtn.getAttribute('data-state');
       const ls3 = await page.evaluate(k => localStorage.getItem(k), app.key);
+      // 第 3 次点击后多数情况下回到 auto：若 state=auto 则 media 复原
+      if (s3 === 'auto') {
+        const medias3 = await page.evaluate(() => Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(m => (m.getAttribute('media')||'').toLowerCase()));
+        expect(medias3.some(m => m.includes('light'))).toBe(true);
+        expect(medias3.some(m => m.includes('dark'))).toBe(true);
+      }
       // 循环三态后应该已遍历至少两种不同的状态
       const states = [initState, s1, s2, s3].filter(Boolean);
       const unique = new Set(states);
