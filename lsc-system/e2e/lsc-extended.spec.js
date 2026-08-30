@@ -21,10 +21,13 @@
  *   场景 T: 商家B2B · 信用分20-39 → B2B暂停 → 创建按钮disabled + alert-warning
  *   场景 U: 商家B2B · 信用分<20 → 永久关闭 → alert-danger + 全卡disabled
  *   场景 V: 平台后台 · 处罚双人审批 · 新增「暂停B2B 30天」「永久关闭核销+B2B」处罚项
+ *   场景 W: 平台后台 · 释放参数修改双人审批(showParamEdit) + 状态机(单人未填满/初始disabled) + release_config
+ *   场景 X: 移动端 · 扫码混合支付 CNY-only发行(全人民币发行 / 全LSC抵扣不发行)
+ *   场景 Y: 平台后台 · 释放比例 calcRate 三分支 [0.03%,0.06%] + rate=0.0468% 计算链路
  *
  * 项目配置:
- *   - chromium-headless: 场景 D/E/H/I/J/N/P/Q/R/S/T/U/V (桌面 + 风险弹窗双人审批 + 信用分门控)
- *   - chromium-mobile:   场景 F/G/K/L/M/O (iPhone 14 尺寸, grep tag 匹配)
+ *   - chromium-headless: 场景 D/E/H/I/J/N/P/Q/R/S/T/U/V/W/Y (桌面 + 风险弹窗双人审批 + 信用分门控 + 发行规则)
+ *   - chromium-mobile:   场景 F/G/K/L/M/O/X (iPhone 14 尺寸, grep tag 匹配)
  */
 const { test, expect, devices } = require('@playwright/test');
 
@@ -578,6 +581,98 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
     // 关闭结果
     await page.locator('#global-modal button').filter({ hasText: /确定/ }).click({ force: true });
   });
+
+  // ------------------------------------------------------------------
+  // 场景W: 平台后台 · 释放参数修改双人审批 (showParamEdit) + 双人审批状态机
+  //   进入 release 视图 → rate_max/rate_min 不可编辑 → 点击 k_min → 状态机(单人未填满/初始disabled) → 审批 → release_config + 审计日志
+  // ------------------------------------------------------------------
+  test('场景W(桌面): 释放参数修改双人审批 + 单人未填满状态机 + rate_max/min 不可编辑', async ({ page }) => {
+    await page.goto(APPS.platform, { waitUntil: 'networkidle' });
+    await page.click('.nav-item[data-view="release"]', { timeout: 12000 });
+    await expect(page.locator('#crumb')).toHaveText(/释放|参数|熔断/, { timeout: 8000 });
+
+    // 1) rate_max=0.06% / rate_min=0.03% 为 locked-param 不可编辑
+    const lockedParams = page.locator('.locked-param');
+    expect(await lockedParams.count()).toBeGreaterThanOrEqual(2);
+    const lockedTexts = await lockedParams.allTextContents();
+    expect(lockedTexts.join(' ')).toMatch(/0\.06%/);
+    expect(lockedTexts.join(' ')).toMatch(/0\.03%/);
+
+    // 2) 点击 k_min param-row → showParamEdit 双人审批弹窗
+    const kminRow = page.locator('.param-row').filter({ hasText: /k_min/ }).first();
+    await kminRow.click({ force: true });
+    const approval = page.locator('#global-modal');
+    await expect(approval).toBeVisible({ timeout: 5000 });
+    expect(await approval.innerText()).toMatch(/修改释放算法参数/);
+    expect(await approval.innerText()).toMatch(/双人审批/);
+
+    // 3) #new-param select 含 3 选项
+    const paramSel = page.locator('#new-param');
+    await expect(paramSel).toBeVisible();
+    const paramOpts = await paramSel.locator('option').allTextContents();
+    expect(paramOpts).toContain('0.45%');
+    expect(paramOpts).toContain('0.50%');
+    expect(paramOpts).toContain('0.55%');
+
+    // 4) 切换 #new-param → #param-new-val 实时更新
+    await paramSel.selectOption({ label: '0.45%' });
+    await page.waitForTimeout(120);
+    expect((await page.locator('#param-new-val').innerText()).trim()).toBe('0.45%');
+
+    // 5) 初始状态 dual-confirm disabled
+    await expect(page.locator('#dual-confirm')).toBeDisabled();
+
+    // 6) 单人未填满 sig1=1字符 → sig1-box.active + "等待..." + btn disabled
+    await page.fill('#sig1-input', 'a');
+    await page.waitForTimeout(180);
+    expect(await page.locator('#sig1-box').evaluate(el => el.classList.contains('active'))).toBe(true);
+    expect(await page.locator('#dual-status').innerText()).toMatch(/等待两位管理员输入账号/);
+    await expect(page.locator('#dual-confirm')).toBeDisabled();
+
+    // 7) 填满不同签名 → 审批 → "参数修改成功" + "release_config" + "审计日志已上链存证"
+    const resultText = await doDualApproval(page, { sig1: 'param_w1', sig2: 'param_w2' });
+    expect(resultText).toMatch(/参数修改成功/);
+    expect(resultText).toMatch(/release_config/);
+    expect(resultText).toMatch(/审计日志已上链存证/);
+    await page.locator('#global-modal button').filter({ hasText: /确定/ }).click({ force: true });
+  });
+
+  // ------------------------------------------------------------------
+  // 场景Y: 平台后台 · 释放比例 calcRate 三分支 [0.03%,0.06%] + rate=0.0468% 计算链路
+  //   验证 calcRate(k≤0.50%)→0.06% / calcRate(k≥1.0%)→0.03% / 中间线性插值 + 今日释放 rate=0.0468% 文案
+  // ------------------------------------------------------------------
+  test('场景Y(桌面): 释放比例 calcRate 三分支 [0.03%,0.06%] + rate=0.0468% 计算链路', async ({ page }) => {
+    await page.goto(APPS.platform, { waitUntil: 'networkidle' });
+    await page.click('.nav-item[data-view="release"]', { timeout: 12000 });
+    await expect(page.locator('#crumb')).toHaveText(/释放|参数|熔断/, { timeout: 8000 });
+
+    // 1) 今日释放任务监控含 rate=0.0468% 计算链路
+    const viewTxt = await page.locator('#view').innerText();
+    expect(viewTxt).toMatch(/0\.0468%/);
+    expect(viewTxt).toMatch(/0\.09%.*0\.06.*0\.0072/);
+    expect(viewTxt).toMatch(/rate ∈ \[0\.03%,0\.06%\]/);
+
+    // 2) calcRate 三分支 + 钳制 E2E 断言
+    const rates = await page.evaluate(() => ({
+      rMax: LSC.calcRate(0.005),   // k≤0.50% → 0.06%
+      rMin: LSC.calcRate(0.01),    // k≥1.0%  → 0.03%
+      rMid: LSC.calcRate(0.0072),  // 中间 → 0.0468%
+      rLow:  LSC.calcRate(0.001),  // k<<0.50% → 钳制 0.06%
+      rHigh: LSC.calcRate(0.02),   // k>>1.0%  → 钳制 0.03%
+    }));
+    expect(rates.rMax).toBeCloseTo(0.0006, 6);
+    expect(rates.rMin).toBeCloseTo(0.0003, 6);
+    expect(rates.rMid).toBeCloseTo(0.000468, 6);
+    expect(rates.rLow).toBeCloseTo(0.0006, 6);
+    expect(rates.rHigh).toBeCloseTo(0.0003, 6);
+
+    // 3) rate 始终 ∈ [0.03%, 0.06%]
+    const inRange = await page.evaluate(() => {
+      const samples = [0, 0.001, 0.003, 0.005, 0.0072, 0.008, 0.01, 0.015, 0.02, 0.1];
+      return samples.every(k => { const r = LSC.calcRate(k); return r >= 0.0003 && r <= 0.0006; });
+    });
+    expect(inRange).toBe(true);
+  });
 });
 
 // ------------------------------------------------------------
@@ -848,6 +943,74 @@ test.describe('LSC V6.2-AI · 移动端 (mobile)', () => {
     // 4) 返回首页
     await page.evaluate(() => { if (typeof showScreen === 'function') showScreen('home'); });
     await page.waitForTimeout(250);
+  });
+
+  // ------------------------------------------------------------------
+  // 场景X(移动端): 扫码混合支付 CNY-only 发行规则
+  //   全人民币(pct=0) → 发行=全额 + "人民币实付" + "锁定池"
+  //   全LSC抵扣(pct=1) → 不发行 + "不触发 LSC 发行" 警告
+  // ------------------------------------------------------------------
+  test('场景X(移动端): 扫码混合支付 CNY-only发行 · 全人民币发行 + 全LSC抵扣不发行', async ({ page }) => {
+    await page.goto(APPS.mobile, { waitUntil: 'networkidle' });
+
+    // 1) 进入扫码页 → 点击"模拟扫码支付"
+    await page.evaluate(() => { if (typeof showScreen === 'function') showScreen('scan'); });
+    await page.waitForTimeout(400);
+    const scanBtn = page.locator('.scan-btn.primary').filter({ hasText: /模拟扫码支付/ }).first();
+    await scanBtn.click({ force: true });
+    await page.waitForTimeout(400);
+
+    // 2) 弹窗含 CNY-only 发行规则文案
+    const mask = page.locator('.modal-mask').last();
+    await expect(mask).toBeVisible({ timeout: 5000 });
+    const modalTxt = await mask.innerText();
+    expect(modalTxt).toMatch(/人民币实付部分/);
+    expect(modalTxt).toMatch(/不触发发行|不.*发行/);
+
+    // 3) 默认 pct=0: hybrid-lsc=0, hybrid-rmb=¥100.00, hybrid-get=+100.00
+    expect(await page.locator('#hybrid-lsc').innerText()).toBe('0.00 LSC');
+    expect(await page.locator('#hybrid-rmb').innerText()).toBe('¥100.00');
+    expect(await page.locator('#hybrid-get').innerText()).toBe('+100.00');
+    expect(await page.locator('#pay-final').innerText()).toBe('100.00');
+
+    // 4) 拖动滑块到最右 pct=1 → 全LSC抵扣, 不发行
+    await page.evaluate(() => {
+      _hybridPct = 1;
+      document.getElementById('hybrid-fill').style.width = '100%';
+      document.getElementById('hybrid-knob').style.left = '100%';
+      calcHybrid();
+    });
+    await page.waitForTimeout(200);
+    expect(await page.locator('#hybrid-lsc').innerText()).toBe('100.00 LSC');
+    expect(await page.locator('#hybrid-rmb').innerText()).toBe('¥0.00');
+    expect(await page.locator('#hybrid-get').innerText()).toBe('+0.00');
+
+    // 5) 全LSC抵扣支付 → paySuccess 警告"不触发 LSC 发行"
+    await mask.locator('button').filter({ hasText: /确认支付/ }).click({ force: true });
+    await page.waitForTimeout(300);
+    const resultLsc = page.locator('.modal-mask').last();
+    const lscTxt = await resultLsc.innerText();
+    expect(lscTxt).toMatch(/LSC消费抵扣/);
+    expect(lscTxt).toMatch(/不触发.*发行/);
+    // 关闭 → 点击"查看我的钱包"
+    await resultLsc.locator('button').filter({ hasText: /查看我的钱包/ }).click({ force: true }).catch(() => {});
+    await page.waitForTimeout(200);
+
+    // 6) 重新触发 → 全人民币支付 → 发行 + "人民币实付" + "锁定池" + "0.0468%"
+    await page.evaluate(() => { if (typeof showScreen === 'function') showScreen('scan'); });
+    await page.waitForTimeout(200);
+    await scanBtn.click({ force: true });
+    await page.waitForTimeout(400);
+    // 确认默认 pct=0
+    expect(await page.locator('#hybrid-get').innerText()).toBe('+100.00');
+    // 支付
+    await page.locator('.modal-mask').last().locator('button').filter({ hasText: /确认支付/ }).click({ force: true });
+    await page.waitForTimeout(300);
+    const resultRmb = page.locator('.modal-mask').last();
+    const rmbTxt = await resultRmb.innerText();
+    expect(rmbTxt).toMatch(/人民币实付/);
+    expect(rmbTxt).toMatch(/锁定池/);
+    expect(rmbTxt).toMatch(/0\.0468%/);
   });
 });
 

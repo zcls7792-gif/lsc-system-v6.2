@@ -306,7 +306,8 @@ function simulateScan() {
       }
     };
   }
-  if (!window._hybridPct) window._hybridPct = 0;
+  // 每次打开扫码弹窗视为新支付会话, 滑块归零 (避免上次 pct 残留)
+  window._hybridPct = 0;
   // 初始化一次, 同步结算参数 (使用setTimeout会在modal销毁后触发，导致元素不存在报错)
   if (typeof calcHybrid === 'function') {
     try { calcHybrid(); } catch(_e) { /* 元素尚不存在则跳过, 下一次 input/滑块 触发时会再算 */ }
@@ -328,6 +329,9 @@ function setupHybridSlider() {
   bar.addEventListener('mousedown', e=>{dragging=true;update(e);});
   document.addEventListener('mousemove', e=>{if(dragging)update(e);});
   document.addEventListener('mouseup', ()=>dragging=false);
+  bar.addEventListener('touchstart', e=>{dragging=true;update(e);}, {passive:true});
+  document.addEventListener('touchmove', e=>{if(dragging)update(e);}, {passive:true});
+  document.addEventListener('touchend', ()=>dragging=false);
 }
 function paySuccess(btn) {
   const mask = btn.closest('.modal-mask');

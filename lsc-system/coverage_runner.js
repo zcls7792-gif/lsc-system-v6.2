@@ -2150,6 +2150,11 @@ async function main() {
             sBar.dispatchEvent(new w.TouchEvent('touchstart', { touches:[{ clientX:60 }], bubbles:true }));
             const pct = w._hybridPct;
             assert(typeof pct === 'number' && pct > 0.5, `${fp}.16f. touchstart@60 → _hybridPct≈0.6 (actual=${pct}) — touches真分支`);
+            // 16g. touchmove + touchend 覆盖 touch 事件监听箭头函数
+            w.document.dispatchEvent(new w.TouchEvent('touchmove', { touches:[{ clientX:80 }], bubbles:true }));
+            const pct2 = w._hybridPct;
+            assert(Math.abs(pct2 - 0.8) < 0.01, `${fp}.16g. touchmove@80 → _hybridPct=0.8 (actual=${pct2})`);
+            w.document.dispatchEvent(new w.TouchEvent('touchend', { bubbles:true }));
           }
           passed++;
         } catch(e){ assert(false, `${fp}.16 tab-item true/calcHybrid NaN/renderProduct越界/touch err: `+e.message); }
