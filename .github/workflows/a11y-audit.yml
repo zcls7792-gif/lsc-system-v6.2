@@ -6,10 +6,10 @@
 #   · 每个 pull_request (目标任意分支)
 #   · 手动 workflow_dispatch
 #
-# 门控 (4 job 并行, 任一失败 阻断合入):
-#   Job 1) coverage_gate    · c8 覆盖率硬阈值: Stmt≥99% / Branch≥95% / Func≥95%
-#   Job 2) assets_meta_gate · 资产体量 (单文件 ≤ 阈值) + 元数据审计 (SEO/OG/meta)
-#   Job 3) a11y_gate       · 16 快照 light/dark axe-core 严格 0 违规 + baseline diff
+# 门控 (3 job 并行 + 1 summary job, 任一失败 阻断合入):
+#   Job 1) coverage-gate    · c8 覆盖率硬阈值: Stmt≥99% / Branch≥95% / Func≥95%
+#   Job 2) assets-meta-gate · 资产体量 (单文件 ≤ 阈值) + 元数据审计 (SEO/OG/meta)
+#   Job 3) a11y-gate       · 16 快照 light/dark axe-core 严格 0 违规 + baseline diff
 # ============================================================================
 
 name: LSC V6.2-Quality Gate (coverage · assets · meta · a11y 16 snap)
@@ -17,16 +17,8 @@ name: LSC V6.2-Quality Gate (coverage · assets · meta · a11y 16 snap)
 on:
   push:
     branches: [ master, main, "release-*" ]
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'coverage/**'
   pull_request:
     branches: [ master, main ]
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'coverage/**'
   workflow_dispatch:
     inputs:
       maxViolations:
@@ -64,8 +56,13 @@ concurrency:
 
 env:
   CI: "true"
-  NODE_VERSION: "22.x"
+  NODE_VERSION: "20.x"
+  WORK_DIR: "lsc-system"
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/playwright-browsers
+
+defaults:
+  run:
+    working-directory: ${{ env.WORK_DIR }}
 
 jobs:
 
@@ -80,32 +77,33 @@ jobs:
       contents: read
       checks: write
     steps:
-      - name: 🔍 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: ${{ env.WORK_DIR }}/package-lock.json
 
-      - name: 📦 npm ci (frozen lockfile)
+      - name: npm ci (frozen lockfile)
         run: npm ci --no-audit --no-fund
 
-      - name: 🧪 运行 c8 覆盖率 (coverage_runner 378 断言 + 硬阈值门控)
+      - name: Run c8 coverage (coverage_runner assertions + hard thresholds)
         id: cov
         run: |
-          # 通过 c8 环境变量覆盖: 让 CI 输入参数或默认值真正生效
           export C8_CHECK_COVERAGE=true
           export C8_LINES=${{ inputs.minStmt || 99 }}
           export C8_STATEMENTS=${{ inputs.minStmt || 99 }}
           export C8_BRANCHES=${{ inputs.minBranch || 95 }}
           export C8_FUNCTIONS=${{ inputs.minFunc || 95 }}
           set -o pipefail
+          mkdir -p coverage
           npm run coverage 2>&1 | tee coverage/coverage.log
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
 
-      - name: 📤 上传 Coverage artifacts (HTML + lcov + summary)
+      - name: Upload Coverage artifacts (HTML + lcov + summary)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -113,10 +111,11 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
           path: |
-            coverage/
+            ${{ env.WORK_DIR }}/coverage/
 
-      - name: 📋 写入 Coverage 摘要到 Job Summary
+      - name: Write Coverage summary to Job Summary
         if: always()
+        working-directory: ${{ github.workspace }}
         run: |
           {
             echo "# 链盛通 LSC V6.2-AI · 覆盖率门控"
@@ -125,21 +124,22 @@ jobs:
             echo ""
             echo "| 指标 | 要求 |"
             echo "|---|---|"
-            echo "| Statements | ≥ ${{ inputs.minStmt || 99 }}% |"
-            echo "| Branches   | ≥ ${{ inputs.minBranch || 95 }}% |"
-            echo "| Functions  | ≥ ${{ inputs.minFunc || 95 }}% |"
+            echo "| Statements | >= ${{ inputs.minStmt || 99 }}% |"
+            echo "| Branches   | >= ${{ inputs.minBranch || 95 }}% |"
+            echo "| Functions  | >= ${{ inputs.minFunc || 95 }}% |"
             echo ""
-            if [ -f coverage/coverage.log ]; then
-              echo "## c8 text-summary (末 40 行)"
+            if [ -f ${{ env.WORK_DIR }}/coverage/coverage.log ]; then
+              echo "## c8 text-summary (last 40 lines)"
               echo ""
               echo '```'
-              tail -n 40 coverage/coverage.log
+              tail -n 40 ${{ env.WORK_DIR }}/coverage/coverage.log
               echo '```'
             fi
           } >> $GITHUB_STEP_SUMMARY
 
-      - name: 🚦 重抛结果
+      - name: Re-throw result
         if: always()
+        working-directory: ${{ github.workspace }}
         run: |
           EXIT="${{ steps.cov.outputs.exit_code }}"
           echo "coverage exit=$EXIT"
@@ -148,37 +148,38 @@ jobs:
           exit 0
 
   # =========================================================================
-  #  JOB 2 : Assets + Meta Gate — 资产体量 + 元数据审计
+  #  JOB 2 : Assets + Meta Gate
   # =========================================================================
   assets-meta-gate:
-    name: Assets & Meta Gate (体量阈值 + SEO/OG/schema 合规)
+    name: Assets & Meta Gate (size threshold + SEO/OG/schema compliance)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
       checks: write
     steps:
-      - name: 🔍 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: ${{ env.WORK_DIR }}/package-lock.json
 
-      - name: 📦 npm ci (frozen lockfile)
+      - name: npm ci (frozen lockfile)
         run: npm ci --no-audit --no-fund
 
-      - name: "📊 运行审计: 资产体量 (audit-assets) + 元数据合规 (audit-meta)"
+      - name: "Run audits: assets (size) + meta (compliance)"
         id: audits
         run: |
           set +e
-          echo "==> [1/2] audit:assets:ci  --strict (体量阈值门控)"
+          echo "==> [1/2] audit:assets:ci --strict"
           npm run audit:assets:ci
           RC1=$?
           echo ""
-          echo "==> [2/2] audit:meta:ci --strict (元数据合规门控)"
+          echo "==> [2/2] audit:meta:ci --strict"
           npm run audit:meta:ci
           RC2=$?
           echo ""
@@ -188,7 +189,7 @@ jobs:
           if [ "$RC1" -ne 0 ] || [ "$RC2" -ne 0 ]; then exit 2; fi
           exit 0
 
-      - name: 📤 上传审计报告 artifacts
+      - name: Upload audit report artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -196,36 +197,38 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
           path: |
-            audit-report/assets-audit.*
-            audit-report/meta-audit.*
+            ${{ env.WORK_DIR }}/audit-report/assets-audit.*
+            ${{ env.WORK_DIR }}/audit-report/meta-audit.*
 
-      - name: 📋 写入 Assets+Meta 摘要到 Job Summary
+      - name: Write Assets+Meta summary to Job Summary
         if: always()
+        working-directory: ${{ github.workspace }}
         run: |
           {
             echo "# 链盛通 LSC V6.2-AI · 资产 / 元数据门控"
             echo ""
-            echo "| 审计 | 退出码 | 说明 |"
+            echo "| Audit | Exit Code | Description |"
             echo "|---|---|---|"
-            echo "| audit:assets (体量) | ${{ steps.audits.outputs.assets_rc }} | 单文件/总大小阈值 + 缺失资源检测 |"
-            echo "| audit:meta (合规) | ${{ steps.audits.outputs.meta_rc }} | title/description/OG/Twitter/schema/alt/icon |"
+            echo "| audit:assets (size) | ${{ steps.audits.outputs.assets_rc }} | Single/total size threshold + missing resource check |"
+            echo "| audit:meta (compliance) | ${{ steps.audits.outputs.meta_rc }} | title/description/OG/Twitter/schema/alt/icon |"
             echo ""
             echo "---"
-            if [ -f audit-report/assets-audit.md ]; then
-              echo "## Assets Audit 摘要"
+            if [ -f ${{ env.WORK_DIR }}/audit-report/assets-audit.md ]; then
+              echo "## Assets Audit Summary"
               echo ""
-              cat audit-report/assets-audit.md
+              cat ${{ env.WORK_DIR }}/audit-report/assets-audit.md
             fi
             echo "---"
-            if [ -f audit-report/meta-audit.md ]; then
-              echo "## Meta Audit 摘要"
+            if [ -f ${{ env.WORK_DIR }}/audit-report/meta-audit.md ]; then
+              echo "## Meta Audit Summary"
               echo ""
-              cat audit-report/meta-audit.md
+              cat ${{ env.WORK_DIR }}/audit-report/meta-audit.md
             fi
           } >> $GITHUB_STEP_SUMMARY
 
-      - name: 🚦 重抛结果
+      - name: Re-throw result
         if: always()
+        working-directory: ${{ github.workspace }}
         run: |
           A="${{ steps.audits.outputs.assets_rc }}"
           M="${{ steps.audits.outputs.meta_rc }}"
@@ -235,7 +238,7 @@ jobs:
           exit 0
 
   # =========================================================================
-  #  JOB 3 : A11y Gate — 16 快照 axe-core 严格 0 违规 + baseline diff
+  #  JOB 3 : A11y Gate
   # =========================================================================
   a11y-gate:
     name: A11y 16-snapshot (Playwright Chromium + axe-core · light/dark)
@@ -247,35 +250,35 @@ jobs:
       checks: write
       pull-requests: write
     steps:
-
-      - name: 🔍 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: ${{ env.WORK_DIR }}/package-lock.json
 
-      - name: 📦 npm ci (frozen lockfile)
+      - name: npm ci (frozen lockfile)
         run: npm ci --no-audit --no-fund
 
-      - name: 🎨 Cache Playwright Chromium
+      - name: Cache Playwright Chromium
         uses: actions/cache@v4
-        id:   pw-cache
+        id: pw-cache
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          key:  pw-chromium-${{ runner.os }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          key: pw-chromium-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', env.WORK_DIR), format('{0}/package.json', env.WORK_DIR)) }}
           restore-keys: |
             pw-chromium-${{ runner.os }}-
 
-      - name: 🎭 Install Playwright Chromium (with deps)
+      - name: Install Playwright Chromium (with deps)
         if: steps.pw-cache.outputs.cache-hit != 'true'
         run: npm run audit:a11y:install
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
 
-      - name: 🧭 准备 baseline (从 master 最近成功 run 下载 artifact)
+      - name: Prepare baseline (from master/latest successful run artifact)
         if: ${{ github.event_name == 'pull_request' && inputs.skipDiff != 'true' }}
         id: baseline-artifact
         continue-on-error: true
@@ -287,20 +290,20 @@ jobs:
           branch: ${{ github.base_ref || (github.event.repository.default_branch) }}
           path: .a11y-baseline-artifact
 
-      - name: 🔗 链接 baseline 文件路径
+      - name: Link baseline file path
         run: |
           mkdir -p audit-report
-          if [ -f .a11y-baseline-artifact/a11y-baseline.baseline.json ]; then
-            cp -a .a11y-baseline-artifact/a11y-baseline.baseline.json audit-report/a11y-baseline.baseline.json
-            echo "✅ 已从 master artifact 应用 baseline"
+          if [ -f ${{ github.workspace }}/.a11y-baseline-artifact/a11y-baseline.baseline.json ]; then
+            cp -a ${{ github.workspace }}/.a11y-baseline-artifact/a11y-baseline.baseline.json audit-report/a11y-baseline.baseline.json
+            echo "Applied baseline from master artifact"
           elif [ -f audit-report/a11y-baseline.baseline.json ]; then
-            echo "ℹ️  项目内置了 audit-report/a11y-baseline.baseline.json, 使用它"
+            echo "Using built-in audit-report/a11y-baseline.baseline.json"
           else
-            echo "⚠️ 未找到 master artifact 也未内置 baseline, 本 run 将跳过 diff, 仅用 strict 阈值门控"
+            echo "No master artifact nor built-in baseline, skipping diff, using strict gate only"
             echo "LSC_SKIP_DIFF=1" >> $GITHUB_ENV
           fi
 
-      - name: 🧪 运行 A11y 16 快照审计 (strict + diff)
+      - name: Run A11y 16-snapshot audit (strict + diff)
         id: audit-run
         continue-on-error: true
         run: |
@@ -339,7 +342,7 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
           FORCE_COLOR: 3
 
-      - name: 📤 保存 master baseline artifact (仅 master/main/tag)
+      - name: Save master baseline artifact (master/main/tag only)
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v4
         with:
@@ -347,11 +350,11 @@ jobs:
           if-no-files-found: error
           retention-days: 90
           path: |
-            audit-report/a11y-baseline.json
-            audit-report/a11y-baseline.md
-            audit-report/a11y-baseline.baseline.json
+            ${{ env.WORK_DIR }}/audit-report/a11y-baseline.json
+            ${{ env.WORK_DIR }}/audit-report/a11y-baseline.md
+            ${{ env.WORK_DIR }}/audit-report/a11y-baseline.baseline.json
 
-      - name: 📤 Upload A11y artifacts
+      - name: Upload A11y artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -359,43 +362,77 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
           path: |
-            audit-report/a11y-baseline.json
-            audit-report/a11y-baseline.md
-            audit-report/a11y-diff.json
-            audit-report/a11y-diff.md
-            audit-report/*.png
+            ${{ env.WORK_DIR }}/audit-report/a11y-baseline.json
+            ${{ env.WORK_DIR }}/audit-report/a11y-baseline.md
+            ${{ env.WORK_DIR }}/audit-report/a11y-diff.json
+            ${{ env.WORK_DIR }}/audit-report/a11y-diff.md
+            ${{ env.WORK_DIR }}/audit-report/*.png
 
-      - name: 📋 写入 A11y 摘要到 Job Summary
+      - name: Write A11y summary to Job Summary
         if: always()
+        working-directory: ${{ github.workspace }}
         run: |
           {
-            echo "# 链盛通 LSC V6.2-AI · A11y 审计结果"
+            echo "# 链盛通 LSC V6.2-AI · A11y Audit Result"
             echo ""
-            echo "| 步骤 | 退出码 | 说明 |"
+            echo "| Step | Exit Code | Description |"
             echo "|---|---|---|"
-            echo "| audit-a11y (strict) | ${{ steps.audit-run.outputs.audit_status }} | 16 快照 0 违规断言 |"
-            echo "| audit-diff (vs master baseline) | ${{ steps.audit-run.outputs.diff_status }} | 新增违规检查 |"
+            echo "| audit-a11y (strict) | ${{ steps.audit-run.outputs.audit_status }} | 16 snapshot 0-violation assertion |"
+            echo "| audit-diff (vs master baseline) | ${{ steps.audit-run.outputs.diff_status }} | New violation check |"
             echo ""
-            if [ -f audit-report/a11y-diff.md ]; then
+            if [ -f ${{ env.WORK_DIR }}/audit-report/a11y-diff.md ]; then
               echo "---"
-              echo "## Baseline Diff (自动生成)"
+              echo "## Baseline Diff (auto-generated)"
               echo ""
-              cat audit-report/a11y-diff.md
-            elif [ -f audit-report/a11y-baseline.md ]; then
+              cat ${{ env.WORK_DIR }}/audit-report/a11y-diff.md
+            elif [ -f ${{ env.WORK_DIR }}/audit-report/a11y-baseline.md ]; then
               echo "---"
-              echo "## 快照审计摘要 (无 Diff)"
+              echo "## Snapshot Audit Summary (no Diff)"
               echo ""
-              cat audit-report/a11y-baseline.md
+              cat ${{ env.WORK_DIR }}/audit-report/a11y-baseline.md
             else
-              echo "⚠️ 未找到报告文件, 请查看 artifacts。"
+              echo "No report file found, please check artifacts."
             fi
           } >> $GITHUB_STEP_SUMMARY
 
-      - name: 🚦 重抛结果
+      - name: Re-throw result
         if: always()
+        working-directory: ${{ github.workspace }}
         run: |
           STATUS1="${{ steps.audit-run.outputs.audit_status }}"
           STATUS2="${{ steps.audit-run.outputs.diff_status }}"
           FINAL="${{ steps.audit-run.outputs.FINAL_EXIT }}"
           echo "audit=$STATUS1 diff=$STATUS2 final=$FINAL"
           if [ -z "$FINAL" ] || [ "$FINAL" != "0" ]; then exit ${FINAL:-2}; fi
+          exit 0
+
+  # =========================================================================
+  #  SUMMARY JOB
+  # =========================================================================
+  quality-gate-summary:
+    name: Quality Gate Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [coverage-gate, assets-meta-gate, a11y-gate]
+    if: always()
+    steps:
+      - name: Enforce quality gate
+        run: |
+          echo "coverage-gate:   ${{ needs.coverage-gate.result }}"
+          echo "assets-meta-gate: ${{ needs.assets-meta-gate.result }}"
+          echo "a11y-gate:        ${{ needs.a11y-gate.result }}"
+          echo ""
+          FAIL=0
+          for r in "${{ needs.coverage-gate.result }}" "${{ needs.assets-meta-gate.result }}" "${{ needs.a11y-gate.result }}"; do
+            case "$r" in
+              success) ;;
+              *) FAIL=1; echo "FAILED gate: $r" ;;
+            esac
+          done
+          echo ""
+          if [ "$FAIL" -ne 0 ]; then
+            echo "::error::Quality gate FAILED — one or more gates did not pass."
+            exit 1
+          else
+            echo "::notice::Quality gate PASSED — coverage / assets / meta / a11y all green."
+          fi
