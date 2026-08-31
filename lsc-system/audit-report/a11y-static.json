@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-29T01:33:12.141Z",
+  "timestamp": "2026-08-31T08:48:47.923Z",
   "method": "jsdom + axe-core static (light + dark)",
   "apps": [
     {
@@ -213,16 +213,16 @@
     },
     {
       "name": "可用池 --c-available vs 纯白/纯黑",
-      "fg": "#48C986",
+      "fg": "#63D99E",
       "bg": "#070B13",
-      "ratio": 9.35,
+      "ratio": 11.21,
       "pass": true
     },
     {
       "name": "可用池 --c-available vs 主背景 --c-bg",
-      "fg": "#48C986",
+      "fg": "#63D99E",
       "bg": "#0E1520",
-      "ratio": 8.7,
+      "ratio": 10.42,
       "pass": true
     },
     {
@@ -276,9 +276,9 @@
     },
     {
       "name": "锁定池 --c-locked vs 主背景 --c-bg",
-      "fg": "#6E92DE",
+      "fg": "#8DB0F5",
       "bg": "#0E1520",
-      "ratio": 5.96,
+      "ratio": 8.42,
       "pass": true
     }
   ],
