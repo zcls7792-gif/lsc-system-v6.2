@@ -13,9 +13,9 @@
     "files": 6
   },
   "totals": {
-    "raw": 326415,
-    "gzip": 84469,
-    "compressRatio": 0.2588
+    "raw": 350999,
+    "gzip": 92081,
+    "compressRatio": 0.2623
   },
   "apps": {
     "platform-admin": {
@@ -26,19 +26,19 @@
         {
           "file": "platform-admin/app.js",
           "ext": "js",
-          "raw": 120030,
-          "gzip": 30116,
-          "ratio": 25.09
+          "raw": 122775,
+          "gzip": 30824,
+          "ratio": 25.11
         }
       ],
       "raw": {
-        "total": 120030,
-        "js": 120030,
+        "total": 122775,
+        "js": 122775,
         "css": 0
       },
       "gzip": {
-        "total": 30116,
-        "js": 30116,
+        "total": 30824,
+        "js": 30824,
         "css": 0
       }
     },
@@ -50,19 +50,19 @@
         {
           "file": "merchant-admin/app.js",
           "ext": "js",
-          "raw": 77790,
-          "gzip": 19971,
-          "ratio": 25.67
+          "raw": 84416,
+          "gzip": 22013,
+          "ratio": 26.08
         }
       ],
       "raw": {
-        "total": 77790,
-        "js": 77790,
+        "total": 84416,
+        "js": 84416,
         "css": 0
       },
       "gzip": {
-        "total": 19971,
-        "js": 19971,
+        "total": 22013,
+        "js": 22013,
         "css": 0
       }
     },
@@ -74,19 +74,19 @@
         {
           "file": "mobile-app/app.js",
           "ext": "js",
-          "raw": 46513,
-          "gzip": 12082,
-          "ratio": 25.98
+          "raw": 49794,
+          "gzip": 13394,
+          "ratio": 26.9
         }
       ],
       "raw": {
-        "total": 46513,
-        "js": 46513,
+        "total": 49794,
+        "js": 49794,
         "css": 0
       },
       "gzip": {
-        "total": 12082,
-        "js": 12082,
+        "total": 13394,
+        "js": 13394,
         "css": 0
       }
     },
@@ -98,19 +98,19 @@
         {
           "file": "mini-program/app.js",
           "ext": "js",
-          "raw": 35313,
-          "gzip": 8759,
+          "raw": 35375,
+          "gzip": 8774,
           "ratio": 24.8
         }
       ],
       "raw": {
-        "total": 35313,
-        "js": 35313,
+        "total": 35375,
+        "js": 35375,
         "css": 0
       },
       "gzip": {
-        "total": 8759,
-        "js": 8759,
+        "total": 8774,
+        "js": 8774,
         "css": 0
       }
     },
@@ -122,30 +122,30 @@
         {
           "file": "shared/design-system.css",
           "ext": "css",
-          "raw": 27055,
-          "gzip": 7335,
+          "raw": 33784,
+          "gzip": 9160,
           "ratio": 27.11
         },
         {
           "file": "shared/app-utils.js",
           "ext": "js",
-          "raw": 19714,
-          "gzip": 6206,
-          "ratio": 31.48
+          "raw": 24855,
+          "gzip": 7916,
+          "ratio": 31.85
         }
       ],
       "raw": {
-        "total": 46769,
-        "js": 19714,
-        "css": 27055
+        "total": 58639,
+        "js": 24855,
+        "css": 33784
       },
       "gzip": {
-        "total": 13541,
-        "js": 6206,
-        "css": 7335
+        "total": 17076,
+        "js": 7916,
+        "css": 9160
       }
     }
   },
   "alerts": [],
-  "_generatedAt": "2026-08-29T15:54:13.142Z"
+  "_generatedAt": "2026-08-31T03:23:46.968Z"
 }
