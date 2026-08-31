@@ -54,7 +54,7 @@ function setView(html) {
 /* 环形进度 */
 function ringChart(pct, color='var(--c-accent)', size=140, stroke=12) {
   const r = (size-stroke)/2, c = 2*Math.PI*r, off = c*(1-pct);
-  return `<svg width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--c-border-soft)" stroke-width="${stroke}"/>
+  return `<svg aria-hidden="true" width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--c-border-soft)" stroke-width="${stroke}"/>
   <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${size/2} ${size/2})"/></svg>`;
 }
 
@@ -95,7 +95,7 @@ function lineChart(opts) {
     pts.forEach(([x,y])=>{ paths += `<circle cx="${x}" cy="${y}" r="${s.radius||2.5}" fill="#fff" stroke="${s.color}" stroke-width="2"/>`; });
     legends += `<span class="tag tag-dot" style="background:${s.color};color:var(--c-text-on-colored,#fff);font-size:10px;">${s.name}</span> `;
   });
-  return { svg: `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${axes}${paths}</svg>`, legend: legends };
+  return { svg: `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${axes}${paths}</svg>`, legend: legends };
 }
 /* 环形/饼图 */
 function donutChart(opts) {
@@ -119,7 +119,7 @@ function donutChart(opts) {
       labels+=`<text x="${lx}" y="${ly+3}" font-size="10" fill="var(--c-text-2)" text-anchor="${Math.cos(mid)<0?'end':'start'}" font-weight="600">${(pct*100).toFixed(1)}%</text>`;
     }
   });
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${arcs}${labels}
+  return `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${arcs}${labels}
     <text x="${cx}" y="${cy-4}" font-size="11" fill="var(--c-text-3)" text-anchor="middle">总计</text>
     <text x="${cx}" y="${cy+14}" font-size="15" font-weight="700" fill="var(--c-text-1)" text-anchor="middle" font-family="var(--ff-mono)">${total>=10000?(total/10000).toFixed(1)+'万':total}${unit}</text>
   </svg>`;
@@ -146,7 +146,7 @@ function stackedBar(opts) {
     if(i%Math.ceil(n/8)===0) xLabs += `<text x="${x+bw/2}" y="${h-pad.b+16}" font-size="10" fill="var(--c-text-3)" text-anchor="middle">${lb}</text>`;
   });
   stacks.forEach((st,i)=>{ legend += `<span class="tag tag-dot" style="background:${st.color};color:var(--c-text-on-colored,#fff);font-size:10px;">${st.name}</span> `; });
-  return { svg: `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabs}</svg>`, legend };
+  return { svg: `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabs}</svg>`, legend };
 }
 
 /* ============== 商家经营总览 ============== */
@@ -320,7 +320,7 @@ function renderShop() {
           </div>
         </div>
         <div class="map-box" id="shop-map-box">
-          <svg class="map-svg" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <svg aria-hidden="true" class="map-svg" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="waterPattern" width="40" height="40" patternUnits="userSpaceOnUse">
                 <rect width="40" height="40" fill="#d9e6f2"/>
@@ -627,7 +627,7 @@ function renderWallet() {
           const xAt=i=>pad.l+i*iw/(data.length-1);
           const yAt=v=>pad.t+ih-((v-min)/range)*ih;
           const pts=data.map((v,i)=>`${xAt(i)},${yAt(v)}`).join(' ');
-          return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
+          return `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
             <polyline points="${pts}" fill="none" stroke="var(--c-available)" stroke-width="2.5"/>
             <polygon points="${pad.l},${pad.t+ih} ${pts} ${xAt(data.length-1)},${pad.t+ih}" fill="var(--c-available)" opacity="0.12"/>
             ${data.map((v,i)=>`<circle cx="${xAt(i)}" cy="${yAt(v)}" r="3" fill="var(--c-available)"/>`).join('')}

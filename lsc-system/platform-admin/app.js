@@ -106,7 +106,7 @@ function lineChart(opts) {
     fcLine = `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t+ih}" stroke="var(--c-accent)" stroke-width="1" stroke-dasharray="4 4"/>
     <text x="${x+4}" y="${pad.t+12}" font-size="10" fill="var(--c-accent-deep)" font-weight="600">AI预测</text>`;
   }
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
+  return `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
     ${grid}${paths}${fcLine}${xLabels}
   </svg>`;
 }
@@ -128,13 +128,13 @@ function barChart(opts) {
     bars += `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3" fill="${color}" opacity="${0.6+0.4*(i/n)}"/>`;
     if (i%Math.ceil(n/8)===0) xLabels += `<text x="${x+bw/2}" y="${h-pad.b+16}" font-size="10" fill="var(--c-text-3)" text-anchor="middle">${labels[i]}</text>`;
   });
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabels}</svg>`;
+  return `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabels}</svg>`;
 }
 
 /* 进度环 */
 function ringChart(pct, color='var(--c-primary)') {
   const r = 44, c = 2*Math.PI*r, off = c*(1-pct);
-  return `<svg width="110" height="110"><circle cx="55" cy="55" r="${r}" fill="none" stroke="var(--c-border-soft)" stroke-width="8"/>
+  return `<svg aria-hidden="true" width="110" height="110"><circle cx="55" cy="55" r="${r}" fill="none" stroke="var(--c-border-soft)" stroke-width="8"/>
   <circle cx="55" cy="55" r="${r}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 55 55)"/></svg>`;
 }
 
@@ -163,7 +163,7 @@ function donutChart(opts) {
       labels += `<text x="${lx}" y="${ly+3}" font-size="10" fill="var(--c-text-2)" text-anchor="${Math.cos(mid)<0?'end':'start'}" font-weight="600">${(pct*100).toFixed(1)}%</text>`;
     }
   });
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${arcs}${labels}
+  return `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${arcs}${labels}
     <text x="${cx}" y="${cy-4}" font-size="11" fill="var(--c-text-3)" text-anchor="middle">总计</text>
     <text x="${cx}" y="${cy+14}" font-size="16" font-weight="700" fill="var(--c-text-1)" text-anchor="middle" font-family="var(--ff-mono)">${total>=10000?(total/10000).toFixed(1)+'万':total}${unit}</text>
   </svg>`;
@@ -188,7 +188,7 @@ function heatmap(opts) {
   });
   rows.forEach((lb,i)=>{ yLabs += `<text x="${padL-6}" y="${padT+i*ch+ch/2+3}" font-size="10" fill="var(--c-text-3)" text-anchor="end">${lb}</text>`; });
   cols.forEach((lb,i)=>{ if(i%3===0) xLabs += `<text x="${padL+i*cw+cw/2}" y="${h-padB+2}" font-size="9" fill="var(--c-text-3)" text-anchor="middle">${lb}</text>`; });
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${yLabs}${cells}${xLabs}</svg>`;
+  return `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${yLabs}${cells}${xLabs}</svg>`;
 }
 
 /* ============== 图表：堆叠柱状图 ============== */
@@ -214,7 +214,7 @@ function stackedBar(opts) {
     if(i%Math.ceil(n/8)===0) xLabs += `<text x="${x+bw/2}" y="${h-pad.b+16}" font-size="10" fill="var(--c-text-3)" text-anchor="middle">${lb}</text>`;
   });
   stacks.forEach((st,i)=>{ legend += `<span class="tag tag-dot" style="background:${st.color};color:#fff;font-size:10px;">${st.name}</span> `; });
-  return { svg: `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabs}</svg>`, legend };
+  return { svg: `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${bars}${xLabs}</svg>`, legend };
 }
 
 /* ============== 图表：雷达图 ============== */
@@ -248,7 +248,7 @@ function radarChart(opts) {
       polys += `<circle cx="${x}" cy="${y}" r="3" fill="${s.color}"/>`;
     });
   });
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${grid}${axis}${polys}${axisLabels}</svg>`;
+  return `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">${grid}${axis}${polys}${axisLabels}</svg>`;
 }
 
 /* ============== 仪表盘 ============== */
@@ -501,7 +501,7 @@ function renderDashboard() {
       <span class="tag tag-dot tag-accent">实时</span>
     </div>
     <div style="overflow-x:auto;">
-    <svg viewBox="0 0 960 280" style="width:100%;min-width:720px;height:auto;">
+    <svg aria-hidden="true" viewBox="0 0 960 280" style="width:100%;min-width:720px;height:auto;">
       <defs>
         <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
           <path d="M0,0 L8,4 L0,8 Z" fill="var(--c-text-3)"/>
@@ -740,7 +740,7 @@ function renderB2B() {
   <div class="card mb-5">
     <div class="card-head"><div class="card-title">B2B订单生命周期状态机</div><div class="card-sub">全状态流转路径 · 绿色=正常 · 红色=异常终止</div></div>
     <div style="overflow-x:auto;">
-    <svg viewBox="0 0 920 160" style="width:100%;min-width:680px;height:auto;">
+    <svg aria-hidden="true" viewBox="0 0 920 160" style="width:100%;min-width:680px;height:auto;">
       <defs>
         <marker id="sm-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--c-text-3)"/></marker>
         <marker id="sm-arrow-ok" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--c-available)"/></marker>

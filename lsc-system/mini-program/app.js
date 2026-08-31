@@ -272,7 +272,7 @@ function renderWallet() {
       <span class="icon icon-sm" data-i="flow" style="color:var(--c-wx-green-deep);"></span>我的LSC流转链路
     </div>
     <div style="overflow-x:auto;">
-    <svg viewBox="0 0 520 160" style="width:100%;min-width:480px;height:130px;">
+    <svg aria-hidden="true" viewBox="0 0 520 160" style="width:100%;min-width:480px;height:130px;">
       <defs>
         <marker id="wx-a1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#576b95"/></marker>
         <marker id="wx-a2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--c-wx-green-deep)"/></marker>

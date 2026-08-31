@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-08-31T04:50:36.883Z",
+  "generatedAt": "2026-08-31T05:43:48.247Z",
   "tool": "audit-screenreader.js",
   "standard": "WAI-ARIA 1.2 + WCAG 2.1 AA",
   "apps": 4,
   "checksPerApp": 22,
   "totalChecks": 88,
   "summary": {
-    "pass": 83,
+    "pass": 87,
     "fail": 0,
-    "warn": 5
+    "warn": 1
   },
   "results": [
     {
@@ -117,8 +117,8 @@
           "sev": "·",
           "label": "装饰性 <svg> 标记 aria-hidden=\"true\"",
           "result": {
-            "pass": false,
-            "detail": "32/37 个装饰性 svg 缺失 aria-hidden: (无类名), (无类名), (无类名), (无类名), (无类名)"
+            "pass": true,
+            "detail": "37 个 svg 全部正确标记"
           }
         },
         {
@@ -139,7 +139,7 @@
           "label": "aria-hidden=\"true\" 元素不含可聚焦子元素 (inert 豁免)",
           "result": {
             "pass": true,
-            "detail": "23 个 aria-hidden 元素无焦点泄漏"
+            "detail": "57 个 aria-hidden 元素无焦点泄漏"
           }
         },
         {
@@ -341,8 +341,8 @@
           "sev": "·",
           "label": "装饰性 <svg> 标记 aria-hidden=\"true\"",
           "result": {
-            "pass": false,
-            "detail": "15/19 个装饰性 svg 缺失 aria-hidden: (无类名), (无类名), (无类名), (无类名), (无类名)"
+            "pass": true,
+            "detail": "19 个 svg 全部正确标记"
           }
         },
         {
@@ -360,7 +360,7 @@
           "label": "aria-hidden=\"true\" 元素不含可聚焦子元素 (inert 豁免)",
           "result": {
             "pass": true,
-            "detail": "21 个 aria-hidden 元素无焦点泄漏"
+            "detail": "37 个 aria-hidden 元素无焦点泄漏"
           }
         },
         {
@@ -562,8 +562,8 @@
           "sev": "·",
           "label": "装饰性 <svg> 标记 aria-hidden=\"true\"",
           "result": {
-            "pass": false,
-            "detail": "71/77 个装饰性 svg 缺失 aria-hidden: (无类名), (无类名), (无类名), (无类名), (无类名)"
+            "pass": true,
+            "detail": "77 个 svg 全部正确标记"
           }
         },
         {
@@ -581,7 +581,7 @@
           "label": "aria-hidden=\"true\" 元素不含可聚焦子元素 (inert 豁免)",
           "result": {
             "pass": true,
-            "detail": "22 个 aria-hidden 元素无焦点泄漏"
+            "detail": "93 个 aria-hidden 元素无焦点泄漏"
           }
         },
         {
@@ -783,8 +783,8 @@
           "sev": "·",
           "label": "装饰性 <svg> 标记 aria-hidden=\"true\"",
           "result": {
-            "pass": false,
-            "detail": "63/69 个装饰性 svg 缺失 aria-hidden: (无类名), (无类名), (无类名), (无类名), (无类名)"
+            "pass": true,
+            "detail": "69 个 svg 全部正确标记"
           }
         },
         {
@@ -802,7 +802,7 @@
           "label": "aria-hidden=\"true\" 元素不含可聚焦子元素 (inert 豁免)",
           "result": {
             "pass": true,
-            "detail": "21 个 aria-hidden 元素无焦点泄漏"
+            "detail": "84 个 aria-hidden 元素无焦点泄漏"
           }
         },
         {

@@ -301,3 +301,10 @@ const ICONS = {
   arrowUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
   arrowRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
 };
+
+// 无障碍: 给所有装饰性 SVG 统一注入 aria-hidden="true" (屏幕阅读器跳过装饰图标)
+for (const _k in ICONS) {
+  if (typeof ICONS[_k] === 'string' && ICONS[_k].includes('<svg') && !ICONS[_k].includes('aria-hidden')) {
+    ICONS[_k] = ICONS[_k].replace('<svg ', '<svg aria-hidden="true" ');
+  }
+}

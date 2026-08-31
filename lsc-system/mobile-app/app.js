@@ -446,7 +446,7 @@ function renderWallet() {
         <span class="icon icon-sm" data-i="flow" style="color:var(--c-primary);"></span>我的LSC流转链路
       </div>
       <div style="overflow-x:auto;">
-      <svg viewBox="0 0 560 170" style="width:100%;min-width:520px;height:140px;">
+      <svg aria-hidden="true" viewBox="0 0 560 170" style="width:100%;min-width:520px;height:140px;">
         <defs>
           <marker id="arrow-user-1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--c-locked)"/></marker>
           <marker id="arrow-user-2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--c-available)"/></marker>
@@ -501,7 +501,7 @@ function renderWallet() {
         const xAt=i=>pad.l+i*iw/(data.length-1);
         const yAt=v=>pad.t+ih-((v-min)/range)*ih;
         const pts=data.map((v,i)=>`${xAt(i)},${yAt(v)}`).join(' ');
-        return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
+        return `<svg aria-hidden="true" viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
           <polygon points="${pad.l},${pad.t+ih} ${pts} ${xAt(data.length-1)},${pad.t+ih}" fill="var(--c-available)" opacity="0.15"/>
           <polyline points="${pts}" fill="none" stroke="var(--c-available)" stroke-width="2.5"/>
           ${data.map((v,i)=>`<circle cx="${xAt(i)}" cy="${yAt(v)}" r="3" fill="var(--c-available)"/>`).join('')}
