@@ -170,7 +170,7 @@ jobs:
       - name: 📦 npm ci (frozen lockfile)
         run: npm ci --no-audit --no-fund
 
-      - name: 📊 运行审计: 资产体量 (audit-assets) + 元数据合规 (audit-meta)
+      - name: "📊 运行审计: 资产体量 (audit-assets) + 元数据合规 (audit-meta)"
         id: audits
         run: |
           set +e
