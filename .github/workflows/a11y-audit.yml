@@ -114,7 +114,6 @@ jobs:
         if: always()
         working-directory: ${{ github.workspace }}
         run: |
-          cd lsc-system
           {
             echo "# 链盛通 LSC V6.2-AI · 覆盖率门控"
             echo ""
@@ -139,7 +138,6 @@ jobs:
         if: always()
         working-directory: ${{ github.workspace }}
         run: |
-          cd lsc-system
           EXIT="${{ steps.cov.outputs.exit_code }}"
           echo "coverage exit=$EXIT"
           [ -z "$EXIT" ] && exit 2
@@ -204,7 +202,6 @@ jobs:
         if: always()
         working-directory: ${{ github.workspace }}
         run: |
-          cd lsc-system
           {
             echo "# 链盛通 LSC V6.2-AI · 资产 / 元数据门控"
             echo ""
@@ -231,7 +228,6 @@ jobs:
         if: always()
         working-directory: ${{ github.workspace }}
         run: |
-          cd lsc-system
           A="${{ steps.audits.outputs.assets_rc }}"
           M="${{ steps.audits.outputs.meta_rc }}"
           echo "assets=$A meta=$M"
@@ -376,7 +372,6 @@ jobs:
         if: always()
         working-directory: ${{ github.workspace }}
         run: |
-          cd lsc-system
           {
             echo "# 链盛通 LSC V6.2-AI · A11y Audit Result"
             echo ""
@@ -404,7 +399,6 @@ jobs:
         if: always()
         working-directory: ${{ github.workspace }}
         run: |
-          cd lsc-system
           STATUS1="${{ steps.audit-run.outputs.audit_status }}"
           STATUS2="${{ steps.audit-run.outputs.diff_status }}"
           FINAL="${{ steps.audit-run.outputs.FINAL_EXIT }}"
@@ -423,8 +417,8 @@ jobs:
     if: always()
     steps:
       - name: Enforce quality gate
+        working-directory: ${{ github.workspace }}
         run: |
-          cd lsc-system
           echo "coverage-gate:   ${{ needs.coverage-gate.result }}"
           echo "assets-meta-gate: ${{ needs.assets-meta-gate.result }}"
           echo "a11y-gate:        ${{ needs.a11y-gate.result }}"
