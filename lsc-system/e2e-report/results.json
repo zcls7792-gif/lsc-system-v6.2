@@ -105,7 +105,7 @@
         {
           "title": "SR · 平台管理后台 [platform-admin]",
           "file": "lsc-screenreader.spec.js",
-          "line": 454,
+          "line": 529,
           "column": 6,
           "specs": [
             {
@@ -124,12 +124,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4275,
+                      "duration": 3979,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T23:59:47.676Z",
+                      "startTime": "2026-08-31T00:15:04.405Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -139,7 +139,7 @@
               ],
               "id": "49389f49b75454fc8546-e7cd89ffeaeace5eb041",
               "file": "lsc-screenreader.spec.js",
-              "line": 468,
+              "line": 543,
               "column": 3
             },
             {
@@ -158,12 +158,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 3631,
+                      "duration": 3521,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T23:59:47.677Z",
+                      "startTime": "2026-08-31T00:15:04.412Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -173,7 +173,7 @@
               ],
               "id": "49389f49b75454fc8546-cd6a166af006b0727813",
               "file": "lsc-screenreader.spec.js",
-              "line": 477,
+              "line": 552,
               "column": 3
             },
             {
@@ -192,12 +192,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 3040,
+                      "duration": 3004,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T23:59:51.977Z",
+                      "startTime": "2026-08-31T00:15:08.547Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -207,7 +207,7 @@
               ],
               "id": "49389f49b75454fc8546-e619c54febbeff4f9692",
               "file": "lsc-screenreader.spec.js",
-              "line": 535,
+              "line": 610,
               "column": 3
             }
           ]
@@ -215,7 +215,7 @@
         {
           "title": "SR · 商家管理后台 [merchant-admin]",
           "file": "lsc-screenreader.spec.js",
-          "line": 548,
+          "line": 623,
           "column": 6,
           "specs": [
             {
@@ -234,12 +234,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3229,
+                      "duration": 3615,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T23:59:52.636Z",
+                      "startTime": "2026-08-31T00:15:08.975Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -249,7 +249,7 @@
               ],
               "id": "49389f49b75454fc8546-3080086c8481930d1365",
               "file": "lsc-screenreader.spec.js",
-              "line": 563,
+              "line": 638,
               "column": 3
             },
             {
@@ -268,12 +268,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2794,
+                      "duration": 3085,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T23:59:55.046Z",
+                      "startTime": "2026-08-31T00:15:11.593Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -283,7 +283,7 @@
               ],
               "id": "49389f49b75454fc8546-939d1a303b47d5ff62e1",
               "file": "lsc-screenreader.spec.js",
-              "line": 572,
+              "line": 647,
               "column": 3
             },
             {
@@ -302,12 +302,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2849,
+                      "duration": 2857,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T23:59:55.882Z",
+                      "startTime": "2026-08-31T00:15:12.636Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -317,7 +317,7 @@
               ],
               "id": "49389f49b75454fc8546-cf39617a9509845db86f",
               "file": "lsc-screenreader.spec.js",
-              "line": 589,
+              "line": 664,
               "column": 3
             }
           ]
@@ -325,7 +325,7 @@
         {
           "title": "SR · 消费者移动端APP[移动端] (mobile-app)",
           "file": "lsc-screenreader.spec.js",
-          "line": 605,
+          "line": 680,
           "column": 6,
           "specs": [
             {
@@ -344,12 +344,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2628,
+                      "duration": 2673,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T23:59:58.988Z",
+                      "startTime": "2026-08-31T00:15:15.861Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -359,7 +359,7 @@
               ],
               "id": "49389f49b75454fc8546-df020f5b991429186138",
               "file": "lsc-screenreader.spec.js",
-              "line": 618,
+              "line": 693,
               "column": 3
             },
             {
@@ -378,12 +378,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3196,
+                      "duration": 3272,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-30T23:59:59.663Z",
+                      "startTime": "2026-08-31T00:15:16.471Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -393,7 +393,7 @@
               ],
               "id": "49389f49b75454fc8546-d4b8972181c298e45c23",
               "file": "lsc-screenreader.spec.js",
-              "line": 625,
+              "line": 700,
               "column": 3
             },
             {
@@ -412,16 +412,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2502,
+                      "duration": 2851,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [
-                        {
-                          "text": "[WARN] mobile-app SR-13: 未找到档位卡片\n"
-                        }
-                      ],
+                      "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-31T00:00:02.140Z",
+                      "startTime": "2026-08-31T00:15:19.081Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -431,7 +427,7 @@
               ],
               "id": "49389f49b75454fc8546-9b295f15014313fe9447",
               "file": "lsc-screenreader.spec.js",
-              "line": 631,
+              "line": 706,
               "column": 3
             },
             {
@@ -450,12 +446,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2246,
+                      "duration": 2439,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-31T00:00:03.514Z",
+                      "startTime": "2026-08-31T00:15:20.387Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -465,7 +461,7 @@
               ],
               "id": "49389f49b75454fc8546-544558944bd013fd5b33",
               "file": "lsc-screenreader.spec.js",
-              "line": 638,
+              "line": 713,
               "column": 3
             },
             {
@@ -484,12 +480,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2041,
+                      "duration": 2095,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-31T00:00:04.659Z",
+                      "startTime": "2026-08-31T00:15:21.970Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -499,7 +495,7 @@
               ],
               "id": "49389f49b75454fc8546-e0c09f7814f11cb78050",
               "file": "lsc-screenreader.spec.js",
-              "line": 642,
+              "line": 717,
               "column": 3
             }
           ]
@@ -507,7 +503,7 @@
         {
           "title": "SR · 微信小程序端[小程序] (mini-program)",
           "file": "lsc-screenreader.spec.js",
-          "line": 651,
+          "line": 726,
           "column": 6,
           "specs": [
             {
@@ -526,12 +522,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2070,
+                      "duration": 2142,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-31T00:00:05.779Z",
+                      "startTime": "2026-08-31T00:15:22.842Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -541,7 +537,7 @@
               ],
               "id": "49389f49b75454fc8546-3a37dbcd8cc086db284e",
               "file": "lsc-screenreader.spec.js",
-              "line": 664,
+              "line": 739,
               "column": 3
             },
             {
@@ -560,12 +556,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2622,
+                      "duration": 2705,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-31T00:00:06.721Z",
+                      "startTime": "2026-08-31T00:15:24.078Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -575,7 +571,7 @@
               ],
               "id": "49389f49b75454fc8546-c58bf4a7dc0e78fc2925",
               "file": "lsc-screenreader.spec.js",
-              "line": 671,
+              "line": 746,
               "column": 3
             },
             {
@@ -594,16 +590,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2279,
+                      "duration": 2663,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [
-                        {
-                          "text": "[WARN] mini-program SR-13: 未找到档位卡片\n"
-                        }
-                      ],
+                      "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-31T00:00:07.859Z",
+                      "startTime": "2026-08-31T00:15:24.998Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -613,7 +605,7 @@
               ],
               "id": "49389f49b75454fc8546-7c543ea0f5f75860c4cb",
               "file": "lsc-screenreader.spec.js",
-              "line": 677,
+              "line": 752,
               "column": 3
             },
             {
@@ -632,16 +624,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2116,
+                      "duration": 2287,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [
-                        {
-                          "text": "[WARN] mini-program SR-10: 未找到表单元素\n"
-                        }
-                      ],
+                      "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-31T00:00:09.356Z",
+                      "startTime": "2026-08-31T00:15:26.800Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -651,7 +639,7 @@
               ],
               "id": "49389f49b75454fc8546-849c6c12614206ee9dc8",
               "file": "lsc-screenreader.spec.js",
-              "line": 683,
+              "line": 758,
               "column": 3
             }
           ]
@@ -661,8 +649,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-08-30T23:59:46.120Z",
-    "duration": 25483.234,
+    "startTime": "2026-08-31T00:15:02.836Z",
+    "duration": 26370.921,
     "expected": 15,
     "skipped": 0,
     "unexpected": 0,
