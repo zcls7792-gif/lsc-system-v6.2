@@ -1,6 +1,6 @@
 # 屏幕阅读器兼容性审计报告
 
-> 生成时间: 2026-08-30T16:07:08.160Z
+> 生成时间: 2026-08-30T23:57:35.737Z
 > 审计工具: audit-screenreader.js (JSDOM + VM)
 > 标准: WAI-ARIA 1.2 + WCAG 2.1 AA (屏幕阅读器兼容性)
 
@@ -61,12 +61,12 @@
 | aria-hidden-focus | R | aria-hidden="true" 元素不含可聚焦子元素 (inert 豁免) | ✅ PASS | 21 个 aria-hidden 元素无焦点泄漏 |
 | aria-current | R | 当前激活导航项标记 aria-current | ✅ PASS | aria-current="page" |
 | tabindex-positive | R | 无 tabindex 正数 (避免破坏 Tab 顺序) | ✅ PASS | 无正数 tabindex |
-| live-regions-dom | R | 动态状态文本元素有 aria-live 或 role=status/alert | ✅ PASS | 无动态状态元素 (DOM 级) |
+| live-regions-dom | R | 动态状态文本元素有 aria-live 或 role=status/alert | ✅ PASS | ✓ #app-status (polite) |
 | live-regions-js | R | JS 动态生成状态文本含 aria-live 或 role=status | ✅ PASS | JS 中无动态文本更新元素 |
 | dialog-aria-js | R | JS 动态生成弹窗含 role=dialog + aria-modal + 可访问名称 | ✅ PASS | ✓ 动态 dialog aria 完整 |
 | theme-toggle-a11y | · | 主题切换按钮有 aria-label + data-state | ✅ PASS | ✓ aria-label="切换主题，当前：跟随系统" |
 | nav-keyboard | R | 导航项支持键盘 (tabindex/role=button) | ✅ PASS | 9 个导航项均可键盘操作 |
-| sr-only-text | · | 使用 .sr-only 为视觉隐藏文本提供屏幕阅读器内容 | ✅ PASS | 4 处 .sr-only: ，3 项待处理; ，2 条待处理; 链盛通LSC商家管理后台; 搜索商品、订单或流水 |
+| sr-only-text | · | 使用 .sr-only 为视觉隐藏文本提供屏幕阅读器内容 | ✅ PASS | 5 处 .sr-only: ，3 项待处理; ，2 条待处理; 链盛通LSC商家管理后台; 搜索商品、订单或流水 |
 | color-scheme | · | <meta name="color-scheme"> 支持浅/深色 | ✅ PASS | content="light dark" |
 
 ## ⚠ 消费者移动端APP [mobile-app]
@@ -88,12 +88,12 @@
 | aria-hidden-focus | R | aria-hidden="true" 元素不含可聚焦子元素 (inert 豁免) | ✅ PASS | 22 个 aria-hidden 元素无焦点泄漏 |
 | aria-current | R | 当前激活导航项标记 aria-current | ✅ PASS | aria-current="page" |
 | tabindex-positive | R | 无 tabindex 正数 (避免破坏 Tab 顺序) | ✅ PASS | 无正数 tabindex |
-| live-regions-dom | R | 动态状态文本元素有 aria-live 或 role=status/alert | ✅ PASS | 无动态状态元素 (DOM 级) |
+| live-regions-dom | R | 动态状态文本元素有 aria-live 或 role=status/alert | ✅ PASS | ✓ #app-status (polite) |
 | live-regions-js | R | JS 动态生成状态文本含 aria-live 或 role=status | ✅ PASS | JS 中无动态状态文本元素 |
 | dialog-aria-js | R | JS 动态生成弹窗含 role=dialog + aria-modal + 可访问名称 | ✅ PASS | JS 中无动态 dialog |
 | theme-toggle-a11y | · | 主题切换按钮有 aria-label + data-state | ✅ PASS | ✓ aria-label="切换主题，当前：跟随系统" |
 | nav-keyboard | R | 导航项支持键盘 (tabindex/role=button) | ✅ PASS | 5 个导航项均可键盘操作 |
-| sr-only-text | · | 使用 .sr-only 为视觉隐藏文本提供屏幕阅读器内容 | ✅ PASS | 1 处 .sr-only: 链盛通LSC消费者APP |
+| sr-only-text | · | 使用 .sr-only 为视觉隐藏文本提供屏幕阅读器内容 | ✅ PASS | 2 处 .sr-only: 链盛通LSC消费者APP |
 | color-scheme | · | <meta name="color-scheme"> 支持浅/深色 | ✅ PASS | content="light dark" |
 
 ## ⚠ 微信小程序端 [mini-program]
@@ -115,12 +115,12 @@
 | aria-hidden-focus | R | aria-hidden="true" 元素不含可聚焦子元素 (inert 豁免) | ✅ PASS | 21 个 aria-hidden 元素无焦点泄漏 |
 | aria-current | R | 当前激活导航项标记 aria-current | ✅ PASS | aria-current="page" |
 | tabindex-positive | R | 无 tabindex 正数 (避免破坏 Tab 顺序) | ✅ PASS | 无正数 tabindex |
-| live-regions-dom | R | 动态状态文本元素有 aria-live 或 role=status/alert | ✅ PASS | 无动态状态元素 (DOM 级) |
+| live-regions-dom | R | 动态状态文本元素有 aria-live 或 role=status/alert | ✅ PASS | ✓ #app-status (polite) |
 | live-regions-js | R | JS 动态生成状态文本含 aria-live 或 role=status | ✅ PASS | JS 中无动态状态文本元素 |
 | dialog-aria-js | R | JS 动态生成弹窗含 role=dialog + aria-modal + 可访问名称 | ✅ PASS | JS 中无动态 dialog |
 | theme-toggle-a11y | · | 主题切换按钮有 aria-label + data-state | ✅ PASS | ✓ aria-label="切换主题，当前：跟随系统" |
 | nav-keyboard | R | 导航项支持键盘 (tabindex/role=button) | ✅ PASS | 5 个导航项均可键盘操作 |
-| sr-only-text | · | 使用 .sr-only 为视觉隐藏文本提供屏幕阅读器内容 | ✅ PASS | 1 处 .sr-only: 链盛通LSC微信小程序 |
+| sr-only-text | · | 使用 .sr-only 为视觉隐藏文本提供屏幕阅读器内容 | ✅ PASS | 2 处 .sr-only: 链盛通LSC微信小程序 |
 | color-scheme | · | <meta name="color-scheme"> 支持浅/深色 | ✅ PASS | content="light dark" |
 
 ## 结论

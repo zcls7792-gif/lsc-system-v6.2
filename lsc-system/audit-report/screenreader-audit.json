@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-30T16:07:08.159Z",
+  "generatedAt": "2026-08-30T23:57:35.737Z",
   "tool": "audit-screenreader.js",
   "standard": "WAI-ARIA 1.2 + WCAG 2.1 AA",
   "apps": 4,
@@ -387,7 +387,10 @@
           "label": "动态状态文本元素有 aria-live 或 role=status/alert",
           "result": {
             "pass": true,
-            "detail": "无动态状态元素 (DOM 级)"
+            "detail": "✓ #app-status (polite)",
+            "items": [
+              "✓ #app-status (polite)"
+            ]
           }
         },
         {
@@ -438,7 +441,7 @@
           "label": "使用 .sr-only 为视觉隐藏文本提供屏幕阅读器内容",
           "result": {
             "pass": true,
-            "detail": "4 处 .sr-only: ，3 项待处理; ，2 条待处理; 链盛通LSC商家管理后台; 搜索商品、订单或流水"
+            "detail": "5 处 .sr-only: ，3 项待处理; ，2 条待处理; 链盛通LSC商家管理后台; 搜索商品、订单或流水"
           }
         },
         {
@@ -605,7 +608,10 @@
           "label": "动态状态文本元素有 aria-live 或 role=status/alert",
           "result": {
             "pass": true,
-            "detail": "无动态状态元素 (DOM 级)"
+            "detail": "✓ #app-status (polite)",
+            "items": [
+              "✓ #app-status (polite)"
+            ]
           }
         },
         {
@@ -653,7 +659,7 @@
           "label": "使用 .sr-only 为视觉隐藏文本提供屏幕阅读器内容",
           "result": {
             "pass": true,
-            "detail": "1 处 .sr-only: 链盛通LSC消费者APP"
+            "detail": "2 处 .sr-only: 链盛通LSC消费者APP"
           }
         },
         {
@@ -823,7 +829,10 @@
           "label": "动态状态文本元素有 aria-live 或 role=status/alert",
           "result": {
             "pass": true,
-            "detail": "无动态状态元素 (DOM 级)"
+            "detail": "✓ #app-status (polite)",
+            "items": [
+              "✓ #app-status (polite)"
+            ]
           }
         },
         {
@@ -871,7 +880,7 @@
           "label": "使用 .sr-only 为视觉隐藏文本提供屏幕阅读器内容",
           "result": {
             "pass": true,
-            "detail": "1 处 .sr-only: 链盛通LSC微信小程序"
+            "detail": "2 处 .sr-only: 链盛通LSC微信小程序"
           }
         },
         {
