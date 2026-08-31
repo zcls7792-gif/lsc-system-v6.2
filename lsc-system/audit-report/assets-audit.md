@@ -1,9 +1,9 @@
 # 链盛通 LSC 前端资产体量审计报告
 
-- 生成时间: 2026-08-31T03:23:46.970Z
+- 生成时间: 2026-08-31T04:50:33.361Z
 - 严格模式: 开启
 - 结果: FAIL=0 WARN=0  Score=100/100
-- 合计: RAW=342.77 KiB  GZIP=89.92 KiB  压缩率=26.2%
+- 合计: RAW=342.86 KiB  GZIP=89.98 KiB  压缩率=26.2%
 
 ## 阈值
 
@@ -12,7 +12,7 @@
 | 单应用 JS gzip 总和 | ≤200.00 KiB | - | - |
 | 单应用 CSS gzip 总和 | ≤50.00 KiB | - | - |
 | 单文件 gzip 绝对上限 | ≤180.00 KiB | - | - |
-| 全部应用+共享 gzip 总和 | ≤800.00 KiB | 89.92 KiB | PASS |
+| 全部应用+共享 gzip 总和 | ≤800.00 KiB | 89.98 KiB | PASS |
 
 ## 平台管理后台 (platform-admin)
 
@@ -28,13 +28,13 @@
 ## 商家管理后台 (merchant-admin)
 
 - 资源文件数: 1
-- RAW  total: 82.44 KiB  (JS 82.44 KiB / CSS 0 B)
-- GZIP total: 21.50 KiB (JS 21.50 KiB / CSS 0 B)
+- RAW  total: 82.52 KiB  (JS 82.52 KiB / CSS 0 B)
+- GZIP total: 21.55 KiB (JS 21.55 KiB / CSS 0 B)
 - 压缩率: 26.1%
 
 | 文件 | 类型 | RAW | GZIP | 压缩率 |
 |---|---|---:|---:|---:|
-| `merchant-admin/app.js` | JS | 82.44 KiB | 21.50 KiB | 26.08% |
+| `merchant-admin/app.js` | JS | 82.52 KiB | 21.55 KiB | 26.12% |
 
 ## 消费者移动端APP (mobile-app)
 

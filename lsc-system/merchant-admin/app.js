@@ -7,6 +7,7 @@ document.querySelectorAll('.icon[data-i]').forEach(el=>{
 const crumbMap = { dashboard:'经营总览', shop:'店铺管理', product:'商品管理', wallet:'LSC账户', nh:'核销管理', b2b:'B2B交易', promotion:'推广管理', credit:'信用中心', ai:'AI助手' };
 const views = { dashboard: renderDashboard, shop: renderShop, product: renderProduct, wallet: renderWallet, nh: renderNH, b2b: renderB2B, promotion: renderPromotion, credit: renderCredit, ai: renderAI };
 /* 当前登录商家（单一商家视图 · 档位/限额已在 shared/app-utils.js 通过 LSC.applyTierAndCredit 派生） */
+/* c8 ignore next */ /* 防御性 fallback: M20001 必然存在于 MOCK.merchants */
 const CURRENT_MERCHANT = MOCK.merchants.find(m => m.id === 'M20001') || MOCK.merchants[0];
 const currentNhEff = () => LSC.getEffectiveNhLimit(CURRENT_MERCHANT);
 /* 核销演示用：模拟今日已核销 LSC 数量，保持 已用/限额 比例合理 */

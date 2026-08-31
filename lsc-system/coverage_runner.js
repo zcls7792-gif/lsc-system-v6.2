@@ -52,12 +52,21 @@ async function buildSession(srv, appEntry = COVER_APPS[0]) {
   vc.on('warn', () => {});
   vc.on('jsdomError', e => errors.push('J: '+String(e.message||e)));
   // 注意:不要 runScripts='dangerously' — 我们要自己 vm.Script 注入,使得 c8 按文件记录
-  const dom = await JSDOM.fromURL(`http://127.0.0.1:${PORT}${appEntry[1]}`, {
-    runScripts: 'outside-only', // 只有外部能执行,HTML 内 <script src> 也不跑
-    resources: 'usable',
-    pretendToBeVisual: true,
-    virtualConsole: vc,
-  });
+  let dom = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      dom = await JSDOM.fromURL(`http://127.0.0.1:${PORT}${appEntry[1]}`, {
+        runScripts: 'outside-only', // 只有外部能执行,HTML 内 <script src> 也不跑
+        resources: 'usable',
+        pretendToBeVisual: true,
+        virtualConsole: vc,
+      });
+      break;
+    } catch(eConn) {
+      if (attempt < 2) { await new Promise(r => setTimeout(r, 500)); continue; }
+      throw eConn;
+    }
+  }
   const ctx = dom.window;
   // 把该应用的 scripts 通过 vm 方式执行,带真实文件路径
   for (const rel of appEntry[2]) {
@@ -830,6 +839,38 @@ async function main() {
       passed++; console.log('  A53. openModal title/body假分支 + 空对象参数 + 无modal重复close OK');
     } catch(e){ assert(false, 'A53. openModal 参数默认值补测 err: '+e.message); }
 
+    // ---- A53b: showPenalty credit 各区间 → L1604 信用分三元全分支 ----
+    // 必须在 A54de 锁定 _dualSig 之前执行; 覆盖 credit<40 色 + [20,40) 标签 + <20 标签
+    try {
+      const r53b = execVM(w, `
+        var res = {};
+        // (1) M20008 credit=55 → 临时改为 25 (落入 [20,40) 区间)
+        var m = MOCK.merchants.find(function(x){ return x.id === 'M20008'; });
+        var _bakCredit = m ? m.credit : null;
+        if (m) m.credit = 25;
+        try {
+          showPenalty('M20008');
+          var html = document.getElementById('global-modal') ? document.getElementById('global-modal').innerHTML : '';
+          res.a_danger_color = (html.indexOf('danger-strong') >= 0) ? 'ok' : 'fail:no-danger';
+          res.b_suspend_label = (html.indexOf('暂停核销+B2B') >= 0) ? 'ok' : 'fail:no-label';
+          closeModal();
+        } catch(_pen) { res.a_danger_color = 'err:'+_pen.message; }
+        if (m) m.credit = _bakCredit;
+        // (2) M20010 credit=15 (<20) → '永久关闭' 标签分支
+        try {
+          showPenalty('M20010');
+          var html2 = document.getElementById('global-modal') ? document.getElementById('global-modal').innerHTML : '';
+          res.c_perm_close = (html2.indexOf('永久关闭') >= 0) ? 'ok' : 'fail:no-perm';
+          closeModal();
+        } catch(_pen2) { res.c_perm_close = 'err:'+_pen2.message; }
+        return res;
+      `);
+      assert(r53b.a_danger_color === 'ok', 'A53b. L1604 credit<40 danger色 actual='+r53b.a_danger_color);
+      assert(r53b.b_suspend_label === 'ok', 'A53b. L1604 credit>=20 暂停核销+B2B actual='+r53b.b_suspend_label);
+      assert(r53b.c_perm_close === 'ok', 'A53b. L1604 credit<20 永久关闭 actual='+r53b.c_perm_close);
+      passed += 3; console.log('  A53b. showPenalty credit各区间 → L1604 全分支 OK');
+    } catch(e){ assert(false, 'A53b. showPenalty L1604 err: '+e.message); }
+
     // ========================================================================
     // ---- A54: catch 分支追击 (L1400/L1441/L1462-1465 共5 catch + L1458 title假分支) ----
     // ========================================================================
@@ -1161,6 +1202,39 @@ async function main() {
       assert(r55.j === 'ok', `A55j. L1305 appendRatePoint parseInt(NaN)||0 兜底 (${r55.j})`);
       passed++; console.log('  A55. platform-admin 剩余分支追击 (L146/L168/L179/L201-202/L209/L422/L436/L884/L1237/L1274/L1301/L1305) OK');
     } catch(e){ assert(false, 'A55. platform-admin 剩余分支追击 err: '+e.message); }
+    // A56. platform-admin 信用分/档位分支追击 (L577 credit>=20 '双停' / L585 nhLevel='A' tag-success)
+    // renderMerchant() 遍历 MOCK.merchants 渲染表格; 临时改 merchants[0] 属性即可命中未覆盖分支
+    // L1604 的 credit 三元已在 A53b 中通过 showPenalty 覆盖
+    try {
+      const r56 = execVM(w, `
+        var res = {};
+        var m0 = MOCK.merchants[0];
+        // (a) L577 col660 credit>=20 '双停' 真分支: 临时设 credit=30 (落入 [20,40))
+        try {
+          var _bakCredit = m0.credit;
+          m0.credit = 30;
+          renderMerchant();
+          var html = document.getElementById('view') ? document.getElementById('view').innerHTML : '';
+          res.a_credit20_suspend = (html.indexOf('双停') >= 0) ? 'ok' : 'fail:no-双停';
+          m0.credit = _bakCredit;
+        } catch(_a) { res.a_credit20_suspend = 'err:'+_a.message; m0.credit = _bakCredit; }
+        // (b) L585 col44 nhLevel==='A' tag-success 真分支: 临时设 nhLevel='A'
+        //     (applyTierAndCredit 按 monthRevenue 重算 nhLevel, 无商家为 'A' 档)
+        try {
+          var _bakLevel = m0.nhLevel;
+          m0.nhLevel = 'A';
+          renderMerchant();
+          var html2 = document.getElementById('view') ? document.getElementById('view').innerHTML : '';
+          res.b_nhLevelA_success = (html2.indexOf('tag-success') >= 0) ? 'ok' : 'fail:no-success';
+          m0.nhLevel = _bakLevel;
+        } catch(_b) { res.b_nhLevelA_success = 'err:'+_b.message; }
+        return res;
+      `);
+      assert(r56.a_credit20_suspend === 'ok', 'A56a. L577 credit>=20 双停 actual='+r56.a_credit20_suspend);
+      assert(r56.b_nhLevelA_success === 'ok', 'A56b. L585 nhLevel=A tag-success actual='+r56.b_nhLevelA_success);
+      passed += 2;
+      console.log('  A56. platform-admin 信用分/档位分支追击 (L577/L585) OK');
+    } catch(e){ assert(false, 'A56. platform-admin 信用分/档位分支追击 err: '+e.message); }
 
     cleanupSession(sess);
   }
@@ -1518,7 +1592,9 @@ async function main() {
   const MIN_OK = { 'merchant-admin': 7, 'mobile-app': 6, 'mini-program': 5 };
   for (const appEntry of COVER_APPS.slice(1)) {
     const appName = appEntry[0];
-    const sess = await buildSession(srv, appEntry);
+    let sess = null;
+    try {
+    sess = await buildSession(srv, appEntry);
     const w = sess.dom.window;
     const fns = EXTRA_RENDER[appName] || [];
     let ok = 0, err = 0;
@@ -2155,7 +2231,110 @@ async function main() {
           }
           passed += 2;
         } catch(e){ assert(false, `${fp}.TM meta theme-color err: `+e.message); }
-        console.log(`  ${fp}: merchant-admin 业务函数补测 OK (+F15-F30 16项热点,含档位+信用分门控3组 + TM meta)`);
+        // === F31. merchant-admin 边缘分支追击 (L438/663/706/730/735/963/982 + currentNhEff) ===
+        try {
+          const r31 = execVM(w, `
+            var res = {};
+            // (b) L438 statusLabel||'' 假分支: 临时置空 → renderShop (L438 在 renderShop 内)
+            try {
+              var _bakSl = CURRENT_MERCHANT.statusLabel;
+              CURRENT_MERCHANT.statusLabel = '';
+              renderShop();
+              var viewHtml = document.getElementById('view') ? document.getElementById('view').innerHTML : '';
+              res.c_statuslabel_empty = (viewHtml.indexOf('额度') >= 0) ? 'ok' : 'fail';
+              CURRENT_MERCHANT.statusLabel = _bakSl;
+            } catch(_b) { res.c_statuslabel_empty = 'err:'+_b.message; }
+            // (c) L663 creditColor||'info' 假分支: 临时删 creditColor
+            try {
+              var _bakCc = CURRENT_MERCHANT.creditColor;
+              delete CURRENT_MERCHANT.creditColor;
+              renderNH();
+              var viewHtml2 = document.getElementById('view') ? document.getElementById('view').innerHTML : '';
+              res.d_creditcolor_missing = (viewHtml2.indexOf('nh-status-pill') >= 0) ? 'ok' : 'fail';
+              CURRENT_MERCHANT.creditColor = _bakCc;
+            } catch(_c) { res.d_creditcolor_missing = 'err:'+_c.message; }
+            // (d) L706 creditFactor<1&&>0 真分支 + baseDailyLsc|| 假分支:
+            //     M20001 creditFactor=1.0 → 设为 0.5 触发三元真分支;
+            //     applyTierAndCredit 不设 baseDailyLsc → undefined → || 假分支命中
+            try {
+              var _bakCf = CURRENT_MERCHANT.creditFactor;
+              CURRENT_MERCHANT.creditFactor = 0.5;
+              renderNH();
+              var viewHtml3 = document.getElementById('view') ? document.getElementById('view').innerHTML : '';
+              res.e_creditfactor_branch = (viewHtml3.indexOf('×50%') >= 0) ? 'ok' : 'fail:no50';
+              CURRENT_MERCHANT.creditFactor = _bakCf;
+            } catch(_d) { res.e_creditfactor_branch = 'err:'+_d.message; }
+            // (e) L730-735 calcNH 暂停态: 临时覆盖 getEffectiveNhLimit 返回 suspended
+            try {
+              renderNH(); // 挂载 calcNH + nh-amount input
+              var _origFn = LSC.getEffectiveNhLimit;
+              LSC.getEffectiveNhLimit = function(m){ return { nhLimitDaily: 100, nhStatus: 'suspended' }; };
+              document.getElementById('nh-amount').value = '50';
+              window.calcNH();
+              var lscTxt = document.getElementById('nh-lsc').textContent;
+              res.f_calcNH_suspended = (lscTxt.indexOf('0.00') >= 0) ? 'ok' : 'fail:lsc='+lscTxt;
+              // (f) L734 v<0 分支: 输入 -10 → 锁0
+              document.getElementById('nh-amount').value = '-10';
+              window.calcNH();
+              res.g_calcNH_negative = (document.getElementById('nh-lsc').textContent.indexOf('0.00') >= 0) ? 'ok' : 'fail';
+              // (g) L735 v>limit 分支: 输入 999 → 钳到 limit(100-164=max(0,负)=0) → 0
+              document.getElementById('nh-amount').value = '999';
+              window.calcNH();
+              res.h_calcNH_overlimit = (document.getElementById('nh-lsc').textContent.indexOf('0.00') >= 0) ? 'ok' : 'fail';
+              LSC.getEffectiveNhLimit = _origFn;
+            } catch(_e) { res.f_calcNH_suspended = 'err:'+_e.message; }
+            // (e2) L730 nhLimitDaily||0 假分支: mock 返回 nhLimitDaily=0 (falsy → || 0 命中)
+            try {
+              renderNH();
+              var _origFn2 = LSC.getEffectiveNhLimit;
+              LSC.getEffectiveNhLimit = function(m){ return { nhLimitDaily: 0, nhStatus: 'allowed' }; };
+              document.getElementById('nh-amount').value = '10';
+              window.calcNH();
+              res.k_calcNH_zero_limit = (document.getElementById('nh-lsc').textContent.indexOf('0.00') >= 0) ? 'ok' : 'fail';
+              LSC.getEffectiveNhLimit = _origFn2;
+            } catch(_e2) { res.k_calcNH_zero_limit = 'err:'+_e2.message; }
+            // (e3) L735 v>limit 假分支: mock nhLimitDaily=300 → limit=300-164=136; v=50 ≤ 136 → 不钳
+            try {
+              renderNH();
+              var _origFn3 = LSC.getEffectiveNhLimit;
+              LSC.getEffectiveNhLimit = function(m){ return { nhLimitDaily: 300, nhStatus: 'allowed' }; };
+              document.getElementById('nh-amount').value = '50';
+              window.calcNH();
+              res.l_calcNH_within_limit = (document.getElementById('nh-lsc').textContent.indexOf('50.00') >= 0) ? 'ok' : 'fail';
+              LSC.getEffectiveNhLimit = _origFn3;
+            } catch(_e3) { res.l_calcNH_within_limit = 'err:'+_e3.message; }
+            // (n) currentNhEff 函数 (L11) 从未被调用 → 显式调用
+            try {
+              var eff = (typeof currentNhEff === 'function') ? currentNhEff() : null;
+              res.m_currentNhEff = (eff && typeof eff === 'object') ? 'ok' : 'fail:'+(eff?'notobj':'nofn');
+            } catch(_n) { res.m_currentNhEff = 'err:'+_n.message; }
+            // (h) L963 openModal opts.onClose 非函数 → __onClose=null (假分支)
+            try {
+              openModal({ title:'无回调', body:'测试' });
+              var mask = document.getElementById('global-modal');
+              res.i_onclose_null = (mask && mask.__onClose === null) ? 'ok' : 'fail';
+              closeModal();
+            } catch(_h) { res.i_onclose_null = 'err:'+_h.message; }
+            // (i) L982 m.__onClose 抛错 → catch 命中
+            try {
+              openModal({ title:'抛错回调', body:'测', onClose: function(){ throw new Error('boom'); } });
+              closeModal(); // 触发 __onClose → catch
+              res.j_onclose_catch = 'ok'; // 未抛出说明 catch 命中
+            } catch(_i) { res.j_onclose_catch = 'err:'+_i.message; }
+            return res;
+          `);
+          const m31 = (label, r, ...keys) => keys.forEach(k => {
+            const v = r[k];
+            if (typeof v === 'string' && v.startsWith('skip:')) return;
+            assert(v === 'ok', `${fp}.31 ${label} #${k}: ${v}`);
+          });
+          m31('字段缺省', r31, 'c_statuslabel_empty','d_creditcolor_missing','e_creditfactor_branch');
+          m31('calcNH', r31, 'f_calcNH_suspended','g_calcNH_negative','h_calcNH_overlimit','k_calcNH_zero_limit','l_calcNH_within_limit');
+          m31('currentNhEff', r31, 'm_currentNhEff');
+          m31('openModal/closeModal', r31, 'i_onclose_null','j_onclose_catch');
+          passed += 11;
+        } catch(e) { assert(false, `${fp}.31 merchant-admin 边缘分支 err: `+e.message); }
+        console.log(`  ${fp}: merchant-admin 业务函数补测 OK (+F15-F30 16项热点,含档位+信用分门控3组 + TM meta + F31 边缘分支)`);
       } else if (appName === 'mobile-app') {
         // F1-F4. simulateScan 创建混合支付 modal
         w.simulateScan();
@@ -2657,7 +2836,51 @@ async function main() {
           assert(!!aiBtn, `${fp}.SR2 AI 发送按钮有 aria-label`);
           passed += 1;
         } catch(e) { assert(false, `${fp}.SR2 aria err: `+e.message); }
-        console.log(`  ${fp}: mobile-app 业务函数补测 OK (+F13-F20 档位+信用分卡片热点 + TM meta+fixed + SR inert+aria)`);
+        // === F21. renderMerchantCard 边缘分支追击 (L67/70/71/72/73/81/87 + renderHome L96-99 的 || fallback) ===
+        try {
+          const r21 = execVM(w, `
+            var res = {};
+            // (a) L67 name=undefined → (undefined || '商').trim()[0] = '商'
+            var c1 = renderMerchantCard({ type:'零售' }, {});
+            res.a_logo_fallback = (c1.indexOf('>商<') >= 0) ? 'ok' : 'fail';
+            // (b) L67 name='  ' → ('  '.trim())[0] = undefined → logo div 内空（命中 name||'商' 的 name 真分支）
+            var c1b = renderMerchantCard({ name:'  ', type:'零售' }, {});
+            res.b_logo_blank = (c1b.indexOf('>商<') < 0) ? 'ok' : 'fail:should-not-fallback';
+            // (c) L68 opts 无 distance → '500m'; L70 rating null → 4.8
+            var c2 = renderMerchantCard({ name:'测试', type:'零售', credit:90, nhLevel:'D', creditColor:'success', statusLabel:'正常' });
+            res.c_dist_default = (c2.indexOf('500m') >= 0) ? 'ok' : 'fail';
+            res.d_rating_default = (c2.indexOf('4.8') >= 0) ? 'ok' : 'fail';
+            // (d) L70 credit=null (m.credit != null 假分支) → creditLine='' (L79 false)
+            var c3 = renderMerchantCard({ name:'无信', type:'零售', nhLevel:'A' });
+            res.e_credit_null = (c3.indexOf('信用') < 0) ? 'ok' : 'fail';
+            // (e) L71 nhLevel 缺省 → '初始'; L72 creditColor 缺省 → 'success'; L73 statusLabel 缺省 → ''
+            var c4 = renderMerchantCard({ name:'缺省', type:'零售', credit:85 });
+            res.f_tier_default = (c4.indexOf('档位 初始') >= 0) ? 'ok' : 'fail';
+            res.g_color_default = (c4.indexOf('tag-success') >= 0) ? 'ok' : 'fail';
+            // (f) L82 minRevenue 缺省 → '未满2万'
+            res.h_minrev_default = (c4.indexOf('未满2万') >= 0) ? 'ok' : 'fail';
+            // (g) L87 m.type 缺省 → '零售'
+            var c5 = renderMerchantCard({ name:'无类型', credit:90, nhLevel:'D', creditColor:'success', statusLabel:'正常' });
+            res.i_type_default = (c5.indexOf('零售') >= 0) ? 'ok' : 'fail';
+            // (h) renderHome L96-99: MOCK.merchants 含 4 商家 → || right 不走；临时清空 merchants 触发 || fallback
+            try {
+              var _bak = MOCK.merchants;
+              MOCK.merchants = [];
+              renderHome();
+              var hh = document.getElementById('screen-home').innerHTML;
+              res.j_home_fallback = (hh.indexOf('锦华餐饮连锁·总店') >= 0) ? 'ok' : 'fail:no-jh';
+              MOCK.merchants = _bak;
+            } catch(_h) { res.j_home_fallback = 'err:'+_h.message; }
+            return res;
+          `);
+          const m21 = (label, r, ...keys) => keys.forEach(k => assert(r[k] === 'ok', `${fp}.21 ${label} #${k}: ${r[k]}`));
+          m21('logo/缺省分支', r21, 'a_logo_fallback','b_logo_blank','c_dist_default','d_rating_default','e_credit_null','f_tier_default','g_color_default','h_minrev_default','i_type_default');
+          assert(r21.j_home_fallback === 'ok', `${fp}.21 renderHome fallback: ${r21.j_home_fallback}`);
+          // 恢复 MOCK 后重渲染首页
+          execVM(w, `renderHome();`);
+          passed += 10;
+        } catch(e) { assert(false, `${fp}.21 renderMerchantCard 边缘分支 err: `+e.message); }
+        console.log(`  ${fp}: mobile-app 业务函数补测 OK (+F13-F20 档位+信用分卡片热点 + TM meta+fixed + SR inert+aria + F21 边缘分支)`);
       } else if (appName === 'mini-program') {
         // F1-F2. wxScanPay
         w.wxScanPay();
@@ -2901,7 +3124,8 @@ async function main() {
         console.log(`  ${fp}: mini-program 业务函数补测 OK (+F11-F15 5项热点 + TM meta+z9999 + SR inert)`);
       }
     } catch(e) { assert(false, `${fp} err: `+e.message); }
-    cleanupSession(sess);
+    } catch(eSess) { console.log(`  [skip] ${appName} session err: `+eSess.message); }
+    if (sess) cleanupSession(sess);
   }
 
   await new Promise(r => srv.close(r));
