@@ -1,6 +1,5 @@
 package com.lianshengtong.common.utils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.function.Supplier;
@@ -39,6 +38,7 @@ public final class OptimisticLockHelper {
      * @return 最终影响行数
      */
     public static int execute(String operation, int maxRetries, Supplier<Integer> action) {
+        String opName = operation != null ? operation : "unknown";
         int retry = 0;
         while (true) {
             int rows = action.get();
@@ -53,14 +53,14 @@ public final class OptimisticLockHelper {
                     log.warn("乐观锁重试耗尽 operation={} retries={}", operation, retry);
                 }
                 throw new OptimisticLockingFailureException(
-                        operation + " 乐观锁冲突超过最大重试次数(" + maxRetries + ")");
+                        opName + " 乐观锁冲突超过最大重试次数(" + maxRetries + ")");
             }
             log.debug("乐观锁重试 operation={} attempt={}/{}", operation, retry, maxRetries);
             try {
                 Thread.sleep(50L * retry);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new OptimisticLockingFailureException(operation + " 乐观锁重试被中断");
+                throw new OptimisticLockingFailureException(opName + " 乐观锁重试被中断");
             }
         }
     }
