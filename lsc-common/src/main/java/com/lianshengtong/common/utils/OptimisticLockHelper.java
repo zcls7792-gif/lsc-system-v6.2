@@ -18,6 +18,16 @@ public final class OptimisticLockHelper {
 
     private static final Logger log = LoggerFactory.getLogger(OptimisticLockHelper.class);
 
+    /**
+     * 被声明为"预期内耗尽"的操作名前缀。
+     * <p>
+     * 单元测试或上层降级重试机制中，经常故意让重试 3 次全部返回 0 来断言异常。
+     * 为了避免这些 log.warn 被 CI 的 failure annotation 捕获（false positive），
+     * 凡 operation 以该前缀开头，耗尽时统一降级为 log.debug。
+     * </p>
+     */
+    public static final String SUPPRESSED_OP_PREFIX = "TEST_EXPECTED_EXHAUSTED_";
+
     private OptimisticLockHelper() {}
 
     /**
@@ -37,7 +47,11 @@ public final class OptimisticLockHelper {
             }
             retry++;
             if (retry >= maxRetries) {
-                log.warn("乐观锁重试耗尽 operation={} retries={}", operation, retry);
+                if (operation != null && operation.startsWith(SUPPRESSED_OP_PREFIX)) {
+                    log.debug("乐观锁重试耗尽(已声明为预期内) operation={} retries={}", operation, retry);
+                } else {
+                    log.warn("乐观锁重试耗尽 operation={} retries={}", operation, retry);
+                }
                 throw new OptimisticLockingFailureException(
                         operation + " 乐观锁冲突超过最大重试次数(" + maxRetries + ")");
             }

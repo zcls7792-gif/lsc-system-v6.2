@@ -1196,21 +1196,21 @@ class CommonP5Test {
     @DisplayName("OptimisticLockHelper: 重试耗尽抛OptimisticLockingFailureException")
     void optimisticLockHelper_retryExhausted() {
         assertThrows(OptimisticLockingFailureException.class, () ->
-                OptimisticLockHelper.execute("test", 3, () -> 0));
+                OptimisticLockHelper.execute(OptimisticLockHelper.SUPPRESSED_OP_PREFIX + "test", 3, () -> 0));
     }
 
     @Test
     @DisplayName("OptimisticLockHelper: 默认重试3次")
     void optimisticLockHelper_defaultRetries_3() {
         assertThrows(OptimisticLockingFailureException.class, () ->
-                OptimisticLockHelper.execute("test", () -> 0));
+                OptimisticLockHelper.execute(OptimisticLockHelper.SUPPRESSED_OP_PREFIX + "test", () -> 0));
     }
 
     @Test
     @DisplayName("OptimisticLockHelper: 零次重试立即失败")
     void optimisticLockHelper_zeroRetry_immediateFail() {
         assertThrows(OptimisticLockingFailureException.class, () ->
-                OptimisticLockHelper.execute("zero", 0, () -> 0));
+                OptimisticLockHelper.execute(OptimisticLockHelper.SUPPRESSED_OP_PREFIX + "zero", 0, () -> 0));
     }
 
     @Test
@@ -1218,7 +1218,7 @@ class CommonP5Test {
     void optimisticLockHelper_exceptionMessageContainsDetails() {
         OptimisticLockingFailureException ex = assertThrows(
                 OptimisticLockingFailureException.class, () ->
-                OptimisticLockHelper.execute("my_op", 5, () -> 0));
+                OptimisticLockHelper.execute(OptimisticLockHelper.SUPPRESSED_OP_PREFIX + "my_op", 5, () -> 0));
         assertTrue(ex.getMessage().contains("my_op"));
         assertTrue(ex.getMessage().contains("5"));
     }
