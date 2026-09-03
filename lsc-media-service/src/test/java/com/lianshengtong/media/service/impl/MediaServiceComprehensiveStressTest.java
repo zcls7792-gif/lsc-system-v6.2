@@ -724,6 +724,3 @@ public class MediaServiceComprehensiveStressTest {
         };
     }
 }
-}
-}
-}
