@@ -1,7 +1,7 @@
 {
   "meta": {
-    "generatedAt": "2026-09-03T01:17:27.423Z",
-    "label": "",
+    "generatedAt": "2026-09-03T04:42:20.937Z",
+    "label": "local-verify",
     "strict": true,
     "thresholds": {
       "maxViolations": 0,
@@ -10,20 +10,20 @@
       "maxNet": 0
     },
     "summary": {
-      "totalViolations": 48,
-      "totalConsoleE": 36,
+      "totalViolations": 0,
+      "totalConsoleE": 0,
       "totalConsoleW": 0,
       "totalNetErrors": 0,
       "totalMissingAlt": 0,
       "light": {
-        "v": 24,
-        "pass": 494,
-        "inc": 12
+        "v": 0,
+        "pass": 417,
+        "inc": 28
       },
       "dark": {
-        "v": 24,
-        "pass": 494,
-        "inc": 12
+        "v": 0,
+        "pass": 417,
+        "inc": 28
       }
     }
   },
@@ -35,60 +35,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "light",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/platform-admin/index.html",
+      "url": "http://127.0.0.1:41799/platform-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:35143' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
-        "Failed to load resource: net::ERR_FAILED",
-        "The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 16,
+        "a": 13,
         "button": 6,
         "input": 2,
         "img": 0,
         "svg": 37,
         "heading": 1,
-        "totalText": 1778
+        "totalText": 10081
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": ".skip-links",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#search-input\" clas"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 40
+        "violations": [],
+        "incomplete": 2,
+        "passes": 37
       },
-      "screenshot": "audit-report/platform__md__768x1024.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "platform",
@@ -97,60 +65,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "dark",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/platform-admin/index.html",
+      "url": "http://127.0.0.1:41799/platform-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:35143' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
-        "Failed to load resource: net::ERR_FAILED",
-        "The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 16,
+        "a": 13,
         "button": 6,
         "input": 2,
         "img": 0,
         "svg": 37,
         "heading": 1,
-        "totalText": 1782
+        "totalText": 10093
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": ".skip-links",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#search-input\" clas"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 40
+        "violations": [],
+        "incomplete": 2,
+        "passes": 37
       },
-      "screenshot": "audit-report/platform__md__768x1024__dark.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "platform",
@@ -159,60 +95,28 @@
       "width": 1440,
       "height": 900,
       "sizeLabel": "桌面 1440×900",
-      "colorScheme": "light",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/platform-admin/index.html",
+      "url": "http://127.0.0.1:41799/platform-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:35143' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
-        "Failed to load resource: net::ERR_FAILED",
-        "The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 16,
+        "a": 13,
         "button": 6,
         "input": 2,
         "img": 0,
         "svg": 37,
         "heading": 1,
-        "totalText": 1874
+        "totalText": 10073
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": ".skip-links",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#search-input\" clas"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 40
+        "violations": [],
+        "incomplete": 2,
+        "passes": 37
       },
-      "screenshot": "audit-report/platform__lg__1440x900.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "platform",
@@ -221,60 +125,28 @@
       "width": 1440,
       "height": 900,
       "sizeLabel": "桌面 1440×900",
-      "colorScheme": "dark",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/platform-admin/index.html",
+      "url": "http://127.0.0.1:41799/platform-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:35143' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
-        "Failed to load resource: net::ERR_FAILED",
-        "The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 16,
+        "a": 13,
         "button": 6,
         "input": 2,
         "img": 0,
         "svg": 37,
         "heading": 1,
-        "totalText": 1874
+        "totalText": 10079
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": ".skip-links",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#search-input\" clas"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 40
+        "violations": [],
+        "incomplete": 2,
+        "passes": 37
       },
-      "screenshot": "audit-report/platform__lg__1440x900__dark.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "merchant",
@@ -283,58 +155,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "light",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 14,
+        "a": 11,
         "button": 5,
         "input": 1,
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 976
+        "totalText": 6077
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 44
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
       },
-      "screenshot": "audit-report/merchant__md__768x1024.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "merchant",
@@ -343,58 +185,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "dark",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 14,
+        "a": 11,
         "button": 5,
         "input": 1,
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 976
+        "totalText": 6077
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 44
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
       },
-      "screenshot": "audit-report/merchant__md__768x1024__dark.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "merchant",
@@ -403,58 +215,28 @@
       "width": 1440,
       "height": 900,
       "sizeLabel": "桌面 1440×900",
-      "colorScheme": "light",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 14,
+        "a": 11,
         "button": 5,
         "input": 1,
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 1127
+        "totalText": 6076
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 44
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
       },
-      "screenshot": "audit-report/merchant__lg__1440x900.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "merchant",
@@ -463,58 +245,28 @@
       "width": 1440,
       "height": 900,
       "sizeLabel": "桌面 1440×900",
-      "colorScheme": "dark",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 14,
+        "a": 11,
         "button": 5,
         "input": 1,
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 1127
+        "totalText": 6076
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 44
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
       },
-      "screenshot": "audit-report/merchant__lg__1440x900__dark.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "mobile",
@@ -523,62 +275,28 @@
       "width": 360,
       "height": 740,
       "sizeLabel": "移动端 360×740 (iPhone SE)",
-      "colorScheme": "light",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/mobile-app/index.html",
+      "url": "http://127.0.0.1:41799/mobile-app/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/mobile-app/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 5,
+        "a": 2,
         "button": 15,
         "input": 2,
         "img": 0,
         "svg": 77,
         "heading": 2,
-        "totalText": 554
+        "totalText": 9920
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#__search__\" class="
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 2,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#nav\"]",
-                "html": "<a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a>"
-              },
-              {
-                "target": "a[href$=\"#__search__\"]",
-                "html": "<a href=\"#__search__\" class=\"skip-link-item\">跳到搜索框</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 36
+        "violations": [],
+        "incomplete": 3,
+        "passes": 29
       },
-      "screenshot": "audit-report/mobile__sm__360x740.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "mobile",
@@ -587,62 +305,28 @@
       "width": 360,
       "height": 740,
       "sizeLabel": "移动端 360×740 (iPhone SE)",
-      "colorScheme": "dark",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/mobile-app/index.html",
+      "url": "http://127.0.0.1:41799/mobile-app/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/mobile-app/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 5,
+        "a": 2,
         "button": 15,
         "input": 2,
         "img": 0,
         "svg": 77,
         "heading": 2,
-        "totalText": 554
+        "totalText": 9920
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#__search__\" class="
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 2,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#nav\"]",
-                "html": "<a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a>"
-              },
-              {
-                "target": "a[href$=\"#__search__\"]",
-                "html": "<a href=\"#__search__\" class=\"skip-link-item\">跳到搜索框</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 36
+        "violations": [],
+        "incomplete": 3,
+        "passes": 29
       },
-      "screenshot": "audit-report/mobile__sm__360x740__dark.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "mobile",
@@ -651,62 +335,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "light",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/mobile-app/index.html",
+      "url": "http://127.0.0.1:41799/mobile-app/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/mobile-app/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 5,
+        "a": 2,
         "button": 15,
         "input": 2,
         "img": 0,
         "svg": 77,
         "heading": 2,
-        "totalText": 554
+        "totalText": 9920
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#__search__\" class="
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 2,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#nav\"]",
-                "html": "<a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a>"
-              },
-              {
-                "target": "a[href$=\"#__search__\"]",
-                "html": "<a href=\"#__search__\" class=\"skip-link-item\">跳到搜索框</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 36
+        "violations": [],
+        "incomplete": 3,
+        "passes": 29
       },
-      "screenshot": "audit-report/mobile__md__768x1024.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "mobile",
@@ -715,62 +365,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "dark",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/mobile-app/index.html",
+      "url": "http://127.0.0.1:41799/mobile-app/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/mobile-app/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 5,
+        "a": 2,
         "button": 15,
         "input": 2,
         "img": 0,
         "svg": 77,
         "heading": 2,
-        "totalText": 554
+        "totalText": 9920
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#__search__\" class="
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 2,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#nav\"]",
-                "html": "<a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a>"
-              },
-              {
-                "target": "a[href$=\"#__search__\"]",
-                "html": "<a href=\"#__search__\" class=\"skip-link-item\">跳到搜索框</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 36
+        "violations": [],
+        "incomplete": 3,
+        "passes": 29
       },
-      "screenshot": "audit-report/mobile__md__768x1024__dark.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "mini",
@@ -779,66 +395,28 @@
       "width": 360,
       "height": 740,
       "sizeLabel": "移动端 360×740 (iPhone SE)",
-      "colorScheme": "light",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/mini-program/index.html",
+      "url": "http://127.0.0.1:41799/mini-program/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/mini-program/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 5,
+        "a": 2,
         "button": 13,
         "input": 1,
         "img": 0,
         "svg": 70,
         "heading": 5,
-        "totalText": 448
+        "totalText": 7030
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#__search__\" class="
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 3,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              },
-              {
-                "target": "a[href$=\"#nav\"]",
-                "html": "<a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a>"
-              },
-              {
-                "target": "a[href$=\"#__search__\"]",
-                "html": "<a href=\"#__search__\" class=\"skip-link-item\">跳到搜索框</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 37
+        "violations": [],
+        "incomplete": 3,
+        "passes": 29
       },
-      "screenshot": "audit-report/mini__sm__360x740.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "mini",
@@ -847,66 +425,28 @@
       "width": 360,
       "height": 740,
       "sizeLabel": "移动端 360×740 (iPhone SE)",
-      "colorScheme": "dark",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/mini-program/index.html",
+      "url": "http://127.0.0.1:41799/mini-program/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/mini-program/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 5,
+        "a": 2,
         "button": 13,
         "input": 1,
         "img": 0,
         "svg": 70,
         "heading": 5,
-        "totalText": 448
+        "totalText": 7030
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#__search__\" class="
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 3,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              },
-              {
-                "target": "a[href$=\"#nav\"]",
-                "html": "<a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a>"
-              },
-              {
-                "target": "a[href$=\"#__search__\"]",
-                "html": "<a href=\"#__search__\" class=\"skip-link-item\">跳到搜索框</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 37
+        "violations": [],
+        "incomplete": 3,
+        "passes": 29
       },
-      "screenshot": "audit-report/mini__sm__360x740__dark.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "mini",
@@ -915,66 +455,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "light",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/mini-program/index.html",
+      "url": "http://127.0.0.1:41799/mini-program/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/mini-program/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 5,
+        "a": 2,
         "button": 13,
         "input": 1,
         "img": 0,
         "svg": 70,
         "heading": 5,
-        "totalText": 448
+        "totalText": 7030
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#__search__\" class="
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 3,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              },
-              {
-                "target": "a[href$=\"#nav\"]",
-                "html": "<a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a>"
-              },
-              {
-                "target": "a[href$=\"#__search__\"]",
-                "html": "<a href=\"#__search__\" class=\"skip-link-item\">跳到搜索框</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 37
+        "violations": [],
+        "incomplete": 3,
+        "passes": 29
       },
-      "screenshot": "audit-report/mini__md__768x1024.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "mini",
@@ -983,66 +485,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "dark",
-      "extra": "",
-      "extraTitle": "",
-      "url": "http://127.0.0.1:35143/mini-program/index.html",
+      "url": "http://127.0.0.1:41799/mini-program/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/mini-program/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 5,
+        "a": 2,
         "button": 13,
         "input": 1,
         "img": 0,
         "svg": 70,
         "heading": 5,
-        "totalText": 448
+        "totalText": 7030
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#__search__\" class="
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 3,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              },
-              {
-                "target": "a[href$=\"#nav\"]",
-                "html": "<a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a>"
-              },
-              {
-                "target": "a[href$=\"#__search__\"]",
-                "html": "<a href=\"#__search__\" class=\"skip-link-item\">跳到搜索框</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 37
+        "violations": [],
+        "incomplete": 3,
+        "passes": 29
       },
-      "screenshot": "audit-report/mini__md__768x1024__dark.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "merchant",
@@ -1051,178 +515,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "light",
-      "extra": "nh-suspend-55",
-      "extraTitle": "商家·核销·信用55暂停",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 14,
-        "button": 7,
-        "input": 2,
-        "img": 0,
-        "svg": 20,
-        "heading": 1,
-        "totalText": 748
-      },
-      "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 44
-      },
-      "screenshot": "audit-report/merchant__md__768x1024__nh-suspend-55.png"
-    },
-    {
-      "app": "merchant",
-      "appName": "商家管理后台",
-      "size": "md",
-      "width": 768,
-      "height": 1024,
-      "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "dark",
-      "extra": "nh-suspend-55",
-      "extraTitle": "商家·核销·信用55暂停",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
-      "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
-      "consoleWarnings": [],
-      "netErrors": [],
-      "counts": {
-        "a": 14,
-        "button": 7,
-        "input": 2,
-        "img": 0,
-        "svg": 20,
-        "heading": 1,
-        "totalText": 748
-      },
-      "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 44
-      },
-      "screenshot": "audit-report/merchant__md__768x1024__dark__nh-suspend-55.png"
-    },
-    {
-      "app": "merchant",
-      "appName": "商家管理后台",
-      "size": "md",
-      "width": 768,
-      "height": 1024,
-      "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "light",
-      "extra": "b2b-suspend-30",
-      "extraTitle": "商家·B2B·信用30暂停",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
-      "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
-      "consoleWarnings": [],
-      "netErrors": [],
-      "counts": {
-        "a": 14,
-        "button": 6,
-        "input": 7,
+        "a": 11,
+        "button": 5,
+        "input": 1,
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 762
+        "totalText": 6076
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 45
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
       },
-      "screenshot": "audit-report/merchant__md__768x1024__b2b-suspend-30.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "merchant",
@@ -1231,58 +545,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "dark",
-      "extra": "b2b-suspend-30",
-      "extraTitle": "商家·B2B·信用30暂停",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 14,
-        "button": 6,
-        "input": 7,
+        "a": 11,
+        "button": 5,
+        "input": 1,
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 762
+        "totalText": 6076
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 45
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
       },
-      "screenshot": "audit-report/merchant__md__768x1024__dark__b2b-suspend-30.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "merchant",
@@ -1291,58 +575,28 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "light",
-      "extra": "b2b-close-15",
-      "extraTitle": "商家·B2B·信用15永久关闭",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 14,
-        "button": 6,
-        "input": 7,
+        "a": 11,
+        "button": 5,
+        "input": 1,
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 767
+        "totalText": 6077
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 45
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
       },
-      "screenshot": "audit-report/merchant__md__768x1024__b2b-close-15.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "merchant",
@@ -1351,58 +605,88 @@
       "width": 768,
       "height": 1024,
       "sizeLabel": "平板 768×1024 (iPad mini)",
-      "colorScheme": "dark",
-      "extra": "b2b-close-15",
-      "extraTitle": "商家·B2B·信用15永久关闭",
-      "url": "http://127.0.0.1:35143/merchant-admin/index.html",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 14,
-        "button": 6,
-        "input": 7,
+        "a": 11,
+        "button": 5,
+        "input": 1,
         "img": 0,
         "svg": 19,
         "heading": 1,
-        "totalText": 767
+        "totalText": 6077
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#merchant-search\" c"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 45
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
       },
-      "screenshot": "audit-report/merchant__md__768x1024__dark__b2b-close-15.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
+    },
+    {
+      "app": "merchant",
+      "appName": "商家管理后台",
+      "size": "md",
+      "width": 768,
+      "height": 1024,
+      "sizeLabel": "平板 768×1024 (iPad mini)",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
+      "loadedOK": true,
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "netErrors": [],
+      "counts": {
+        "a": 11,
+        "button": 5,
+        "input": 1,
+        "img": 0,
+        "svg": 19,
+        "heading": 1,
+        "totalText": 6076
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
+      },
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
+    },
+    {
+      "app": "merchant",
+      "appName": "商家管理后台",
+      "size": "md",
+      "width": 768,
+      "height": 1024,
+      "sizeLabel": "平板 768×1024 (iPad mini)",
+      "url": "http://127.0.0.1:41799/merchant-admin/index.html",
+      "loadedOK": true,
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "netErrors": [],
+      "counts": {
+        "a": 11,
+        "button": 5,
+        "input": 1,
+        "img": 0,
+        "svg": 19,
+        "heading": 1,
+        "totalText": 6076
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": 2,
+        "passes": 38
+      },
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     },
     {
       "app": "platform",
@@ -1411,60 +695,28 @@
       "width": 1440,
       "height": 900,
       "sizeLabel": "桌面 1440×900",
-      "colorScheme": "light",
-      "extra": "platform-penalty-modal",
-      "extraTitle": "平台·处罚双人审批弹窗",
-      "url": "http://127.0.0.1:35143/platform-admin/index.html",
+      "url": "http://127.0.0.1:41799/platform-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:35143' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
-        "Failed to load resource: net::ERR_FAILED",
-        "The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope."
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 16,
-        "button": 12,
-        "input": 8,
+        "a": 13,
+        "button": 6,
+        "input": 2,
         "img": 0,
-        "svg": 21,
+        "svg": 37,
         "heading": 1,
-        "totalText": 1634
+        "totalText": 10079
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#search-input\" clas"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 46
+        "violations": [],
+        "incomplete": 2,
+        "passes": 37
       },
-      "screenshot": "audit-report/platform__lg__1440x900__platform-penalty-modal.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "light"
     },
     {
       "app": "platform",
@@ -1473,60 +725,28 @@
       "width": 1440,
       "height": 900,
       "sizeLabel": "桌面 1440×900",
-      "colorScheme": "dark",
-      "extra": "platform-penalty-modal",
-      "extraTitle": "平台·处罚双人审批弹窗",
-      "url": "http://127.0.0.1:35143/platform-admin/index.html",
+      "url": "http://127.0.0.1:41799/platform-admin/index.html",
       "loadedOK": true,
-      "consoleErrors": [
-        "The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.",
-        "Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:35143' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
-        "Failed to load resource: net::ERR_FAILED"
-      ],
+      "consoleErrors": [],
       "consoleWarnings": [],
       "netErrors": [],
       "counts": {
-        "a": 16,
-        "button": 12,
-        "input": 8,
+        "a": 13,
+        "button": 6,
+        "input": 2,
         "img": 0,
-        "svg": 21,
+        "svg": 37,
         "heading": 1,
-        "totalText": 1634
+        "totalText": 10087
       },
       "axe": {
-        "violations": [
-          {
-            "id": "region",
-            "impact": "moderate",
-            "description": "Ensures all page content is contained by landmarks",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/region?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "ul",
-                "html": "<ul class=\"skip-links\" aria-label=\"跳转链接（屏幕阅读器专用）\"><li><a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a></li><li><a href=\"#nav\" class=\"skip-link-item\">跳到主导航</a></li><li><a href=\"#search-input\" clas"
-              }
-            ]
-          },
-          {
-            "id": "skip-link",
-            "impact": "moderate",
-            "description": "Ensure all skip links have a focusable target",
-            "count": 1,
-            "helpUrl": "https://dequeuniversity.com/rules/axe/4.9/skip-link?application=LSC-V6.2-AI%20A11y",
-            "nodes": [
-              {
-                "target": "a[href$=\"#content\"]",
-                "html": "<a href=\"#content\" class=\"skip-link-item\">跳到主内容区域</a>"
-              }
-            ]
-          }
-        ],
-        "incomplete": 1,
-        "passes": 46
+        "violations": [],
+        "incomplete": 2,
+        "passes": 37
       },
-      "screenshot": "audit-report/platform__lg__1440x900__dark__platform-penalty-modal.png"
+      "screenshot": null,
+      "mode": "jsdom",
+      "colorScheme": "dark"
     }
   ]
 }

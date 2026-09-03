@@ -94,7 +94,7 @@
   /* c8 ignore stop */
 
   function injectSkipLinks() {
-    if (document.querySelector('ul.skip-links, ol.skip-links, nav.skip-links')) return; // 幂等
+    if (document.querySelector('nav.skip-links, ul.skip-links, ol.skip-links')) return; // 幂等
     // 动态探测主内容 / 导航目标（按端差异化 id 命名: content/wx-content/view, nav/wx-tabbar/tabbar）
     /* c8 ignore start */
     var contentEl =
@@ -133,10 +133,13 @@
     /* c8 ignore stop */
     if (!targets.length) return; // 无目标元素时不注入（避免 axe skip-link 违规）
 
+    // 用 <nav>（天然 navigation landmark）包装 <ul><li> 列表，避免
+    //   - aria-allowed-role：<ul role="navigation"> 不被允许
+    //   - listitem：<ul> 加 role=navigation 后 <li> 失去 list 父语义
+    var nav = document.createElement('nav');
+    nav.className = 'skip-links';
+    nav.setAttribute('aria-label', '跳转链接（屏幕阅读器专用）');
     var ul = document.createElement('ul');
-    ul.className = 'skip-links';
-    ul.setAttribute('role', 'navigation'); // ← landmark，消除 axe region 违规
-    ul.setAttribute('aria-label', '跳转链接（屏幕阅读器专用）');
     targets.forEach(function (t) {
       var li = document.createElement('li');
       var a = document.createElement('a');
@@ -162,9 +165,10 @@
       li.appendChild(a);
       ul.appendChild(li);
     });
+    nav.appendChild(ul);
     var parent = document.body;
-    if (parent && parent.firstChild) parent.insertBefore(ul, parent.firstChild);
-    else if (parent) parent.appendChild(ul);
+    if (parent && parent.firstChild) parent.insertBefore(nav, parent.firstChild);
+    else if (parent) parent.appendChild(nav);
   }
 
   // ============================================================

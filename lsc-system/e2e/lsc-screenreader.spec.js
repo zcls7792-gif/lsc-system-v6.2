@@ -859,19 +859,19 @@ async function assertRovingTabindex(page, appName) {
 
 /**
  * KB-02 Skip-Link 跳转：首个 Tab 焦点到跳转链接，激活后焦点移动到主内容
- *   - 验证 keyboard-a11y 注入的 ul.skip-links 存在
+ *   - 验证 keyboard-a11y 注入的 nav.skip-links 存在
  *   - 首个链接"跳到主内容"点击后，activeElement 位于目标或其子树
  */
 async function assertKeyboardSkipLink(page, appName) {
-  // keyboard-a11y 注入的 skip-links 列表
-  const skipUl = page.locator('ul.skip-links').first();
+  // keyboard-a11y 注入的 skip-links 容器（<nav class="skip-links">）
+  const skipUl = page.locator('nav.skip-links').first();
   const hasSkip = await skipUl.count().then(n => n > 0);
   if (!hasSkip) {
-    console.warn(`[WARN] ${appName} KB-02: 未找到 ul.skip-links（KB 模块可能未初始化），兜底走 assertSkipLink`);
+    console.warn(`[WARN] ${appName} KB-02: 未找到 nav.skip-links（KB 模块可能未初始化），兜底走 assertSkipLink`);
     await assertSkipLink(page, appName);
     return;
   }
-  await expect(skipUl, `${appName} KB-02a: ul.skip-links 存在`).toBeAttached();
+  await expect(skipUl, `${appName} KB-02a: nav.skip-links 存在`).toBeAttached();
   const ulLabel = await skipUl.getAttribute('aria-label');
   expect(ulLabel, `${appName} KB-02b: skip-links 有 aria-label 说明用途`).toBeTruthy();
 

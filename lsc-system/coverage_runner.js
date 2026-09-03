@@ -3282,7 +3282,7 @@ async function main() {
       assert(Array.isArray(dbg.defaultSelectors) && dbg.defaultSelectors.length >= 4, 'B5a7: defaultSelectors 长度');
 
       // B5b: Skip-Links 注入 + 有无 search 框（上面模板有 search-input，应追加跳到搜索）
-      const skips = w.document.querySelectorAll('ul.skip-links a.skip-link-item');
+      const skips = w.document.querySelectorAll('nav.skip-links a.skip-link-item');
       assert(skips.length >= 3, `B5b1: skip-links 数量 ≥3 (实际=${skips.length})，含跳到搜索`);
       const labels = Array.from(skips).map(a => a.textContent || '');
       assert(labels.some(t => t.includes('主内容')), 'B5b2: 跳到主内容');
@@ -3782,7 +3782,7 @@ async function main() {
       api.destroy();
       const r = api.init({ scope: frag, appPrefix: 'frag', showHint: false });
       assert(r && r.ok === true, 'B5j1: 非 document scope init ok');
-      const skipCount = w.document.querySelectorAll('ul.skip-links').length;
+      const skipCount = w.document.querySelectorAll('nav.skip-links').length;
       assert(skipCount === 0, `B5j2: 非 document scope 不注入 skip-links (实际=${skipCount})`);
       // rovingSelectors = null fallback → DEFAULT
       api.destroy();
@@ -3805,7 +3805,7 @@ async function main() {
       const api = w.LSCKeyboardA11y;
       api.destroy();
       api.init({ scope: w.document, appPrefix: 'nos', showHint: false });
-      const skips = w.document.querySelectorAll('ul.skip-links a.skip-link-item');
+      const skips = w.document.querySelectorAll('nav.skip-links a.skip-link-item');
       assert(skips.length === 2, `B5p1: 无搜索框时 skip-links = 2 (实际=${skips.length})`);
       const labels = Array.from(skips).map(a => a.textContent || '');
       assert(labels.some(t => t.includes('主内容')) && labels.some(t => t.includes('导航')), 'B5p2: 主内容+导航 两条');
@@ -3967,7 +3967,7 @@ async function main() {
           var kb = window.LSCKeyboardA11y;
           kb.destroy();
           // 清 destroy 没删的 skip-links / panel (L80 幂等检查需要)
-          var oldUL = document.querySelector('ul.skip-links');
+          var oldUL = document.querySelector('nav.skip-links');
           if (oldUL && oldUL.parentNode) oldUL.parentNode.removeChild(oldUL);
           var op = document.getElementById('kb-shortcuts-panel');
           if (op && op.parentNode) op.parentNode.removeChild(op);
@@ -3980,7 +3980,7 @@ async function main() {
           var get_ok = document.getElementById('content') === document.body;
           var cap_b = window.__stc.length;
           kb.init({ scope:document, appPrefix:'t', showHint:false });
-          var ul = document.querySelector('ul.skip-links');
+          var ul = document.querySelector('nav.skip-links');
           var l119 = empty && !!ul && ul.parentNode === document.body;
           var a = ul && ul.querySelector('a[href^="#"]');
           var links = ul ? ul.querySelectorAll('a').length : 0;
@@ -4004,7 +4004,7 @@ async function main() {
       if (rBC && rBC.err) throw new Error('rBC err: ' + rBC.err);
       assert(rBC && rBC.empty === true, `B5r_C0: body.firstChild 空 (actual=${rBC && rBC.empty})`);
       assert(rBC && rBC.id_ok && rBC.get_ok, `B5r_C1: body.id='content' 且 getElementById 返回 body (id=${rBC && rBC.id_ok} get=${rBC && rBC.get_ok})`);
-      assert(rBC && rBC.ul_p === true && rBC.links >= 1, `B5r_C2: skip-links ul 创建成功 (ul=${rBC && rBC.ul_p} links=${rBC && rBC.links})`);
+      assert(rBC && rBC.ul_p === true && rBC.links >= 1, `B5r_C2: skip-links nav 创建成功 (nav=${rBC && rBC.ul_p} links=${rBC && rBC.links})`);
       assert(rBC && rBC.l119 === true, `B5r_C: L119 空 body appendChild 分支 hit (actual=${rBC && rBC.l119})`);
       assert(rBC && rBC.l110 === true, `B5r_B: L108 setTimeout → 800ms 后执行 L110 tabindex 恢复 (cap=${rBC && rBC.cap} ran=${rBC && rBC.ran})`);
 
