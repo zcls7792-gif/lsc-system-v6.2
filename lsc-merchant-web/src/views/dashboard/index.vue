@@ -155,7 +155,7 @@ function resize() {
 </script>
 
 <template>
-  <div class="lsc-page" v-loading="loading">
+  <div class="lsc-page" v-loading="loading" data-testid="merchant-dashboard-page">
     <div class="lsc-page-header">
       <div>
         <h1 class="lsc-page-title">工作台</h1>
@@ -255,7 +255,7 @@ function resize() {
               :closable="false"
             >
               <template #default>
-                <el-button type="primary" link @click="go('/store/info')">前往处理</el-button>
+                <el-button type="primary" link @click="go('/store/info')" data-testid="merchant-dashboard-storeinfo-btn">前往处理</el-button>
               </template>
             </el-alert>
           </div>

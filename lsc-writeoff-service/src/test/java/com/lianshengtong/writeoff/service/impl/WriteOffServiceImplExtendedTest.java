@@ -335,4 +335,89 @@ class WriteOffServiceImplExtendedTest {
         // 长度: NH(2) + yyyyMMddHHmmss(14) + 6 位 = 22
         assertEquals(22, orderNo.length());
     }
+
+    // ============== Phase D 追加：并发 / lock / ledger feign fail 深层分支 ==============
+
+    @Test
+    @DisplayName("applyWriteOff: 并发获取锁失败 -> 抛出业务异常 核销处理中")
+    void applyWriteOff_lockFail_throws() throws Exception {
+        WriteOffApplyDTO dto = new WriteOffApplyDTO();
+        dto.setMerchantId(1001L);
+        dto.setLscAmount(100L);
+
+        when(redissonClient.getLock(anyString())).thenReturn(rLock);
+        when(rLock.tryLock(anyLong(), anyLong(), eq(TimeUnit.MILLISECONDS))).thenReturn(false);
+
+        BizException ex = assertThrows(BizException.class, () -> writeOffService.applyWriteOff(dto));
+        assertTrue(ex.getMessage().contains("核销处理中，请稍后重试"), "实际：" + ex.getMessage());
+        // 未获得锁，不应解锁
+        verify(rLock, never()).unlock();
+    }
+
+    @Test
+    @DisplayName("applyWriteOff: tryLock 抛 InterruptedException -> 设置中断标记 + 抛 BizException")
+    void applyWriteOff_interrupted_throws() throws Exception {
+        WriteOffApplyDTO dto = new WriteOffApplyDTO();
+        dto.setMerchantId(1001L);
+        dto.setLscAmount(100L);
+
+        when(redissonClient.getLock(anyString())).thenReturn(rLock);
+        when(rLock.tryLock(anyLong(), anyLong(), eq(TimeUnit.MILLISECONDS)))
+                .thenThrow(new InterruptedException("wakeup"));
+
+        BizException ex = assertThrows(BizException.class, () -> writeOffService.applyWriteOff(dto));
+        assertEquals("核销被中断", ex.getMessage());
+        assertTrue(Thread.currentThread().isInterrupted());
+        Thread.interrupted(); // 清除中断防止污染
+    }
+
+    @Test
+    @DisplayName("applyWriteOff: 成功完成但 isHeldByCurrentThread=false -> 不解锁（避免非法线程状态异常）")
+    void applyWriteOff_lockNotHeldByThread_noUnlock() throws Exception {
+        mockLockSuccess();
+        when(rLock.isHeldByCurrentThread()).thenReturn(false);
+
+        MerchantInfoDTO mch = createMerchant(MerchantPenaltyStatusEnum.NORMAL.getCode(), 500, LocalDate.now().minusDays(1), "ACC001");
+        when(merchantFeignClient.getMerchantInfo(1001L)).thenReturn(R.ok(mch));
+        Map<String, Object> balance = new HashMap<>();
+        balance.put("totalAvailable", 1000L);
+        when(lscLedgerFeignClient.getBalance(1001L)).thenReturn(R.ok(balance));
+        when(merchantNhRecordMapper.insert(any())).thenReturn(1);
+        when(lscLedgerFeignClient.writeOffLsc(any())).thenReturn(R.ok(new HashMap<>()));
+        when(merchantNhRecordMapper.updateById(any())).thenReturn(1);
+
+        WriteOffApplyDTO dto = new WriteOffApplyDTO();
+        dto.setMerchantId(1001L);
+        dto.setLscAmount(100L);
+        MerchantNhRecord r = writeOffService.applyWriteOff(dto);
+        assertNotNull(r);
+        verify(rLock, never()).unlock();
+    }
+
+    @Test
+    @DisplayName("applyWriteOff: 账本 writeOffLsc 返回 R.fail 触发 markRecordFailed 并重新抛异常")
+    void applyWriteOff_writeOffLscFail_markFailed() throws Exception {
+        mockLockSuccess();
+        MerchantInfoDTO mch = createMerchant(MerchantPenaltyStatusEnum.NORMAL.getCode(), 500, LocalDate.now().minusDays(1), "ACC001");
+        when(merchantFeignClient.getMerchantInfo(1001L)).thenReturn(R.ok(mch));
+        Map<String, Object> balance = new HashMap<>();
+        balance.put("totalAvailable", 1000L);
+        when(lscLedgerFeignClient.getBalance(1001L)).thenReturn(R.ok(balance));
+        when(merchantNhRecordMapper.insert(any())).thenAnswer(inv -> {
+            MerchantNhRecord rec = inv.getArgument(0);
+            rec.setId(999L);
+            return 1;
+        });
+        when(lscLedgerFeignClient.writeOffLsc(any())).thenReturn(R.fail("账本不可用"));
+        doNothing().when(self).markRecordFailed(anyLong(), anyInt(), anyString());
+
+        WriteOffApplyDTO dto = new WriteOffApplyDTO();
+        dto.setMerchantId(1001L);
+        dto.setLscAmount(100L);
+
+        BizException ex = assertThrows(BizException.class, () -> writeOffService.applyWriteOff(dto));
+        assertTrue(ex.getMessage().contains("LSC销毁失败"), "实际：" + ex.getMessage());
+        // 验证失败标记被调用
+        verify(self).markRecordFailed(eq(999L), eq(1), contains("账本不可用"));
+    }
 }

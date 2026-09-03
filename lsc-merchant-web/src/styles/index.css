@@ -348,3 +348,48 @@ a {
   opacity: 0;
   transform: translateY(8px);
 }
+
+/* ================================
+ * 键盘可达性：焦点可见性 (Focus Ring)
+ * ================================ */
+:where(a, button, [role="button"], input:not([type="hidden"]), select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--lsc-brand-gold, #c9a96e);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.el-button:focus-visible,
+.el-input__wrapper:focus-visible,
+.el-select__wrapper:focus-visible,
+.el-checkbox__inner:focus-visible,
+.el-tabs__item:focus-visible,
+.el-menu-item:focus-visible,
+.el-pagination button:focus-visible {
+  outline: 2px solid var(--lsc-brand-gold, #c9a96e) !important;
+  outline-offset: 2px !important;
+}
+
+/* 跳过导航链接 */
+.skip-links a {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 99999;
+  padding: 8px 16px;
+  background: var(--lsc-brand-gold, #c9a96e);
+  color: #fff !important;
+  border-radius: 0 0 6px 0;
+}
+.skip-links a:focus,
+.skip-links a:focus-visible {
+  left: 0;
+  outline: 2px solid var(--lsc-brand-teal, #2d5a4d);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

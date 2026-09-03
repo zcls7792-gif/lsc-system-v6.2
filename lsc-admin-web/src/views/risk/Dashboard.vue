@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container" data-testid="platform-risk-dashboard-page">
     <el-row :gutter="16" class="card-row">
       <el-col :span="6">
         <el-card shadow="hover"><el-statistic title="今日风控事件" :value="stats.todayEvents" /></el-card>
@@ -19,7 +19,7 @@
       <el-col :span="12">
         <el-card shadow="hover">
           <template #header><div class="card-title">风险事件趋势</div></template>
-          <div ref="trendRef" class="chart-container"></div>
+          <div ref="trendRef" class="chart-container" data-testid="platform-risk-trend-chart"></div>
         </el-card>
       </el-col>
       <el-col :span="12">

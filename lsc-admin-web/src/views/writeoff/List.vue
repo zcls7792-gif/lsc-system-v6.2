@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container" data-testid="platform-writeoff-list-page">
     <el-form :inline="true" :model="query" class="search-form">
       <el-form-item label="批次号">
         <el-input v-model="query.batchNo" placeholder="核销批次号" clearable @keyup.enter="handleSearch" />
@@ -26,7 +26,7 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+        <el-button type="primary" :icon="Search" @click="handleSearch" data-testid="platform-writeoff-search-btn">查询</el-button>
         <el-button :icon="Refresh" @click="handleReset">重置</el-button>
       </el-form-item>
     </el-form>

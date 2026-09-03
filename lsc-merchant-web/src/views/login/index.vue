@@ -59,7 +59,7 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="login">
+  <div class="login" data-testid="merchant-login-page">
     <div class="login__bg">
       <div class="login__bg-grid"></div>
       <div class="login__bg-glow login__bg-glow--teal"></div>
@@ -68,18 +68,18 @@ async function handleLogin() {
 
     <div class="login__container">
       <div class="login__brand">
-        <div class="login__brand-mark">
+        <div class="login__brand-mark" data-testid="merchant-login-brand-mark">
           <span>L</span>
         </div>
         <div class="login__brand-text">
-          <h1 class="login__brand-title">链盛通</h1>
+          <h1 class="login__brand-title" data-testid="merchant-login-brand-title">链盛通</h1>
           <p class="login__brand-sub">LSC 商家管理后台</p>
         </div>
       </div>
 
       <div class="login__card">
         <div class="login__card-head">
-          <h2 class="login__card-title">商家登录</h2>
+          <h2 class="login__card-title" data-testid="merchant-login-title">商家登录</h2>
           <p class="login__card-desc">输入手机号与密码进入商家管理后台</p>
         </div>
 
@@ -90,24 +90,27 @@ async function handleLogin() {
           size="large"
           label-position="top"
           @keyup.enter="handleLogin"
+          data-testid="merchant-login-form"
         >
-          <el-form-item prop="mobile">
+          <el-form-item prop="mobile" data-testid="merchant-login-mobile-item">
             <el-input
               v-model="form.mobile"
               placeholder="请输入手机号"
               :prefix-icon="User"
               maxlength="11"
               clearable
+              data-testid="merchant-login-mobile-input"
             />
           </el-form-item>
 
-          <el-form-item prop="password">
+          <el-form-item prop="password" data-testid="merchant-login-password-item">
             <el-input
               v-model="form.password"
               type="password"
               placeholder="请输入密码"
               :prefix-icon="Lock"
               show-password
+              data-testid="merchant-login-password-input"
             />
           </el-form-item>
 
@@ -116,6 +119,7 @@ async function handleLogin() {
             class="login__submit"
             :loading="loading"
             @click="handleLogin"
+            data-testid="merchant-login-submit-btn"
           >
             登 录
           </el-button>

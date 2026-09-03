@@ -90,3 +90,60 @@ a {
 .ai-tag {
   margin-right: 4px;
 }
+
+/* ================================
+ * 键盘可达性：焦点可见性 (Focus Ring)
+ * 仅对键盘激活焦点生效，避免鼠标点击后的蓝色残环
+ * ================================ */
+:where(a, button, [role="button"], input:not([type="hidden"]), select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #409eff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 保证 Element Plus 组件的可聚焦元素呈现焦点环 */
+.el-button:focus-visible,
+.el-input__inner:focus-visible,
+.el-input__wrapper:focus-visible,
+.el-select__wrapper:focus-visible,
+.el-radio-button:focus-visible,
+.el-checkbox__inner:focus-visible,
+.el-date-editor .el-input__wrapper:focus-visible,
+.el-tabs__item:focus-visible,
+.el-menu-item:focus-visible,
+.el-pagination button:focus-visible {
+  outline: 2px solid #409eff !important;
+  outline-offset: 2px !important;
+}
+
+/* 跳过导航链接（仅焦点可见） */
+.skip-links a {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 99999;
+  padding: 8px 16px;
+  background: #409eff;
+  color: #fff !important;
+  border-radius: 0 0 4px 0;
+}
+.skip-links a:focus,
+.skip-links a:focus-visible {
+  left: 0;
+  outline: 2px solid #1f6feb;
+  outline-offset: 2px;
+}
+
+/* 高对比度主题：尊重用户系统偏好 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --lsc-focus-ring: #52a8ff;
+  }
+}

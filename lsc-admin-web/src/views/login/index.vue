@@ -1,15 +1,28 @@
 <template>
-  <div class="login-container">
+  <div class="login-container" data-testid="platform-login-container">
     <div class="login-box">
       <div class="login-header">
-        <h2 class="login-title">LSC平台管理后台</h2>
+        <h2 class="login-title" data-testid="platform-login-title">LSC平台管理后台</h2>
         <p class="login-subtitle">连锁生通 · 平台管理系统</p>
       </div>
-      <el-form ref="loginFormRef" :model="loginForm" :rules="rules" size="large" @keyup.enter="handleLogin">
-        <el-form-item prop="username">
-          <el-input v-model="loginForm.username" placeholder="请输入用户名" :prefix-icon="User" clearable />
+      <el-form
+        ref="loginFormRef"
+        :model="loginForm"
+        :rules="rules"
+        size="large"
+        @keyup.enter="handleLogin"
+        data-testid="platform-login-form"
+      >
+        <el-form-item prop="username" data-testid="platform-login-username-item">
+          <el-input
+            v-model="loginForm.username"
+            placeholder="请输入用户名"
+            :prefix-icon="User"
+            clearable
+            data-testid="platform-login-username-input"
+          />
         </el-form-item>
-        <el-form-item prop="password">
+        <el-form-item prop="password" data-testid="platform-login-password-item">
           <el-input
             v-model="loginForm.password"
             type="password"
@@ -17,10 +30,17 @@
             :prefix-icon="Lock"
             show-password
             clearable
+            data-testid="platform-login-password-input"
           />
         </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :loading="loading" style="width: 100%" @click="handleLogin">
+        <el-form-item data-testid="platform-login-submit-item">
+          <el-button
+            type="primary"
+            :loading="loading"
+            style="width: 100%"
+            @click="handleLogin"
+            data-testid="platform-login-submit-btn"
+          >
             登 录
           </el-button>
         </el-form-item>

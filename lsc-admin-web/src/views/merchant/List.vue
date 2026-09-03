@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container" data-testid="platform-merchant-list-page">
     <el-form :inline="true" :model="query" class="search-form">
       <el-form-item label="关键词">
         <el-input v-model="query.keyword" placeholder="商家名称/账号" clearable @keyup.enter="handleSearch" />
@@ -17,7 +17,7 @@
         <el-input v-model="query.creditMax" placeholder="最高" style="width: 90px" />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+        <el-button type="primary" :icon="Search" @click="handleSearch" data-testid="platform-merchant-search-btn">查询</el-button>
         <el-button :icon="Refresh" @click="handleReset">重置</el-button>
       </el-form-item>
     </el-form>

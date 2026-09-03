@@ -94,7 +94,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="lsc-page" v-loading="loading">
+  <div class="lsc-page" v-loading="loading" data-testid="merchant-writeoff-apply-page">
     <div class="lsc-page-header">
       <div>
         <h1 class="lsc-page-title">申请核销</h1>
@@ -152,6 +152,7 @@ onMounted(load)
                 type="primary"
                 size="large"
                 :icon="Money"
+                data-testid="merchant-writeoff-submit-btn"
                 :loading="submitting"
                 :disabled="!canApply"
                 @click="submit"

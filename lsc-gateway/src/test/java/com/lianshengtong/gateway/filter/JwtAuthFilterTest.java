@@ -487,4 +487,71 @@ class JwtAuthFilterTest {
             assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
         }
     }
+
+    // ============== Phase D 追加：3 条未覆盖 branch ==============
+
+    @Nested
+    @DisplayName("Phase D：边缘分支覆盖")
+    class PhaseDAppendedBranchTests {
+
+        @Test
+        @DisplayName("Authorization=Bearer + 空白字符串(纯空格) -> 触发\"认证令牌为空\"")
+        void filter_blankBearerToken_returnsEmptyTokenMessage() {
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.AUTHORIZATION, "Bearer   ");
+            ServerHttpRequest request = mockRequest("/api/protected", headers);
+            ServerHttpResponse response = mockResponse();
+            ServerWebExchange exch = mockExchangeWithResponse(request, response);
+
+            filter.filter(exch, chain);
+
+            verify(response).setStatusCode(HttpStatus.UNAUTHORIZED);
+            // 认证令牌为空 branch 只要求触发 unauthorized -> Content-Type: application/json 已设置
+            assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
+        }
+
+        @Test
+        @DisplayName("白名单为空字符串(配置项空白)时：isWhitelisted 返回 false")
+        void isWhitelisted_emptyWhitelistConfig_returnsFalse() {
+            JwtAuthFilter f = new JwtAuthFilter();
+            ReflectionTestUtils.setField(f, "userSecret", USER_SECRET);
+            ReflectionTestUtils.setField(f, "adminSecret", ADMIN_SECRET);
+            ReflectionTestUtils.setField(f, "userIssuer", USER_ISSUER);
+            ReflectionTestUtils.setField(f, "adminIssuer", ADMIN_ISSUER);
+            ReflectionTestUtils.setField(f, "whitelistStr", "   ");
+            f.init();
+
+            Boolean r = ReflectionTestUtils.invokeMethod(f, "isWhitelisted", "/api/user/login");
+            assertThat(r).isFalse();
+        }
+
+        @Test
+        @DisplayName("管理员 Token 但 role 字段为 null -> 不写 X-Admin-Role header")
+        void filter_adminTokenWithoutRole_noAdminRoleHeader() {
+            // 构造 admin issuer 但不含 role 的 token
+            String tokenNoRole = io.jsonwebtoken.Jwts.builder()
+                    .subject("admin-norole")
+                    .issuer(ADMIN_ISSUER)
+                    .issuedAt(new Date())
+                    .expiration(new Date(System.currentTimeMillis() + 3600_000))
+                    .signWith(adminKey)
+                    .compact();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + tokenNoRole);
+            ServerHttpRequest request = mockRequest("/api/admin/users", headers,
+                    new InetSocketAddress("10.0.0.9", 1111));
+            ServerHttpResponse response = mockResponse();
+            ServerWebExchange exch = mockExchangeWithResponse(request, response);
+            when(chain.filter(any())).thenReturn(Mono.empty());
+
+            // 截获 mutate().header(...) 调用链
+            ServerHttpRequest.Builder outerBuilder = request.mutate();
+
+            filter.filter(exch, chain).block();
+            // 确保请求 mutate 后只传 3 个 header：X-User-Id, X-User-Type, X-Client-Ip
+            // X-Admin-Role 不应该被调用
+            verify(outerBuilder, never()).header(eq("X-Admin-Role"), any(String[].class));
+        }
+    }
 }

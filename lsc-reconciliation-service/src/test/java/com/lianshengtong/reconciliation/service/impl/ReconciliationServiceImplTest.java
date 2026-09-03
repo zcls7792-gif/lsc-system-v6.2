@@ -640,4 +640,135 @@ class ReconciliationServiceImplTest {
         assertNull(chainTxHash);
         verify(reconcileReportMapper).updateById(any(ReconcileReport.class));
     }
+
+    // ============== 追加：深处未覆盖 branch ==============
+
+    @Test
+    @DisplayName("dailyReconcile: tryLock 抛 InterruptedException -> 恢复中断标记 + 抛 BizException")
+    void dailyReconcile_interrupted_throwBiz() throws Exception {
+        when(redissonClient.getLock(anyString())).thenReturn(rLock);
+        when(rLock.tryLock(anyLong(), anyLong(), eq(TimeUnit.MINUTES)))
+                .thenThrow(new InterruptedException("lock wakeup"));
+
+        BizException ex = assertThrows(BizException.class,
+                () -> reconciliationService.dailyReconcile(TEST_DATE));
+        assertTrue(ex.getMessage().contains("对账任务被中断"));
+        // 中断标记应当恢复
+        assertTrue(Thread.currentThread().isInterrupted(), "中断标记应当恢复");
+        // 清除中断防止污染其他测试
+        Thread.interrupted();
+    }
+
+    @Test
+    @DisplayName("generateReport: 支付 Feign 返回 R(ok=true, data=Map 中 totalAmount=String 数值) 走 String 分支")
+    void generateReport_amountAsString_converts() {
+        stubNewReportInsert(2L);
+        Map<String, Object> payment = new HashMap<>();
+        payment.put("totalAmount", "1500.00");
+        payment.put("totalCount", "15");
+        Map<String, Object> ledger = buildLedgerSummary(1500L, 15L);
+        stubPaymentAndLedger(payment, ledger);
+        stubEvidenceOk("0xtxStr");
+        ReconcileReport rp = new ReconcileReport();
+        rp.setId(2L);
+        stubReportSelectById(rp);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+        assertEquals(0, report.getDiffAmount().compareTo(BigDecimal.ZERO));
+        assertEquals(0L, report.getDiffCount());
+        assertEquals(1, report.getStatus());
+    }
+
+    @Test
+    @DisplayName("toLong: totalCount 为 Integer(小数字) 也应正确转为 long")
+    void toLong_integerType_convertsCorrectly() {
+        stubNewReportInsert(3L);
+        Map<String, Object> payment = new HashMap<>();
+        payment.put("totalAmount", new BigDecimal("100"));
+        payment.put("totalCount", Integer.valueOf(7));
+        Map<String, Object> ledger = buildLedgerSummary(100L, 7L);
+        stubPaymentAndLedger(payment, ledger);
+        stubEvidenceOk("0x");
+        ReconcileReport rp = new ReconcileReport();
+        rp.setId(3L);
+        stubReportSelectById(rp);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+        assertEquals(Long.valueOf(7L), report.getPaymentCount());
+    }
+
+    @Test
+    @DisplayName("generateReport: orderFeign 返回 null resp -> 默认 0")
+    void generateReport_paymentRespNull_defaults() {
+        stubNewReportInsert(4L);
+        when(orderFeignClient.dailySummary(anyString())).thenReturn(null);
+        Map<String, Object> ledger = buildLedgerSummary(100L, 1L);
+        when(lscLedgerFeignClient.dailySummary(any(LocalDate.class), anyString()))
+                .thenReturn(R.ok(ledger));
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+        assertEquals(BigDecimal.ZERO, report.getPaymentTotalAmount());
+    }
+
+    @Test
+    @DisplayName("generateReport: ledger Feign resp=null -> 默认")
+    void generateReport_ledgerRespNull_defaults() {
+        stubNewReportInsert(5L);
+        Map<String, Object> payment = buildPaymentSummary(new BigDecimal("100"), 1L);
+        when(orderFeignClient.dailySummary(anyString())).thenReturn(R.ok(payment));
+        when(lscLedgerFeignClient.dailySummary(any(LocalDate.class), anyString()))
+                .thenReturn(null);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+        assertEquals(Long.valueOf(0L), report.getLedgerCount());
+    }
+
+    @Test
+    @DisplayName("generateReport: 一致情况 evidenceFeignClient.saveEvidence 抛 RuntimeException 不影响报告返回")
+    void generateReport_evidenceThrowsCaughtSilently() {
+        stubNewReportInsert(6L);
+        Map<String, Object> payment = buildPaymentSummary(new BigDecimal("800"), 8L);
+        Map<String, Object> ledger = buildLedgerSummary(800L, 8L);
+        stubPaymentAndLedger(payment, ledger);
+        ReconcileReport rp = new ReconcileReport();
+        rp.setId(6L);
+        stubReportSelectById(rp);
+        when(evidenceFeignClient.saveEvidence(anyString(), anyString(), anyString()))
+                .thenThrow(new RuntimeException("on chain RPC timeout"));
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+        assertEquals(1, report.getStatus());
+        assertNull(report.getChainTxHash());
+    }
+
+    @Test
+    @DisplayName("generateReport: R(ok=false)/失败 -> 默认 0")
+    void generateReport_paymentRFail_defaults() {
+        stubNewReportInsert(7L);
+        when(orderFeignClient.dailySummary(anyString())).thenReturn(R.fail("no data"));
+        Map<String, Object> ledger = buildLedgerSummary(200L, 2L);
+        when(lscLedgerFeignClient.dailySummary(any(LocalDate.class), anyString()))
+                .thenReturn(R.ok(ledger));
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+        assertEquals(BigDecimal.ZERO, report.getPaymentTotalAmount());
+    }
+
+    @Test
+    @DisplayName("toBigDecimal: 整型 Double 数值也能正确转换")
+    void toBigDecimal_fromIntegerConverts() {
+        stubNewReportInsert(8L);
+        Map<String, Object> payment = new HashMap<>();
+        payment.put("totalAmount", 250);  // Integer
+        payment.put("totalCount", 2L);
+        Map<String, Object> ledger = buildLedgerSummary(250L, 2L);
+        stubPaymentAndLedger(payment, ledger);
+        stubEvidenceOk("0x");
+        ReconcileReport rp = new ReconcileReport();
+        rp.setId(8L);
+        stubReportSelectById(rp);
+
+        ReconcileReport report = reconciliationService.generateReport(TEST_DATE);
+        assertEquals(0, report.getDiffAmount().compareTo(BigDecimal.ZERO));
+    }
 }

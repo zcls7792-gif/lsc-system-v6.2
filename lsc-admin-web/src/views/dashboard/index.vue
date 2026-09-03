@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard">
+  <div class="dashboard" data-testid="platform-dashboard-page">
     <el-row :gutter="16" class="card-row">
       <el-col :span="6">
         <el-card shadow="hover" class="stat-card">
@@ -11,7 +11,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
+        <el-card shadow="hover" class="stat-card" data-testid="platform-dashboard-merchant-card">
           <el-statistic title="总商家数" :value="stats.totalMerchants">
             <template #prefix>
               <el-icon style="color: #67c23a"><Shop /></el-icon>
@@ -20,7 +20,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
+        <el-card shadow="hover" class="stat-card" data-testid="platform-dashboard-amount-card">
           <el-statistic title="今日交易额(元)" :value="stats.todayAmount" :precision="2">
             <template #prefix>
               <el-icon style="color: #e6a23c"><Money /></el-icon>

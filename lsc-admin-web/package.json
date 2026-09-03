@@ -7,7 +7,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
@@ -22,11 +25,16 @@
     "vue-router": "^4.4.0"
   },
   "devDependencies": {
+    "@types/node": "^20.14.10",
     "@vitejs/plugin-vue": "^5.0.5",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^14.12.3",
     "typescript": "^5.5.3",
     "unplugin-auto-import": "^0.17.6",
     "unplugin-vue-components": "^0.27.2",
     "vite": "^5.3.3",
+    "vitest": "^1.6.1",
+    "vue-router-mock": "^2.0.2",
     "vue-tsc": "^2.0.26"
   }
 }

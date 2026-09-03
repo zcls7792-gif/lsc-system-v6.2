@@ -55,7 +55,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="lsc-page" v-loading="loading">
+  <div class="lsc-page" v-loading="loading" data-testid="merchant-lsc-account-page">
     <div class="lsc-page-header">
       <div>
         <h1 class="lsc-page-title">LSC 账户</h1>
@@ -100,7 +100,7 @@ onMounted(load)
               <span class="detail-sub">按过期日排序 · 最近 10 条</span>
             </div>
 
-            <el-table :data="details" row-key="id" size="small" :show-header="true">
+            <el-table :data="details" row-key="id" size="small" :show-header="true" data-testid="merchant-lsc-details-table">
               <el-table-column label="数量" width="100">
                 <template #default="{ row }">
                   <span class="lsc-num lsc-gold-text">{{ row.amount }}</span>

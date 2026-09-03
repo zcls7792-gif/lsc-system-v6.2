@@ -960,4 +960,115 @@ class RiskControlServiceImplTest {
 
         assertNotNull(result);
     }
+
+    // ========== 追加：更深处的边缘分支 ==========
+
+    @Test
+    @DisplayName("incrWindow Redis 抛异常 -> 降级返回 0，不影响整体 check 流程")
+    void testCheck_incrWindowExceptionDegrade() {
+        RiskCheckDTO dto = buildBaseDto();
+        // opsForValue().increment 首次调用（batch计数）抛 Redis 连接异常
+        when(valueOperations.increment(anyString()))
+                .thenThrow(new org.springframework.data.redis.RedisConnectionFailureException("OOM"));
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel(), "Redis 异常降级为无风险");
+        verify(riskLogMapper).insert(any(RiskLog.class));
+    }
+
+    @Test
+    @DisplayName("AI 网关返回 R.fail -> 本地不设置 aiScore，继续按本地规则判断")
+    void testCheck_AiGatewayRfail() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setEnableAi(true);
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+        when(aiGatewayFeignClient.riskScore(anyLong(), anyString()))
+                .thenReturn(com.lianshengtong.common.result.R.fail("后端评分未就绪"));
+
+        RiskLog result = riskControlService.check(dto);
+
+        assertNotNull(result);
+        assertNull(result.getAiScore(), "R.fail 不应写入 aiScore");
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("AI 网关返回 success=true 但 data=null 的 R.ok(null)")
+    void testCheck_AiGatewayOkDataNull() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setEnableAi(true);
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+        when(aiGatewayFeignClient.riskScore(anyLong(), anyString()))
+                .thenReturn(com.lianshengtong.common.result.R.ok(null));
+
+        RiskLog result = riskControlService.check(dto);
+        assertNotNull(result);
+        assertNull(result.getAiScore());
+    }
+
+    @Test
+    @DisplayName("handle: 传入 handleStatus=0 标记待人工复核，remark 正确写入")
+    void testHandle_setPendingWithRemark() {
+        RiskLog log = new RiskLog();
+        log.setId(10L);
+        log.setHandleStatus(3);
+        when(riskLogMapper.selectById(10L)).thenReturn(log);
+        riskControlService.handle(10L, 0, "需复核");
+        org.mockito.ArgumentCaptor<RiskLog> capt =
+                org.mockito.ArgumentCaptor.forClass(RiskLog.class);
+        verify(riskLogMapper).updateById(capt.capture());
+        RiskLog updated = capt.getValue();
+        assertEquals(0, updated.getHandleStatus());
+        assertEquals("需复核", updated.getHandleRemark());
+        assertNotNull(updated.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("异地操作 geo sAdd + expire 都被触发，城市数 <3 不触发风控")
+    void testCheck_geoAddAndExpire() {
+        RiskCheckDTO dto = buildBaseDto();
+        dto.setClientCity("Shanghai");
+
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(setOperations.add(anyString(), any())).thenReturn(1L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+        when(setOperations.size(startsWith("lsc:risk:geo:"))).thenReturn(2L);
+
+        RiskLog result = riskControlService.check(dto);
+        assertNotNull(result);
+        assertEquals(0, result.getRiskLevel());
+        verify(setOperations).add(startsWith("lsc:risk:geo:"), eq("Shanghai"));
+        verify(stringRedisTemplate).expire(startsWith("lsc:risk:geo:"), any());
+    }
+
+    @Test
+    @DisplayName("高频套利次数=阈值-1 不触发（恰好等于4时）")
+    void testCheck_ArbitrageJustBelowThreshold() {
+        RiskCheckDTO dto = buildBaseDto();
+        // threshold = 5, below = 4
+        when(valueOperations.increment(anyString())).thenReturn(0L);
+        when(valueOperations.increment(startsWith("lsc:risk:arb:"))).thenReturn(5L - 1L);
+        when(setOperations.size(anyString())).thenReturn(0L);
+
+        RiskLog result = riskControlService.check(dto);
+        assertEquals(0, result.getRiskLevel());
+    }
+
+    @Test
+    @DisplayName("dashboard: 高风险待处理 in(0,1,2) 所有结果均为 0")
+    void testDashboard_zeroHighRiskPending() {
+        reset(riskLogMapper);
+        // 1 次 total + 3 次 byLevel + 5 次 byStatus + 1 次 pending = 10
+        when(riskLogMapper.selectCount(any(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class)))
+                .thenReturn(0L);
+
+        var map = riskControlService.dashboard();
+        assertEquals(0L, map.get("total"));
+        assertEquals(0L, map.get("highRiskPending"));
+    }
 }

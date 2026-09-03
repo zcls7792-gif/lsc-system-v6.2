@@ -108,7 +108,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="lsc-page">
+  <div class="lsc-page" data-testid="merchant-product-list-page">
     <div class="lsc-page-header">
       <div>
         <h1 class="lsc-page-title">商品列表</h1>
@@ -140,7 +140,7 @@ onMounted(load)
     </div>
 
     <div class="lsc-card" style="margin-top: 16px">
-      <el-table v-loading="loading" :data="list" row-key="id" stripe>
+      <el-table v-loading="loading" :data="list" row-key="id" stripe data-testid="merchant-product-list-table">
         <el-table-column label="商品" min-width="280">
           <template #default="{ row }">
             <div class="prod-cell">

@@ -94,7 +94,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="lsc-page">
+  <div class="lsc-page" data-testid="merchant-order-list-page">
     <div class="lsc-page-header">
       <div>
         <h1 class="lsc-page-title">订单管理</h1>
@@ -136,7 +136,7 @@ onMounted(load)
     </div>
 
     <div class="lsc-card" style="margin-top: 16px">
-      <el-table v-loading="loading" :data="list" row-key="id" stripe>
+      <el-table v-loading="loading" :data="list" row-key="id" stripe data-testid="merchant-order-list-table">
         <el-table-column label="订单号" min-width="200">
           <template #default="{ row }">
             <div class="ord-no lsc-num">{{ row.orderNo }}</div>

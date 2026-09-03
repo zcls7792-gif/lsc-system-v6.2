@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container" data-testid="platform-reconcile-report-page">
     <el-form :inline="true" :model="query" class="search-form">
       <el-form-item label="对账日期">
         <el-date-picker
@@ -20,7 +20,7 @@
       <el-form-item>
         <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
         <el-button :icon="Refresh" @click="handleReset">重置</el-button>
-        <el-button type="success" :icon="RefreshRight" @click="handleTriggerReconcile">触发对账</el-button>
+        <el-button type="success" :icon="RefreshRight" @click="handleTriggerReconcile" data-testid="platform-reconcile-trigger-btn">触发对账</el-button>
       </el-form-item>
     </el-form>
 

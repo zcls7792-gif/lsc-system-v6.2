@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container" data-testid="platform-order-list-page">
     <el-form :inline="true" :model="query" class="search-form">
       <el-form-item label="订单号">
         <el-input v-model="query.orderNo" placeholder="订单号" clearable @keyup.enter="handleSearch" />
@@ -32,7 +32,7 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+        <el-button type="primary" :icon="Search" @click="handleSearch" data-testid="platform-order-search-btn">查询</el-button>
         <el-button :icon="Refresh" @click="handleReset">重置</el-button>
         <el-button :icon="Download">导出</el-button>
       </el-form-item>
