@@ -41,8 +41,7 @@
 <link rel="preload" href="../shared/keyboard-a11y.js" as="script">
 <link rel="preload" href="./app.js" as="script">
 <link rel="preload" href="./manifest.webmanifest" as="fetch" crossorigin>
-<!-- 平台后台默认 logo / og:image 预加载 (避免首屏图重排) -->
-<link rel="preload" as="image" href="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9" crossorigin="anonymous">
+<!-- og:image 预加载已移除（跨域资源导致 consoleE；社交分享时由爬虫抓取 og:image meta，无需首屏 preload） -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
