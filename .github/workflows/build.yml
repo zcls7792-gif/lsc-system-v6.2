@@ -126,7 +126,7 @@ jobs:
           echo "::notice::Quality gate PASSED — all builds, tests, frontend unit tests, and coverage checks succeeded."
 
   frontend-unit-tests:
-    name: Frontend unit tests (admin-web + merchant-web)
+    name: Frontend tests (vitest + coverage + e2e + a11y)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -135,10 +135,10 @@ jobs:
         app:
           - name: lsc-admin-web
             dir: lsc-admin-web
-            node: 20
+            node: 24
           - name: lsc-merchant-web
             dir: lsc-merchant-web
-            node: 20
+            node: 24
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -154,9 +154,17 @@ jobs:
         working-directory: ${{ matrix.app.dir }}
         run: npm ci --no-audit --no-fund
 
-      - name: Run Vitest unit tests
+      - name: Run Vitest unit tests with coverage
         working-directory: ${{ matrix.app.dir }}
-        run: npm test -- --reporter=default --reporter=junit --outputFile.junit=junit-report.xml
+        run: npm run test:coverage -- --reporter=default --reporter=junit --outputFile.junit=junit-report.xml
+
+      - name: Install Playwright browsers
+        working-directory: ${{ matrix.app.dir }}
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Playwright E2E + axe-core a11y
+        working-directory: ${{ matrix.app.dir }}
+        run: npm run e2e
 
       - name: Upload Vitest JUnit reports
         if: always()
@@ -164,5 +172,23 @@ jobs:
         with:
           name: vitest-junit-${{ matrix.app.name }}
           path: ${{ matrix.app.dir }}/junit-report.xml
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: vitest-coverage-${{ matrix.app.name }}
+          path: ${{ matrix.app.dir }}/coverage/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload Playwright E2E reports
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-e2e-${{ matrix.app.name }}
+          path: ${{ matrix.app.dir }}/e2e-junit.xml
           if-no-files-found: ignore
           retention-days: 7
