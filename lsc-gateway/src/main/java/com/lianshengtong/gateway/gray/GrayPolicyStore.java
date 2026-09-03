@@ -1,0 +1,204 @@
+package com.lianshengtong.gateway.gray;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
+/**
+ * 灰度策略仓储（内存态，单实例场景快速打通闭环；多实例场景建议接入 Redis/Nacos）。
+ * <p>
+ * 数据模型：
+ * <ul>
+ *   <li>policyId：业务语义化，例 "order-service-v2.1"</li>
+ *   <li>routeId：对应 application.yml 中的路由 id（user-service / ledger-service / order-service …）</li>
+ *   <li>baselineUri：基线版本 lb://{serviceId}</li>
+ *   <li>canaryUri：灰度版本 lb://{serviceId}-canary 或 lb://{serviceId}{-suffix}（K8s 下可对应不同 Deployment/Service subset）</li>
+ *   <li>canaryWeightPercent：0~100 整数灰度权重，命中比例；0 = 关闭灰度，100 = 全量切</li>
+ *   <li>rules：硬命中规则（X-Canary=force / userId%N=0 / header:X-User-Type=merchant …）</li>
+ *   <li>status：ACTIVE / PAUSED / ROLLED_BACK</li>
+ * </ul>
+ * </p>
+ */
+public class GrayPolicyStore {
+
+    public enum Status { ACTIVE, PAUSED, ROLLED_BACK }
+
+    /** 一条灰度策略的命中规则 */
+    public record Rule(
+            String type,             // HEADER / QUERY / COOKIE / USER_ID_MOD / PATH_PREFIX
+            String key,              // 键: 头名 / 参数名 / cookie 名 / null
+            String operator,         // EQ / NE / PREFIX / MOD_EQ
+            String value,            // 值: 字符串 / "mod==0" 中的余
+            String extra             // 额外配置: USER_ID_MOD 中 mod=N → "N"
+    ) {}
+
+    /** 灰度策略快照（不可变） */
+    public record Policy(
+            String policyId,
+            String routeId,
+            String baselineUri,
+            String canaryUri,
+            int canaryWeightPercent,          // 0..100
+            List<Rule> rules,
+            Map<String, String> meta,         // { author, ticketId, reason, k8sCanaryDeployment }
+            Status status,
+            Instant createdAt,
+            Instant updatedAt,
+            String updatedBy
+    ) {
+        /** 策略是否处于"可参与分流决策"的状态（注意：weight=0 但有 rules 时仍需参与，
+         * 因为 rules 允许强制切基线/灰度；此时权重随机分支会落在 baseline）。 */
+        public boolean active() {
+            return status == Status.ACTIVE && (canaryWeightPercent > 0 || (rules != null && !rules.isEmpty()));
+        }
+    }
+
+    /** 变更历史条目 */
+    public record History(
+            Instant ts,
+            String policyId,
+            String operator,
+            String action,   // CREATE / UPDATE / ROLLBACK / PAUSE / RESUME / WEIGHT_CHANGE
+            String detail
+    ) {}
+
+    /** 命中统计 */
+    public static class Stats {
+        public final AtomicLong baselineHits = new AtomicLong();
+        public final AtomicLong canaryHits = new AtomicLong();
+        public final AtomicLong ruleForceCanary = new AtomicLong();
+        public final AtomicLong ruleForceBaseline = new AtomicLong();
+        public final AtomicLong startTimeMs = new AtomicLong(System.currentTimeMillis());
+        /** 每分钟窗口（秒级桶简化：最近 60s 命中计数器） */
+        public final AtomicLong[] perSecondBaseline = new AtomicLong[60];
+        public final AtomicLong[] perSecondCanary   = new AtomicLong[60];
+        {
+            for (int i = 0; i < 60; i++) {
+                perSecondBaseline[i] = new AtomicLong();
+                perSecondCanary[i]   = new AtomicLong();
+            }
+        }
+    }
+
+    private final Map<String, AtomicReference<Policy>> policies = new ConcurrentHashMap<>();
+    private final Map<String, Stats> stats = new ConcurrentHashMap<>();
+    private final java.util.Deque<History> history = new java.util.concurrent.ConcurrentLinkedDeque<>();
+
+    public Policy createOrUpdate(Policy in, String operator) {
+        Instant now = Instant.now();
+        Policy toSave = in.createdAt() == null
+                ? new Policy(in.policyId(), in.routeId(), in.baselineUri(), in.canaryUri(),
+                    clamp(in.canaryWeightPercent()),
+                    in.rules() == null ? List.of() : in.rules(),
+                    in.meta() == null ? Map.of() : in.meta(),
+                    in.status() == null ? Status.ACTIVE : in.status(),
+                    now, now, operator)
+                : new Policy(in.policyId(), in.routeId(), in.baselineUri(), in.canaryUri(),
+                    clamp(in.canaryWeightPercent()),
+                    in.rules() == null ? List.of() : in.rules(),
+                    in.meta() == null ? Map.of() : in.meta(),
+                    in.status() == null ? Status.ACTIVE : in.status(),
+                    in.createdAt(), now, operator);
+
+        AtomicReference<Policy> ref = policies.computeIfAbsent(toSave.policyId(),
+                k -> new AtomicReference<>());
+        Policy prev = ref.get();
+        ref.set(toSave);
+        stats.computeIfAbsent(toSave.policyId(), k -> new Stats());
+        history.addFirst(new History(now, toSave.policyId(), operator,
+                prev == null ? "CREATE" : "UPDATE", describeDiff(prev, toSave)));
+        trimHistory();
+        return toSave;
+    }
+
+    public Policy get(String policyId) {
+        AtomicReference<Policy> ref = policies.get(policyId);
+        return ref == null ? null : ref.get();
+    }
+
+    public List<Policy> list() {
+        List<Policy> out = new ArrayList<>(policies.size());
+        for (AtomicReference<Policy> r : policies.values()) {
+            Policy p = r.get();
+            if (p != null) out.add(p);
+        }
+        return out;
+    }
+
+    /** 按 routeId 查找 ACTIVE 策略（Gateway filter 中使用，热点路径） */
+    public Policy findActiveForRoute(String routeId) {
+        if (routeId == null) return null;
+        for (AtomicReference<Policy> r : policies.values()) {
+            Policy p = r.get();
+            if (p != null && p.active() && routeId.equals(p.routeId())) return p;
+        }
+        return null;
+    }
+
+    public Policy rollback(String policyId, String operator, String reason) {
+        AtomicReference<Policy> ref = policies.get(policyId);
+        if (ref == null) return null;
+        Policy cur = ref.get();
+        Policy rolledBack = new Policy(cur.policyId(), cur.routeId(),
+                cur.baselineUri(), cur.canaryUri(), 0,
+                cur.rules(), cur.meta(), Status.ROLLED_BACK,
+                cur.createdAt(), Instant.now(), operator);
+        ref.set(rolledBack);
+        history.addFirst(new History(Instant.now(), policyId, operator, "ROLLBACK",
+                "canaryWeight 0%; reason=" + reason));
+        trimHistory();
+        return rolledBack;
+    }
+
+    public Policy setWeight(String policyId, int weight, String operator) {
+        AtomicReference<Policy> ref = policies.get(policyId);
+        if (ref == null) return null;
+        Policy cur = ref.get();
+        int w = clamp(weight);
+        Policy next = new Policy(cur.policyId(), cur.routeId(),
+                cur.baselineUri(), cur.canaryUri(), w,
+                cur.rules(), cur.meta(),
+                w == 0 ? Status.PAUSED : Status.ACTIVE,
+                cur.createdAt(), Instant.now(), operator);
+        ref.set(next);
+        history.addFirst(new History(Instant.now(), policyId, operator,
+                "WEIGHT_CHANGE", "newWeight=" + w + "%"));
+        trimHistory();
+        return next;
+    }
+
+    public List<History> history(String policyId, int limit) {
+        List<History> out = new ArrayList<>(Math.min(limit, history.size()));
+        int n = 0;
+        for (History h : history) {
+            if (policyId == null || policyId.equals(h.policyId())) {
+                out.add(h);
+                if (++n >= limit) break;
+            }
+        }
+        return out;
+    }
+
+    public Stats statsFor(String policyId) {
+        return stats.computeIfAbsent(policyId, k -> new Stats());
+    }
+
+    // ---------- internals ----------
+    private static int clamp(int w) { return Math.max(0, Math.min(100, w)); }
+
+    private static String describeDiff(Policy prev, Policy next) {
+        if (prev == null) return "new policy for route=" + next.routeId()
+                + " weight=" + next.canaryWeightPercent() + "%";
+        return "weight " + prev.canaryWeightPercent() + "% -> " + next.canaryWeightPercent() + "%; "
+                + "status " + prev.status() + " -> " + next.status();
+    }
+
+    private void trimHistory() {
+        // keep latest 500 entries
+        while (history.size() > 500) history.pollLast();
+    }
+}

@@ -1,5 +1,6 @@
 package com.lianshengtong.common.exception;
 
+import com.lianshengtong.common.observability.TraceIdHolder;
 import com.lianshengtong.common.result.R;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -21,46 +22,73 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BizException.class)
     public R<Void> handleBizException(BizException e, HttpServletRequest request) {
-        log.warn("[BizException] {} - {}: {}", request.getRequestURI(), e.getCode(), e.getMessage());
-        return R.fail(e.getCode(), e.getMessage());
+        log.warn("[BizException] traceId={} uri={} code={} msg={}",
+                TraceIdHolder.get(), request.getRequestURI(), e.getCode(), e.getMessage());
+        return R.fail(e.getCode(), e.getMessage(), TraceIdHolder.currentOrCreate());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public R<Void> handleValidException(MethodArgumentNotValidException e) {
+    public R<Void> handleValidException(MethodArgumentNotValidException e, HttpServletRequest request) {
         String msg = e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
-        log.warn("[ValidException] {}", msg);
-        return R.fail(400, msg);
+        log.warn("[ValidException] traceId={} uri={} msg={}",
+                TraceIdHolder.get(), request.getRequestURI(), msg);
+        return R.fail(400, msg, TraceIdHolder.currentOrCreate());
     }
 
     @ExceptionHandler(BindException.class)
-    public R<Void> handleBindException(BindException e) {
+    public R<Void> handleBindException(BindException e, HttpServletRequest request) {
         String msg = e.getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
-        log.warn("[BindException] {}", msg);
-        return R.fail(400, msg);
+        log.warn("[BindException] traceId={} uri={} msg={}",
+                TraceIdHolder.get(), request.getRequestURI(), msg);
+        return R.fail(400, msg, TraceIdHolder.currentOrCreate());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public R<Void> handleConstraintViolationException(ConstraintViolationException e) {
+    public R<Void> handleConstraintViolationException(ConstraintViolationException e, HttpServletRequest request) {
         String msg = e.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining(", "));
-        log.warn("[ConstraintViolationException] {}", msg);
-        return R.fail(400, msg);
+        log.warn("[ConstraintViolationException] traceId={} uri={} msg={}",
+                TraceIdHolder.get(), request.getRequestURI(), msg);
+        return R.fail(400, msg, TraceIdHolder.currentOrCreate());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public R<Void> handleIllegalArgument(IllegalArgumentException e) {
-        log.warn("[IllegalArgumentException] {}", e.getMessage());
-        return R.fail(400, "请求参数不合法");
+    public R<Void> handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
+        log.warn("[IllegalArgumentException] traceId={} uri={} msg={}",
+                TraceIdHolder.get(), request.getRequestURI(), e.getMessage());
+        return R.fail(400, "请求参数不合法", TraceIdHolder.currentOrCreate());
     }
 
     @ExceptionHandler(Exception.class)
     public R<Void> handleException(Exception e, HttpServletRequest request) {
-        log.error("[Exception] {}: {}", request.getRequestURI(), e.getMessage(), e);
-        return R.fail(500, "系统错误，请稍后重试");
+        log.error("[Exception] traceId={} uri={} msg={}",
+                TraceIdHolder.get(), request.getRequestURI(), e.getMessage(), e);
+        return R.fail(500, "系统错误，请稍后重试", TraceIdHolder.currentOrCreate());
+    }
+
+
+    // ============== 1 参数兼容重载（测试场景、非 Servlet 场景使用）==============
+    public R<Void> handleBizException(BizException e) {
+        return handleBizException(e, null);
+    }
+    public R<Void> handleValidException(MethodArgumentNotValidException e) {
+        return handleValidException(e, null);
+    }
+    public R<Void> handleBindException(BindException e) {
+        return handleBindException(e, null);
+    }
+    public R<Void> handleConstraintViolationException(ConstraintViolationException e) {
+        return handleConstraintViolationException(e, null);
+    }
+    public R<Void> handleIllegalArgument(IllegalArgumentException e) {
+        return handleIllegalArgument(e, null);
+    }
+    public R<Void> handleException(Exception e) {
+        return handleException(e, null);
     }
 }
