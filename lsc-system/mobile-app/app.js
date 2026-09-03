@@ -127,10 +127,10 @@ function renderHome() {
 
   <div class="pg">
     <div class="quick-grid">
-      <div class="quick-item" onclick="showScreen('scan')"><div class="quick-icon" style="background:var(--c-primary);"><span class="icon" data-i="scan"></span></div><span>扫一扫</span></div>
-      <div class="quick-item" onclick="showScreen('paycode')"><div class="quick-icon" style="background:var(--c-available);"><span class="icon" data-i="qr"></span></div><span>付款码</span></div>
-      <div class="quick-item" onclick="showScreen('orders')"><div class="quick-icon" style="background:var(--c-accent);"><span class="icon" data-i="order"></span></div><span>订单</span></div>
-      <div class="quick-item" onclick="showScreen('promo')"><div class="quick-icon" style="background:var(--c-warning);"><span class="icon" data-i="promotion"></span></div><span>推广</span></div>
+      <div class="quick-item" onclick="showScreen('scan')" data-testid="mobile-quick-scan"><div class="quick-icon" style="background:var(--c-primary);"><span class="icon" data-i="scan"></span></div><span>扫一扫</span></div>
+      <div class="quick-item" onclick="showScreen('paycode')" data-testid="mobile-quick-paycode"><div class="quick-icon" style="background:var(--c-available);"><span class="icon" data-i="qr"></span></div><span>付款码</span></div>
+      <div class="quick-item" onclick="showScreen('orders')" data-testid="mobile-quick-orders"><div class="quick-icon" style="background:var(--c-accent);"><span class="icon" data-i="order"></span></div><span>订单</span></div>
+      <div class="quick-item" onclick="showScreen('promo')" data-testid="mobile-quick-promo"><div class="quick-icon" style="background:var(--c-warning);"><span class="icon" data-i="promotion"></span></div><span>推广</span></div>
     </div>
 
     <div class="section-head">
@@ -247,8 +247,8 @@ function renderScan() {
     </div>
     <div style="text-align:center;font-size:12px;opacity:0.7;margin-bottom:16px;">将商家收款码放入框内即可自动扫描</div>
     <div class="scan-actions">
-      <div class="scan-btn"><span class="icon" data-i="location"></span>附近商家</div>
-      <div class="scan-btn primary" onclick="simulateScan()"><span class="icon" data-i="qr"></span>模拟扫码支付</div>
+      <div class="scan-btn" data-testid="mobile-scan-nearby"><span class="icon" data-i="location"></span>附近商家</div>
+      <div class="scan-btn primary" onclick="simulateScan()" data-testid="mobile-scan-simulate"><span class="icon" data-i="qr"></span>模拟扫码支付</div>
     </div>
   </div>`;
   renderIcons(document.getElementById('screen-scan'));
@@ -279,8 +279,8 @@ function simulateScan() {
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline btn-sm" onclick="this.closest('.modal-mask').remove()">取消</button>
-      <button class="btn btn-primary btn-sm" onclick="paySuccess(this)">确认支付 ¥<span id="pay-final">100.00</span></button>
+      <button class="btn btn-outline btn-sm" onclick="this.closest('.modal-mask').remove()" data-testid="mobile-scan-cancel">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="paySuccess(this)" data-testid="mobile-scan-confirm">确认支付 ¥<span id="pay-final">100.00</span></button>
     </div>
   </div>`;
   document.body.appendChild(mask);
@@ -363,7 +363,7 @@ function paySuccess(btn) {
     <div style="font-size:18px;font-weight:700;">支付成功 · ${payMode}</div>
     <div class="text-muted text-sm mt-2" style="line-height:1.7;">${payBreak}</div>
     ${issueBlock}
-    <button class="btn btn-primary btn-block mt-4" onclick="this.closest('.modal-mask').remove();showScreen('wallet');">查看我的钱包</button>
+    <button class="m-btn m-btn-primary m-btn-block mt-4" onclick="this.closest('.modal-mask').remove();showScreen('wallet');" data-testid="mobile-scan-view-wallet">查看我的钱包</button>
   </div>`;
   renderIcons(mask);
 }
@@ -545,7 +545,7 @@ function renderMe() {
     <div class="me-menu-item"><span class="icon" data-i="doc"></span><span class="mm-text">入驻协议 / 隐私政策</span><span class="arrow"><span class="icon icon-sm" data-i="arrowRight"></span></span></div>
   </div>
   <div class="pg">
-    <button class="m-btn m-btn-outline m-btn-block" style="color:var(--c-text-3);margin-top:20px;">退出登录</button>
+    <button class="m-btn m-btn-outline m-btn-block" style="color:var(--c-text-3);margin-top:20px;" data-testid="mobile-me-logout">退出登录</button>
     <div style="text-align:center;margin-top:14px;font-size:11px;color:var(--c-text-3);">链盛通LSC V6.2 · 消费创造权益</div>
   </div>`;
   renderIcons(document.getElementById('screen-me'));
@@ -559,10 +559,10 @@ function renderOrders() {
     <span style="font-size:16px;font-weight:600;">我的订单</span>
   </div>
   <div class="order-tabs">
-    <div class="order-tab active">全部</div>
-    <div class="order-tab">消费</div>
-    <div class="order-tab">兑换</div>
-    <div class="order-tab">退款</div>
+    <div class="order-tab active" data-testid="mobile-order-tab-all">全部</div>
+    <div class="order-tab" data-testid="mobile-order-tab-consume">消费</div>
+    <div class="order-tab" data-testid="mobile-order-tab-exchange">兑换</div>
+    <div class="order-tab" data-testid="mobile-order-tab-refund">退款</div>
   </div>
   <div class="order-card">
     <div class="order-card-head"><span class="order-no">ORD20260827001</span><span class="tag tag-success">已完成</span></div>
@@ -577,7 +577,7 @@ function renderOrders() {
     </div>
     <div class="order-card-foot">
       <span class="text-xs text-muted">2026-08-27 18:24</span>
-      <div class="flex gap-2"><button class="m-btn m-btn-outline" style="padding:6px 14px;font-size:12px;">查看详情</button></div>
+      <div class="flex gap-2"><button class="m-btn m-btn-outline" style="padding:6px 14px;font-size:12px;" data-testid="mobile-order-row-detail">查看详情</button></div>
     </div>
   </div>
   <div class="order-card">
@@ -592,7 +592,7 @@ function renderOrders() {
       </div>
       <div style="text-align:right;"><div style="font-family:var(--ff-mono);font-weight:700;">¥100</div><div class="text-xs text-muted">混合支付</div></div>
     </div>
-    <div class="order-card-foot"><span class="text-xs text-muted">2026-08-26 12:30</span><div class="flex gap-2"><button class="m-btn m-btn-outline" style="padding:6px 14px;font-size:12px;">再次消费</button></div></div>
+    <div class="order-card-foot"><span class="text-xs text-muted">2026-08-26 12:30</span><div class="flex gap-2"><button class="m-btn m-btn-outline" style="padding:6px 14px;font-size:12px;" data-testid="mobile-order-row-rebuy">再次消费</button></div></div>
   </div>
   <div class="order-card">
     <div class="order-card-head"><span class="order-no">EXC20260825002</span><span class="tag tag-warning">待核销</span></div>
@@ -605,7 +605,7 @@ function renderOrders() {
       </div>
       <div style="text-align:right;"><div style="font-family:var(--ff-mono);font-weight:700;color:var(--c-available);">-200</div><div class="text-xs text-muted">LSC</div></div>
     </div>
-    <div class="order-card-foot"><span class="text-xs text-muted">2026-08-25 15:20</span><div class="flex gap-2"><button class="m-btn m-btn-outline" style="padding:6px 14px;font-size:12px;">等待商家核销</button></div></div>
+    <div class="order-card-foot"><span class="text-xs text-muted">2026-08-25 15:20</span><div class="flex gap-2"><button class="m-btn m-btn-outline" style="padding:6px 14px;font-size:12px;" data-testid="mobile-order-row-wait">等待商家核销</button></div></div>
   </div>`;
   renderIcons(document.getElementById('screen-orders'));
 }
@@ -632,8 +632,8 @@ function renderPromo() {
       </div>
     </div>
     <div class="flex gap-2 justify-center mt-4">
-      <button class="m-btn m-btn-outline">复制链接</button>
-      <button class="m-btn m-btn-accent">保存图片</button>
+      <button class="m-btn m-btn-outline" data-testid="mobile-promo-copy">复制链接</button>
+      <button class="m-btn m-btn-accent" data-testid="mobile-promo-save">保存图片</button>
     </div>
   </div>
   <div class="pg">
@@ -671,8 +671,8 @@ function renderAI() {
       <div class="chat-bubble chat-ai">🔹 <b>锁定池</b>: 消费获得, 每日动态缓释, 不可直接消费<br>🔹 <b>可用池</b>: 可消费抵扣、线下扫码、推广奖励来源<br><br>简单理解: 锁定池是"正在释放中", 可用池是"可立即使用"。</div>
     </div>
     <div class="ai-chat-input">
-      <input class="input" placeholder="输入您的问题..." style="flex:1;">
-      <button class="m-btn m-btn-primary" style="padding:8px 14px;" aria-label="发送消息"><span class="icon icon-sm" data-i="arrowRight" style="width:18px;height:18px;" aria-hidden="true"></span></button>
+      <input class="input" placeholder="输入您的问题..." style="flex:1;" data-testid="mobile-ai-input">
+      <button class="m-btn m-btn-primary" style="padding:8px 14px;" aria-label="发送消息" data-testid="mobile-ai-send"><span class="icon icon-sm" data-i="arrowRight" style="width:18px;height:18px;" aria-hidden="true"></span></button>
     </div>
   </div>`;
   renderIcons(document.getElementById('screen-ai'));
@@ -720,9 +720,9 @@ function renderProduct(idx) {
     <div style="height:60px;"></div>
   </div>
   <div style="position:fixed;left:0;right:0;bottom:0;background:#fff;padding:10px 16px;border-top:1px solid var(--c-border-soft);display:flex;gap:10px;align-items:center;z-index:20;width:100%;max-width:366px;margin:0 auto;">
-    <div style="text-align:center;font-size:11px;color:var(--c-text-3);"><span class="icon" data-i="chat" style="width:20px;height:20px;display:block;margin:0 auto 2px;"></span>客服</div>
-    <button class="m-btn m-btn-outline" style="flex:1;" onclick="addToCart(${idx})">加入购物车</button>
-    <button class="m-btn m-btn-accent" style="flex:1;" onclick="simulateScan()">立即购买</button>
+    <div style="text-align:center;font-size:11px;color:var(--c-text-3);" data-testid="mobile-product-chat"><span class="icon" data-i="chat" style="width:20px;height:20px;display:block;margin:0 auto 2px;"></span>客服</div>
+    <button class="m-btn m-btn-outline" style="flex:1;" onclick="addToCart(${idx})" data-testid="mobile-product-cart">加入购物车</button>
+    <button class="m-btn m-btn-accent" style="flex:1;" onclick="simulateScan()" data-testid="mobile-product-buy">立即购买</button>
   </div>`;
   renderIcons(document.getElementById('screen-product'));
 }

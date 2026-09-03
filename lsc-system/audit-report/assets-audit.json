@@ -10,121 +10,149 @@
   "counts": {
     "fail": 0,
     "warn": 0,
-    "files": 6
+    "files": 12
   },
   "totals": {
-    "raw": 351743,
-    "gzip": 92320,
-    "compressRatio": 0.2625
+    "raw": 417482,
+    "gzip": 115608,
+    "compressRatio": 0.2769
   },
   "apps": {
     "platform-admin": {
       "title": "平台管理后台",
       "dir": "platform-admin",
-      "count": 1,
+      "count": 2,
       "files": [
         {
           "file": "platform-admin/app.js",
           "ext": "js",
-          "raw": 122946,
-          "gzip": 30841,
-          "ratio": 25.08
+          "raw": 124463,
+          "gzip": 31099,
+          "ratio": 24.99
+        },
+        {
+          "file": "platform-admin/sw.js",
+          "ext": "js",
+          "raw": 6779,
+          "gzip": 2649,
+          "ratio": 39.08
         }
       ],
       "raw": {
-        "total": 122946,
-        "js": 122946,
+        "total": 131242,
+        "js": 131242,
         "css": 0
       },
       "gzip": {
-        "total": 30841,
-        "js": 30841,
+        "total": 33748,
+        "js": 33748,
         "css": 0
       }
     },
     "merchant-admin": {
       "title": "商家管理后台",
       "dir": "merchant-admin",
-      "count": 1,
+      "count": 2,
       "files": [
         {
           "file": "merchant-admin/app.js",
           "ext": "js",
-          "raw": 84615,
-          "gzip": 22073,
-          "ratio": 26.09
+          "raw": 85586,
+          "gzip": 22287,
+          "ratio": 26.04
+        },
+        {
+          "file": "merchant-admin/sw.js",
+          "ext": "js",
+          "raw": 6779,
+          "gzip": 2649,
+          "ratio": 39.08
         }
       ],
       "raw": {
-        "total": 84615,
-        "js": 84615,
+        "total": 92365,
+        "js": 92365,
         "css": 0
       },
       "gzip": {
-        "total": 22073,
-        "js": 22073,
+        "total": 24936,
+        "js": 24936,
         "css": 0
       }
     },
     "mobile-app": {
       "title": "消费者移动端APP",
       "dir": "mobile-app",
-      "count": 1,
+      "count": 2,
       "files": [
         {
           "file": "mobile-app/app.js",
           "ext": "js",
-          "raw": 49832,
-          "gzip": 13390,
-          "ratio": 26.87
+          "raw": 50663,
+          "gzip": 13574,
+          "ratio": 26.79
+        },
+        {
+          "file": "mobile-app/sw.js",
+          "ext": "js",
+          "raw": 6779,
+          "gzip": 2649,
+          "ratio": 39.08
         }
       ],
       "raw": {
-        "total": 49832,
-        "js": 49832,
+        "total": 57442,
+        "js": 57442,
         "css": 0
       },
       "gzip": {
-        "total": 13390,
-        "js": 13390,
+        "total": 16223,
+        "js": 16223,
         "css": 0
       }
     },
     "mini-program": {
       "title": "微信小程序端",
       "dir": "mini-program",
-      "count": 1,
+      "count": 2,
       "files": [
         {
           "file": "mini-program/app.js",
           "ext": "js",
-          "raw": 35394,
-          "gzip": 8776,
-          "ratio": 24.8
+          "raw": 35922,
+          "gzip": 8904,
+          "ratio": 24.79
+        },
+        {
+          "file": "mini-program/sw.js",
+          "ext": "js",
+          "raw": 6779,
+          "gzip": 2649,
+          "ratio": 39.08
         }
       ],
       "raw": {
-        "total": 35394,
-        "js": 35394,
+        "total": 42701,
+        "js": 42701,
         "css": 0
       },
       "gzip": {
-        "total": 8776,
-        "js": 8776,
+        "total": 11553,
+        "js": 11553,
         "css": 0
       }
     },
     "shared": {
       "title": "共享资源 (design-system.css/app-utils.js)",
       "dir": "shared",
-      "count": 2,
+      "count": 4,
       "files": [
         {
           "file": "shared/design-system.css",
           "ext": "css",
-          "raw": 33784,
-          "gzip": 9160,
-          "ratio": 27.11
+          "raw": 39360,
+          "gzip": 10629,
+          "ratio": 27
         },
         {
           "file": "shared/app-utils.js",
@@ -132,20 +160,34 @@
           "raw": 25172,
           "gzip": 8080,
           "ratio": 32.1
+        },
+        {
+          "file": "shared/keyboard-a11y.js",
+          "ext": "js",
+          "raw": 22424,
+          "gzip": 7792,
+          "ratio": 34.75
+        },
+        {
+          "file": "shared/sw.js",
+          "ext": "js",
+          "raw": 6776,
+          "gzip": 2647,
+          "ratio": 39.06
         }
       ],
       "raw": {
-        "total": 58956,
-        "js": 25172,
-        "css": 33784
+        "total": 93732,
+        "js": 54372,
+        "css": 39360
       },
       "gzip": {
-        "total": 17240,
-        "js": 8080,
-        "css": 9160
+        "total": 29148,
+        "js": 18519,
+        "css": 10629
       }
     }
   },
   "alerts": [],
-  "_generatedAt": "2026-08-31T12:12:11.703Z"
+  "_generatedAt": "2026-09-03T01:19:43.748Z"
 }

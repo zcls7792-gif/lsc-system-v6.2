@@ -49,8 +49,8 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
   // ------------------------------------------------------------------
   test('场景D(桌面): 商家核销 → 填写金额/备注/单号 → confirmModal+resultModal 完整交互', async ({ page }) => {
     await page.goto(APPS.merchant, { waitUntil: 'networkidle' });
-    await page.click('.nav-item[data-view="dashboard"]'); // 基准
-    await page.click('.nav-item[data-view="nh"]');
+    await page.click('[data-testid="merchant-nav-dashboard"]'); // 基准
+    await page.click('[data-testid="merchant-nav-nh"]');
     await expect(page.locator('#crumb')).toHaveText(/核销管理/, { timeout: 8000 });
 
     // 填写 3 个字段
@@ -108,7 +108,7 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
       { key: 'release',  crumbRE: /释放|速率|池/,      keywordRE: /释放|速率|算法|池子|1\.5‰|每日/ },
     ];
     for (const v of views) {
-      await page.click(`.nav-item[data-view="${v.key}"]`);
+      await page.click(`[data-testid="platform-nav-${v.key}"]`);
       await expect(page.locator('#crumb')).toHaveText(v.crumbRE, { timeout: 8000 });
       // 视图内有可展示的卡片 / 表格 / SVG 等内容（高度至少 100px）
       const main = page.locator('#view');
@@ -126,7 +126,7 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
   // ------------------------------------------------------------------
   test('场景H(桌面): 商家核销输入异常值 → 提示/禁用 → 输入合法后按钮可用', async ({ page }) => {
     await page.goto(APPS.merchant, { waitUntil: 'networkidle' });
-    await page.click('.nav-item[data-view="nh"]');
+    await page.click('[data-testid="merchant-nav-nh"]');
     await expect(page.locator('#crumb')).toHaveText(/核销管理/, { timeout: 8000 });
 
     const input = page.locator('#nh-amount');
@@ -238,22 +238,23 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
     await page.goto(APPS.platform, { waitUntil: 'networkidle' });
 
     // 1) 进入商家管理视图
-    await page.click('.nav-item[data-view="merchant"]', { timeout: 12000 });
+    await page.click('[data-testid="platform-nav-merchant"]', { timeout: 12000 });
     await expect(page.locator('#crumb')).toHaveText(/商家|商户/, { timeout: 8000 });
 
     // 2) 视图内有商家列表表格 + 至少 1 个资质按钮
     await expect(page.locator('#view table, #view .tbl').first()).toBeVisible();
 
-    // 3) 搜索框输入"M20004"（鼎盛物流仓储） — 顶部全局搜索框
-    const searchInput = page.locator('#search-input');
+    // 3) 搜索框输入"M20004"（鼎盛物流仓储） — 顶部商家列表搜索框
+    const searchInput = page.locator('[data-testid="platform-merchant-search-input"]');
     if (await searchInput.isVisible().catch(() => false)) {
       await searchInput.fill('M20004');
-      await searchInput.press('Enter');
+      const searchBtn = page.locator('[data-testid="platform-merchant-search-btn"]');
+      if (await searchBtn.isVisible().catch(() => false)) await searchBtn.click();
       await page.waitForTimeout(250);
     }
 
     // 4) 点击第一个"资质"按钮 → 打开商家详情modal
-    const detailBtn = page.locator('#view span.row-btn, #view button').filter({ hasText: /资质|详情/ }).first();
+    const detailBtn = page.locator('[data-testid="platform-merchant-row-qual"]').first();
     if (await detailBtn.count() > 0) {
       await detailBtn.click({ force: true });
       await page.waitForTimeout(400);
@@ -289,7 +290,7 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
   // ------------------------------------------------------------------
   test('场景N(桌面): 商家经营总览 → 3 类图表渲染 + 筛选切换不报错', async ({ page }) => {
     await page.goto(APPS.merchant, { waitUntil: 'networkidle' });
-    await page.click('.nav-item[data-view="dashboard"]');
+    await page.click('[data-testid="merchant-nav-dashboard"]');
     await expect(page.locator('#crumb')).toHaveText(/经营总览|仪表盘/, { timeout: 8000 });
 
     // 1) 至少 3 张 stat-card 指标卡 + 至少 1 个 SVG 图表
@@ -343,11 +344,11 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
   // ------------------------------------------------------------------
   test('场景P(桌面): 平台后台 商家处罚 双人审批 → 签名输入 → 结果弹窗', async ({ page }) => {
     await page.goto(APPS.platform, { waitUntil: 'networkidle' });
-    await page.click('.nav-item[data-view="merchant"]', { timeout: 12000 });
+    await page.click('[data-testid="platform-nav-merchant"]', { timeout: 12000 });
     await expect(page.locator('#crumb')).toHaveText(/商家|商户/, { timeout: 8000 });
 
     // 1) 至少有一个"处罚"按钮 (红色 danger 风格)
-    const penaltyBtn = page.locator('#view span.row-btn.danger').filter({ hasText: /处罚/ }).first();
+    const penaltyBtn = page.locator('[data-testid="platform-merchant-row-penalty"]').first();
     const btCount = await penaltyBtn.count().catch(() => 0);
     expect(btCount).toBeGreaterThanOrEqual(1);
     await penaltyBtn.click({ force: true });
@@ -392,7 +393,7 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
   // ------------------------------------------------------------------
   test('场景Q(桌面): 平台后台 人工熔断 双人审批 → alert-danger → 结果熔断已执行', async ({ page }) => {
     await page.goto(APPS.platform, { waitUntil: 'networkidle' });
-    await page.click('.nav-item[data-view="release"]', { timeout: 12000 });
+    await page.click('[data-testid="platform-nav-release"]', { timeout: 12000 });
     // crumbMap: release → 释放管理
     await expect(page.locator('#crumb')).toHaveText(/释放管理|释放|参数|熔断/, { timeout: 8000 });
 
@@ -439,7 +440,7 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
   test('场景R(桌面): 平台后台 违规记录 撤销处罚 双人审批 → 结果处罚已撤销', async ({ page }) => {
     await page.goto(APPS.platform, { waitUntil: 'networkidle' });
     // 处罚撤销按钮在 renderCredit → nav data-view=credit, crumb=信用管理
-    await page.click('.nav-item[data-view="credit"]', { timeout: 12000 });
+    await page.click('[data-testid="platform-nav-credit"]', { timeout: 12000 });
     await expect(page.locator('#crumb')).toHaveText(/信用|违规|处罚/, { timeout: 8000 });
 
     // 1) 视图有足够内容 + 在 MOCK.violations 表格中找到 row-btn danger 的撤销按钮
@@ -613,7 +614,7 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
   // ------------------------------------------------------------------
   test('场景W(桌面): 释放参数修改双人审批 + 单人未填满状态机 + rate_max/min 不可编辑', async ({ page }) => {
     await page.goto(APPS.platform, { waitUntil: 'networkidle' });
-    await page.click('.nav-item[data-view="release"]', { timeout: 12000 });
+    await page.click('[data-testid="platform-nav-release"]', { timeout: 12000 });
     await expect(page.locator('#crumb')).toHaveText(/释放|参数|熔断/, { timeout: 8000 });
 
     // 1) rate_max=0.06% / rate_min=0.03% 为 locked-param 不可编辑
@@ -668,7 +669,7 @@ test.describe('LSC V6.2-AI · 桌面端深度扩展', () => {
   // ------------------------------------------------------------------
   test('场景Y(桌面): 释放比例 calcRate 三分支 [0.03%,0.06%] + rate=0.0468% 计算链路', async ({ page }) => {
     await page.goto(APPS.platform, { waitUntil: 'networkidle' });
-    await page.click('.nav-item[data-view="release"]', { timeout: 12000 });
+    await page.click('[data-testid="platform-nav-release"]', { timeout: 12000 });
     await expect(page.locator('#crumb')).toHaveText(/释放|参数|熔断/, { timeout: 8000 });
 
     // 1) 今日释放任务监控含 rate=0.0468% 计算链路

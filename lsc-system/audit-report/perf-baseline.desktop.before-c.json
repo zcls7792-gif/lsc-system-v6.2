@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-03T01:14:23.893Z",
-  "mode": "mobile",
+  "generatedAt": "2026-08-31T04:15:39.289Z",
+  "mode": "desktop",
   "thresholds": true,
   "summary": {
     "avgPerf": 100,
@@ -21,15 +21,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 244,
+        "FCP": 80,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 137,
-        "FP": 244,
-        "DCL": 85,
-        "load": 189
+        "TTI": 130,
+        "FP": 80,
+        "DCL": 129,
+        "load": 130
       }
     },
     {
@@ -43,15 +43,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 64,
+        "FCP": 56,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 110,
-        "FP": 64,
-        "DCL": 108,
-        "load": 112
+        "TTI": 95,
+        "FP": 56,
+        "DCL": 93,
+        "load": 97
       }
     },
     {
@@ -65,15 +65,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 128,
+        "FCP": 92,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 95,
-        "FP": 128,
-        "DCL": 91,
-        "load": 99
+        "TTI": 89,
+        "FP": 92,
+        "DCL": 88,
+        "load": 89
       }
     },
     {
@@ -87,15 +87,15 @@
         "seo": null
       },
       "metrics": {
-        "FCP": 64,
+        "FCP": 76,
         "SI": 0,
         "LCP": 0,
         "TBT": 0,
         "CLS": 0,
-        "TTI": 90,
-        "FP": 64,
-        "DCL": 86,
-        "load": 93
+        "TTI": 67,
+        "FP": 76,
+        "DCL": 65,
+        "load": 68
       }
     }
   ]

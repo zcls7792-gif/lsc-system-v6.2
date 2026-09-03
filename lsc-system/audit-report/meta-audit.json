@@ -9,7 +9,7 @@
       "titleText": "链盛通LSC系统 · 平台管理后台 V6.2",
       "htmlLang": "zh-CN",
       "metaCount": 22,
-      "linkCount": 5,
+      "linkCount": 15,
       "jsonLdCount": 1,
       "rules": [
         {
@@ -153,7 +153,7 @@
       "titleText": "链盛通LSC · 商家管理后台 V6.2",
       "htmlLang": "zh-CN",
       "metaCount": 22,
-      "linkCount": 5,
+      "linkCount": 14,
       "jsonLdCount": 1,
       "rules": [
         {
@@ -297,7 +297,7 @@
       "titleText": "链盛通LSC · 消费者APP V6.2",
       "htmlLang": "zh-CN",
       "metaCount": 25,
-      "linkCount": 5,
+      "linkCount": 14,
       "jsonLdCount": 1,
       "rules": [
         {
@@ -441,7 +441,7 @@
       "titleText": "链盛通LSC · 微信小程序 V6.2",
       "htmlLang": "zh-CN",
       "metaCount": 25,
-      "linkCount": 5,
+      "linkCount": 14,
       "jsonLdCount": 1,
       "rules": [
         {
@@ -581,5 +581,5 @@
     }
   },
   "strict": true,
-  "_generatedAt": "2026-08-31T12:12:11.410Z"
+  "_generatedAt": "2026-09-03T01:19:44.005Z"
 }

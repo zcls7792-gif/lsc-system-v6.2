@@ -927,3 +927,205 @@ textarea:focus-visible {
   outline-color: var(--c-accent, #E6C36A);
   box-shadow: 0 0 0 3px rgba(230, 195, 106, 0.25);
 }
+
+/* ============================================================
+   B1. 键盘可达性增强 CSS (Group B · WCAG 2.1)
+   - Skip-link 多目标跳转组 (WCAG 2.4.1 Bypass Blocks)
+   - 焦点环 pulse 动画 + 双层高对比度
+   - Roving tabindex 组容器与可激活子项
+   - Kbd 快捷键提示 badge + data-shortcut 自动徽章
+   - :focus-within 组高亮 / 深色模式 / 强制色兼容
+   ============================================================ */
+
+/* --- 1. Skip-link 组 --- */
+.skip-links {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  list-style: none;
+  margin: 0;
+}
+.skip-links a {
+  position: absolute;
+  left: -9999px;
+  top: 6px;
+  padding: 8px 14px;
+  background: var(--c-primary-deep, #082E2C);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+  white-space: nowrap;
+}
+.skip-links a:focus-visible,
+.skip-links a:focus {
+  left: 12px;
+  position: relative;
+  outline: 3px solid var(--c-accent, #C8A24B);
+  outline-offset: 2px;
+  animation: skipIn 0.2s ease both;
+}
+[data-theme="dark"] .skip-links a { background: #042120; color: #F4EEDB; }
+
+@keyframes skipIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 2. 焦点环双层 + 动画 pulse 环 (高对比 WCAG 2.4.7/1.4.11) --- */
+@keyframes focusRingPulse {
+  0%   { box-shadow: 0 0 0 3px rgba(200, 162, 75, 0.12), 0 0 0 0 rgba(200, 162, 75, 0.45); }
+  50%  { box-shadow: 0 0 0 3px rgba(200, 162, 75, 0.22), 0 0 0 6px rgba(200, 162, 75, 0.10); }
+  100% { box-shadow: 0 0 0 3px rgba(200, 162, 75, 0.22), 0 0 0 0 rgba(200, 162, 75, 0.0); }
+}
+
+:focus-visible {
+  animation: focusRingPulse 1.2s ease-in-out 1;
+}
+
+/* 表格行/分段控件焦点态 */
+.seg-item:focus-visible,
+.row-btn:focus-visible,
+.quick-item:focus-visible,
+.wx-grid-item:focus-visible,
+.order-tab:focus-visible,
+.paycode-tab:focus-visible {
+  outline-offset: 0;
+  outline-width: 2px;
+  border-radius: 8px;
+}
+
+/* Row-btn 组使用 roving tabindex —— 子项通过方向键移动焦点 */
+.row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg,
+.toolbar .seg,
+.row-actions,
+.quick-grid,
+.wx-grid,
+.order-tabs,
+.paycode-tabs,
+.m-btn-group,
+.wx-btn-group {
+  /* roving tabindex 容器声明 (供 keyboard-a11y.js 自动识别) */
+}
+[data-roving="true"] > [role="button"],
+[data-roving="true"]  > .seg-item,
+[data-roving="true"]  > .row-btn,
+[data-roving="true"]  > .quick-item,
+[data-roving="true"]  > .wx-grid-item,
+[data-roving="true"]  > .order-tab,
+[data-roving="true"]  > .paycode-tab {
+  cursor: pointer;
+}
+
+/* --- 3. focus-within 组容器高亮 --- */
+.row-actions:focus-within,
+.seg:focus-within,
+.toolbar:focus-within,
+.card:focus-within,
+.modal-foot:focus-within {
+  box-shadow: inset 0 0 0 1px var(--c-accent-soft, rgba(200,162,75,0.35));
+  border-radius: 8px;
+}
+
+/* --- 4. Kbd 键盘提示徽章 + data-shortcut 自动徽章 --- */
+.kbd,
+kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.3;
+  color: var(--c-text-1, #1F2937);
+  background: var(--c-bg-soft, #F0ECE0);
+  border: 1px solid var(--c-border, #E0D8BE);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  vertical-align: middle;
+}
+[data-theme="dark"] kbd,
+[data-theme="dark"] .kbd {
+  background: #273846;
+  color: #F4EEDB;
+  border-color: #2F4A5C;
+}
+.shortcut-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--c-text-3, #6B7280);
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* data-shortcut="Ctrl+K" 用法：在按钮/菜单项上自动展示徽章（:before 或 title 辅助） */
+[data-shortcut]::after {
+  content: attr(data-shortcut);
+  margin-left: 12px;
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--c-text-2, #4B5563);
+  background: var(--c-bg-soft, #F0ECE0);
+  border: 1px solid var(--c-border, #E0D8BE);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  opacity: 0.9;
+}
+[data-theme="dark"] [data-shortcut]::after {
+  background: #273846; color: #D1D5DB; border-color: #2F4A5C;
+}
+
+/* nav 中显示全局快捷键 help 提示 */
+.shortcuts-help {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9998;
+  font-size: 11px;
+  color: var(--c-text-3, #6B7280);
+  background: var(--c-bg, #FBF8EF);
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border-soft, #ECE5CF);
+  box-shadow: var(--sh-sm);
+}
+[data-theme="dark"] .shortcuts-help { background: #0A2726; color: #BBC6C4; border-color: #144743; }
+
+/* --- 5. Forced-Colors / Windows 高对比度模式兼容 --- */
+@media (forced-colors: active) {
+  :focus-visible,
+  .skip-link:focus,
+  .skip-links a:focus {
+    outline: 3px solid Highlight !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+  }
+  [data-shortcut]::after,
+  kbd, .kbd {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+    background: Canvas;
+  }
+}
+
+/* --- 6. 减少动效用户偏好 --- */
+@media (prefers-reduced-motion: reduce) {
+  :focus-visible,
+  .skip-links a:focus { animation: none !important; }
+  @keyframes focusRingPulse { /* 空: 无动画 */ }
+  @keyframes skipIn { /* 空: 无动画 */ }
+}
+
+/* --- 7. 模态内 Tab 循环捕获期间的视觉指示 --- */
+[data-trap-focus="true"]:focus-visible {
+  outline-color: var(--c-info, #3B82F6);
+}

@@ -1,0 +1,48 @@
+{
+  "name": "链盛通LSC系统 · 平台管理后台 V6.2",
+  "short_name": "LSC平台后台",
+  "description": "AI增强版平台管理后台：商家入驻、LSC发行/释放、核销监控、风控熔断、AI策略仿真与合规审计一站式管理。",
+  "start_url": "/platform-admin/index.html",
+  "scope": "/platform-admin/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#F5F3EC",
+  "theme_color": "#082E2C",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%23082E2C'/><path d='M48 144L96 48L144 144H114L104 124H88L78 144H48ZM82 110H110L96 80L82 110Z' fill='%23E6C46A'/><text x='96' y='172' text-anchor='middle' font-family='sans-serif' font-weight='700' font-size='22' fill='%23F5F3EC'>LSC</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='%23082E2C'/><path d='M128 384L256 128L384 384H312L288 336H224L200 384H128ZM218 300H294L256 224L218 300Z' fill='%23E6C46A'/><text x='256' y='460' text-anchor='middle' font-family='sans-serif' font-weight='700' font-size='58' fill='%23F5F3EC'>LSC</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "商家管理",
+      "short_name": "商家",
+      "url": "/platform-admin/index.html?view=merchant",
+      "icons": [{ "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' rx='20' fill='%231D4ED8'/><text x='48' y='62' text-anchor='middle' font-family='sans-serif' font-size='42' fill='white'>商</text></svg>", "sizes": "96x96", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "核销监控",
+      "short_name": "核销",
+      "url": "/platform-admin/index.html?view=redeem",
+      "icons": [{ "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' rx='20' fill='%230F766E'/><text x='48' y='62' text-anchor='middle' font-family='sans-serif' font-size='42' fill='white'>核</text></svg>", "sizes": "96x96", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "AI 仿真中心",
+      "short_name": "AI仿真",
+      "url": "/platform-admin/index.html?view=ai",
+      "icons": [{ "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' rx='20' fill='%237C3AED'/><text x='48' y='62' text-anchor='middle' font-family='sans-serif' font-size='42' fill='white'>AI</text></svg>", "sizes": "96x96", "type": "image/svg+xml" }]
+    }
+  ]
+}

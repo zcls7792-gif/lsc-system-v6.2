@@ -585,26 +585,26 @@ function renderMerchant() {
       <td><span class="tag ${m.nhLevel==='A'?'tag-success':m.nhLevel==='B'||m.nhLevel==='C'?'tag-warning':'tag-info'}">${m.nhLevel}档</span> <span class="text-xs text-muted">/日${LSC.fmtNum(m.nhLimitDaily)} LSC</span></td>
       <td><span class="tag ${m.aiAddr==='pass'?'tag-success':m.aiAddr==='suspect'?'tag-warning':'tag-danger'} tag-dot">${m.aiAddr==='pass'?'核验通过':'核验可疑'}</span></td>
       <td><div class="row-actions">
-        <span class="row-btn" onclick="showMerchantDetail('${m.id}')">资质</span>
-        <span class="row-btn warn" onclick="showAdjustLimit('${m.id}')">调额</span>
-        <span class="row-btn danger" onclick="showPenalty('${m.id}')">处罚</span>
+        <span class="row-btn" onclick="showMerchantDetail('${m.id}')" data-testid="platform-merchant-row-qual">资质</span>
+        <span class="row-btn warn" onclick="showAdjustLimit('${m.id}')" data-testid="platform-merchant-row-adjust">调额</span>
+        <span class="row-btn danger" onclick="showPenalty('${m.id}')" data-testid="platform-merchant-row-penalty">处罚</span>
       </div></td>
     </tr>`).join('');
   const html = pageHead('商家管理', '商家入驻审核、资质管理、核销额度调整与信用监控', `
-    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="filter"></span>高级筛选</button>
-    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="export"></span>导出</button>
+    <button class="btn btn-outline btn-sm" data-testid="platform-merchant-filter"><span class="icon icon-sm" data-i="filter"></span>高级筛选</button>
+    <button class="btn btn-primary btn-sm" data-testid="platform-merchant-export"><span class="icon icon-sm" data-i="export"></span>导出</button>
   `) + `
-  <div class="toolbar">
-    <div class="seg">
-      <span class="seg-item active">全部 ${MOCK.merchants.length}</span>
-      <span class="seg-item">待审核 12</span>
-      <span class="seg-item">正常 8</span>
-      <span class="seg-item">预警 3</span>
-      <span class="seg-item">处罚 2</span>
+  <div class="toolbar" data-testid="platform-merchant-toolbar">
+    <div class="seg" data-testid="platform-merchant-seg">
+      <span class="seg-item active" data-testid="platform-merchant-seg-all">全部 ${MOCK.merchants.length}</span>
+      <span class="seg-item" data-testid="platform-merchant-seg-review">待审核 12</span>
+      <span class="seg-item" data-testid="platform-merchant-seg-normal">正常 8</span>
+      <span class="seg-item" data-testid="platform-merchant-seg-warn">预警 3</span>
+      <span class="seg-item" data-testid="platform-merchant-seg-penalty">处罚 2</span>
     </div>
     <div class="input-group" style="margin-left:auto;">
-      <input class="input" placeholder="搜索商家ID/名称/手机号" style="width:240px;">
-      <button class="btn btn-soft btn-sm">搜索</button>
+      <input class="input" placeholder="搜索商家ID/名称/手机号" style="width:240px;" data-testid="platform-merchant-search-input">
+      <button class="btn btn-soft btn-sm" data-testid="platform-merchant-search-btn">搜索</button>
     </div>
   </div>
   <div class="card">
@@ -619,9 +619,9 @@ function renderMerchant() {
     <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--c-divider);">
       <span class="text-xs text-muted">共 ${MOCK.merchants.length} 条记录 · 8物理库分片存储</span>
       <div class="flex gap-2 items-center">
-        <button class="btn btn-ghost btn-sm">上一页</button>
+        <button class="btn btn-ghost btn-sm" data-testid="platform-merchant-page-prev">上一页</button>
         <span class="tag tag-info">1 / 12</span>
-        <button class="btn btn-soft btn-sm">下一页</button>
+        <button class="btn btn-soft btn-sm" data-testid="platform-merchant-page-next">下一页</button>
       </div>
     </div>
   </div>
@@ -658,24 +658,24 @@ function renderProduct() {
         </div>
         <div class="flex gap-2 mb-3 flex-wrap">${p.aiTags.map(t=>`<span class="tag ${t.includes('违规')||t.includes('假冒')||t.includes('疑似')?'tag-danger':t.includes('需')?'tag-warning':'tag-success'}">${t}</span>`).join('')}</div>
         <div class="row-actions">
-          ${p.status==='ai_reject'?`<span class="row-btn danger" onclick="showProductDetail('${p.id}')">详情</span>`:''}
-          ${p.status==='manual_review'?`<span class="row-btn" onclick="showProductDetail('${p.id}')">详情</span><span class="row-btn" onclick="resultModal('审核通过','商品 ${p.name} 已通过审核并上架。')">通过</span><span class="row-btn danger" onclick="confirmModal('驳回商品','确认驳回商品 ${p.name}？驳回原因: 涉嫌违规内容。',()=>resultModal('已驳回','商品 ${p.name} 已驳回。',{danger:true}))">驳回</span>`:''}
-          ${p.status==='ai_pass'?`<span class="row-btn" onclick="showProductDetail('${p.id}')">详情</span><span class="row-btn warn" onclick="confirmModal('下架商品','确认下架商品 ${p.name}？',()=>resultModal('已下架','商品 ${p.name} 已下架。','warning'),{danger:true,btnText:'下架'})">下架</span>`:''}
-          ${p.status==='ai_suspect'?`<span class="row-btn" onclick="showProductDetail('${p.id}')">复核</span><span class="row-btn danger" onclick="confirmModal('驳回商品','确认驳回商品 ${p.name}？',()=>resultModal('已驳回','商品 ${p.name} 已驳回。',{danger:true}))">驳回</span>`:''}
+          ${p.status==='ai_reject'?`<span class="row-btn danger" onclick="showProductDetail('${p.id}')" data-testid="platform-prod-card-detail-reject">详情</span>`:''}
+          ${p.status==='manual_review'?`<span class="row-btn" onclick="showProductDetail('${p.id}')" data-testid="platform-prod-card-detail">详情</span><span class="row-btn" onclick="resultModal('审核通过','商品 ${p.name} 已通过审核并上架。')" data-testid="platform-prod-card-pass">通过</span><span class="row-btn danger" onclick="confirmModal('驳回商品','确认驳回商品 ${p.name}？驳回原因: 涉嫌违规内容。',()=>resultModal('已驳回','商品 ${p.name} 已驳回。',{danger:true}))" data-testid="platform-prod-card-reject">驳回</span>`:''}
+          ${p.status==='ai_pass'?`<span class="row-btn" onclick="showProductDetail('${p.id}')" data-testid="platform-prod-card-detail-pass">详情</span><span class="row-btn warn" onclick="confirmModal('下架商品','确认下架商品 ${p.name}？',()=>resultModal('已下架','商品 ${p.name} 已下架。','warning'),{danger:true,btnText:'下架'})" data-testid="platform-prod-card-off">下架</span>`:''}
+          ${p.status==='ai_suspect'?`<span class="row-btn" onclick="showProductDetail('${p.id}')" data-testid="platform-prod-card-review">复核</span><span class="row-btn danger" onclick="confirmModal('驳回商品','确认驳回商品 ${p.name}？',()=>resultModal('已驳回','商品 ${p.name} 已驳回。',{danger:true}))" data-testid="platform-prod-card-reject-sus">驳回</span>`:''}
         </div>
       </div>
     </div>`;
   }).join('');
   const html = pageHead('商品审核', 'AI智能审核商品图片/视频/文本，人工复核存疑商品，强制校验1:1定价', `
-    <button class="btn btn-outline btn-sm"><span class="icon icon-sm" data-i="refresh"></span>刷新队列</button>
+    <button class="btn btn-outline btn-sm" data-testid="platform-prod-refresh"><span class="icon icon-sm" data-i="refresh"></span>刷新队列</button>
   `) + `
-  <div class="toolbar">
-    <div class="seg">
-      <span class="seg-item active">全部 ${MOCK.products.length}</span>
-      <span class="seg-item tag-success">AI通过 3</span>
-      <span class="seg-item tag-warning">AI存疑 1</span>
-      <span class="seg-item tag-danger">AI驳回 1</span>
-      <span class="seg-item tag-info">待复核 1</span>
+  <div class="toolbar" data-testid="platform-prod-toolbar">
+    <div class="seg" data-testid="platform-prod-seg">
+      <span class="seg-item active" data-testid="platform-prod-seg-all">全部 ${MOCK.products.length}</span>
+      <span class="seg-item tag-success" data-testid="platform-prod-seg-aipass">AI通过 3</span>
+      <span class="seg-item tag-warning" data-testid="platform-prod-seg-suspect">AI存疑 1</span>
+      <span class="seg-item tag-danger" data-testid="platform-prod-seg-reject">AI驳回 1</span>
+      <span class="seg-item tag-info" data-testid="platform-prod-seg-manual">待复核 1</span>
     </div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">${cards}</div>
@@ -718,16 +718,16 @@ function renderB2B() {
       <td><span class="tag ${v.tag} tag-dot">${v.label}</span><div class="text-xs text-muted mt-1">匹配度 ${(o.aiMatch*100).toFixed(0)}%</div></td>
       <td><span class="tag ${s.tag}">${s.label}</span></td>
       <td><div class="row-actions">
-        ${o.status==='await_verify'?`<span class="row-btn" onclick="confirmModal('触发AI核验','确认触发AI核验订单 ${o.id}？',()=>resultModal('AI核验已触发','订单 ${o.id} 已提交至B2B OCR核验Agent，预计5秒内完成。'))">核验</span>`:''}
-        ${o.status==='pending'?`<span class="row-btn" onclick="showB2BDetail('${o.id}')">凭证</span>`:''}
-        ${o.status==='rejected'?`<span class="row-btn danger" onclick="showB2BDetail('${o.id}')">原因</span>`:''}
-        ${o.status==='confirmed'||o.status==='completed'?`<span class="row-btn" onclick="showB2BDetail('${o.id}')">链上</span>`:''}
-        <span class="row-btn warn" onclick="showB2BDetail('${o.id}')">详情</span>
+        ${o.status==='await_verify'?`<span class="row-btn" onclick="confirmModal('触发AI核验','确认触发AI核验订单 ${o.id}？',()=>resultModal('AI核验已触发','订单 ${o.id} 已提交至B2B OCR核验Agent，预计5秒内完成。'))" data-testid="platform-b2b-row-verify">核验</span>`:''}
+        ${o.status==='pending'?`<span class="row-btn" onclick="showB2BDetail('${o.id}')" data-testid="platform-b2b-row-voucher">凭证</span>`:''}
+        ${o.status==='rejected'?`<span class="row-btn danger" onclick="showB2BDetail('${o.id}')" data-testid="platform-b2b-row-reason">原因</span>`:''}
+        ${o.status==='confirmed'||o.status==='completed'?`<span class="row-btn" onclick="showB2BDetail('${o.id}')" data-testid="platform-b2b-row-chain">链上</span>`:''}
+        <span class="row-btn warn" onclick="showB2BDetail('${o.id}')" data-testid="platform-b2b-row-detail">详情</span>
       </div></td>
     </tr>`;
   }).join('');
   const html = pageHead('B2B订单管理', '商家间LSC流转订单全生命周期管理 · AI核验贸易凭证 · 1:1金额对应校验', `
-    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="export"></span>导出</button>
+    <button class="btn btn-primary btn-sm" data-testid="platform-b2b-export"><span class="icon icon-sm" data-i="export"></span>导出</button>
   `) + `
   <div class="stat-grid mb-5" style="grid-template-columns:repeat(4,1fr);">
     <div class="stat-card"><div class="stat-label">今日B2B流转</div><div class="stat-value" style="font-size:20px;">${LSC.fmtNum(MOCK.dashboard.todayB2B)}</div><div class="text-xs text-muted">LSC</div></div>

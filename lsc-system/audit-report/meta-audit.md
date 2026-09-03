@@ -1,6 +1,6 @@
 # 链盛通 LSC 系统 HTML/安全元数据审计报告
 
-- 生成时间: 2026-08-31T12:12:11.410Z
+- 生成时间: 2026-09-03T01:19:44.005Z
 - 严格模式: 开启 (WARN 计为 FAIL)
 - 结果: PASS=76  WARN=0  FAIL=0
 
@@ -9,7 +9,7 @@
 - 文件: `platform-admin/index.html`
 - &lt;html lang&gt; : `zh-CN`
 - &lt;title&gt; : "链盛通LSC系统 · 平台管理后台 V6.2"
-- meta 总数: 22  link 总数: 5  JSON-LD 块: 1
+- meta 总数: 22  link 总数: 15  JSON-LD 块: 1
 
 | 规则 | 级别 | 通过 | 说明 | 必需 |
 |---|---|---|---|---|
@@ -38,7 +38,7 @@
 - 文件: `merchant-admin/index.html`
 - &lt;html lang&gt; : `zh-CN`
 - &lt;title&gt; : "链盛通LSC · 商家管理后台 V6.2"
-- meta 总数: 22  link 总数: 5  JSON-LD 块: 1
+- meta 总数: 22  link 总数: 14  JSON-LD 块: 1
 
 | 规则 | 级别 | 通过 | 说明 | 必需 |
 |---|---|---|---|---|
@@ -67,7 +67,7 @@
 - 文件: `mobile-app/index.html`
 - &lt;html lang&gt; : `zh-CN`
 - &lt;title&gt; : "链盛通LSC · 消费者APP V6.2"
-- meta 总数: 25  link 总数: 5  JSON-LD 块: 1
+- meta 总数: 25  link 总数: 14  JSON-LD 块: 1
 
 | 规则 | 级别 | 通过 | 说明 | 必需 |
 |---|---|---|---|---|
@@ -96,7 +96,7 @@
 - 文件: `mini-program/index.html`
 - &lt;html lang&gt; : `zh-CN`
 - &lt;title&gt; : "链盛通LSC · 微信小程序 V6.2"
-- meta 总数: 25  link 总数: 5  JSON-LD 块: 1
+- meta 总数: 25  link 总数: 14  JSON-LD 块: 1
 
 | 规则 | 级别 | 通过 | 说明 | 必需 |
 |---|---|---|---|---|

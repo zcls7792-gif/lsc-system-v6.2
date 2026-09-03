@@ -89,14 +89,14 @@ function renderHome() {
 
   <div class="wx-card">
     <div class="wx-grid">
-      <div class="wx-grid-item" onclick="showScreen('scan')"><div class="wx-grid-icon" style="background:var(--c-wx-green);"><span class="icon" data-i="scan"></span></div><span>扫一扫</span></div>
-      <div class="wx-grid-item" onclick="wxPayCode()"><div class="wx-grid-icon" style="background:#576b95;"><span class="icon" data-i="qr"></span></div><span>付款码</span></div>
-      <div class="wx-grid-item" onclick="showScreen('orders')"><div class="wx-grid-icon" style="background:var(--c-accent);"><span class="icon" data-i="order"></span></div><span>订单</span></div>
-      <div class="wx-grid-item" onclick="showScreen('promo')"><div class="wx-grid-icon" style="background:#ff5a3c;"><span class="icon" data-i="promotion"></span></div><span>推广</span></div>
-      <div class="wx-grid-item" onclick="showScreen('wallet')"><div class="wx-grid-icon" style="background:#576b95;"><span class="icon" data-i="wallet"></span></div><span>钱包</span></div>
-      <div class="wx-grid-item" onclick="showTip('微信支付 · 支持混合支付')"><div class="wx-grid-icon" style="background:#09bb07;"><span class="icon" data-i="wallet"></span></div><span>微信支付</span></div>
-      <div class="wx-grid-item" onclick="showTip('地理位置已授权 · 显示附近商家')"><div class="wx-grid-icon" style="background:#ff9500;"><span class="icon" data-i="location"></span></div><span>附近</span></div>
-      <div class="wx-grid-item" onclick="showTip('AI智能客服')"><div class="wx-grid-icon" style="background:var(--c-primary);"><span class="icon" data-i="ai"></span></div><span>AI客服</span></div>
+      <div class="wx-grid-item" onclick="showScreen('scan')" data-testid="mini-grid-scan"><div class="wx-grid-icon" style="background:var(--c-wx-green);"><span class="icon" data-i="scan"></span></div><span>扫一扫</span></div>
+      <div class="wx-grid-item" onclick="wxPayCode()" data-testid="mini-grid-paycode"><div class="wx-grid-icon" style="background:#576b95;"><span class="icon" data-i="qr"></span></div><span>付款码</span></div>
+      <div class="wx-grid-item" onclick="showScreen('orders')" data-testid="mini-grid-orders"><div class="wx-grid-icon" style="background:var(--c-accent);"><span class="icon" data-i="order"></span></div><span>订单</span></div>
+      <div class="wx-grid-item" onclick="showScreen('promo')" data-testid="mini-grid-promo"><div class="wx-grid-icon" style="background:#ff5a3c;"><span class="icon" data-i="promotion"></span></div><span>推广</span></div>
+      <div class="wx-grid-item" onclick="showScreen('wallet')" data-testid="mini-grid-wallet"><div class="wx-grid-icon" style="background:#576b95;"><span class="icon" data-i="wallet"></span></div><span>钱包</span></div>
+      <div class="wx-grid-item" onclick="showTip('微信支付 · 支持混合支付')" data-testid="mini-grid-wxpay"><div class="wx-grid-icon" style="background:#09bb07;"><span class="icon" data-i="wallet"></span></div><span>微信支付</span></div>
+      <div class="wx-grid-item" onclick="showTip('地理位置已授权 · 显示附近商家')" data-testid="mini-grid-nearby"><div class="wx-grid-icon" style="background:#ff9500;"><span class="icon" data-i="location"></span></div><span>附近</span></div>
+      <div class="wx-grid-item" onclick="showTip('AI智能客服')" data-testid="mini-grid-ai"><div class="wx-grid-icon" style="background:var(--c-primary);"><span class="icon" data-i="ai"></span></div><span>AI客服</span></div>
     </div>
   </div>
 
@@ -193,8 +193,8 @@ function renderScan() {
     </div>
     <div class="wx-scan-hint">将商家收款码放入框内即可自动扫描</div>
     <div class="wx-scan-actions">
-      <div class="wx-scan-btn"><span class="icon" data-i="location"></span>附近商家</div>
-      <div class="wx-scan-btn primary" onclick="wxScanPay()"><span class="icon" data-i="qr"></span>模拟扫码</div>
+      <div class="wx-scan-btn" data-testid="mini-scan-nearby"><span class="icon" data-i="location"></span>附近商家</div>
+      <div class="wx-scan-btn primary" onclick="wxScanPay()" data-testid="mini-scan-simulate"><span class="icon" data-i="qr"></span>模拟扫码</div>
     </div>
   </div>`;
   renderIcons(document.getElementById('screen-scan'));
@@ -220,8 +220,8 @@ function wxScanPay() {
       <div class="alert" style="background:var(--c-wx-green-tint);color:var(--c-wx-green-deep);padding:8px 10px;border-radius:6px;font-size:11px;margin-top:6px;"><span class="icon icon-sm" data-i="unlock"></span>支付后获得100 LSC进入锁定池, 每日动态释放</div>
     </div>
     <div style="padding:12px;border-top:1px solid #f0f0f0;display:flex;gap:8px;">
-      <button class="wx-btn wx-btn-outline" style="flex:1;padding:10px;" onclick="this.closest('.modal-mask').remove()">取消</button>
-      <button class="wx-btn wx-btn-green" style="flex:1;padding:10px;" onclick="wxPaySuccess(this)">确认支付</button>
+      <button class="wx-btn wx-btn-outline" style="flex:1;padding:10px;" onclick="this.closest('.modal-mask').remove()" data-testid="mini-scan-cancel">取消</button>
+      <button class="wx-btn wx-btn-green" style="flex:1;padding:10px;" onclick="wxPaySuccess(this)" data-testid="mini-scan-confirm">确认支付</button>
     </div>
   </div>`;
   document.body.appendChild(mask);
@@ -234,7 +234,7 @@ function wxPaySuccess(btn) {
     <div style="font-size:17px;font-weight:700;">支付成功</div>
     <div class="text-muted text-sm mt-2">消费¥100 · 获得100.00 LSC</div>
     <div style="background:var(--c-wx-green-tint);color:var(--c-wx-green-deep);padding:10px;border-radius:8px;font-size:12px;margin-top:14px;text-align:left;"><span class="icon icon-sm" data-i="bell"></span> 已为您订阅消息: LSC释放/核销通知将通过微信推送</div>
-    <button class="wx-btn wx-btn-green" style="margin-top:18px;" onclick="this.closest('.modal-mask').remove();showScreen('wallet');">查看钱包</button>
+    <button class="wx-btn wx-btn-green" style="margin-top:18px;" onclick="this.closest('.modal-mask').remove();showScreen('wallet');" data-testid="mini-scan-view-wallet">查看钱包</button>
   </div>`;
   renderIcons(mask);
 }
@@ -394,8 +394,8 @@ function renderPromo() {
     <div style="text-align:center;font-size:12px;opacity:0.9;margin-top:10px;">扫码或分享卡片给好友</div>
   </div>
   <div style="padding:0 12px;">
-    <button class="wx-btn wx-btn-green" onclick="wxShare()"><span class="icon" data-i="promotion" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></span>分享给微信好友</button>
-    <button class="wx-btn wx-btn-outline" style="margin-top:8px;" onclick="showTip('已保存推广码到相册')">保存推广码图片</button>
+    <button class="wx-btn wx-btn-green" onclick="wxShare()" data-testid="mini-promo-share"><span class="icon" data-i="promotion" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></span>分享给微信好友</button>
+    <button class="wx-btn wx-btn-outline" style="margin-top:8px;" onclick="showTip('已保存推广码到相册')" data-testid="mini-promo-save">保存推广码图片</button>
   </div>
   <div class="wx-section-title"><h2>推广战绩</h2></div>
   <div style="display:flex;gap:8px;padding:0 12px 12px;">
@@ -467,8 +467,8 @@ function renderProduct(idx) {
     <div style="height:60px;"></div>
   </div>
   <div class="wx-pay-bar" style="position:fixed;left:0;right:0;bottom:0;max-width:366px;margin:0 auto;z-index:20;">
-    <button class="wx-btn wx-btn-outline" style="flex:1;padding:10px;margin-right:6px;" onclick="showTip('已加入购物车 · ${p.name}')">加入购物车</button>
-    <button class="wx-btn wx-btn-green" style="flex:1;padding:10px;" onclick="wxScanPay()">立即购买</button>
+    <button class="wx-btn wx-btn-outline" style="flex:1;padding:10px;margin-right:6px;" onclick="showTip('已加入购物车 · ${p.name}')" data-testid="mini-product-cart">加入购物车</button>
+    <button class="wx-btn wx-btn-green" style="flex:1;padding:10px;" onclick="wxScanPay()" data-testid="mini-product-buy">立即购买</button>
   </div>`;
   renderIcons(document.getElementById('screen-product'));
 }

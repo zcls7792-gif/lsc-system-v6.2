@@ -294,7 +294,7 @@ function renderShop() {
         </div>
         <div class="flex items-center justify-between" style="padding:10px 0;">
           <div class="flex items-center gap-3"><span class="icon" data-i="doc" style="color:var(--c-warning);"></span><div><div style="font-size:13px;font-weight:500;">消防合格证</div><div class="text-xs text-muted">即将到期 30天</div></div></div>
-          <span class="row-btn warn">更新</span>
+          <span class="row-btn warn" data-testid="merchant-qual-fire-update">更新</span>
         </div>
       </div>
     </div>
@@ -315,8 +315,8 @@ function renderShop() {
             <div><b>AI 地址核验结果:</b> 注册地址与工商信息一致，实景地图比对匹配度 96%，核验通过。今日地址修改次数: 0/3。</div>
           </div>
           <div class="flex gap-2 mt-3">
-            <button class="btn btn-soft btn-sm">高德地图选点</button>
-            <button class="btn btn-outline btn-sm">百度地图选点</button>
+            <button class="btn btn-soft btn-sm" data-testid="merchant-map-amap-pick">高德地图选点</button>
+            <button class="btn btn-outline btn-sm" data-testid="merchant-map-baidu-pick">百度地图选点</button>
           </div>
         </div>
         <div class="map-box" id="shop-map-box">
@@ -492,14 +492,14 @@ function renderProduct() {
         </div>
         <div class="flex gap-2">
           ${p.status==='review'
-            ? '<span class="row-btn warn" style="flex:1;justify-content:center;">审核中</span>'
-            : `<span class="row-btn" style="flex:1;justify-content:center;">编辑</span><span class="row-btn ${p.status==='on'?'gold':''}" style="flex:1;justify-content:center;">${p.status==='on'?'下架':'上架'}</span>`}
+            ? '<span class="row-btn warn" style="flex:1;justify-content:center;" data-testid="merchant-prod-row-reviewing">审核中</span>'
+            : `<span class="row-btn" style="flex:1;justify-content:center;" data-testid="merchant-prod-row-edit">编辑</span><span class="row-btn ${p.status==='on'?'gold':''}" style="flex:1;justify-content:center;" data-testid="merchant-prod-row-toggle">${p.status==='on'?'下架':'上架'}</span>`}
         </div>
       </div>
     </div>`).join('');
 
   const html = pageHead('商品管理', '商品发布/编辑/上下架 · 强制1:1定价校验 · AI图片视频审核', `
-    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="product"></span>发布商品</button>
+    <button class="btn btn-primary btn-sm" data-testid="merchant-prod-publish"><span class="icon icon-sm" data-i="product"></span>发布商品</button>
   `) + `
   <div class="card mb-5">
     <div class="card-body">
@@ -536,12 +536,12 @@ function renderProduct() {
     </div>
   </div>
 
-  <div class="toolbar">
-    <div class="seg">
-      <span class="seg-item active">全部 ${products.length}</span>
-      <span class="seg-item">上架中 3</span>
-      <span class="seg-item">审核中 1</span>
-      <span class="seg-item">已下架 1</span>
+  <div class="toolbar" data-testid="merchant-prod-toolbar">
+    <div class="seg" data-testid="merchant-prod-seg">
+      <span class="seg-item active" data-testid="merchant-prod-seg-all">全部 ${products.length}</span>
+      <span class="seg-item" data-testid="merchant-prod-seg-on">上架中 3</span>
+      <span class="seg-item" data-testid="merchant-prod-seg-review">审核中 1</span>
+      <span class="seg-item" data-testid="merchant-prod-seg-off">已下架 1</span>
     </div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">${cards}</div>
@@ -640,7 +640,7 @@ function renderWallet() {
   </div>
 
   <div class="card">
-    <div class="card-head"><div class="card-title">LSC 流水明细</div><div class="seg"><span class="seg-item active">全部</span><span class="seg-item">释放</span><span class="seg-item">核销</span><span class="seg-item">B2B</span></div></div>
+    <div class="card-head"><div class="card-title">LSC 流水明细</div><div class="seg" data-testid="merchant-lsc-seg"><span class="seg-item active" data-testid="merchant-lsc-seg-all">全部</span><span class="seg-item" data-testid="merchant-lsc-seg-release">释放</span><span class="seg-item" data-testid="merchant-lsc-seg-nh">核销</span><span class="seg-item" data-testid="merchant-lsc-seg-b2b">B2B</span></div></div>
     <div style="overflow-x:auto;">
     <table class="table">
       <thead><tr><th>流水类型</th><th>变动金额</th><th>锁定池变动</th><th>可用池变动</th><th>订单号</th><th>时间</th></tr></thead>
@@ -655,7 +655,7 @@ function renderWallet() {
 /* ============== 核销管理 ============== */
 function renderNH() {
   const html = pageHead('核销管理', '核销申请 · 现金结算(×0.87) · 核销记录 · 限额查询 · 收款码生成', `
-    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="release"></span>申请核销</button>
+    <button class="btn btn-primary btn-sm" data-testid="merchant-nh-apply"><span class="icon icon-sm" data-i="release"></span>申请核销</button>
   `) + `
   <div class="stat-grid mb-5">
     <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="release"></span></div><div class="stat-label">今日已核销</div><div class="stat-value">${LSC.fmtNum(NH_USED_TODAY_LSC)} LSC</div><div class="text-xs text-muted mt-1">×0.87结算 ≈ 现金 ¥${LSC.fmtNum(NH_USED_TODAY_LSC*0.87)}</div></div>
@@ -682,8 +682,8 @@ function renderNH() {
           <div class="text-xs text-accent mt-2">⏱ 30秒后自动刷新 · 含防伪签名</div>
         </div>
         <div class="flex gap-2 justify-center mt-4">
-          <button class="btn btn-outline btn-sm">下载打印</button>
-          <button class="btn btn-soft btn-sm">刷新二维码</button>
+          <button class="btn btn-outline btn-sm" data-testid="merchant-qr-download">下载打印</button>
+          <button class="btn btn-soft btn-sm" data-testid="merchant-qr-refresh">刷新二维码</button>
         </div>
       </div>
     </div>
@@ -790,7 +790,7 @@ function renderB2B() {
         </div>
       </div>
       <div class="alert alert-warning mt-4" style="font-size:12px;"><span class="icon icon-sm" data-i="warning"></span>消费者会员间禁止LSC流转 · 消费者→商家支付允许 · 商家→消费者反向流转禁止。流转后接收方LSC有效期重置为365天。</div>
-      <div class="flex justify-end gap-3 mt-3"><button class="btn btn-outline btn-sm${b2bDisabled?' btn-disabled-soft':''}"${b2bDisabled?' disabled aria-disabled="true"':''} onclick="resultModal('已保存草稿','B2B订单草稿已保存, 可稍后继续编辑。','info')">保存草稿</button><button class="btn btn-primary btn-sm${b2bDisabled?' btn-disabled-soft':''}"${b2bDisabled?' disabled aria-disabled="true"':''} onclick="confirmModal('提交B2B订单','确认提交订单? 提交后进入待对手方确认状态, AI将并行核验凭证真伪。',()=>resultModal('订单已提交','B2B订单已提交, 等待对手方确认。AI核验同步进行中。','success'),{btnText:'提交'})">提交并等待确认</button></div>
+      <div class="flex justify-end gap-3 mt-3"><button class="btn btn-outline btn-sm${b2bDisabled?' btn-disabled-soft':''}"${b2bDisabled?' disabled aria-disabled="true"':''} onclick="resultModal('已保存草稿','B2B订单草稿已保存, 可稍后继续编辑。','info')" data-testid="merchant-b2b-save">保存草稿</button><button class="btn btn-primary btn-sm${b2bDisabled?' btn-disabled-soft':''}"${b2bDisabled?' disabled aria-disabled="true"':''} onclick="confirmModal('提交B2B订单','确认提交订单? 提交后进入待对手方确认状态, AI将并行核验凭证真伪。',()=>resultModal('订单已提交','B2B订单已提交, 等待对手方确认。AI核验同步进行中。','success'),{btnText:'提交'})" data-testid="merchant-b2b-submit">提交并等待确认</button></div>
     </div>
   </div>
 
@@ -800,9 +800,9 @@ function renderB2B() {
     <table class="table">
       <thead><tr><th>订单号</th><th>对手方</th><th>描述</th><th>金额</th><th>AI核验</th><th>状态</th><th>操作</th></tr></thead>
       <tbody>
-        <tr><td style="font-family:var(--ff-mono);font-size:11px;">B2B20260824002</td><td>御品茶业工坊</td><td>高端茶叶季度供应</td><td><b>¥96,000</b><br><span class="text-xs text-available">96,000 LSC</span></td><td><span class="tag tag-success tag-dot">真实 98%</span></td><td><span class="tag tag-success">已完成</span></td><td><span class="row-btn">详情</span></td></tr>
-        <tr><td style="font-family:var(--ff-mono);font-size:11px;">B2B20260822003</td><td>恒通建材批发中心</td><td>装修材料采购</td><td><b>¥12,000</b><br><span class="text-xs text-available">12,000 LSC</span></td><td><span class="tag tag-success tag-dot">真实 94%</span></td><td><span class="tag tag-success">已完成</span></td><td><span class="row-btn">详情</span></td></tr>
-        <tr><td style="font-family:var(--ff-mono);font-size:11px;">B2B20260827009</td><td>海纳科技公司</td><td>智能点餐系统采购</td><td><b>¥45,000</b><br><span class="text-xs text-available">45,000 LSC</span></td><td><span class="tag tag-info">待核验</span></td><td><span class="tag tag-warning">待确认</span></td><td><span class="row-btn gold">催办</span></td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">B2B20260824002</td><td>御品茶业工坊</td><td>高端茶叶季度供应</td><td><b>¥96,000</b><br><span class="text-xs text-available">96,000 LSC</span></td><td><span class="tag tag-success tag-dot">真实 98%</span></td><td><span class="tag tag-success">已完成</span></td><td><span class="row-btn" data-testid="merchant-b2b-row-detail">详情</span></td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">B2B20260822003</td><td>恒通建材批发中心</td><td>装修材料采购</td><td><b>¥12,000</b><br><span class="text-xs text-available">12,000 LSC</span></td><td><span class="tag tag-success tag-dot">真实 94%</span></td><td><span class="tag tag-success">已完成</span></td><td><span class="row-btn" data-testid="merchant-b2b-row-detail-2">详情</span></td></tr>
+        <tr><td style="font-family:var(--ff-mono);font-size:11px;">B2B20260827009</td><td>海纳科技公司</td><td>智能点餐系统采购</td><td><b>¥45,000</b><br><span class="text-xs text-available">45,000 LSC</span></td><td><span class="tag tag-info">待核验</span></td><td><span class="tag tag-warning">待确认</span></td><td><span class="row-btn gold" data-testid="merchant-b2b-row-urge">催办</span></td></tr>
       </tbody>
     </table>
     </div>
@@ -814,7 +814,7 @@ function renderB2B() {
 /* ============== 推广管理 ============== */
 function renderPromotion() {
   const html = pageHead('推广管理', '推荐关系 · 首单10%奖励 · 推广二维码 · 奖励记录', `
-    <button class="btn btn-primary btn-sm"><span class="icon icon-sm" data-i="qr"></span>生成推广码</button>
+    <button class="btn btn-primary btn-sm" data-testid="merchant-promo-gen"><span class="icon icon-sm" data-i="qr"></span>生成推广码</button>
   `) + `
   <div class="stat-grid mb-5">
     <div class="stat-card gold"><div class="sc-icon"><span class="icon" data-i="promotion"></span></div><div class="stat-label">累计推荐用户</div><div class="stat-value">248</div><div class="text-xs text-available mt-1">活跃 186</div></div>

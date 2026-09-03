@@ -30,13 +30,13 @@ test.describe('LSC V6.2-AI · 端到端核心 3 场景', () => {
     await page.goto(APPS.merchant, { waitUntil: 'networkidle' });
 
     // 0) 先强制点击到"经营总览"作为基准（不同存储状态下不一定默认）
-    await page.click('.nav-item[data-view="dashboard"]');
+    await page.click('[data-testid="merchant-nav-dashboard"]');
     // 1) 经营总览渲染成功：存在核心指标 + crumb 正确
     await expect(page.locator('.stat-card').first()).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#crumb')).toHaveText(/经营总览/);
 
     // 2) 导航点击到"核销管理"
-    await page.click('.nav-item[data-view="nh"]');
+    await page.click('[data-testid="merchant-nav-nh"]');
     await expect(page.locator('#crumb')).toHaveText(/核销管理/, { timeout: 8000 });
 
     // 3) 页内必须存在核销输入框 + 核销按钮
@@ -53,7 +53,7 @@ test.describe('LSC V6.2-AI · 端到端核心 3 场景', () => {
     expect(Math.round(cashNum * 100)).toBe(Math.round(amtNum * 0.87 * 100));
 
     // 5) 再进入"LSC账户"查看钱包数字非空（LSC 钱包页使用 hero-val / hf-val，不可用 stat-card）
-    await page.click('.nav-item[data-view="wallet"]');
+    await page.click('[data-testid="merchant-nav-wallet"]');
     await expect(page.locator('#crumb')).toHaveText(/LSC.*账户/);
     const hero = page.locator('.hero-val').first();
     await expect(hero).toBeVisible();
@@ -71,7 +71,7 @@ test.describe('LSC V6.2-AI · 端到端核心 3 场景', () => {
     await page.goto(APPS.platform, { waitUntil: 'networkidle' });
 
     // 1) 进入 AI 视图触发 _aiTimers 初始化
-    await page.click('.nav-item[data-view="ai"]', { timeout: 12000 });
+    await page.click('[data-testid="platform-nav-ai"]', { timeout: 12000 });
     await expect(page.locator('#crumb')).toHaveText(/AI|智能/);
 
     // 2) feed 容器 + 至少 1 条活动
@@ -102,7 +102,7 @@ test.describe('LSC V6.2-AI · 端到端核心 3 场景', () => {
     await page.goto(APPS.merchant, { waitUntil: 'networkidle' });
 
     // 1) 进入"店铺管理"
-    await page.click('.nav-item[data-view="shop"]', { timeout: 12000 });
+    await page.click('[data-testid="merchant-nav-shop"]', { timeout: 12000 });
     await expect(page.locator('#crumb')).toHaveText(/店铺管理/);
 
     // 2) 地图必须是真实 SVG（含 viewBox、路径/矩形元素、POI文本）

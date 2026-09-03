@@ -4,8 +4,7 @@
       "/root/.nvm/versions/node/v24.1.0/bin/node",
       "/workspace/lsc-system/node_modules/.bin/playwright",
       "test",
-      "e2e/lsc-screenreader.spec.js",
-      "--workers=2"
+      "--project=chromium-headless"
     ],
     "configFile": "/workspace/lsc-system/playwright.config.js",
     "rootDir": "/workspace/lsc-system/e2e",
@@ -96,6 +95,670 @@
   },
   "suites": [
     {
+      "title": "lsc-core.spec.js",
+      "file": "lsc-core.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LSC V6.2-AI · 端到端核心 3 场景",
+          "file": "lsc-core.spec.js",
+          "line": 14,
+          "column": 6,
+          "specs": [
+            {
+              "title": "场景A: 商家后台核销管理页面 → 核销计算联动 + LSC账户值非空",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2848,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:06.174Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "381d9a03cfaa35a94702-e9a8cb855379d376fde8",
+              "file": "lsc-core.spec.js",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "场景B: 平台后台 AI活动流feed + 速率图表SVG渲染 + 2个定时器创建",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2492,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:06.211Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "381d9a03cfaa35a94702-90e67d462f84787d0bd1",
+              "file": "lsc-core.spec.js",
+              "line": 70,
+              "column": 3
+            },
+            {
+              "title": "场景C: 商家店铺地图替换占位为真实SVG + 缩放控件可交互",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2529,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:09.234Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "381d9a03cfaa35a94702-6d563e871c6eae2f0c72",
+              "file": "lsc-core.spec.js",
+              "line": 101,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "lsc-extended.spec.js",
+      "file": "lsc-extended.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "LSC V6.2-AI · 桌面端深度扩展",
+          "file": "lsc-extended.spec.js",
+          "line": 44,
+          "column": 6,
+          "specs": [
+            {
+              "title": "场景D(桌面): 商家核销 → 填写金额/备注/单号 → confirmModal+resultModal 完整交互",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3221,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:09.620Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-0b6e683de281aee1faaa",
+              "file": "lsc-extended.spec.js",
+              "line": 50,
+              "column": 3
+            },
+            {
+              "title": "场景E(桌面): 平台后台 · 商家/B2B/风险/释放 4 个视图渲染无空白",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2479,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:11.824Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-d9b1f38defe1d033f5a1",
+              "file": "lsc-extended.spec.js",
+              "line": 100,
+              "column": 3
+            },
+            {
+              "title": "场景H(桌面): 商家核销输入异常值 → 提示/禁用 → 输入合法后按钮可用",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2205,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:12.862Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-fdc15669eb643a2d3ecd",
+              "file": "lsc-extended.spec.js",
+              "line": 127,
+              "column": 3
+            },
+            {
+              "title": "场景I(桌面): 4应用主题切换按钮三态循环(auto→light→dark) + 持久化",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 7897,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:14.321Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-77807c2e4e20d358ce67",
+              "file": "lsc-extended.spec.js",
+              "line": 157,
+              "column": 3
+            },
+            {
+              "title": "场景J(桌面): 平台后台 商家管理 → 搜索 → 商家详情 → 信用分颜色合规",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2695,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:15.134Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-cc7ed93633a23d9e4cc0",
+              "file": "lsc-extended.spec.js",
+              "line": 237,
+              "column": 3
+            },
+            {
+              "title": "场景N(桌面): 商家经营总览 → 3 类图表渲染 + 筛选切换不报错",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1219,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:17.851Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-bde7f2070ef880a3d3e7",
+              "file": "lsc-extended.spec.js",
+              "line": 291,
+              "column": 3
+            },
+            {
+              "title": "场景P(桌面): 平台后台 商家处罚 双人审批 → 签名输入 → 结果弹窗",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2626,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:19.112Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-33ad326c3fa70a6272d5",
+              "file": "lsc-extended.spec.js",
+              "line": 345,
+              "column": 3
+            },
+            {
+              "title": "场景Q(桌面): 平台后台 人工熔断 双人审批 → alert-danger → 结果熔断已执行",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2905,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:21.765Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-9a52482f2c46a5754cf2",
+              "file": "lsc-extended.spec.js",
+              "line": 394,
+              "column": 3
+            },
+            {
+              "title": "场景R(桌面): 平台后台 违规记录 撤销处罚 双人审批 → 结果处罚已撤销",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2289,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:22.238Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-8821c6a7c16012285788",
+              "file": "lsc-extended.spec.js",
+              "line": 440,
+              "column": 3
+            },
+            {
+              "title": "场景S(桌面): 信用分40-59 核销暂停 → #nh-amount disabled + alert-warning",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1469,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:24.566Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-53a5377c3009ee11a4a8",
+              "file": "lsc-extended.spec.js",
+              "line": 475,
+              "column": 3
+            },
+            {
+              "title": "场景T(桌面): 信用分20-39 B2B暂停 → 创建按钮disabled + alert-warning",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1387,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:24.720Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-4b1fc0c3fa113461881b",
+              "file": "lsc-extended.spec.js",
+              "line": 508,
+              "column": 3
+            },
+            {
+              "title": "场景U(桌面): 信用分<20 B2B永久关闭 → alert-danger + 全卡disabled",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1511,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:26.052Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-21c6c20d1c82e2e2be20",
+              "file": "lsc-extended.spec.js",
+              "line": 539,
+              "column": 3
+            },
+            {
+              "title": "场景V(桌面): 平台后台 处罚「暂停B2B 30天」+「永久关闭核销+B2B」双人审批",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3141,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:26.128Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-355a6fa27a157cb4a856",
+              "file": "lsc-extended.spec.js",
+              "line": 570,
+              "column": 3
+            },
+            {
+              "title": "场景W(桌面): 释放参数修改双人审批 + 单人未填满状态机 + rate_max/min 不可编辑",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2836,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:27.608Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-e9694ec1d85d68fbb0f4",
+              "file": "lsc-extended.spec.js",
+              "line": 615,
+              "column": 3
+            },
+            {
+              "title": "场景Y(桌面): 释放比例 calcRate 三分支 [0.03%,0.06%] + rate=0.0468% 计算链路",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1661,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:29.309Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aaed197fda9439e7798c-08dbf0db63357235f92e",
+              "file": "lsc-extended.spec.js",
+              "line": 670,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "lsc-screenreader.spec.js",
       "file": "lsc-screenreader.spec.js",
       "column": 0,
@@ -121,15 +784,25 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 4330,
+                      "duration": 4320,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:17.332Z",
+                      "startTime": "2026-09-03T01:16:30.517Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -155,15 +828,25 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3618,
+                      "duration": 2919,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:17.301Z",
+                      "startTime": "2026-09-03T01:16:31.032Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -189,15 +872,25 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3655,
+                      "duration": 3202,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:21.265Z",
+                      "startTime": "2026-09-03T01:16:33.968Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -231,15 +924,19 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "passed",
                       "duration": 3505,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][merchant-admin] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:22.112Z",
+                      "startTime": "2026-09-03T01:16:34.855Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -265,15 +962,19 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3341,
+                      "duration": 2836,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][merchant-admin] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:24.963Z",
+                      "startTime": "2026-09-03T01:16:37.214Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -299,15 +1000,19 @@
                   "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 3275,
+                      "duration": 3810,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][merchant-admin] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:25.651Z",
+                      "startTime": "2026-09-03T01:16:38.410Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -323,13 +1028,13 @@
           ]
         },
         {
-          "title": "SR · 消费者移动端APP[移动端] (mobile-app)",
+          "title": "KB · 平台管理后台 [platform-admin] 键盘可达性",
           "file": "lsc-screenreader.spec.js",
-          "line": 680,
+          "line": 1132,
           "column": 6,
           "specs": [
             {
-              "title": "SR-01~03 + SR-15 页面加载 + 地标 + live region",
+              "title": "KB-01 Roving tabindex 方向键导航",
               "ok": true,
               "tags": [],
               "tests": [
@@ -337,53 +1042,29 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 2,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 2823,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-08-31T12:12:29.470Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "49389f49b75454fc8546-df020f5b991429186138",
-              "file": "lsc-screenreader.spec.js",
-              "line": 693,
-              "column": 3
-            },
-            {
-              "title": "SR-06 + SR-11 + SR-12 主题切换 + Tab 顺序 + 图片替代文本",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
-                  "results": [
-                    {
-                      "workerIndex": 3,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3628,
+                      "duration": 2771,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:30.060Z",
+                      "startTime": "2026-09-03T01:16:40.066Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -391,13 +1072,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "49389f49b75454fc8546-d4b8972181c298e45c23",
+              "id": "49389f49b75454fc8546-cc7432702e42f2e4a83b",
               "file": "lsc-screenreader.spec.js",
-              "line": 700,
+              "line": 1145,
               "column": 3
             },
             {
-              "title": "SR-13 + SR-14 档位卡片 + 底部导航可访问性",
+              "title": "KB-02 Skip-Link 跳到主内容区域",
               "ok": true,
               "tags": [],
               "tests": [
@@ -405,19 +1086,29 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2904,
+                      "duration": 1590,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:32.628Z",
+                      "startTime": "2026-09-03T01:16:42.249Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -425,13 +1116,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "49389f49b75454fc8546-9b295f15014313fe9447",
+              "id": "49389f49b75454fc8546-bfa9bb608171be79c153",
               "file": "lsc-screenreader.spec.js",
-              "line": 706,
+              "line": 1154,
               "column": 3
             },
             {
-              "title": "SR-04 导航项朗读 (导航/Tab 项通用)",
+              "title": "KB-03 全局快捷键 (Ctrl+K / ? / Esc)",
               "ok": true,
               "tags": [],
               "tests": [
@@ -439,19 +1130,29 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2617,
+                      "duration": 2601,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:34.073Z",
+                      "startTime": "2026-09-03T01:16:42.857Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -459,13 +1160,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "49389f49b75454fc8546-544558944bd013fd5b33",
+              "id": "49389f49b75454fc8546-acc3a480f3de083f9794",
               "file": "lsc-screenreader.spec.js",
-              "line": 713,
+              "line": 1158,
               "column": 3
             },
             {
-              "title": "SR-10 表单标签 (扫码/搜索等输入)",
+              "title": "KB-04 焦点环可见性 (focus-visible)",
               "ok": true,
               "tags": [],
               "tests": [
@@ -473,19 +1174,29 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 2191,
+                      "duration": 1723,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:35.558Z",
+                      "startTime": "2026-09-03T01:16:43.859Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -493,21 +1204,112 @@
                   "status": "expected"
                 }
               ],
-              "id": "49389f49b75454fc8546-e0c09f7814f11cb78050",
+              "id": "49389f49b75454fc8546-11e736a1529e2426a570",
               "file": "lsc-screenreader.spec.js",
-              "line": 717,
+              "line": 1162,
+              "column": 3
+            },
+            {
+              "title": "KB-05 模态焦点陷阱 (Tab 循环不逸出)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1995,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        },
+                        {
+                          "text": "[WARN] platform-admin KB-05: 无可交互模态，跳过焦点陷阱断言\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:45.477Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "49389f49b75454fc8546-d877efe763048d051890",
+              "file": "lsc-screenreader.spec.js",
+              "line": 1166,
+              "column": 3
+            },
+            {
+              "title": "KB-06 ARIA 状态更新 (seg/nav aria-selected/current)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2262,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Access to image at 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=LSC%20blockchain%20consumption%20voucher%20platform%20dashboard%20with%20AI%20panel%20clean%20modern%20screenshot&image_size=landscape_16_9' from origin 'http://127.0.0.1:8765' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] Failed to load resource: net::ERR_FAILED\n"
+                        },
+                        {
+                          "text": "[CONSOLE-ERR][platform-admin] The path of the provided scope ('/platform-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:45.644Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "49389f49b75454fc8546-68952881ec53632312e5",
+              "file": "lsc-screenreader.spec.js",
+              "line": 1193,
               "column": 3
             }
           ]
         },
         {
-          "title": "SR · 微信小程序端[小程序] (mini-program)",
+          "title": "KB · 商家管理后台 [merchant-admin] 键盘可达性",
           "file": "lsc-screenreader.spec.js",
-          "line": 726,
+          "line": 1205,
           "column": 6,
           "specs": [
             {
-              "title": "SR-01~03 + SR-15 页面加载 + 跳过链接 + 地标 + live region",
+              "title": "KB-01 Roving tabindex 方向键导航",
               "ok": true,
               "tags": [],
               "tests": [
@@ -515,19 +1317,23 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2230,
+                      "duration": 2462,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][merchant-admin] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:36.711Z",
+                      "startTime": "2026-09-03T01:16:47.487Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -535,13 +1341,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "49389f49b75454fc8546-3a37dbcd8cc086db284e",
+              "id": "49389f49b75454fc8546-d4b3931d01b1dd18be9e",
               "file": "lsc-screenreader.spec.js",
-              "line": 739,
+              "line": 1219,
               "column": 3
             },
             {
-              "title": "SR-06 + SR-11 + SR-12 主题切换 + Tab 顺序 + 图片替代文本",
+              "title": "KB-02 Skip-Link 跳到主内容区域",
               "ok": true,
               "tags": [],
               "tests": [
@@ -549,19 +1355,23 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 3069,
+                      "duration": 1491,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][merchant-admin] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:37.781Z",
+                      "startTime": "2026-09-03T01:16:47.936Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -569,13 +1379,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "49389f49b75454fc8546-c58bf4a7dc0e78fc2925",
+              "id": "49389f49b75454fc8546-4de454619146445f5644",
               "file": "lsc-screenreader.spec.js",
-              "line": 746,
+              "line": 1229,
               "column": 3
             },
             {
-              "title": "SR-13 + SR-14 档位卡片 + 底部导航可访问性",
+              "title": "KB-03 全局快捷键 (Ctrl+K / ? / Esc)",
               "ok": true,
               "tags": [],
               "tests": [
@@ -583,19 +1393,61 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2254,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][merchant-admin] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:49.456Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "49389f49b75454fc8546-ceb08a3e30f725c44907",
+              "file": "lsc-screenreader.spec.js",
+              "line": 1233,
+              "column": 3
+            },
+            {
+              "title": "KB-04 焦点环可见性 (focus-visible)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2790,
+                      "duration": 1377,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][merchant-admin] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:38.978Z",
+                      "startTime": "2026-09-03T01:16:49.982Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -603,13 +1455,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "49389f49b75454fc8546-7c543ea0f5f75860c4cb",
+              "id": "49389f49b75454fc8546-a4e732ab49697e14e0ad",
               "file": "lsc-screenreader.spec.js",
-              "line": 752,
+              "line": 1237,
               "column": 3
             },
             {
-              "title": "SR-04 + SR-10 导航项 + 表单标签",
+              "title": "KB-05 模态焦点陷阱 (核销申请确认模态)",
               "ok": true,
               "tags": [],
               "tests": [
@@ -617,19 +1469,23 @@
                   "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium-mobile",
-                  "projectName": "chromium-mobile",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
                   "results": [
                     {
-                      "workerIndex": 2,
-                      "parallelIndex": 1,
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2404,
+                      "duration": 2554,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][merchant-admin] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-31T12:12:40.867Z",
+                      "startTime": "2026-09-03T01:16:51.374Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -637,9 +1493,47 @@
                   "status": "expected"
                 }
               ],
-              "id": "49389f49b75454fc8546-849c6c12614206ee9dc8",
+              "id": "49389f49b75454fc8546-c62349526c4501effc0a",
               "file": "lsc-screenreader.spec.js",
-              "line": 758,
+              "line": 1241,
+              "column": 3
+            },
+            {
+              "title": "KB-06 ARIA 状态更新 (商品 seg/订单 tabs)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-headless",
+                  "projectName": "chromium-headless",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2555,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "[CONSOLE-ERR][merchant-admin] The path of the provided scope ('/merchant-admin/') is not under the max scope allowed ('/shared/'). Adjust the scope, move the Service Worker script, or use the Service-Worker-Allowed HTTP header to allow the scope.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-03T01:16:51.740Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "49389f49b75454fc8546-b563e6bc03cbcc9e8a99",
+              "file": "lsc-screenreader.spec.js",
+              "line": 1258,
               "column": 3
             }
           ]
@@ -649,9 +1543,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-08-31T12:12:16.109Z",
-    "duration": 27274.041,
-    "expected": 15,
+    "startTime": "2026-09-03T01:16:04.346Z",
+    "duration": 50251.825,
+    "expected": 36,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
