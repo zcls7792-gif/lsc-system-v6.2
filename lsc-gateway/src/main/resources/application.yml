@@ -21,6 +21,10 @@ spring:
           - data-id: lsc-gateway-routes.yaml
             group: LSC_GROUP
             refresh: true
+          # Phase K: 灰度策略 shared-config（需要运维/Nacos admin 首次在控制台创建同名 data-id）
+          - data-id: gray-release.yaml
+            group: LSC_GROUP
+            refresh: true
     # ============ Spring Cloud Gateway 路由配置 ============
     # 限流策略(RequestRateLimiter 基于 Redis 令牌桶):
     #   - 默认业务接口: 单 IP 200 req/s (burstCapacity 400)
@@ -241,6 +245,33 @@ lsc:
   gateway:
     # 鉴权白名单 (无需 JWT 即可访问, 逗号分隔)
     auth-whitelist: /api/user/login,/api/user/register,/api/user/sms-code,/api/user/logout,/api/merchant/auth/login,/api/admin/login,/actuator/**,/doc.html,/swagger-ui/**,/swagger-resources/**,/v3/api-docs/**,/webjars/**
+  # ===== Phase K: 灰度发布配置 (本地兜底, 生产环境请直接走 Nacos data-id: gray-release.yaml group: LSC_GROUP) =====
+  # 优先级：Nacos push > local properties > GrayPolicyRepository loadAll > 内存空。
+  gray:
+    stats:
+      # Redis 共享统计键前缀；多集群可按 namespace / env 区分
+      prefix: ${GRAY_STATS_PREFIX:lsc:gray:stats}
+    nacos:
+      # 开关：关闭时仅走 GrayPolicyProperties 本地 / @ConfigurationProperties 绑定（不走 Nacos Listener）
+      enabled: ${GRAY_NACOS_ENABLED:true}
+      data-id: ${GRAY_NACOS_DATA_ID:gray-release.yaml}
+      group:   ${GRAY_NACOS_GROUP:LSC_GROUP}
+    # 本地兜底示例（开发 / 本地联调，Nacos 不可用时通过这里临时下发 1~2 条策略）：
+    # policies:
+    #   - policy-id: order_gray_001
+    #     route-id: lsc-order-service
+    #     baseline-uri: lb://lsc-order-service
+    #     canary-uri: lb://lsc-order-service-canary
+    #     canary-weight-percent: 10
+    #     status: ACTIVE
+    #     rules:
+    #       - type: HEADER
+    #         key: X-Gray
+    #         operator: EQ
+    #         value: canary
+    #         extra: force-canary
+    #     meta:
+    #       created-by: local-dev
 
 # 日志
 logging:

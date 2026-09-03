@@ -1,7 +1,8 @@
 package com.lianshengtong.gateway.gray;
 
 import com.lianshengtong.common.result.R;
-import lombok.RequiredArgsConstructor;
+import com.lianshengtong.gateway.gray.stats.GrayStatsAggregator;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -19,15 +20,35 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/gateway/gray")
-@RequiredArgsConstructor
 public class GrayReleaseController {
 
     private final GrayPolicyStore store;
     private final GrayPolicyService service;
+    private final GrayStatsAggregator statsAggregator;
+
+    /** Spring 托管构造：statsAggregator 通过 ObjectProvider 可选。 */
+    public GrayReleaseController(GrayPolicyStore store,
+                                 GrayPolicyService service,
+                                 ObjectProvider<GrayStatsAggregator> aggregatorProvider) {
+        this(store, service, aggregatorProvider.getIfAvailable(() -> new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store)));
+    }
+
+    private GrayReleaseController(GrayPolicyStore store,
+                                  GrayPolicyService service,
+                                  GrayStatsAggregator statsAggregator) {
+        this.store = store;
+        this.service = service;
+        this.statsAggregator = statsAggregator == null ? new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store) : statsAggregator;
+    }
+
+    /** 兼容构造（已拿到 service 实例的单测场景；stats 回退 local-only）。 */
+    public GrayReleaseController(GrayPolicyStore store, GrayPolicyService service) {
+        this(store, service, (GrayStatsAggregator) null);
+    }
 
     /** 兼容构造函数（只传入 store 时，自动创建一个纯内存 GrayPolicyService，适合单元测试 / 无 Spring 上下文场景）。 */
     public GrayReleaseController(GrayPolicyStore store) {
-        this(store, defaultInMemoryService(store));
+        this(store, defaultInMemoryService(store), new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store));
     }
 
     private static GrayPolicyService defaultInMemoryService(GrayPolicyStore store) {
@@ -139,7 +160,10 @@ public class GrayReleaseController {
         GrayPolicyStore.Policy p = store.get(policyId);
         if (p == null) return R.fail(404, "policy not found");
         GrayPolicyStore.Stats s = store.statsFor(policyId);
-        return R.ok(buildStatsMap(policyId, p, s));
+        GrayStatsAggregator.AggregatedStats cluster = statsAggregator.aggregated(policyId);
+        Map<String, Object> out = buildStatsMap(policyId, p, s);
+        out.put("clusterStats", clusterStatsMap(cluster));
+        return R.ok(out);
     }
 
     @GetMapping("/summary")
@@ -147,13 +171,30 @@ public class GrayReleaseController {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("repository", service.repositoryImplementation());
         out.put("repositoryAvailable", service.repositoryAvailable());
+        String implName = statsAggregator.getClass().getName();
+        // 取简单名（匿名类会带 $N；优先去掉包前缀）
+        int dot = implName.lastIndexOf('.');
+        out.put("statsImplementation", dot >= 0 ? implName.substring(dot + 1) : implName);
 
         List<GrayPolicyStore.Policy> all = store.list();
         List<Map<String, Object>> perRoute = new ArrayList<>(all.size());
+        Map<String, GrayStatsAggregator.AggregatedStats> clusterMap = statsAggregator.aggregatedAll();
         long totalBaseline = 0, totalCanary = 0, totalRuleForce = 0;
+        long clusterBaseline = 0, clusterCanary = 0, clusterRuleForce = 0;
+        int maxLiveNodes = 1;
+        boolean anyCluster = false;
         for (GrayPolicyStore.Policy p : all) {
             GrayPolicyStore.Stats s = store.statsFor(p.policyId());
             Map<String, Object> r = buildStatsMap(p.policyId(), p, s);
+            GrayStatsAggregator.AggregatedStats agg = clusterMap.get(p.policyId());
+            if (agg != null) {
+                r.put("clusterStats", clusterStatsMap(agg));
+                clusterBaseline += agg.baselineHits();
+                clusterCanary += agg.canaryHits();
+                clusterRuleForce += agg.ruleForceCanary() + agg.ruleForceBaseline();
+                maxLiveNodes = Math.max(maxLiveNodes, agg.liveNodes());
+                if (agg.clusterAvailable()) anyCluster = true;
+            }
             r.put("routeId", p.routeId());
             r.put("status", p.status().name());
             perRoute.add(r);
@@ -164,8 +205,29 @@ public class GrayReleaseController {
         out.put("routeCount", perRoute.size());
         out.put("totalRequestsProcessed", totalBaseline + totalCanary);
         out.put("totalRuleForceHits", totalRuleForce);
+        out.put("clusterTotalRequests", clusterBaseline + clusterCanary);
+        out.put("clusterRuleForceHits", clusterRuleForce);
+        out.put("clusterAvailable", anyCluster);
+        out.put("observedLiveNodes", maxLiveNodes);
         out.put("policies", perRoute);
         return R.ok(out);
+    }
+
+    // ============== internals ==============
+    private static Map<String, Object> clusterStatsMap(GrayStatsAggregator.AggregatedStats a) {
+        long total = a.totalRequests();
+        double ratio = total == 0 ? 0d : (a.canaryHits() * 100d / total);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("available", a.clusterAvailable());
+        out.put("liveNodes", a.liveNodes());
+        out.put("startEpochSec", a.startEpochSec());
+        out.put("totalRequests", total);
+        out.put("baselineHits", a.baselineHits());
+        out.put("canaryHits", a.canaryHits());
+        out.put("canaryRatioPercent", String.format("%.2f", ratio));
+        out.put("ruleForceCanaryHits", a.ruleForceCanary());
+        out.put("ruleForceBaselineHits", a.ruleForceBaseline());
+        return out;
     }
 
     // ============== internals ==============

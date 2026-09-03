@@ -134,6 +134,17 @@
                  声明 provided 避免把 mockito 打进可执行 jar（Spring Boot 打包会排除 provided）。 -->
             <scope>provided</scope>
         </dependency>
+        <!-- 测试：Mock Redis reactive ops (避免引入 embedded-redis) -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- 运行时：解析 Nacos 推送的 YAML 文本（List<String> 场景，@ConfigurationProperties 无法覆盖动态刷新） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

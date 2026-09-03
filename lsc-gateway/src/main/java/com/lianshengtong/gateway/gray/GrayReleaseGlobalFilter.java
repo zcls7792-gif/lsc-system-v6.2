@@ -1,7 +1,9 @@
 package com.lianshengtong.gateway.gray;
 
+import com.lianshengtong.gateway.gray.stats.GrayStatsAggregator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -36,14 +38,33 @@ import java.util.function.Predicate;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class GrayReleaseGlobalFilter implements GlobalFilter, Ordered {
 
     public static final String ATTR_GRAY_VERSION = "lsc.gray.version"; // "baseline" | "canary"
     public static final String ATTR_POLICY_ID    = "lsc.gray.policyId";
 
     private final GrayPolicyStore store;
+    private final GrayStatsAggregator statsAggregator;
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
+
+    /**
+     * 兼容构造（非 Spring 托管的 pure-Java 单测）：仅需 store，statsAggregator 回退 no-op。
+     */
+    public GrayReleaseGlobalFilter(GrayPolicyStore store) {
+        this(store, (GrayStatsAggregator) null);
+    }
+
+    /** Spring 托管构造：通过 ObjectProvider 让 statsAggregator 可选。 */
+    public GrayReleaseGlobalFilter(GrayPolicyStore store, ObjectProvider<GrayStatsAggregator> aggregatorProvider) {
+        this(store, aggregatorProvider.getIfAvailable());
+    }
+
+    private GrayReleaseGlobalFilter(GrayPolicyStore store, GrayStatsAggregator aggregator) {
+        this.store = store;
+        this.statsAggregator = aggregator == null
+                ? new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store)
+                : aggregator;
+    }
 
     @Override public int getOrder() { return -90; }
 
@@ -71,10 +92,13 @@ public class GrayReleaseGlobalFilter implements GlobalFilter, Ordered {
         }
 
         int bucket = (int)((System.currentTimeMillis() / 1000L) % 60);
+        GrayStatsAggregator.Version version;
+        GrayStatsAggregator.RuleForce ruleForce;
         ServerHttpRequest mutated;
         if (canary) {
             s.canaryHits.incrementAndGet();
             s.perSecondCanary[bucket].incrementAndGet();
+            version = GrayStatsAggregator.Version.CANARY;
             // 覆盖路由目标 URI 到 canary (典型: lb://lsc-order-service-canary)
             Route canaryRoute = Route.async()
                     .id(route.getId() + "__canary")
@@ -95,6 +119,7 @@ public class GrayReleaseGlobalFilter implements GlobalFilter, Ordered {
         } else {
             s.baselineHits.incrementAndGet();
             s.perSecondBaseline[bucket].incrementAndGet();
+            version = GrayStatsAggregator.Version.BASELINE;
             mutated = req.mutate()
                     .header("X-Gray-Policy", policy.policyId())
                     .header("X-Gray-Version", "baseline")
@@ -102,6 +127,12 @@ public class GrayReleaseGlobalFilter implements GlobalFilter, Ordered {
             exchange.getAttributes().put(ATTR_GRAY_VERSION, "baseline");
             exchange.getAttributes().put(ATTR_POLICY_ID, policy.policyId());
         }
+        // ruleForce 计算（在 record 前完成，避免 inline 分支）
+        if (ruleHit == null) ruleForce = GrayStatsAggregator.RuleForce.NONE;
+        else if (ruleHit.endsWith("FORCE_CANARY")) ruleForce = GrayStatsAggregator.RuleForce.FORCE_CANARY;
+        else ruleForce = GrayStatsAggregator.RuleForce.FORCE_BASELINE;
+        // 双写：本地 + Redis（best-effort，内部异步 fire-and-forget，非阻塞）
+        statsAggregator.record(policy.policyId(), version, ruleForce);
         // NOTE: ServerWebExchange.mutate() 会复制 attributes（而非共享）。
         // 先把 attributes 放到原 exchange，新 exchange 创建时会自动继承。
         ServerWebExchange nextExchange = exchange.mutate().request(mutated).build();

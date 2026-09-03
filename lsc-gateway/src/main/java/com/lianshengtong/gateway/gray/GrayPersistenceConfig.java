@@ -4,12 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lianshengtong.gateway.gray.spi.GrayPolicyRepository;
 import com.lianshengtong.gateway.gray.spi.InMemoryGrayPolicyRepository;
 import com.lianshengtong.gateway.gray.spi.JdbcGrayPolicyRepository;
+import com.lianshengtong.gateway.gray.stats.GrayStatsAggregator;
+import com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator;
+import com.lianshengtong.gateway.gray.stats.RedisGrayStatsAggregator;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -43,5 +48,22 @@ public class GrayPersistenceConfig {
     @ConditionalOnMissingBean(GrayPolicyRepository.class)
     public GrayPolicyRepository inMemoryGrayPolicyRepository() {
         return new InMemoryGrayPolicyRepository();
+    }
+
+    // ============= Phase K: Stats Aggregator =============
+    @Bean
+    @ConditionalOnClass(ReactiveStringRedisTemplate.class)
+    @ConditionalOnBean(ReactiveStringRedisTemplate.class)
+    public GrayStatsAggregator redisGrayStatsAggregator(
+            ReactiveStringRedisTemplate redis,
+            GrayPolicyStore store,
+            @Value("${lsc.gray.stats.prefix:lsc:gray:stats}") String prefix) {
+        return new RedisGrayStatsAggregator(redis, store, prefix);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(GrayStatsAggregator.class)
+    public GrayStatsAggregator localOnlyGrayStatsAggregator(GrayPolicyStore store) {
+        return new LocalOnlyGrayStatsAggregator(store);
     }
 }
