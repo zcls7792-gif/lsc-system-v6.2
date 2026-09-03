@@ -114,7 +114,17 @@
             <artifactId>aspectjrt</artifactId>
             <version>1.9.22</version>
         </dependency>
-    </dependencies>
+    
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency></dependencies>
 
     <build>
         <finalName>${project.artifactId}</finalName>
