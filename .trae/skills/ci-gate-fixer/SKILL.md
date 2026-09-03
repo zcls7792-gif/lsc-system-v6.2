@@ -1,7 +1,8 @@
----
+***
+
 name: "ci-gate-fixer"
 description: "Diagnoses and fixes CI gate intermittent failures in multi-module Maven+Node hybrid repos. Invoke when CI flaky tests, Java compile errors, memory threshold failures, or GitHub Actions deprecation warnings occur."
----
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # CI Gate Fixer
 
@@ -10,8 +11,11 @@ A durable playbook for resolving CI gate failures in hybrid Maven (Java 17) + No
 ## When to Invoke
 
 - A previously-green CI workflow suddenly fails after a minor change (test threshold, brace edit, Node version bump).
+
 - Failure messages mention: `memory growth exceeded threshold`, `class, interface, enum, or record expected`, `Node 20 actions are deprecated`, `Tests run: N, Failures: 1`, `BUILD FAILURE`, or `Compilation failure`.
+
 - The same test passes locally but flakes on GitHub-hosted runners.
+
 - Dual CI pipelines (Quality Gate + Build/Test/Coverage) need coordinated verification.
 
 ## Diagnosis Workflow
@@ -34,12 +38,12 @@ gh api repos/<OWNER>/<REPO>/actions/jobs/$JOB_ID/logs 2>&1 | strings \
 
 Common error signatures and their root causes:
 
-| Signature | Root Cause |
-|---|---|
-| `class, interface, enum, or record expected` at `File.java:[N,1]` | Extra closing braces after class terminator — Java disallows code outside the class body |
-| `Tests run: 1, Failures: 1 ... 内存增长应低于Xmb` | Memory pressure test threshold too strict for shared runner heap jitter |
-| `Node.js 16 actions are deprecated` / `Node 20 actions are deprecated` | `actions/checkout`, `setup-node`, `upload-artifact`, `cache` pinned to v4 or older |
-| `aria-allowed-role` / `listitem` axe violations | Skip-links wrapper uses invalid `role` on a `<ul>` |
+| Signature                                                              | Root Cause                                                                               |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `class, interface, enum, or record expected` at `File.java:[N,1]`      | Extra closing braces after class terminator — Java disallows code outside the class body |
+| `Tests run: 1, Failures: 1 ... 内存增长应低于Xmb`                             | Memory pressure test threshold too strict for shared runner heap jitter                  |
+| `Node.js 16 actions are deprecated` / `Node 20 actions are deprecated` | `actions/checkout`, `setup-node`, `upload-artifact`, `cache` pinned to v4 or older       |
+| `aria-allowed-role` / `listitem` axe violations                        | Skip-links wrapper uses invalid `role` on a `<ul>`                                       |
 
 ### Step 2 — Brace / paren balance self-check (Java)
 
@@ -112,15 +116,15 @@ Replace all `Runtime.getRuntime().freeMemory()` ad-hoc calls with this helper.
 
 GitHub-hosted runners share heap across tenants; expect 100–300MB of jitter. Reasonable thresholds:
 
-| Test type | Old (strict) | New (runner-safe) |
-|---|---|---|
-| Cache operations (20K writes) | 300MB | 700MB |
-| Key generation (50K iterations) | 300MB | 500MB |
-| File validation (50K iterations) | 200MB | 400MB |
-| Repeated upload (50×) | 100MB | 250MB |
-| Status polling (10K iterations) | 200MB | 400MB |
+| Test type                        | Old (strict) | New (runner-safe) |
+| -------------------------------- | ------------ | ----------------- |
+| Cache operations (20K writes)    | 300MB        | 700MB             |
+| Key generation (50K iterations)  | 300MB        | 500MB             |
+| File validation (50K iterations) | 200MB        | 400MB             |
+| Repeated upload (50×)            | 100MB        | 250MB             |
+| Status polling (10K iterations)  | 200MB        | 400MB             |
 
-Always keep thresholds below the runner's total heap (typically ~2GB for Java modules).
+Always keep thresholds below the runner's total heap (typically \~2GB for Java modules).
 
 **Pattern C — Verify locally with proxy-aware Maven:**
 
@@ -187,19 +191,22 @@ Both must report `conclusion: "success"` before declaring the fix verified.
 
 ## Repair Patterns Summary
 
-| Failure Class | Fix Pattern | Verification |
-|---|---|---|
-| Extra closing braces | Delete surplus `}` after class terminator | `brace_check.py` → `final_depth=0` |
-| Memory threshold too strict | `measureUsedMemory()` + GC settle + widen threshold | Local `mvn test` passes with margin |
-| Maven network unreachable | `~/.m2/settings.xml` proxy config | `curl -x proxy <url>` returns 200 |
-| Node 20 deprecation | Bump `NODE_VERSION` + `actions/*` to v5 | CI annotations clear |
-| a11y role violations | Wrap skip-links in `<nav>` not `<ul role="navigation">` | axe-core reports 0 violations |
+| Failure Class               | Fix Pattern                                             | Verification                        |
+| --------------------------- | ------------------------------------------------------- | ----------------------------------- |
+| Extra closing braces        | Delete surplus `}` after class terminator               | `brace_check.py` → `final_depth=0`  |
+| Memory threshold too strict | `measureUsedMemory()` + GC settle + widen threshold     | Local `mvn test` passes with margin |
+| Maven network unreachable   | `~/.m2/settings.xml` proxy config                       | `curl -x proxy <url>` returns 200   |
+| Node 20 deprecation         | Bump `NODE_VERSION` + `actions/*` to v5                 | CI annotations clear                |
+| a11y role violations        | Wrap skip-links in `<nav>` not `<ul role="navigation">` | axe-core reports 0 violations       |
 
 ## Anti-Patterns
 
 - **Do NOT** blindly add `}` to "balance" braces — always run `brace_check.py` to find the exact surplus line.
+
 - **Do NOT** widen memory thresholds to absurd values (e.g., 2GB) — keep them below runner heap and above observed jitter.
+
 - **Do NOT** use `git commit --amend` on already-pushed branches — create a new fix commit.
+
 - **Do NOT** skip the local `mvn test` verification step before pushing — it catches 90% of issues before CI.
 
 ## Commit Message Convention
@@ -214,3 +221,4 @@ fix(ci,media): stabilize memory stress test threshold and fix brace surplus
   upload 250MB, videoStatus 400MB
 - Delete 3 surplus closing braces causing compile error at L727
 ```
+
