@@ -56,7 +56,7 @@ concurrency:
 
 env:
   CI: "true"
-  NODE_VERSION: "20.x"
+  NODE_VERSION: "24.x"
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/playwright-browsers
 
 
@@ -74,10 +74,10 @@ jobs:
       checks: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -102,7 +102,7 @@ jobs:
 
       - name: Upload Coverage artifacts (HTML + lcov + summary)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: lsc-coverage-${{ github.sha }}
           retention-days: 30
@@ -156,10 +156,10 @@ jobs:
       checks: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -189,7 +189,7 @@ jobs:
 
       - name: Upload audit report artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: lsc-assets-meta-${{ github.sha }}
           retention-days: 30
@@ -249,10 +249,10 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -262,7 +262,7 @@ jobs:
         run: cd lsc-system && npm ci --no-audit --no-fund
 
       - name: Cache Playwright Chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: pw-cache
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
@@ -344,7 +344,7 @@ jobs:
 
       - name: Save master baseline artifact (master/main/tag only)
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: lsc-a11y-baseline
           if-no-files-found: error
@@ -356,7 +356,7 @@ jobs:
 
       - name: Upload A11y artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: lsc-a11y-report-${{ github.sha }}
           retention-days: 30

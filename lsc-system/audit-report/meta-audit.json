@@ -9,7 +9,7 @@
       "titleText": "链盛通LSC系统 · 平台管理后台 V6.2",
       "htmlLang": "zh-CN",
       "metaCount": 22,
-      "linkCount": 15,
+      "linkCount": 14,
       "jsonLdCount": 1,
       "rules": [
         {
@@ -581,5 +581,5 @@
     }
   },
   "strict": true,
-  "_generatedAt": "2026-09-03T01:19:44.005Z"
+  "_generatedAt": "2026-09-03T05:00:16.880Z"
 }

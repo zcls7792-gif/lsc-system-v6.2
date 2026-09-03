@@ -1,9 +1,9 @@
 # 链盛通 LSC 前端资产体量审计报告
 
-- 生成时间: 2026-09-03T01:19:43.750Z
+- 生成时间: 2026-09-03T05:00:17.512Z
 - 严格模式: 开启
 - 结果: FAIL=0 WARN=0  Score=100/100
-- 合计: RAW=407.70 KiB  GZIP=112.90 KiB  压缩率=27.7%
+- 合计: RAW=410.07 KiB  GZIP=113.57 KiB  压缩率=27.7%
 
 ## 阈值
 
@@ -12,7 +12,7 @@
 | 单应用 JS gzip 总和 | ≤200.00 KiB | - | - |
 | 单应用 CSS gzip 总和 | ≤50.00 KiB | - | - |
 | 单文件 gzip 绝对上限 | ≤180.00 KiB | - | - |
-| 全部应用+共享 gzip 总和 | ≤800.00 KiB | 112.90 KiB | PASS |
+| 全部应用+共享 gzip 总和 | ≤800.00 KiB | 113.57 KiB | PASS |
 
 ## 平台管理后台 (platform-admin)
 
@@ -65,14 +65,14 @@
 ## 共享资源 (design-system.css/app-utils.js) (shared)
 
 - 资源文件数: 4
-- RAW  total: 91.54 KiB  (JS 53.10 KiB / CSS 38.44 KiB)
-- GZIP total: 28.46 KiB (JS 18.08 KiB / CSS 10.38 KiB)
-- 压缩率: 31.1%
+- RAW  total: 93.91 KiB  (JS 55.30 KiB / CSS 38.60 KiB)
+- GZIP total: 29.14 KiB (JS 18.68 KiB / CSS 10.46 KiB)
+- 压缩率: 31.0%
 
 | 文件 | 类型 | RAW | GZIP | 压缩率 |
 |---|---|---:|---:|---:|
-| `shared/design-system.css` | CSS | 38.44 KiB | 10.38 KiB | 27% |
+| `shared/design-system.css` | CSS | 38.60 KiB | 10.46 KiB | 27.08% |
+| `shared/keyboard-a11y.js` | JS | 24.11 KiB | 8.21 KiB | 34.05% |
 | `shared/app-utils.js` | JS | 24.58 KiB | 7.89 KiB | 32.1% |
-| `shared/keyboard-a11y.js` | JS | 21.90 KiB | 7.61 KiB | 34.75% |
 | `shared/sw.js` | JS | 6.62 KiB | 2.58 KiB | 39.06% |
 

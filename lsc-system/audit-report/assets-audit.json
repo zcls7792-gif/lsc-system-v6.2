@@ -13,9 +13,9 @@
     "files": 12
   },
   "totals": {
-    "raw": 417482,
-    "gzip": 115608,
-    "compressRatio": 0.2769
+    "raw": 419913,
+    "gzip": 116298,
+    "compressRatio": 0.277
   },
   "apps": {
     "platform-admin": {
@@ -150,9 +150,16 @@
         {
           "file": "shared/design-system.css",
           "ext": "css",
-          "raw": 39360,
-          "gzip": 10629,
-          "ratio": 27
+          "raw": 39531,
+          "gzip": 10706,
+          "ratio": 27.08
+        },
+        {
+          "file": "shared/keyboard-a11y.js",
+          "ext": "js",
+          "raw": 24684,
+          "gzip": 8405,
+          "ratio": 34.05
         },
         {
           "file": "shared/app-utils.js",
@@ -160,13 +167,6 @@
           "raw": 25172,
           "gzip": 8080,
           "ratio": 32.1
-        },
-        {
-          "file": "shared/keyboard-a11y.js",
-          "ext": "js",
-          "raw": 22424,
-          "gzip": 7792,
-          "ratio": 34.75
         },
         {
           "file": "shared/sw.js",
@@ -177,17 +177,17 @@
         }
       ],
       "raw": {
-        "total": 93732,
-        "js": 54372,
-        "css": 39360
+        "total": 96163,
+        "js": 56632,
+        "css": 39531
       },
       "gzip": {
-        "total": 29148,
-        "js": 18519,
-        "css": 10629
+        "total": 29838,
+        "js": 19132,
+        "css": 10706
       }
     }
   },
   "alerts": [],
-  "_generatedAt": "2026-09-03T01:19:43.748Z"
+  "_generatedAt": "2026-09-03T05:00:17.510Z"
 }
