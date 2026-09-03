@@ -62,6 +62,8 @@
         <guava.version>33.1.0-jre</guava.version>
         <jjwt.version>0.12.6</jjwt.version>
         <lombok.version>1.18.32</lombok.version>
+        <!-- Spring Cloud Contract 4.1.x 对应 Spring Cloud 2023.0.x -->
+        <spring-cloud-contract.version>4.1.2</spring-cloud-contract.version>
     </properties>
 
     <dependencyManagement>
@@ -189,6 +191,19 @@
                 <artifactId>caffeine</artifactId>
                 <version>3.1.8</version>
             </dependency>
+            <!-- Spring Cloud Contract (Verifier + Stub Runner) 契约测试 -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-contract-verifier</artifactId>
+                <version>${spring-cloud-contract.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
+                <version>${spring-cloud-contract.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -299,6 +314,34 @@
                             </path>
                         </annotationProcessorPaths>
                     </configuration>
+                </plugin>
+                <!-- Spring Cloud Contract Verifier Maven Plugin (Provider 端生成契约测试 + stubs jar) -->
+                <plugin>
+                    <groupId>org.springframework.cloud</groupId>
+                    <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                    <version>${spring-cloud-contract.version}</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <!-- stubs 分类器：方便 Stub Runner 通过 +:stubs 定位 -->
+                        <classifier>stubs</classifier>
+                        <!-- 契约来源：Groovy DSL (也支持 YAML) -->
+                        <contractsDirectory>src/test/resources/contracts</contractsDirectory>
+                        <!-- 生成的契约测试输出目录 -->
+                        <generatedTestSourcesDirectory>${project.build.directory}/generated-test-sources/contracts</generatedTestSourcesDirectory>
+                        <!-- 契约测试 base class package prefix -->
+                        <basePackageForTests>com.lianshengtong</basePackageForTests>
+                        <!-- 不把契约测试算作普通测试，避免 mvn test 重复跑 -->
+                        <skipInPlugin>true</skipInPlugin>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>convert</goal>
+                                <goal>generateStubs</goal>
+                                <goal>generateTests</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>

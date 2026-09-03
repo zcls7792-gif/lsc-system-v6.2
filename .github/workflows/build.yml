@@ -103,16 +103,109 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  contract-testing:
+    name: Contract Tests (Provider Verifier + Consumer Stub Runner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        role:
+          - name: provider-verifier
+            desc: "Run Spring Cloud Contract verifier tests on 4 provider services"
+            phases: |
+              mvn -B -ntp -pl lsc-ledger-service,lsc-order-service,lsc-user-service,lsc-promotion-service \
+                  test -Dtest='*Contract*Test,UserTest,LedgerTest,OrderTest,PromotionTest' \
+                  -DfailIfNoTests=false \
+                  -Dsurefire.failIfNoSpecifiedTests=false
+          - name: consumer-stub-runner
+            desc: "Run consumer-side stub runner tests on 3 consumer services"
+            phases: |
+              # Step 1: Install stubs of all 4 provider services into local Maven repo
+              mvn -B -ntp -pl lsc-ledger-service,lsc-order-service,lsc-user-service,lsc-promotion-service \
+                  install -DskipTests -Dmaven.javadoc.skip=true
+              # Step 2: Run consumer stub tests
+              mvn -B -ntp -pl lsc-order-service \
+                  test -Dtest='OrderConsumerLedgerStubTest,OrderConsumerPromotionStubTest' -DfailIfNoTests=false
+              mvn -B -ntp -pl lsc-promotion-service \
+                  test -Dtest='PromotionConsumerUserStubTest' -DfailIfNoTests=false
+              mvn -B -ntp -pl lsc-mall-service \
+                  test -Dtest='MallConsumerOrderStubTest' -DfailIfNoTests=false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache Maven repository
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-contract-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+            ${{ runner.os }}-m2-contract-
+
+      - name: Compile before contract run
+        run: mvn -B -ntp -T 1C clean compile test-compile -DskipTests
+
+      - name: ${{ matrix.role.name }}
+        run: |
+          set -euo pipefail
+          cat <<'PHASE' > /tmp/phase.sh
+          ${{ matrix.role.phases }}
+          PHASE
+          bash /tmp/phase.sh
+
+      - name: Aggregate contract test summary
+        if: always()
+        run: |
+          echo "### Contract Test Summary — ${{ matrix.role.name }}" >> $GITHUB_STEP_SUMMARY
+          total=0; failed=0; errors=0; skipped=0
+          for f in $(find . -name 'TEST-*.xml' -path '*/target/surefire-reports/*' 2>/dev/null); do
+            t=$(grep -oE 'tests="[0-9]+"' "$f" | head -1 | grep -oE '[0-9]+' || echo 0)
+            f_=$(grep -oE 'failures="[0-9]+"' "$f" | head -1 | grep -oE '[0-9]+' || echo 0)
+            e=$(grep -oE 'errors="[0-9]+"' "$f" | head -1 | grep -oE '[0-9]+' || echo 0)
+            s=$(grep -oE 'skipped="[0-9]+"' "$f" | head -1 | grep -oE '[0-9]+' || echo 0)
+            total=$((total + t)); failed=$((failed + f_)); errors=$((errors + e)); skipped=$((skipped + s))
+          done
+          {
+            echo "- **Role:** ${{ matrix.role.name }} — ${{ matrix.role.desc }}"
+            echo "- **Total contract tests:** $total"
+            echo "- **Failures:** $failed"
+            echo "- **Errors:** $errors"
+            echo "- **Skipped:** $skipped"
+          } >> $GITHUB_STEP_SUMMARY
+          if [ "$failed" -gt 0 ] || [ "$errors" -gt 0 ]; then
+            echo "::error::Contract testing failed — $failed failures, $errors errors (total $total)."
+          fi
+
+      - name: Upload contract test surefire reports
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: contract-surefire-${{ matrix.role.name }}
+          path: '**/target/surefire-reports/**'
+          if-no-files-found: ignore
+          retention-days: 7
+
   quality-gate:
     name: Quality Gate Summary
     runs-on: ubuntu-latest
-    needs: [build, frontend-unit-tests]
+    needs: [build, frontend-unit-tests, contract-testing]
     if: always()
     steps:
       - name: Enforce quality gate
         run: |
           echo "Build result: ${{ needs.build.result }}"
           echo "Frontend unit tests result: ${{ needs.frontend-unit-tests.result }}"
+          echo "Contract testing result: ${{ needs.contract-testing.result }}"
           fail=0
           if [ "${{ needs.build.result }}" != "success" ]; then
             echo "::error::Build, tests, or coverage check failed. Quality gate NOT passed."
@@ -122,8 +215,12 @@ jobs:
             echo "::error::Frontend unit tests failed. Quality gate NOT passed."
             fail=1
           fi
+          if [ "${{ needs.contract-testing.result }}" != "success" ]; then
+            echo "::error::Contract testing job failed. Quality gate NOT passed."
+            fail=1
+          fi
           if [ "$fail" -ne 0 ]; then exit 1; fi
-          echo "::notice::Quality gate PASSED — all builds, tests, frontend unit tests, and coverage checks succeeded."
+          echo "::notice::Quality gate PASSED — all builds, tests, contract tests, frontend unit tests, and coverage checks succeeded."
 
   frontend-unit-tests:
     name: Frontend tests (vitest + coverage + e2e + a11y)

@@ -99,6 +99,25 @@
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
         </dependency>
+
+        <!-- ========== Contract Testing ========== -->
+        <!-- Provider 端: 给 order-service 暴露 first-order-notify 契约 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-verifier</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>spring-mock-mvc</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Consumer 端: Stub Runner 验证对 user-service 的调用 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -107,6 +126,19 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Spring Cloud Contract Verifier: 给 order-service 生成 notify stubs -->
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <configuration>
+                    <baseClassMappings>
+                        <baseClassMapping>
+                            <contractPackageRegex>.*promotion.*</contractPackageRegex>
+                            <baseClassFQN>com.lianshengtong.promotion.contract.PromotionContractBase</baseClassFQN>
+                        </baseClassMapping>
+                    </baseClassMappings>
+                </configuration>
             </plugin>
         </plugins>
     </build>

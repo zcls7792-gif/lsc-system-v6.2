@@ -114,6 +114,18 @@
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
         </dependency>
+
+        <!-- ========== Contract Testing: Provider (给 promotion-service 等用) ========== -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-verifier</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>spring-mock-mvc</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -121,6 +133,19 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Spring Cloud Contract Verifier: 生成 /api/user/info 契约 stubs -->
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <configuration>
+                    <baseClassMappings>
+                        <baseClassMapping>
+                            <contractPackageRegex>.*user.*</contractPackageRegex>
+                            <baseClassFQN>com.lianshengtong.user.contract.UserContractBase</baseClassFQN>
+                        </baseClassMapping>
+                    </baseClassMappings>
+                </configuration>
             </plugin>
         </plugins>
     </build>
