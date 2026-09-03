@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class GrayPolicyStore {
 
-    public enum Status { ACTIVE, PAUSED, ROLLED_BACK }
+    public enum Status { ACTIVE, PAUSED, ROLLED_BACK, GRADUATED }
 
     /** 一条灰度策略的命中规则 */
     public record Rule(
@@ -181,6 +181,70 @@ public class GrayPolicyStore {
             }
         }
         return out;
+    }
+
+    // ========== 新增：pause / resume / graduate / delete ==========
+
+    /** 暂停：仅改状态 PAUSED，权重保持不变（保留发布意图）；用于临时冻结再观察。 */
+    public Policy pause(String policyId, String operator) {
+        AtomicReference<Policy> ref = policies.get(policyId);
+        if (ref == null) return null;
+        Policy cur = ref.get();
+        if (cur.status() == Status.PAUSED) return cur;
+        Policy next = new Policy(cur.policyId(), cur.routeId(), cur.baselineUri(), cur.canaryUri(),
+                cur.canaryWeightPercent(), cur.rules(), cur.meta(), Status.PAUSED,
+                cur.createdAt(), Instant.now(), operator);
+        ref.set(next);
+        history.addFirst(new History(Instant.now(), policyId, operator, "PAUSE",
+                "status=" + cur.status() + " -> PAUSED"));
+        trimHistory();
+        return next;
+    }
+
+    /** 恢复：PAUSED / ROLLED_BACK → ACTIVE（ROLLED_BACK 恢复权重默认置为 0，等价"重新开启但不放量"，
+     *  实际需要时再 setWeight 逐步调整；避免恢复后立刻进入旧权重冲击线上）。 */
+    public Policy resume(String policyId, String operator) {
+        AtomicReference<Policy> ref = policies.get(policyId);
+        if (ref == null) return null;
+        Policy cur = ref.get();
+        int w = cur.status() == Status.ROLLED_BACK ? 0 : cur.canaryWeightPercent();
+        Policy next = new Policy(cur.policyId(), cur.routeId(), cur.baselineUri(), cur.canaryUri(),
+                w, cur.rules(), cur.meta(), Status.ACTIVE,
+                cur.createdAt(), Instant.now(), operator);
+        ref.set(next);
+        history.addFirst(new History(Instant.now(), policyId, operator, "RESUME",
+                "status=" + cur.status() + " -> ACTIVE; weight=" + cur.canaryWeightPercent() + "% -> " + w + "%"));
+        trimHistory();
+        return next;
+    }
+
+    /** 毕业：新版本已经成为 baseline，标记 GRADUATED 并清权重（不再参与分流决策；保留审计查询）。 */
+    public Policy graduate(String policyId, String operator, String reason) {
+        AtomicReference<Policy> ref = policies.get(policyId);
+        if (ref == null) return null;
+        Policy cur = ref.get();
+        Policy next = new Policy(cur.policyId(), cur.routeId(), cur.baselineUri(), cur.canaryUri(),
+                0, cur.rules(), cur.meta(), Status.GRADUATED,
+                cur.createdAt(), Instant.now(), operator);
+        ref.set(next);
+        history.addFirst(new History(Instant.now(), policyId, operator, "GRADUATE",
+                reason == null ? "promoted to baseline" : reason));
+        trimHistory();
+        return next;
+    }
+
+    /** 物理删除（仅限 GRADUATED / ROLLED_BACK 的策略；ACTIVE/PAUSED 策略拒绝删除以避免误操作）。 */
+    public boolean delete(String policyId, String operator) {
+        AtomicReference<Policy> ref = policies.get(policyId);
+        if (ref == null) return false;
+        Policy cur = ref.get();
+        if (cur.status() != Status.GRADUATED && cur.status() != Status.ROLLED_BACK) return false;
+        policies.remove(policyId);
+        stats.remove(policyId);
+        history.addFirst(new History(Instant.now(), policyId, operator, "DELETE",
+                "removed policy with status=" + cur.status()));
+        trimHistory();
+        return true;
     }
 
     public Stats statsFor(String policyId) {

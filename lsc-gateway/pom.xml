@@ -97,6 +97,43 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <!-- JSON 序列化（rules/meta 字段 JSON 持久化） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Spring JDBC（策略持久化 MySQL 表；未配置 datasource 时自动回退到纯内存仓储） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- H2（仅 test，用于 JDBC 持久化集成测试） -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <!-- GrayReleaseController 兼容构造与测试中都使用 Mockito mock ObjectProvider；生产不会触发该构造。
+                 声明 provided 避免把 mockito 打进可执行 jar（Spring Boot 打包会排除 provided）。 -->
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
