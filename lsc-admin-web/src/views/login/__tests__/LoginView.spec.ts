@@ -39,9 +39,9 @@ describe('admin-web Login View spec', () => {
     expect(w.find('[data-testid="platform-login-title"]').text()).toContain('LSC平台管理后台')
   })
 
-  it('has 6+ platform- prefixed data-testid anchors on Login page', () => {
+  it('has 9 platform- prefixed data-testid anchors on Login page', () => {
     const w = factory()
     const anchors = w.findAll('[data-testid^="platform-"]')
-    expect(anchors.length).toBeGreaterThanOrEqual(6)
+    expect(anchors.length).toBeGreaterThanOrEqual(9)
   })
 })

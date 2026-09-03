@@ -2,10 +2,10 @@ import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
 test.describe('admin-web · data-testid 锚点验证 (24 platform-* anchors)', () => {
-  test('Login 页渲染 8 个 platform-login-* 锚点', async ({ page }) => {
+  test('Login 页渲染 9 个 platform-login-* 锚点', async ({ page }) => {
     await page.goto('/login', { waitUntil: 'networkidle' })
     const anchors = page.locator('[data-testid^="platform-login-"]')
-    await expect(anchors).toHaveCount(8)
+    await expect(anchors).toHaveCount(9)
     await expect(page.locator('[data-testid="platform-login-title"]')).toContainText('LSC平台管理后台')
     await expect(page.locator('[data-testid="platform-login-form"]')).toBeVisible()
     await expect(page.locator('[data-testid="platform-login-submit-btn"]')).toBeVisible()
