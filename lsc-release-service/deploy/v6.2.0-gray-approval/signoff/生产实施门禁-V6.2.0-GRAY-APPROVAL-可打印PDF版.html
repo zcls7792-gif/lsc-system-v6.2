@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>V6.2.0 Gray Approval · 生产实施门禁 · 正式签字版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================
+     Design: Editorial Legal-Contract × Industrial Gate Log
+     Palette: Navy #0B1F3A · Brass #C9A962 · Warm Paper #FAFAF5
+     Fonts : Cormorant Garamond (display) · DM Sans (body)
+     ========================================================= */
+  :root{
+    --navy:#0B1F3A;
+    --navy-2:#132C54;
+    --brass:#C9A962;
+    --brass-2:#E3CE9C;
+    --paper:#FAFAF5;
+    --paper-2:#F0EDE1;
+    --ink:#1C2333;
+    --ink-soft:#3D4758;
+    --rule:#D9D3BF;
+    --stamp-green:#1A7F37;
+    --stamp-red:#B42318;
+    --shadow: 0 10px 40px -18px rgba(11,31,58,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+    font-family:"DM Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    font-size:12.5pt;line-height:1.55;-webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(1200px 600px at 20% -10%, rgba(201,169,98,.08), transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, rgba(11,31,58,.08), transparent 60%);
+  }
+  /* ---- Document wrapper (A4 simulation on screen) ---- */
+  .doc{
+    width:210mm;min-height:297mm;margin:24px auto;padding:22mm 20mm 24mm;background:var(--paper);
+    box-shadow:var(--shadow);position:relative;
+  }
+  /* ---- Top Letterhead ---- */
+  .masthead{position:relative;padding:0 0 14px;border-top:3px double var(--brass);border-bottom:1px solid var(--rule);margin-bottom:18px;}
+  .masthead::before{content:"";position:absolute;left:0;right:0;top:6px;border-top:1px solid var(--brass);opacity:.6}
+  .brand{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
+  .brand h1{margin:0;font-family:"Cormorant Garamond",Georgia,"Noto Serif SC",serif;font-weight:600;
+    font-size:34px;letter-spacing:1.5px;color:var(--navy);line-height:1.05;}
+  .brand h1 small{display:block;font-size:11px;letter-spacing:5.5px;color:var(--ink-soft);font-family:"DM Sans";font-weight:500;margin-top:10px;text-transform:uppercase;}
+  .mark{font-family:"Cormorant Garamond",serif;font-size:14px;color:var(--navy-2);border:1px solid var(--brass);padding:6px 12px;border-radius:2px;background:linear-gradient(180deg,#fffaf0,#F4EAD0);}
+  .mark b{color:#8a6d2a;letter-spacing:1px}
+  .cr-row{margin-top:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px 24px;font-size:12.5px;color:var(--ink-soft)}
+  .cr-row div span{color:var(--ink);font-weight:600}
+
+  /* ---- Section heading (legal contract style) ---- */
+  section{margin:18px 0;page-break-inside:avoid;break-inside:avoid;}
+  .phase{display:grid;grid-template-columns:60px 1fr;gap:18px;align-items:flex-start;padding:10px 0 8px;border-top:1px solid var(--rule);position:relative;}
+  .phase-num{font-family:"Cormorant Garamond",serif;font-size:44px;font-weight:700;color:var(--navy);
+    line-height:1;margin-top:4px;border-right:3px double var(--brass);padding-right:12px;text-align:right;letter-spacing:-1px;}
+  .phase-num em{display:block;font-size:11px;letter-spacing:3px;color:var(--ink-soft);font-style:normal;margin-top:8px;font-family:"DM Sans";font-weight:500;text-transform:uppercase;}
+  .phase-title{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:22px;color:var(--navy);margin:4px 0 2px;}
+  .phase-sub{font-size:12px;color:var(--ink-soft);letter-spacing:.3px;margin-bottom:10px;}
+  .phase-sub b{color:var(--brass);font-weight:600}
+
+  /* ---- Tables ---- */
+  table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 4px;}
+  th,td{border:1px solid var(--rule);padding:7px 9px;vertical-align:top;text-align:left;}
+  th{background:linear-gradient(180deg,#EEF0F3,#E1E4EA);color:var(--navy);font-weight:600;font-size:11.5px;letter-spacing:.2px;text-transform:uppercase;}
+  td code, th code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;background:#F5F1E3;border:1px solid #E8DFC4;color:#5a4a16;padding:1px 5px;border-radius:2px;font-size:11.5px;}
+  tr td:first-child{font-weight:500;color:var(--navy)}
+  .checkbox{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+  .cb{width:14px;height:14px;border:1.5px solid #5c6577;border-radius:2px;display:inline-block;background:#fff;vertical-align:middle;}
+
+  /* ---- Code / Terminal blocks ---- */
+  pre.term{background:#0E1729;color:#E3CE9C;border-left:4px solid var(--brass);padding:10px 12px;border-radius:3px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11px;line-height:1.5;overflow:auto;white-space:pre-wrap;}
+  pre.term b{color:#F0DFAE}
+
+  /* ---- Signature block ---- */
+  .signoff{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .sig{border:1px dashed #b7a97c;border-radius:3px;padding:10px 12px;background:#FBF8EC;}
+  .sig h5{margin:0 0 6px;font-size:12px;color:var(--navy);letter-spacing:.2px;}
+  .sig .line{border-bottom:1px solid #3a445a;height:30px;margin:4px 0;}
+  .sig small{color:var(--ink-soft);display:block;margin-top:2px;font-size:11px}
+  .stamp-row{margin:16px 0 6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .stamp{border:2px dashed;border-radius:50px;padding:10px 12px;text-align:center;font-weight:700;letter-spacing:1px;}
+  .stamp.green{border-color:var(--stamp-green);color:var(--stamp-green);background:linear-gradient(180deg,#E8F6EC,#FFF);}
+  .stamp.yellow{border-color:#8a6d2a;color:#8a6d2a;background:linear-gradient(180deg,#FBF3DA,#FFF);}
+  .stamp.red{border-color:var(--stamp-red);color:var(--stamp-red);background:linear-gradient(180deg,#FCEDEA,#FFF);}
+  .deci{margin-top:10px;border:2px solid var(--navy);border-radius:4px;padding:12px;background:linear-gradient(180deg,#fff,#F6F3E8);position:relative;}
+  .deci h3{margin:0 0 8px;font-family:"Cormorant Garamond",serif;font-weight:600;font-size:22px;color:var(--navy);letter-spacing:1px;}
+  .deci-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+  /* ---- Screen-only toolbar (print hides) ---- */
+  .toolbar{position:fixed;top:14px;right:18px;display:flex;gap:8px;z-index:100;}
+  .toolbar button{font-family:inherit;font-weight:600;background:var(--navy);color:var(--brass-2);border:none;border-radius:2px;padding:8px 14px;cursor:pointer;box-shadow:var(--shadow);letter-spacing:.5px;}
+  .toolbar button.secondary{background:#fff;color:var(--navy);border:1px solid var(--brass)}
+  .placeholder-var{background:#FFF4CC;color:#8a6d00;padding:1px 5px;border-radius:2px;font-weight:600;border:1px dashed #D9C26B;font-family:"JetBrains Mono",monospace;font-size:11.5px;}
+
+  /* ---- Appendix title ---- */
+  .stamp-corner{position:absolute;top:10mm;right:14mm;width:80px;height:80px;border:3px double var(--brass);transform:rotate(12deg);opacity:.25;pointer-events:none;}
+
+  /* =========================================
+     PRINT: A4, no colors, no toolbar, crisp
+     ========================================= */
+  @page { size: A4; margin: 12mm 14mm 16mm 14mm; }
+  @media print {
+    html,body{background:#fff;color:#000;background-image:none;}
+    .doc{box-shadow:none;width:auto;min-height:auto;margin:0;padding:0;}
+    .toolbar{display:none!important}
+    .stamp-corner{opacity:.5}
+    table, th, td{border-color:#000!important;color:#000;}
+    th{background:#ddd!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .sig{background:#fff5d6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .stamp{background:#fff!important}
+    pre.term{background:#F3F0E2!important;color:#000!important;border-color:#999!important}
+    a{color:#000;text-decoration:none}
+    section{page-break-inside:avoid;break-inside:avoid;}
+    .page-break-before{page-break-before:always;break-before:page;}
+    .placeholder-var{background:#fff!important;color:#000!important;border-color:#000!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- Screen-only utility toolbar (hidden in PDF output) -->
+<div class="toolbar no-print">
+  <button class="secondary" onclick="demoFill()">🧪 填充演示示例</button>
+  <button onclick="window.print()">🖨 打印 / 另存为 PDF</button>
+</div>
+
+<div class="doc">
+  <div class="stamp-corner"></div>
+
+  <!-- ====== Letterhead / Cover ====== -->
+  <header class="masthead">
+    <div class="brand">
+      <h1>Production Change · Gate Sign-Off
+        <small>连生通 · LSC Platform · 发布域 · 灰度审批工作流上线</small>
+      </h1>
+      <div class="mark">PACKAGE <b>V6.2.0 · GRAY-APPROVAL</b></div>
+    </div>
+    <div class="cr-row">
+      <div>CR 编号：<span>CR-LSC-RELEASE-2026-09-04-GRAY-APPROVAL</span></div>
+      <div>优先级：<span>P1 · 本期计划</span></div>
+      <div>建议窗口：<span>工作日 <span class="placeholder-var">[[WINDOW-START]]</span> – <span class="placeholder-var">[[WINDOW-END]]</span>（14:00–18:00）</span></div>
+      <div>Rollback ≤：<span>8 分钟（含 DDL）</span></div>
+      <div>交付包 TGZ MD5：<span class="placeholder-var">[[TGZ-MD5]]</span></div>
+      <div>Downtime：<span>0 秒（Online DDL + K8s 金丝雀 / VM 滚动）</span></div>
+    </div>
+  </header>
+
+  <!-- ====== P · Stakeholders ====== -->
+  <section>
+    <div class="phase">
+      <div class="phase-num">P<em>Party · 干系人</em></div>
+      <div>
+        <div class="phase-title">CR 干系人登记（发布前 24h 全员确认）</div>
+        <div class="phase-sub">任何一项 <b>签名缺失</b> → 禁止进入 Phase 0。签名规则：手写 / 电子签（PDF 签署版归档 CMDB ≥ 180 天）。</div>
+        <table>
+          <thead><tr><th style="width:28%">角色</th><th>手写签名栏</th><th style="width:28%">姓名 / 工号 / 手机</th><th style="width:18%">日期</th></tr></thead>
+          <tbody>
+            <tr><td>技术负责人 (Tech Lead · 技术一票否决)</td><td class="line"></td><td><span class="placeholder-var">[[TL-NAME]]</span> / <span class="placeholder-var">[[TL-ID]]</span></td><td><span class="placeholder-var">[[DATE]]</span></td></tr>
+            <tr><td>产品 / 业务 Owner (业务一票否决)</td><td class="line"></td><td><span class="placeholder-var">[[PO-NAME]]</span> · <span class="placeholder-var">[[PO-ROLE]]</span></td><td><span class="placeholder-var">[[DATE]]</span></td></tr>
+            <tr><td>SRE On-Call（当晚值班）</td><td class="line"></td><td><span class="placeholder-var">[[SRE-NAME]]</span> / 📞 <span class="placeholder-var">[[SRE-PHONE]]</span></td><td><span class="placeholder-var">[[DATE]]</span></td></tr>
+            <tr><td>DBA 授权（DDL 执行授权）</td><td class="line"></td><td><span class="placeholder-var">[[DBA-NAME]]</span> / <span class="placeholder-var">[[DBA-ID]]</span></td><td><span class="placeholder-var">[[DATE]]</span></td></tr>
+            <tr><td>安全评审（鉴权/密钥合规）</td><td class="line"></td><td><span class="placeholder-var">[[SEC-NAME]]</span> / <span class="placeholder-var">[[SEC-ID]]</span></td><td><span class="placeholder-var">[[DATE]]</span></td></tr>
+            <tr><td><b>实施主责（操作人）</b></td><td class="line"></td><td><span class="placeholder-var">[[OP1-NAME]]</span> / <span class="placeholder-var">[[OP1-ID]]</span> · ▢ 开发 ▢ SRE ▢ DBA</td><td><span class="placeholder-var">[[DATE]]</span></td></tr>
+            <tr><td><b>复核主责（独立复核）</b></td><td class="line"></td><td><span class="placeholder-var">[[OP2-NAME]]</span> / <span class="placeholder-var">[[OP2-ID]]</span> · ▢ 开发 ▢ SRE ▢ DBA</td><td><span class="placeholder-var">[[DATE]]</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== Phase 0 ====== -->
+  <section>
+    <div class="phase">
+      <div class="phase-num">0<em>Pre-Check · 前置</em></div>
+      <div>
+        <div class="phase-title">Phase 0 · 前置准备（发布前 1 小时）</div>
+        <div class="phase-sub">实施：<b><span class="placeholder-var">[[OP1-NAME]]</span></b>　·　复核：<b><span class="placeholder-var">[[OP2-NAME]]</span></b></div>
+        <table>
+          <thead><tr><th>#</th><th>核验内容</th><th>结果</th><th>OP 小签</th><th>REV 小签</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr><td>0.1</td><td>目标环境：<span class="placeholder-var">[[ENV]]</span>；集群/NS：<span class="placeholder-var">[[CLUSTER]]</span></td><td><span class="cb"></span> Y / N</td><td></td><td></td><td></td></tr>
+            <tr><td>0.2</td><td>当前时间位于 Change Window 工作日 14:00–18:00 且非封网</td><td><span class="cb"></span> Y / N</td><td></td><td></td><td>时钟：<span class="placeholder-var">[[NOW]]</span></td></tr>
+            <tr><td>0.3</td><td>DB lsc_release 账号 CREATE / INDEX / DROP 权限 in</td><td><span class="cb"></span> Y / N</td><td></td><td></td><td>附件 0.3</td></tr>
+            <tr><td>0.4</td><td>Nacos 账号对 NS <span class="placeholder-var">[[NACOS-NS]]</span> 有 Config 发布权</td><td><span class="cb"></span> Y / N</td><td></td><td></td><td>附件 0.4</td></tr>
+            <tr><td>0.5</td><td>XXL-JOB 账号对执行器 lsc-release-executor 有 Job 创</td><td><span class="cb"></span> Y / N</td><td></td><td></td><td>附件 0.5</td></tr>
+            <tr><td>0.6</td><td>K8s/VM 部署操作权限通过</td><td><span class="cb"></span> Y / N</td><td></td><td></td><td>附件 0.6</td></tr>
+            <tr><td>0.7</td><td>回滚物料：上一稳定镜像 tag = <span class="placeholder-var">[[PREV-IMG]]</span></td><td><span class="cb"></span> Y / N</td><td></td><td></td><td>附件 0.7</td></tr>
+            <tr><td>0.8</td><td>发布作战室 in；On-Call 电话 in；值班表同步</td><td><span class="cb"></span> Y / N</td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+        <div class="signoff">
+          <div class="sig"><h5>🟦 Phase 0 · 实施人 GO/NO-GO 签字</h5><div class="line"></div><small>姓名：<span class="placeholder-var">[[OP1-NAME]]</span>　日期：<span class="placeholder-var">[[DATETIME]]</span></small></div>
+          <div class="sig"><h5>🟦 Phase 0 · 复核人 GO/NO-GO 签字</h5><div class="line"></div><small>姓名：<span class="placeholder-var">[[OP2-NAME]]</span>　日期：<span class="placeholder-var">[[DATETIME]]</span></small></div>
+        </div>
+        <div class="stamp-row">
+          <div class="stamp green">GO → 进入 Phase 1</div>
+          <div class="stamp red">NO-GO：____________</div>
+          <div class="stamp yellow">DEADLINE PASS → 关闭本次 CR</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== Phase 1 · DDL ====== -->
+  <section class="page-break-before">
+    <div class="phase">
+      <div class="phase-num">1<em>DB · DDL</em></div>
+      <div>
+        <div class="phase-title">Phase 1 · 数据库 DDL（预计 2 min）</div>
+        <div class="phase-sub">执行方式：<b>主库单节点执行</b> → 只读从库异步追；ONLINE DDL 无锁，不阻塞业务写入。</div>
+<pre class="term">$ <b>mysql</b> -h $MYSQL_MASTER -P 3306 -u $MYSQL_USER -p lsc_release \
+     &lt; sql/V6.2.0__gray_approval_flow.DDL.sql 2&gt;&amp;1 | tee /tmp/V6.2.0-DDL.log
+# 回滚（异常时立即）
+$ <b>mysql</b> -h $MYSQL_MASTER -P 3306 -u $MYSQL_USER -p lsc_release \
+     &lt; sql/ROLLBACK-DROP-V6.2.0-gray-approval.sql</pre>
+        <table>
+          <thead><tr><th>#</th><th>核验</th><th>阈值</th><th>实测</th><th>OP</th><th>REV</th></tr></thead>
+          <tbody>
+            <tr><td>1.1</td><td>DDL 输出 ERROR 数 / Warning 数</td><td>0 / ≤ 3</td><td></td><td></td><td></td></tr>
+            <tr><td>1.2</td><td>表落地：flow / node / audit / release_config</td><td>4 / 4</td><td>____ / 4</td><td></td><td></td></tr>
+            <tr><td>1.3</td><td>索引落地：flow 4 + node 4 + audit 4</td><td>12 / 12</td><td>____ / 12</td><td></td><td></td></tr>
+            <tr><td>1.4</td><td>release_config 种子（rate_max/min k_min/max alpha）</td><td>5 行</td><td>____ / 5</td><td></td><td></td></tr>
+            <tr><td>1.5</td><td>Rollback DDL 已演练（如本项失败 = N 强制 NO-GO）</td><td>Y</td><td><span class="cb"></span></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+        <div class="signoff">
+          <div class="sig"><h5>实施人签字 · Phase 1</h5><div class="line"></div><small><span class="placeholder-var">[[OP1-NAME]]</span> @ <span class="placeholder-var">[[DATETIME]]</span></small></div>
+          <div class="sig"><h5>复核人签字 · Phase 1</h5><div class="line"></div><small><span class="placeholder-var">[[OP2-NAME]]</span> @ <span class="placeholder-var">[[DATETIME]]</span></small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== Phase 2 · Nacos ====== -->
+  <section>
+    <div class="phase">
+      <div class="phase-num">2<em>Nacos · Config</em></div>
+      <div>
+        <div class="phase-title">Phase 2 · Nacos 配置发布（预计 3 min）</div>
+        <div class="phase-sub">Namespace：<span class="placeholder-var">[[NACOS-NS]]</span> · Group：<code>LSC_RELEASE_GROUP</code> · dataId：<code>gray-approval.yaml</code></div>
+        <table>
+          <thead><tr><th>#</th><th>关键配置项（核对 UI / API 结果）</th><th>期望值</th><th>实测</th><th>OP</th><th>REV</th></tr></thead>
+          <tbody>
+            <tr><td>2.1</td><td>gray.approval.default-required-approvals</td><td><code>2</code></td><td></td><td></td><td></td></tr>
+            <tr><td>2.2</td><td>gray.approval.approver-role（与 UAC/LDAP 对齐）</td><td><code>ROLE_RELEASE_ADMIN</code></td><td></td><td></td><td></td></tr>
+            <tr><td>2.3</td><td>stale-executing-seconds / execute-retry-max</td><td>120s / 3</td><td></td><td></td><td></td></tr>
+            <tr><td>2.4</td><td>alert.channel + feishu.webhook-url（生产群机器人）</td><td>feishu + 非空</td><td></td><td></td><td></td></tr>
+            <tr><td>2.5</td><td>订阅者数量 == lsc-release Running Pod 数</td><td>____ / ____</td><td>____ / ____</td><td></td><td></td></tr>
+          </tbody>
+        </table>
+        <div class="signoff">
+          <div class="sig"><h5>实施人签字 · Phase 2</h5><div class="line"></div><small><span class="placeholder-var">[[OP1-NAME]]</span> @ <span class="placeholder-var">[[DATETIME]]</span></small></div>
+          <div class="sig"><h5>复核人签字 · Phase 2</h5><div class="line"></div><small><span class="placeholder-var">[[OP2-NAME]]</span> @ <span class="placeholder-var">[[DATETIME]]</span></small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== Phase 3 · XXL-JOB ====== -->
+  <section>
+    <div class="phase">
+      <div class="phase-num">3<em>XXL-JOB · 3 Tasks</em></div>
+      <div>
+        <div class="phase-title">Phase 3 · XXL-JOB 三任务注册（预计 5 min）</div>
+        <div class="phase-sub">脚本：<code>scripts/03-xxljob-create-jobs.sh</code>（先填 <code>XXL_JOB_ADMIN / XXL_JOB_TOKEN</code>）</div>
+<pre class="term">$ <b>bash</b> scripts/03-xxljob-create-jobs.sh 2&gt;&amp;1 | tee /tmp/V6.2.0-XXL.log
+# Admin 每个任务 → 点 "执行一次"：HandlerReturn == 200, 无 ERROR 级日志</pre>
+        <table>
+          <thead><tr><th>Handler 名称</th><th>Cron</th><th>执行器分组</th><th>首次「执行一次」结果</th><th>OP</th><th>REV</th></tr></thead>
+          <tbody>
+            <tr><td><code>grayAuditJob</code></td><td><code>0 0/10 * * * ?</code>（每 10 min 审计缺口巡检）</td><td>lsc-release-executor</td><td><span class="cb"></span> HTTP 200 · 日志 OK</td><td></td><td></td></tr>
+            <tr><td><code>grayApprovalSelfHealJob</code></td><td><code>0 0/5 * * * ?</code>（每 5 min stuckExecuting 自愈）</td><td>lsc-release-executor</td><td><span class="cb"></span> HTTP 200 · 日志 OK</td><td></td><td></td></tr>
+            <tr><td><code>grayStalePolicyEnforceJob</code></td><td><code>0 30 3 * * ?</code>（夜 03:30 归档/清理）</td><td>lsc-release-executor</td><td><span class="cb"></span> HTTP 200 · 日志 OK</td><td></td><td></td></tr>
+          </tbody>
+        </table>
+        <div class="signoff">
+          <div class="sig"><h5>实施人签字 · Phase 3</h5><div class="line"></div><small><span class="placeholder-var">[[OP1-NAME]]</span></small></div>
+          <div class="sig"><h5>复核人签字 · Phase 3</h5><div class="line"></div><small><span class="placeholder-var">[[OP2-NAME]]</span></small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== Phase 4 · Deploy ====== -->
+  <section class="page-break-before">
+    <div class="phase">
+      <div class="phase-num">4<em>Deploy · 发布</em></div>
+      <div>
+        <div class="phase-title">Phase 4 · 服务发布（K8s 金丝雀 推荐 / VM 备选）</div>
+        <div class="phase-sub">强制路径：<b>Canary → 观察 ≥ 10 min → Full</b>；若任一红线 → Rollback。</div>
+
+        <h4 style="margin:10px 0 4px;color:var(--navy)">4a · K8s（默认）· canary 20% → full 3 Pod</h4>
+<pre class="term">$ <b>bash</b> scripts/04b-k8s-deploy.sh apply   # canary 1 Pod + 20% svc slice
+# 观察 ≥ 10 min
+$ <b>bash</b> scripts/04b-k8s-deploy.sh full    # 3 Pod Running; 金丝雀 scale to 0
+$ <b>bash</b> scripts/04b-k8s-deploy.sh rollback  # 异常：上一 ReplicaSet + 恢复 svc</pre>
+        <table>
+          <thead><tr><th>#</th><th>观察项</th><th>阈值</th><th>实测</th><th>OP</th><th>REV</th></tr></thead>
+          <tbody>
+            <tr><td>4a.1</td><td>金丝雀 Pod Ready</td><td>1/1</td><td>____/____</td><td></td><td></td></tr>
+            <tr><td>4a.2</td><td>新增 ERROR 级日志数</td><td>≤ 5 条可解释</td><td>____</td><td></td><td></td></tr>
+            <tr><td>4a.3</td><td>JVM 堆（after GC peak）</td><td>&lt; 80 %</td><td>____%</td><td></td><td></td></tr>
+            <tr><td>4a.4</td><td>HTTP 5xx 率（金丝雀维度）</td><td>&lt; 0.1 %</td><td>____%</td><td></td><td></td></tr>
+            <tr><td>4a.5</td><td>Redisson lock_failures_per_min</td><td>&lt; 1</td><td>____</td><td></td><td></td></tr>
+            <tr><td>4a.6</td><td>Nacos 订阅数（金丝雀加入后）</td><td>== 期望</td><td>____/____</td><td></td><td></td></tr>
+            <tr><td>4a.7</td><td>Full 后 Pod Running</td><td>3 / 3</td><td>____/____</td><td></td><td></td></tr>
+            <tr><td>4a.8</td><td>Rollback 触发了？（Y/N；若 Y，附 log + 冒烟）</td><td>N（正常）</td><td><span class="cb"></span></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+
+        <h4 style="margin:14px 0 4px;color:var(--navy)">4b · VM（备选）· systemd</h4>
+<pre class="term">$ <b>bash</b> scripts/04a-vm-deploy.sh apply    # backup → stop → replace → start → verify
+$ <b>bash</b> scripts/04a-vm-deploy.sh rollback</pre>
+        <div class="checkbox"><span class="cb"></span> 4b.1 Pre-backup tar 生成成功（大小≈旧 jar）　<span class="cb"></span> 4b.2 systemd active(running)　<span class="cb"></span> 4b.3 health UP(db/redis)　<span class="cb"></span> 4b.4 Rollback 演练</div>
+
+        <div class="signoff">
+          <div class="sig"><h5>实施人签字 · Phase 4</h5><div class="line"></div><small><span class="placeholder-var">[[OP1-NAME]]</span> · Rollback 触发：<span class="cb"></span> 否 / <span class="cb"></span> 是</small></div>
+          <div class="sig"><h5>复核人签字 · Phase 4</h5><div class="line"></div><small><span class="placeholder-var">[[OP2-NAME]]</span> · 耗时：____ 分钟</small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== Phase 5 · Smoke + Observability ====== -->
+  <section class="page-break-before">
+    <div class="phase">
+      <div class="phase-num">5<em>Gate · 最终门禁</em></div>
+      <div>
+        <div class="phase-title">Phase 5 · 冒烟 + 观测 + 告警实测（最终决策）</div>
+        <div class="phase-sub">本 Phase <b>任意 1 条未通过</b> → 无条件 NO-GO + Rollback。</div>
+
+        <h4 style="margin:8px 0 4px;color:var(--navy)">5.1 七项冒烟断言</h4>
+<pre class="term">$ BASE=https://release.lianshengtong.com/lsc-release \
+  TOKEN="Bearer &lt;OPS-JWT&gt;" bash scripts/05-smoke.sh 2&gt;&amp;1 | tee /tmp/V6.2.0-SMOKE.log</pre>
+        <table>
+          <thead><tr><th>#</th><th>接口 / 场景</th><th>断言</th><th>实测</th><th>通过</th><th>小签</th></tr></thead>
+          <tbody>
+            <tr><td>①</td><td>GET /actuator/health</td><td>status = UP</td><td></td><td><span class="cb"></span></td><td></td></tr>
+            <tr><td>②</td><td>POST 审批单（WEIGHT_CHANGE）</td><td>R.code=0 & flowId≠空</td><td>id = ____</td><td><span class="cb"></span></td><td></td></tr>
+            <tr><td>③</td><td>审批人 1 同意</td><td>R.code=0</td><td></td><td><span class="cb"></span></td><td></td></tr>
+            <tr><td>④</td><td>审批人 2 同意（达到 required=2）</td><td>R.code=0 & flowStatus ∈ {APPROVED, EXECUTING, SUCCEEDED}</td><td>status = ____</td><td><span class="cb"></span></td><td></td></tr>
+            <tr><td>⑤</td><td>GET /approvals/{id} 详情</td><td>R.code=0 & nodes≥2</td><td>nodes = ____</td><td><span class="cb"></span></td><td></td></tr>
+            <tr><td>⑥</td><td>GET /approvals?page=1 分页含新单</td><td>R.code=0 & 命中</td><td></td><td><span class="cb"></span></td><td></td></tr>
+            <tr><td>⑦</td><td>新审批单 → 拒绝</td><td>R.code=0 & status=REJECTED</td><td></td><td><span class="cb"></span></td><td></td></tr>
+          </tbody>
+        </table>
+        <p style="margin:6px 0"><b>合计：____ / 7</b>（非 7 → Rollback + NO-GO）。日志归档：<code>/tmp/V6.2.0-SMOKE.log</code>。</p>
+
+        <h4 style="margin:14px 0 4px;color:var(--navy)">5.2 Grafana 8 面板观测</h4>
+        <div class="checkbox"><span class="cb"></span> 5.2.1 Import `grafana/gray-rollout-dashboard.json` 成功，Prometheus 数据源可选（生产 Datasource）　<span class="cb"></span> 5.2.2 审批单状态分布有值　<span class="cb"></span> 5.2.3 事件 TPS 有尖峰（刚冒烟过）　<span class="cb"></span> 5.2.4 锁 p95 &lt; 50ms，HTTP 5xx = 0%</div>
+
+        <h4 style="margin:14px 0 4px;color:var(--navy)">5.3 告警通道双实测（强制 2/2）</h4>
+        <table>
+          <thead><tr><th>#</th><th>场景</th><th>操作</th><th>预期证据</th><th>实际</th><th>通过</th></tr></thead>
+          <tbody>
+            <tr><td>5.3.1</td><td>Feishu 主通道</td><td>SelfHealJob 手动 trigger / 或拒绝一条审批单</td><td>作战室飞书群收到卡片</td><td>截图：附件 5.3.1</td><td><span class="cb"></span></td></tr>
+            <tr><td>5.3.2</td><td>Logging 降级通道 <span style="color:var(--stamp-red)">★</span></td><td>Nacos 临时把 webhook 改成 <code>http://127.0.0.1:1/down</code>，触发一次告警后立即还原</td><td>应用日志 1 条 ERROR 级 <code>[ReleaseAlert][Logging]</code> 含 <code>[DEGRADED-FROM-FEISHU]</code> + <code>[root-cause]</code></td><td>grep：附件 5.3.2</td><td><span class="cb"></span></td></tr>
+          </tbody>
+        </table>
+
+        <!-- FINAL DECISION -->
+        <div class="deci" style="margin-top:18px">
+          <h3>🎯 Final Go / No-Go · 最终决策签章</h3>
+          <p style="margin:2px 0 10px;color:var(--ink-soft);font-size:12px">五人合议：TL + PO + SRE On-Call + 实施主责 + 复核主责。<b>任何一票否决 → 无条件 NO-GO 并执行 Rollback。</b></p>
+          <div class="stamp-row">
+            <div class="stamp green">🟢 GO 全量发布</div>
+            <div class="stamp yellow">🟡 条件 GO（≤1 项）</div>
+            <div class="stamp red">🔴 NO-GO 回滚</div>
+          </div>
+          <div class="deci-grid">
+            <div class="sig"><h5>TL 签字</h5><div class="line"></div><small><span class="placeholder-var">[[TL-NAME]]</span>　<span class="placeholder-var">[[DATETIME]]</span></small></div>
+            <div class="sig"><h5>PO 签字</h5><div class="line"></div><small><span class="placeholder-var">[[PO-NAME]]</span>　<span class="placeholder-var">[[DATETIME]]</span></small></div>
+            <div class="sig"><h5>SRE On-Call</h5><div class="line"></div><small><span class="placeholder-var">[[SRE-NAME]]</span>　<span class="placeholder-var">[[DATETIME]]</span></small></div>
+            <div class="sig"><h5>DBA （Phase 1 已授权，最终确认）</h5><div class="line"></div><small><span class="placeholder-var">[[DBA-NAME]]</span>　<span class="placeholder-var">[[DATETIME]]</span></small></div>
+            <div class="sig"><h5>实施主责</h5><div class="line"></div><small><span class="placeholder-var">[[OP1-NAME]]</span>　<span class="placeholder-var">[[DATETIME]]</span></small></div>
+            <div class="sig"><h5>复核主责</h5><div class="line"></div><small><span class="placeholder-var">[[OP2-NAME]]</span>　<span class="placeholder-var">[[DATETIME]]</span></small></div>
+          </div>
+          <div style="margin-top:10px;padding:8px 10px;border:1px dashed var(--brass);font-size:12px;color:var(--ink-soft);background:#FFFDF2">
+            GO 备注：____________________________________________　Rollback 触发报告位置：____________________________________
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== Appendix · Attachments Index ====== -->
+  <section class="page-break-before">
+    <div class="phase">
+      <div class="phase-num">A<em>Appendix · 附件</em></div>
+      <div>
+        <div class="phase-title">附录 · 附件归档清单（随 PDF 一起存入 CR 工单 / CMDB）</div>
+        <div class="phase-sub">打包时 ZIP 命名：<code>CR-LSC-RELEASE-2026-09-04-GRAY-APPROVAL-附件.zip</code>；MD5 = <span class="placeholder-var">[[ZIP-MD5]]</span>。</div>
+        <table>
+          <thead><tr><th style="width:14%">编号</th><th>文件名 / 位置</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>附件 0.3</td><td><code>03-db-privileges.png / txt</code></td><td>MySQL DDL 账号 SHOW GRANTS 输出</td></tr>
+            <tr><td>附件 0.4</td><td><code>04-nacos-privileges.png</code></td><td>Nacos 权限 UI 截图</td></tr>
+            <tr><td>附件 0.5</td><td><code>05-xxljob-privileges.png</code></td><td>XXL-JOB 权限 UI 截图</td></tr>
+            <tr><td>附件 0.6</td><td><code>06-k8s-or-vm-permission.txt</code></td><td>kubectl auth / systemctl 探测</td></tr>
+            <tr><td>附件 0.7</td><td><code>07-prev-image-digest.txt</code></td><td>上一稳定镜像摘要（Rollback 锚点）</td></tr>
+            <tr><td>附件 1.x</td><td><code>/tmp/V6.2.0-DDL.log</code> + 表/索引/种子 count 截图</td><td>DDL 执行证据</td></tr>
+            <tr><td>附件 2.x</td><td>Nacos 订阅者列表截图 + yaml diff</td><td>Nacos 发布证据</td></tr>
+            <tr><td>附件 3.x</td><td><code>/tmp/V6.2.0-XXL.log</code> + 三任务首次 run 截图</td><td>XXL-JOB 证据</td></tr>
+            <tr><td>附件 4</td><td><code>/tmp/V6.2.0-K8s-apply.log</code>（或 VM 日志）</td><td>发布日志；Rollback 发生时追加 ROLLBACK log</td></tr>
+            <tr><td>附件 5.1</td><td><code>/tmp/V6.2.0-SMOKE.log</code></td><td>7/7 冒烟断言全输出（本附件 NO-GO 触发最高）</td></tr>
+            <tr><td>附件 5.2</td><td><code>52-grafana-8panels.png</code></td><td>Grafana 导入后 8 面板全屏截图（拼接成 1 图）</td></tr>
+            <tr><td>附件 5.3.1</td><td><code>531-feishu-receive-screenshot.png</code></td><td>飞书群告警卡片截图（5.3.1 主通道）</td></tr>
+            <tr><td>附件 5.3.2 ⭐</td><td><code>532-degraded-grep.txt</code></td><td>日志中 `[ReleaseAlert][Logging] ... [DEGRADED-FROM-FEISHU]` grep 结果（5.3.2 降级通道强制证据）</td></tr>
+            <tr><td>附件 5.4.1 / 5.4.2</td><td>（如执行）自愈/归档任务的手动 trigger 日志</td><td>可选；未执行时在备注填 N/A 即可</td></tr>
+          </tbody>
+        </table>
+
+        <p style="margin-top:18px;padding-top:10px;border-top:3px double var(--brass);color:var(--ink-soft);font-size:11.5px;text-align:center">
+          Document Version <b>V6.2.0-GATE-SIGNOFF-V2</b>　·　Generated by LSC Platform @ 2026-09-04　·　Format: Original MD + Browser Print Signed PDF (双份归档)
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  /* 填充演示示例按钮 - 打印时不可见 */
+  function demoFill(){
+    const today = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    const date = `2026-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+    const time = `${pad(today.getHours())}:${pad(today.getMinutes())}`;
+    const map = {
+      "[[TL-NAME]]":"张敏", "[[TL-ID]]":"100001",
+      "[[PO-NAME]]":"李伟","[[PO-ROLE]]":"发布域 · 产品负责人",
+      "[[SRE-NAME]]":"王浩","[[SRE-PHONE]]":"138-0000-0001",
+      "[[DBA-NAME]]":"赵宇","[[DBA-ID]]":"300007",
+      "[[SEC-NAME]]":"陈曦","[[SEC-ID]]":"400023",
+      "[[OP1-NAME]]":"周一","[[OP1-ID]]":"200045",
+      "[[OP2-NAME]]":"吴桐","[[OP2-ID]]":"200188",
+      "[[ENV]]":"生产（Production）","[[CLUSTER]]":"prod-cn-shanghai / ns: prod-lsc",
+      "[[NACOS-NS]]":"prod-lsc-release",
+      "[[PREV-IMG]]":"registry.lsc/lsc-release:v6.1.9-main-abc1234",
+      "[[NOW]]":`${date}  ${time}`,
+      "[[DATE]]":date,"[[DATETIME]]":`${date} ${time}`,
+      "[[TGZ-MD5]]":"88b3a1ff…（以实际文件为准）",
+      "[[WINDOW-START]]":"2026-09-05","[[WINDOW-END]]":"2026-09-05",
+      "[[ZIP-MD5]]":"f2c8d901…（以实际 ZIP 为准）"
+    };
+    document.querySelectorAll(".placeholder-var").forEach(el=>{
+      const k = el.textContent.trim();
+      if (map[k]) el.textContent = map[k];
+    });
+    document.querySelectorAll(".cb").forEach((cb,i)=>{ if(i%3!==2) cb.style.background="#1A7F37"; });
+    alert("已填充演示示例占位 → 接下来可点「打印 / 另存为 PDF」生成正式 PDF。\n\n实际发布时请人工用真实姓名/工号替换！");
+  }
+</script>
+</body>
+</html>
