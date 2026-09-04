@@ -1,21 +1,21 @@
 package com.lianshengtong.release.alert;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
- * 默认告警通道实现：仅记录 ERROR 日志
+ * 默认告警通道实现：仅记录 ERROR 日志。
  * <p>
- * 当容器中不存在其他 {@link AlertChannel} 实现时启用，作为兜底方案。
- * 生产环境注入具体的告警通道（如 DingtalkAlertChannel / FeishuAlertChannel）后会自动覆盖。
+ *   启用条件：{@code alert.channel=logging} 或者 {@code alert.channel} 未配置（matchIfMissing=true）。
+ *   生产环境配置 {@code alert.channel=feishu} 后，{@link FeishuAlertChannel} 启用，本实现自动不注入。
  * </p>
  *
  * @author lsc
  */
 @Slf4j
 @Component
-@ConditionalOnMissingBean(AlertChannel.class)
+@ConditionalOnProperty(name = "alert.channel", havingValue = "logging", matchIfMissing = true)
 public class LoggingAlertChannel implements AlertChannel {
 
     @Override

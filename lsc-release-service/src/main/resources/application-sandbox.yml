@@ -1,0 +1,156 @@
+# =========================================================================
+#  application-sandbox.yml —— 本地上线冒烟专用配置
+#  用法：java -jar lsc-release-service.jar --spring.profiles.active=sandbox \
+#          --spring.cloud.bootstrap.enabled=false
+#  要点：
+#   · --spring.cloud.bootstrap.enabled=false 放在命令行（必须），让 Spring Boot 3 彻底不启
+#     用 bootstrap 上下文 → Nacos Config PostProcessor 不抢先进 8848
+#   · 真正的 Nacos/Seata/XXL/Rabbit/Redis 等中间件开关都在本文件里控制
+#   · MySQL+Redis 用本地 127.0.0.1
+# =========================================================================
+spring:
+
+  # ---- 1) 外部中间件 Nacos / Discovery 全关 ----
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+        register-enabled: false
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+    # 彻底禁用服务注册（Nacos 后台线程不会再去做 service register → 不连 9848）
+    service-registry:
+      auto-registration:
+        enabled: false
+
+  # ---- 2) 自动装配排除：sandbox 不启 Rabbit/Seata/FastJson/SystemMetrics(容器无cgroup) ----
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.boot.autoconfigure.amqp.RabbitTemplateAutoConfiguration
+      - io.seata.spring.boot.autoconfigure.SeataAutoConfiguration
+      - io.seata.spring.boot.autoconfigure.SeataCoreAutoConfiguration
+      # FastJSON2 Spring 6 HTTP Converter 自动装配（sandbox 缺 fastjson2-extension-spring6 jar，已用 Stub 替代）
+      - com.alibaba.fastjson2.spring.boot.autoconfigure.FastJson2HttpMessageConverterAutoConfiguration
+      - com.alibaba.fastjson2.spring.boot3.autoconfigure.FastJson2HttpMessageConverterAutoConfiguration
+      # 容器环境 Cgroup v1/v2 结构与本地不一致，ProcessorMetrics 抛 "anyController is null" → 禁用整组系统指标
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+      # 连带的 JVM/Disk/Process 指标若也访问 cgroup，一并禁用（不影响业务 & Prometheus 仍可用 JVM 基础指标）
+      - org.springframework.boot.actuate.autoconfigure.metrics.ProcessMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.DiskSpaceMetricsAutoConfiguration
+
+  # ---- 3) 数据源：本地 MariaDB(10.11) 走 mysql-connector 协议（完全兼容）----
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/lsc_release?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true
+    username: root
+    password: ""
+    hikari:
+      maximum-pool-size: 8
+      minimum-idle: 2
+      connection-timeout: 10000
+      idle-timeout: 60000
+      max-lifetime: 300000
+      connection-test-query: SELECT 1
+
+  # ---- 4) Redis ----
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      # sandbox 专用密码（通过 redis-cli CONFIG SET 注入）
+      password: "lsc-sandbox-redis-2026!"
+      database: 2
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 1
+
+# ---- 5) Seata AT：显式关闭（即使 exclude 自动装配里已经做了，双保险） ----
+seata:
+  enabled: false
+  enable-auto-data-source-proxy: false
+
+# ---- 6) XXL-JOB ----
+xxl:
+  job:
+    admin:
+      addresses:   # 留空 = 不连 admin
+    accessToken:   # 空
+    executor:
+      appname: lsc-release-service-sandbox
+
+# ---- 7) Redisson 分布式锁（与上面 Redis 一致） ----
+redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://127.0.0.1:6379"
+      password: "lsc-sandbox-redis-2026!"
+      database: 2
+      connectionMinimumIdleSize: 2
+      connectionPoolSize: 8
+      idleConnectionTimeout: 10000
+      connectTimeout: 5000
+      timeout: 3000
+      retryAttempts: 2
+      retryInterval: 1000
+    threads: 4
+    nettyThreads: 8
+    codec: !<org.redisson.codec.JsonJacksonCodec> {}
+
+# ---- 8) 灰度审批（sandbox 默认 2 人，自愈关） ----
+gray:
+  # ------- 关键：沙箱网关直连 URL（绕开 Spring Cloud LoadBalancer） -------
+  #   若 18000 无监听 → FallbackFactory 返回空串降级，不影响审批主流程
+  gateway-url: http://127.0.0.1:18000
+  approval:
+    default-required-approvals: 2
+    approver-role: ROLE_RELEASE_ADMIN
+    execute-retry-max: 0
+    audit-chain-enabled: false
+    stale-executing-seconds: 120
+    self-heal-retry-interval-seconds: 600
+
+# ---- 8a) 其余 Feign 客户端直连 URL（全部绕开 LoadBalancer） ----
+ledger:
+  gateway-url: http://127.0.0.1:18001   # 18001 = 假地址, Feign fail → 降级
+ai:
+  gateway-url: http://127.0.0.1:18002   # 18002 = 假地址, Feign fail → 降级
+
+# ---- 9) 告警只打日志 ----
+alert:
+  channel: logging
+  feishu:
+    webhook-url: ""
+release:
+  alert-receivers: "ops_smoke"
+
+# ---- 10) 日志级别：INFO 为主 ----
+logging:
+  level:
+    root: INFO
+    com.lianshengtong.release: DEBUG
+    com.lianshengtong.release.service.impl.GrayApprovalServiceImpl: DEBUG
+    org.redisson: WARN
+    com.alibaba.nacos: ERROR
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# ---- 11) 监控 / Knife4j ----
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn

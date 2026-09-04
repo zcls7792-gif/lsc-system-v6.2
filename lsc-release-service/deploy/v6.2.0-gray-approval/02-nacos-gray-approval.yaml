@@ -1,0 +1,55 @@
+# =========================================================================
+#  Priority 1 / Step 2 — Nacos：lsc-release-service 新增配置片段（LSC_GROUP）
+#  =========================================================================
+#  操作步骤：
+#   1) 登录 Nacos Console → 配置管理 → 配置列表 → 选 namespace=prod、group=LSC_GROUP
+#   2) 搜索 Data ID = lsc-release-service；存在则「编辑 + 追加」下面两段；不存在则新建（YAML 格式）
+#   3) 保存后点「发布」
+#   4) 观察「监听者查询」：lsc-release-service 所有 Pod 显示"已订阅最新"（默认 bootstrap 热拉，无需重启）
+#  =========================================================================
+
+# ====== [NEW] 灰度审批工作流参数（Phase M Go-Live） ======
+gray:
+  approval:
+    # 默认审批人数：首次上线建议 2；稳定后关键动作可前端单独指定 3
+    default-required-approvals: 2
+    # 审批人池角色：与 lsc-user-service 角色中心一致（ROLE_ 前缀常量）
+    approver-role: ROLE_RELEASE_ADMIN
+    # 自愈任务允许的 EXECUTE_FAILED 自动重试次数（>3 一般代表网关持续不可达，需要人工）
+    execute-retry-max: 3
+    # 链上存证开关：金融合规阶段再打开；打开前必须在 GRAY_APPROVAL_AUDIT_CHAIN=true + 配置链节点
+    audit-chain-enabled: false
+    # EXECUTING 超过此秒数视为"卡住"（网关超时 / 进程 crash / 双活切换都可能），自愈任务发起 DB 修复
+    stale-executing-seconds: 120
+    # 两次自动重试之间 ≥ 10min（避免短时间打爆网关 policyStats）
+    self-heal-retry-interval-seconds: 600
+    # 审批人 24h 未处理 → 下一版 idle-reminder 任务飞书催办（预留开关）
+    approver-idle-remind-hours: 24
+
+# ====== [NEW] 告警通道：默认 logging → 生产必须切 feishu ======
+alert:
+  # channel 枚举：logging | feishu | dingtalk（当前实现 logging + feishu）
+  channel: feishu
+  feishu:
+    # ⚠️ 绝对不要把 webhook 明文写在 YAML 里！
+    # 正确方式二选一：
+    #   A) Nacos Secret 加密配置（推荐）：在 lsc-common-infra.yaml 加密后以变量引用
+    #   B) 容器 env 注入：K8s Secret → Pod env ALERT_FEISHU_WEBHOOK
+    webhook-url: ${ALERT_FEISHU_WEBHOOK:}
+
+# ====== [EXISTING 保留] 已有 release 配置，不要覆盖 ======
+# release:
+#   alert-receivers: ${ALERT_RECEIVERS:admin-super-001,admin-super-002}
+
+# =========================================================================
+#  附加：lsc-gateway-routes.yaml（若需显式放行审批 API）
+#  说明：/api/release/** 默认已经在网关路由到 lsc-release-service，
+#        通常不需要额外加，但如果你按路径做了 JWT 鉴权白/黑名单，请加：
+#
+#  - id: release-gray-approval
+#    uri: lb://lsc-release-service
+#    predicates:
+#      - Path=/api/release/gray/**
+#    filters:
+#      - StripPrefix=0
+# =========================================================================

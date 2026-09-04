@@ -14,11 +14,18 @@ import java.util.Map;
 /**
  * LSC账本服务 Feign 客户端
  * <p>
+ * 路由策略：
+ *   <ul>
+ *     <li>生产：不设 {@code ledger.gateway-url} → 走服务名+lsc-ledger-service+Nacos LB；</li>
+ *     <li>沙箱/联调：设置 {@code ledger.gateway-url=http(s)://host:port} → 走直连 URL，不依赖 LB。</li>
+ *   </ul>
  * 调用 lsc-ledger-service 执行释放操作(L_LOCKED -> L_AVAILABLE)，
  * 由 Seata AT 模式保障跨服务一致性。
  * </p>
  */
-@FeignClient(name = "lsc-ledger-service", contextId = "lscLedgerClient")
+@FeignClient(name = "lsc-ledger-service",
+             url  = "${ledger.gateway-url:}",
+             contextId = "lscLedgerClient")
 public interface LscLedgerFeignClient {
 
     /**

@@ -9,11 +9,16 @@ import java.util.Map;
 /**
  * Phase M：Feign 客户端 —— 调用 lsc-gateway 的灰度接口。
  * <p>
- * 若 Feign + Nacos 未启用，也可以通过 {@code GrayGatewayHttpClient} 走 RestTemplate/OkHttp 兜底；
- * 但既然 lsc-release-service 的 pom 已引入 openfeign，这里走 Feign（Sentinel 可加 fallbackFactory）。
+ * 路由策略（Spring Cloud OpenFeign 4.x 原生占位符配置）：
+ *   <ul>
+ *     <li>生产：<b>不设置</b> {@code gray.gateway-url} → 走 {@code name=服务名} + Spring Cloud LoadBalancer + Nacos 服务发现；</li>
+ *     <li>沙箱/联调：<b>设置</b> {@code gray.gateway-url=http(s)://host:port} → 走直连 URL，<b>完全不依赖</b> LB/Nacos。</li>
+ *   </ul>
+ * 若目标网关不可达，FallbackFactory {@link GrayGatewayClientFallbackFactory} 返回空结果降级，业务继续。
  */
 @FeignClient(
         name = "lsc-gateway",
+        url  = "${gray.gateway-url:}",
         path = "/api/gateway/gray",
         contextId = "grayGateway",
         fallbackFactory = com.lianshengtong.release.feign.fallback.GrayGatewayClientFallbackFactory.class

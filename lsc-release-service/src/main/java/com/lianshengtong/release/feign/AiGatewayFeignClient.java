@@ -11,11 +11,18 @@ import java.util.Map;
 /**
  * AI网关 Feign 客户端
  * <p>
+ * 路由策略：
+ *   <ul>
+ *     <li>生产：不设 {@code ai.gateway-url} → 走服务名 lsc-ai-gateway + Nacos LB；</li>
+ *     <li>沙箱/联调：设置 {@code ai.gateway-url=http(s)://host:port} → 走直连 URL，不依赖 LB。</li>
+ *   </ul>
  * 调用 lsc-ai-gateway 的释放趋势预测能力，获取未来7-30天核销率预测，
  * 供每日释放任务参数调节与告警参考。
  * </p>
  */
-@FeignClient(name = "lsc-ai-gateway", contextId = "aiGatewayClient")
+@FeignClient(name = "lsc-ai-gateway",
+             url  = "${ai.gateway-url:}",
+             contextId = "aiGatewayClient")
 public interface AiGatewayFeignClient {
 
     /**
