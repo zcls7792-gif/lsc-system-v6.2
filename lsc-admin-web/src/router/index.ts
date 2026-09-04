@@ -140,6 +140,17 @@ export const routes: RouteRecordRaw[] = [
         name: 'ReleaseSimulation',
         component: () => import('@/views/release/Simulation.vue'),
         meta: { title: '仿真推演', group: '释放管理' }
+      },
+      {
+        path: 'approval',
+        name: 'ReleaseGrayApproval',
+        component: () => import('@/views/release/Approval.vue'),
+        meta: {
+          title: '灰度审批',
+          group: '释放管理',
+          icon: 'Stamp',
+          roles: ['super_admin', 'tech_admin', 'release_admin']
+        }
       }
     ]
   },
