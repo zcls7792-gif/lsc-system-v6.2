@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lianshengtong.common.dto.PageResult;
 import com.lianshengtong.common.result.R;
+import com.lianshengtong.release.config.GrayApprovalProperties;
 import com.lianshengtong.release.dto.GrayApprovalDTO;
 import com.lianshengtong.release.entity.gray.GrayApprovalAudit;
 import com.lianshengtong.release.entity.gray.GrayApprovalFlow;
@@ -14,7 +15,9 @@ import com.lianshengtong.release.feign.GrayGatewayClient;
 import com.lianshengtong.release.mapper.gray.GrayApprovalAuditMapper;
 import com.lianshengtong.release.mapper.gray.GrayApprovalFlowMapper;
 import com.lianshengtong.release.mapper.gray.GrayApprovalNodeMapper;
+import com.lianshengtong.release.observability.GrayApprovalMetrics;
 import com.lianshengtong.release.service.GrayApprovalService;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -53,6 +56,8 @@ public class GrayApprovalServiceImpl implements GrayApprovalService {
     private final GrayApprovalAuditMapper  auditMapper;
     private final GrayGatewayClient        gatewayClient;
     private final ObjectMapper             objectMapper;
+    private final GrayApprovalProperties   props;
+    private final GrayApprovalMetrics      metrics;
     private final org.springframework.beans.factory.ObjectProvider<RedissonClient> redissonProvider;
 
     private static final String LOCK_KEY = "gray:approval:flow:";
@@ -70,7 +75,8 @@ public class GrayApprovalServiceImpl implements GrayApprovalService {
         flow.setTitle(StringUtils.hasText(req.title) ? req.title : defaultTitle(req));
         flow.setApplyReason(req.applyReason);
         flow.setStatus(GrayApprovalFlow.Status.DRAFT.name());
-        int required = req.requiredApprovals == null ? 2 : req.requiredApprovals;
+        int configuredDefault = props.getDefaultRequiredApprovals();
+        int required = req.requiredApprovals == null ? configuredDefault : req.requiredApprovals;
         flow.setRequiredApprovals(Math.max(1, Math.min(5, required)));
         flow.setApprovedCount(0);
         flow.setTotalNodes(flow.getRequiredApprovals());
@@ -81,11 +87,12 @@ public class GrayApprovalServiceImpl implements GrayApprovalService {
 
         // 按 requiredApprovals 生成审批节点
         List<String> approvers = req.approvers;
+        String approverRole = props.getApproverRole();
         for (int i = 0; i < flow.getRequiredApprovals(); i++) {
             GrayApprovalNode n = new GrayApprovalNode();
             n.setFlowId(flow.getId());
             n.setNodeOrder(i + 1);
-            n.setApproverRole("ROLE_RELEASE_ADMIN");
+            n.setApproverRole(approverRole);
             n.setApprover(approvers != null && approvers.size() > i ? approvers.get(i) : null);
             n.setNodeStatus(GrayApprovalNode.NodeStatus.WAITING.name());
             nodeMapper.insert(n);
@@ -101,6 +108,7 @@ public class GrayApprovalServiceImpl implements GrayApprovalService {
         flow.setUpdatedBy(req.applicant);
         flowMapper.updateById(flow);
         audit(flow.getId(), flow.getFlowNo(), "FLOW_SUBMITTED", req.applicant, Map.of());
+        metrics.incFlowCreated(flow.getFlowType());
         return flow;
     }
 
@@ -134,10 +142,12 @@ public class GrayApprovalServiceImpl implements GrayApprovalService {
             node.setDecidedAt(LocalDateTime.now());
             node.setComment(req.comment);
             node.setSignature(req.signature);
-            node.setNodeStatus(Boolean.TRUE.equals(req.approved)
+            String decision = Boolean.TRUE.equals(req.approved)
                     ? GrayApprovalNode.NodeStatus.APPROVED.name()
-                    : GrayApprovalNode.NodeStatus.REJECTED.name());
+                    : GrayApprovalNode.NodeStatus.REJECTED.name();
+            node.setNodeStatus(decision);
             nodeMapper.updateById(node);
+            metrics.incNodeDecision(decision, or(node.getApproverRole(), props.getApproverRole()));
 
             // 拒绝 → 整单 REJECTED
             if (!Boolean.TRUE.equals(req.approved)) {
@@ -262,9 +272,11 @@ public class GrayApprovalServiceImpl implements GrayApprovalService {
         flowMapper.updateById(flow);
         audit(flow.getId(), flow.getFlowNo(), "FLOW_EXECUTING", operator, Map.of());
 
+        Timer.Sample sample = metrics.startExecuteSample();
         long start = System.currentTimeMillis();
         String resp;
         boolean success;
+        String exceptionClass = "none";
         try {
             R<Map<String,Object>> r = switch (GrayApprovalFlow.Type.valueOf(flow.getFlowType())) {
                 case GRADUATE -> gatewayClient.graduate(flow.getPolicyId(), operator, Map.of("approvalFlowNo", flow.getFlowNo()));
@@ -280,13 +292,29 @@ public class GrayApprovalServiceImpl implements GrayApprovalService {
                 }
                 case LAUNCH -> throw new UnsupportedOperationException("LAUNCH type apply via policy upsert API directly; not supported.");
             };
-            resp = toJson(Map.of("success", r.isSuccess(), "code", r.getCode(), "data", r.getData(), "msg", r.getMessage()));
+            // R.fail() 可能 data==null / msg==null：Map.of() 抛 NPE → 改用 HashMap 容纳 null
+            Map<String,Object> rMap = new HashMap<>();
+            rMap.put("success", r.isSuccess());
+            rMap.put("code", r.getCode());
+            rMap.put("data", r.getData());
+            rMap.put("msg", r.getMessage());
+            resp = toJson(rMap);
             success = r.isSuccess();
         } catch (Exception ex) {
-            resp = toJson(Map.of("success", false, "exception", ex.getClass().getSimpleName(), "message", ex.getMessage()));
+            // ex.getMessage() 也可能为 null → 兼容 HashMap
+            Map<String,Object> errMap = new HashMap<>();
+            errMap.put("success", false);
+            errMap.put("exception", ex.getClass().getSimpleName());
+            errMap.put("message", ex.getMessage());
+            resp = toJson(errMap);
             success = false;
+            exceptionClass = ex.getClass().getSimpleName();
         }
         long cost = System.currentTimeMillis() - start;
+        metrics.stopExecuteSample(sample, flow.getFlowType(), success);
+        if (!success) {
+            metrics.incExecuteFail(flow.getFlowType(), exceptionClass);
+        }
         flow.setExecuteCostMs(cost);
         flow.setExecuteResponse(resp);
         flow.setUpdatedBy(operator);
@@ -315,16 +343,19 @@ public class GrayApprovalServiceImpl implements GrayApprovalService {
             RLock lock = r.getFairLock(LOCK_KEY + flowId);
             try {
                 boolean ok = lock.tryLock(10, 60, TimeUnit.SECONDS);
+                metrics.incLockContention("redisson", ok);
                 if (!ok) throw new IllegalStateException("cannot acquire distributed lock for flow " + flowId);
                 return new AcquiredLock(null, lock, true);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                metrics.incLockContention("redisson", false);
                 throw new IllegalStateException("lock interrupted");
             }
         }
         // 降级：JVM 级 ReentrantLock（单实例部署仍安全；多实例不保证，但不会造成数据脏写，因为 DB 层事务 + 乐观判断）
         ReentrantLock mutex = JVM_LOCKS.computeIfAbsent(flowId, k -> new ReentrantLock());
         boolean ok = mutex.tryLock();
+        metrics.incLockContention("jvm", ok);
         if (!ok) throw new IllegalStateException("cannot acquire jvm mutex for flow " + flowId);
         return new AcquiredLock(mutex, null, false);
     }
@@ -353,6 +384,7 @@ public class GrayApprovalServiceImpl implements GrayApprovalService {
         a.setOperator(operator);
         a.setDetailJson(toJson(detail));
         auditMapper.insert(a);
+        metrics.incAuditWrite(action);
     }
 
     private String toJson(Object o) {

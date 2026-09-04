@@ -15,8 +15,8 @@ import java.util.Map;
 @FeignClient(
         name = "lsc-gateway",
         path = "/api/gateway/gray",
-        contextId = "grayGateway"
-        // fallbackFactory = GrayGatewayClientFallbackFactory.class  (可选)
+        contextId = "grayGateway",
+        fallbackFactory = com.lianshengtong.release.feign.fallback.GrayGatewayClientFallbackFactory.class
 )
 public interface GrayGatewayClient {
 

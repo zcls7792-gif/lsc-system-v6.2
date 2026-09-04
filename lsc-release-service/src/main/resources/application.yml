@@ -153,7 +153,34 @@ release:
   # 释放锁过期时间(秒) - 防死锁
   lock-expire-seconds: 7200
   # 超级管理员告警接收人(释放比例越界/任务失败时推送)
-  alert-receivers: admin-super-001,admin-super-002
+  alert-receivers: ${ALERT_RECEIVERS:admin-super-001,admin-super-002}
+
+# ============================================================
+# 灰度审批工作流（详细设计 §13.1 配置）
+# ============================================================
+gray:
+  approval:
+    # 创建审批单未显式指定时使用默认审批人数；范围 [1..5]，超出自动 clip
+    default-required-approvals: ${GRAY_APPROVAL_DEFAULT_REQUIRED:2}
+    # 默认审批人角色（CreateRequest 未指定 approvers 列表时使用的审批人池）
+    approver-role: ${GRAY_APPROVAL_ROLE:ROLE_RELEASE_ADMIN}
+    # 自愈任务允许的最大自动重试次数（EXECUTE_FAILED）
+    execute-retry-max: ${GRAY_APPROVAL_RETRY_MAX:3}
+    # 审计流水链上存证（预留，合规场景接入后打开）
+    audit-chain-enabled: ${GRAY_APPROVAL_AUDIT_CHAIN:false}
+    # 超过该秒数的 EXECUTING 状态视为"卡住"，由自愈任务回查 gateway policyStats 修复
+    stale-executing-seconds: ${GRAY_APPROVAL_STALE_EXECUTING_SEC:120}
+    # 自愈重试之间的最小间隔（秒）
+    self-heal-retry-interval-seconds: ${GRAY_APPROVAL_RETRY_INTERVAL_SEC:600}
+    # 审批人多久未操作触发提醒（暂未使用，下一版 reminder job）
+    approver-idle-remind-hours: ${GRAY_APPROVAL_IDLE_REMIND_H:24}
+
+# 告警通道：默认 logging；生产环境可切到 feishu/dingtalk/pagerduty
+alert:
+  channel: ${ALERT_CHANNEL:logging}
+  feishu:
+    # 生产通过 Nacos Secret / 环境变量注入，禁止明文入库
+    webhook-url: ${ALERT_FEISHU_WEBHOOK:}
 
 # 日志
 logging:

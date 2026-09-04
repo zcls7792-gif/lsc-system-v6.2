@@ -1,11 +1,13 @@
 package com.lianshengtong.release.job;
 
 import com.lianshengtong.common.result.R;
+import com.lianshengtong.release.alert.AlertChannel;
 import com.lianshengtong.release.feign.GrayGatewayClient;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -30,6 +32,11 @@ import java.util.Map;
 public class GrayAuditJobHandler {
 
     private final GrayGatewayClient gatewayClient;
+    /** AlertChannel 可插拔：默认 Logging；配置 alert.channel=feishu 时推送飞书卡片。 */
+    private final AlertChannel alertChannel;
+
+    @Value("${release.alert-receivers:admin-super-001,admin-super-002}")
+    private String alertReceivers;
 
     /** Consecutive SLO failures >= this -> fire P1 warning (before hard rollback kicks in). */
     private final int warnConsecutiveFailures = Math.max(1,
@@ -107,8 +114,15 @@ public class GrayAuditJobHandler {
         }
     }
 
-    /** Alert sink placeholder - plug into org alerting (DingTalk/Feishu/PagerDuty) in production. */
+    /** Alert sink - routes to pluggable AlertChannel (default logs; optionally Feishu/Dingtalk/PagerDuty). */
     private void alert(String level, String title, String detail) {
+        String fullTitle = "[" + level + "] " + title;
+        String fullDetail = detail + "\n[source] grayAuditJob in lsc-release-service";
         log.error("[ALERT-{}] {}\n  detail: {}", level, title, detail);
+        try {
+            alertChannel.send(alertReceivers, fullTitle, fullDetail);
+        } catch (Exception ex) {
+            log.warn("[gray-audit] alert channel failed: {}", ex.getMessage());
+        }
     }
 }
