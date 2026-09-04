@@ -1,0 +1,177 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": { "refId": "A", "matchAny": true, "tags": [], "type": "dashboard" },
+        "type": "dashboard"
+      },
+      {
+        "datasource": { "type": "prometheus", "uid": "Prometheus" },
+        "enable": true,
+        "name": "发布窗口 / 审批事件",
+        "target": {
+          "expr": "increase(gray_approval_events_total[5m]) > 0",
+          "refId": "ann-events"
+        },
+        "textField": "type={{app_type}} flow={{flow_type}} status={{to_status}}",
+        "titleFormat": "审批事件"
+      }
+    ]
+  },
+  "description": "V6.2.0 灰度审批工作流 & Rollout 状态看板。数据源：Prometheus（Micrometer Actuator + GrayApprovalMetrics 自定义指标）。",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "tags": ["lsc-release", "gray-approval", "v6.2.0"],
+  "timepicker": { "refresh_intervals": ["10s","30s","1m","5m","15m","30m","1h"] },
+  "time": { "from": "now-24h", "to": "now" },
+  "timezone": "Asia/Shanghai",
+  "title": "Gray Rollout Dashboard (V6.2.0)",
+  "schemaVersion": 39,
+  "version": 1,
+  "uid": "gray-rollout-dashboard-v620",
+  "refresh": "30s",
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "审批单总数（按状态）",
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "gray_approval_flows_current", "legendFormat": "{{flow_status}}" }
+      ],
+      "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+      "colorMode": "value",
+      "graphMode": "area",
+      "justifyMode": "auto",
+      "orientation": "horizontal",
+      "textMode": "value_and_name"
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "审批创建 / 通过 / 拒绝 事件 TPS (5m)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (event_type) (rate(gray_approval_events_total[5m]))", "legendFormat": "{{event_type}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } } },
+      "legend": { "showLegend": true, "placement": "bottom" }
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "自愈任务执行次数（超时→EXECUTE_FAILED 补救）",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "increase(gray_selfheal_actions_total[5m])", "legendFormat": "{{action}}" }
+      ],
+      "legend": { "showLegend": true, "placement": "bottom" }
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "Redisson 分布式锁争用（tryLock 等待 ms p95 / 死锁拒绝次数）",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(gray_lock_acquire_seconds_bucket[5m])))", "legendFormat": "lock_wait_p95" },
+        { "refId": "B", "expr": "sum(rate(gray_lock_failures_total[5m])) * 60", "legendFormat": "lock_failures_per_min" }
+      ]
+    },
+    {
+      "id": 5, "type": "stat", "title": "JVM 堆内存 (used / max)",
+      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "jvm_memory_used_bytes{area=\"heap\"} / 1024^3", "legendFormat": "used_GiB" },
+        { "refId": "B", "expr": "jvm_memory_max_bytes{area=\"heap\"} / 1024^3", "legendFormat": "max_GiB" }
+      ],
+      "unit": "gbytes",
+      "reduceOptions": { "calcs": ["lastNotNull"] }
+    },
+    {
+      "id": 6, "type": "stat", "title": "告警发送（通道 / 失败）",
+      "gridPos": { "h": 7, "w": 6, "x": 18, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "increase(alert_sent_total[1h])", "legendFormat": "sent_{{channel}}_1h" },
+        { "refId": "B", "expr": "increase(alert_errors_total[1h])", "legendFormat": "errors_{{channel}}_1h" }
+      ],
+      "reduceOptions": { "calcs": ["lastNotNull"] }
+    },
+    {
+      "id": 7, "type": "table", "title": "Top 10 审批链审计（近 1 小时 / 异常记录高亮）",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "description": "如果生产接入了 Loki/ES 日志源，此处应替换为日志数据源；当前版本展示近 1h 审计事件计数。",
+      "targets": [
+        { "refId": "A", "expr": "topk(10, sum by (flow_id, action, approver) (increase(gray_audit_events_total[1h])))", "format": "table", "instant": true }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "renameByName": {
+              "flow_id": "审批单 ID",
+              "action": "审计动作",
+              "approver": "操作人",
+              "Value": "近 1h 次数"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Tomcat HTTP 5xx 率 & 请求量",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{uri!=\"/actuator/**\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{uri!=\"/actuator/**\"}[5m]))", "legendFormat": "HTTP_5xx_ratio" },
+        { "refId": "B", "expr": "sum(rate(http_server_requests_seconds_count{uri!=\"/actuator/**\"}[5m]))", "legendFormat": "QPS", "yAxisPlacement": "RIGHT" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.001 },
+              { "color": "red", "value": 0.01 }
+            ]
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "QPS" }, "properties": [{ "id": "thresholds", "value": { "mode": "absolute", "steps": [] } }] }
+        ]
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "Prometheus" },
+        "refresh": 1,
+        "label": "数据源",
+        "description": "指向 lsc-release-service 的 /actuator/prometheus 采集目标对应的 Prometheus 数据源"
+      },
+      {
+        "name": "cluster",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "Prometheus" },
+        "query": "label_values(system_metrics_cpu_usage, cluster)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": false,
+        "label": "集群",
+        "description": "用于筛选生产集群 / 预发集群"
+      }
+    ]
+  }
+}

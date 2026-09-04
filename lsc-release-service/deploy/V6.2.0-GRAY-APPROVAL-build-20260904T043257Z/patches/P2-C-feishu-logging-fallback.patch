@@ -1,0 +1,25 @@
+# 应用对象：src/main/java/com/lianshengtong/release/alert/FeishuAlertChannel.java
+# 目的：任何飞书发送失败（网络 / 协议 / 空 webhook）→ 降级到 LoggingAlertChannel.send()，
+#       保证生产有 1 条 ERROR 级 "[ReleaseAlert][Logging]" 可被 ELK/Loki 检索。
+#
+# 核心改动 A (webhook 空分支):
+-            log.warn("[Alert][Feishu] webhook-url empty, fall back to logging. receivers={} title={}", receivers, title);
+-            return;
++            log.warn("[Alert][Feishu] webhook-url empty, fall back to LoggingAlertChannel. receivers={} title={}", receivers, title);
++            new LoggingAlertChannel().send(receivers, title, content);
++            return;
+#
+# 核心改动 B (RestClientException catch):
+-        } catch (RestClientException ex) {
+-            log.error("[Alert][Feishu] send failed: title={} receivers={} ex={}", title, receivers, ex.getMessage());
+-        }
++        } catch (RestClientException ex) {
++            log.error("[Alert][Feishu] send failed: title={} receivers={} ex={}; DEGRADE to LoggingAlertChannel.",
++                    title, receivers, ex.toString());
++            try {
++                new LoggingAlertChannel().send(
++                        receivers,
++                        "[DEGRADED-FROM-FEISHU] " + title,
++                        content + "\n[root-cause] " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
++            } catch (Exception ignored) { /* 极端情况不影响主流程 */ }
++        }
