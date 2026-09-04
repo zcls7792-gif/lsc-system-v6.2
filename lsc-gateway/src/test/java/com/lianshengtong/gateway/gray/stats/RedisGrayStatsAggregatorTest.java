@@ -30,7 +30,7 @@ public class RedisGrayStatsAggregatorTest {
     @BeforeEach
     void setUp() {
         store = new GrayPolicyStore();
-        GrayPolicyStore.Policy p = new GrayPolicyStore.Policy(
+        GrayPolicyStore.Policy p = GrayPolicyStore.Policy.legacy(
                 "p1", "r1", "lb://baseline", "lb://canary", 10,
                 List.of(), Map.of(), GrayPolicyStore.Status.ACTIVE,
                 Instant.now(), Instant.now(), "test");

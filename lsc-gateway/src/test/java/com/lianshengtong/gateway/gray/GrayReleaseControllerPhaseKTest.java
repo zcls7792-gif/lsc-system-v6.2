@@ -47,7 +47,8 @@ public class GrayReleaseControllerPhaseKTest {
             @Override public void record(String policyId, Version version, RuleForce ruleForce) { delegate.record(policyId, version, ruleForce); }
             @Override public AggregatedStats aggregated(String policyId) {
                 AggregatedStats s = delegate.aggregated(policyId);
-                return new AggregatedStats(
+                // 复用 legacy 工厂：Phase K 单测不关心 err/p95，默认 -1
+                return AggregatedStats.legacy(
                         s.baselineHits() * 10,
                         s.canaryHits() * 10,
                         s.ruleForceCanary() * 10,
@@ -72,7 +73,7 @@ public class GrayReleaseControllerPhaseKTest {
 
     @Test
     void stats_returnsInstancePlusClusterViews() {
-        GrayPolicyStore.Policy p = new GrayPolicyStore.Policy("pk1", "r1", "lb://base", "lb://canary",
+        GrayPolicyStore.Policy p = GrayPolicyStore.Policy.legacy("pk1", "r1", "lb://base", "lb://canary",
                 50, List.of(), Map.of(), GrayPolicyStore.Status.ACTIVE,
                 Instant.now(), Instant.now(), "tester");
         controller.upsert(p, "tester");
@@ -133,7 +134,7 @@ public class GrayReleaseControllerPhaseKTest {
     }
 
     private GrayPolicyStore.Policy buildPolicy(String pid, String rid, int weight) {
-        return new GrayPolicyStore.Policy(pid, rid, "lb://a", "lb://a-c", weight,
+        return GrayPolicyStore.Policy.legacy(pid, rid, "lb://a", "lb://a-c", weight,
                 List.of(), Map.of(), GrayPolicyStore.Status.ACTIVE,
                 Instant.now(), Instant.now(), "t");
     }

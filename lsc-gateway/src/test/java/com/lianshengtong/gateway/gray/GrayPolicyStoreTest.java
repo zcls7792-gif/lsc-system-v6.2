@@ -16,7 +16,7 @@ class GrayPolicyStoreTest {
     @BeforeEach void setUp() { store = new GrayPolicyStore(); }
 
     GrayPolicyStore.Policy sample(String id, int w) {
-        return new GrayPolicyStore.Policy(id, "order-service",
+        return GrayPolicyStore.Policy.legacy(id, "order-service",
                 "lb://lsc-order-service", "lb://lsc-order-service-canary",
                 w, List.of(), Map.of(), null, null, null, null);
     }

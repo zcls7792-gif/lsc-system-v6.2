@@ -48,6 +48,13 @@ public class RedisGrayStatsAggregator implements GrayStatsAggregator {
 
     @Override
     public void record(String policyId, Version version, RuleForce ruleForce) {
+        record(policyId, version, ruleForce, 0, -1);
+    }
+
+    /** Phase N：在热路径调用 record(statusCode, latencyMs) → 多写 err/p95 Redis 聚合键。 */
+    @Override
+    public void record(String policyId, Version version, RuleForce ruleForce,
+                       int statusCode, long latencyMs) {
         try {
             String baseHitKey = null;
             if (version == Version.BASELINE) baseHitKey = key(policyId, "baseline_hits");
@@ -64,21 +71,35 @@ public class RedisGrayStatsAggregator implements GrayStatsAggregator {
             } else if (ruleForce == RuleForce.FORCE_BASELINE) {
                 op = op.then(redis.opsForValue().increment(key(policyId, "rule_force_baseline")).then());
             }
-            // 写入 start_ts（SET_IF_ABSENT → SETNX 语义，保留第一次写入时间），TTL 30 天
+            // Phase N: err 5xx INCR
+            if (statusCode >= 500 && version != null) {
+                String errKey = version == Version.BASELINE
+                        ? key(policyId, "err_5xx_baseline")
+                        : key(policyId, "err_5xx_canary");
+                op = op.then(redis.opsForValue().increment(errKey).then());
+            }
+            // Phase N: latency histogram 桶 (TDigest近似：简化用固定7桶 bucket + 1ms-10s，够估算 P95)
+            if (latencyMs >= 0 && version != null) {
+                int bucket = latencyBucket(latencyMs);
+                String bucketKey = (version == Version.BASELINE
+                        ? key(policyId, "lat_baseline:" + bucket)
+                        : key(policyId, "lat_canary:" + bucket));
+                op = op.then(redis.opsForValue().increment(bucketKey).then());
+            }
+
+            // start_ts + live_nodes
             op = op.then(redis.opsForValue()
                     .setIfAbsent(key(policyId, "start_ts"), String.valueOf(System.currentTimeMillis() / 1000L))
                     .flatMap(ok -> Boolean.TRUE.equals(ok)
                             ? redis.expire(key(policyId, "start_ts"), START_TS_TTL)
                             : Mono.just(false))
                     .then());
-            // 活跃节点集合：当前节点 SADD + 单独给该节点键 EXPIRE（30 分钟）
             String memberKey = key(policyId, "live_nodes:" + nodeId);
             op = op.then(redis.opsForSet().add(key(policyId, "live_nodes"), nodeId)
                     .flatMap(n -> redis.expire(key(policyId, "live_nodes"), NODE_TTL))
                     .flatMap(n -> redis.opsForValue().set(memberKey, "1", NODE_TTL))
                     .then());
 
-            // fire-and-forget：订阅即可
             op.onErrorResume(e -> {
                 log.warn("[gray-stats] Redis record failed for policy={}: {}", policyId, e.getMessage());
                 return Mono.empty();
@@ -91,14 +112,25 @@ public class RedisGrayStatsAggregator implements GrayStatsAggregator {
     @Override
     public AggregatedStats aggregated(String policyId) {
         try {
+            // Phase N: err_5xx_* + 7 个 latency buckets
+            List<String> keys = new java.util.ArrayList<>(List.of(
+                    key(policyId, "baseline_hits"),
+                    key(policyId, "canary_hits"),
+                    key(policyId, "rule_force_canary"),
+                    key(policyId, "rule_force_baseline"),
+                    key(policyId, "start_ts"),
+                    key(policyId, "err_5xx_baseline"),
+                    key(policyId, "err_5xx_canary")
+            ));
+            for (int b = 0; b < 7; b++) {
+                keys.add(key(policyId, "lat_baseline:" + b));
+            }
+            for (int b = 0; b < 7; b++) {
+                keys.add(key(policyId, "lat_canary:" + b));
+            }
             return redis.opsForValue()
-                    .multiGet(List.of(
-                            key(policyId, "baseline_hits"),
-                            key(policyId, "canary_hits"),
-                            key(policyId, "rule_force_canary"),
-                            key(policyId, "rule_force_baseline"),
-                            key(policyId, "start_ts")
-                    )).zipWith(redis.opsForSet().size(key(policyId, "live_nodes")).defaultIfEmpty(0L))
+                    .multiGet(keys)
+                    .zipWith(redis.opsForSet().size(key(policyId, "live_nodes")).defaultIfEmpty(0L))
                     .map(tuple -> {
                         List<String> vals = tuple.getT1() == null ? List.of() : tuple.getT1();
                         long base = toLong(at(vals, 0));
@@ -106,8 +138,13 @@ public class RedisGrayStatsAggregator implements GrayStatsAggregator {
                         long rfc = toLong(at(vals, 2));
                         long rfb = toLong(at(vals, 3));
                         long startSec = toLong(at(vals, 4));
+                        long errB = toLong(at(vals, 5));
+                        long errC = toLong(at(vals, 6));
+                        long[] baseBuckets = new long[7];
+                        long[] canBuckets = new long[7];
+                        for (int b = 0; b < 7; b++) baseBuckets[b] = toLong(at(vals, 7 + b));
+                        for (int b = 0; b < 7; b++) canBuckets[b]  = toLong(at(vals, 14 + b));
                         int liveNodes = tuple.getT2().intValue();
-                        // 将本地值加到 cluster 值上（防止 Redis 抖动时数据被"抹零"）
                         GrayPolicyStore.Stats s = store.statsFor(policyId);
                         return new AggregatedStats(
                                 base + s.baselineHits.get(),
@@ -116,7 +153,9 @@ public class RedisGrayStatsAggregator implements GrayStatsAggregator {
                                 rfb + s.ruleForceBaseline.get(),
                                 startSec == 0 ? s.startTimeMs.get() / 1000L : startSec,
                                 Math.max(liveNodes, 1),
-                                true);
+                                true,
+                                errB, errC,
+                                estimateP95Ms(baseBuckets), estimateP95Ms(canBuckets));
                     })
                     .onErrorReturn(localOnly(policyId))
                     .block(Duration.ofMillis(1500));
@@ -147,7 +186,7 @@ public class RedisGrayStatsAggregator implements GrayStatsAggregator {
     // -------- internals --------
     private AggregatedStats localOnly(String policyId) {
         GrayPolicyStore.Stats s = store.statsFor(policyId);
-        return new AggregatedStats(
+        return AggregatedStats.legacy(
                 s.baselineHits.get(),
                 s.canaryHits.get(),
                 s.ruleForceCanary.get(),
@@ -178,5 +217,42 @@ public class RedisGrayStatsAggregator implements GrayStatsAggregator {
         catch (UnknownHostException ex) { host = "127.0.0.1"; }
         String port = System.getProperty("server.port", System.getenv().getOrDefault("SERVER_PORT", "8000"));
         return host + ":" + port + ":" + Long.toHexString(System.nanoTime() & 0xFFFFFL);
+    }
+
+    /** 简化 P95 桶：共 7 桶，上闭区间 [0,10)ms ... [10000,∞)ms */
+    static final long[] BUCKET_UPPER_MS = { 10L, 50L, 100L, 250L, 500L, 1000L, 10_000L };
+
+    static int latencyBucket(long latencyMs) {
+        for (int i = 0; i < BUCKET_UPPER_MS.length; i++) {
+            if (latencyMs < BUCKET_UPPER_MS[i]) return i;
+        }
+        return BUCKET_UPPER_MS.length - 1;
+    }
+
+    /**
+     * P95 估算：假设桶内均匀分布（线性插值）。
+     * @return P95 毫秒；如果所有桶都空，返回 -1。
+     */
+    static long estimateP95Ms(long[] buckets) {
+        if (buckets == null) return -1L;
+        long total = 0; for (long v : buckets) total += v;
+        if (total <= 0) return -1L;
+        long target = (long) Math.ceil(total * 0.95);
+        long acc = 0L;
+        for (int i = 0; i < buckets.length; i++) {
+            long prevLower = i == 0 ? 0L : BUCKET_UPPER_MS[i - 1];
+            long upper = BUCKET_UPPER_MS[i];
+            long width = Math.max(1L, upper - prevLower);
+            if (acc + buckets[i] >= target) {
+                long needInBucket = Math.max(1L, target - acc);
+                long inBucket = Math.max(1L, buckets[i]);
+                // 均匀插值：p95 落在桶内 (needInBucket / inBucket) 的位置
+                long ms = prevLower + (width * Math.min(needInBucket, inBucket)) / inBucket;
+                return Math.max(0L, ms);
+            }
+            acc += buckets[i];
+        }
+        // 极端：所有数据 > 7 桶上限，返回最后一桶上限
+        return BUCKET_UPPER_MS[BUCKET_UPPER_MS.length - 1];
     }
 }

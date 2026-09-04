@@ -42,4 +42,18 @@ public interface GrayGatewayClient {
 
     @GetMapping("/summary")
     R<Map<String, Object>> summary();
+
+    /** Phase N：rollout 状态（leader/last tick/运行中策略数/approaching rollback 数/默认门限快照）。 */
+    @GetMapping("/rollout/status")
+    R<Map<String, Object>> rolloutStatus();
+
+    /** Phase N：单策略 rollout 详情（步进/保持时间/SLO 各大门/合并配置）。 */
+    @GetMapping("/policies/{policyId}/rollout")
+    R<Map<String, Object>> rolloutDetail(@PathVariable("policyId") String policyId);
+
+    /** Phase N：运维手动推进下一步（跳过 minMinutesAtStep 保持时间）。 */
+    @PostMapping("/policies/{policyId}/rollout/advance-step")
+    R<Map<String, Object>> rolloutAdvanceStep(@PathVariable("policyId") String policyId,
+                                               @RequestHeader("X-Admin-User") String operator,
+                                               @RequestParam(value = "reason", required = false) String reason);
 }

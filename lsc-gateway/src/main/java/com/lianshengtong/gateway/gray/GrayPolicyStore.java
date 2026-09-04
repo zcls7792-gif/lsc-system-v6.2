@@ -25,15 +25,31 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class GrayPolicyStore {
 
-    public enum Status { ACTIVE, PAUSED, ROLLED_BACK, GRADUATED }
+    public enum Status { DRAFT, ACTIVE, READY_FOR_GRADUATION, PAUSED, ROLLED_BACK, GRADUATED, DELETED }
 
-    /** 一条灰度策略的命中规则 */
+    /** 灰度策略命中规则 */
     public record Rule(
             String type,             // HEADER / QUERY / COOKIE / USER_ID_MOD / PATH_PREFIX
             String key,              // 键: 头名 / 参数名 / cookie 名 / null
             String operator,         // EQ / NE / PREFIX / MOD_EQ
             String value,            // 值: 字符串 / "mod==0" 中的余
             String extra             // 额外配置: USER_ID_MOD 中 mod=N → "N"
+    ) {}
+
+    /**
+     * Phase N：单策略 rollout 覆盖配置（null = 继承全局 GrayRolloutProperties 默认）。
+     * 允许单策略自定义步进台阶、SLO 门限、或禁用自动推进（enabled=false）。
+     */
+    public record RolloutConfig(
+            /* 非空则覆盖全局 steps，最后一项强制 <=100 并在缺失时补 100 */
+            List<Integer> steps,
+            Integer minMinutesAtStep,
+            Double maxErrorDriftPct,
+            Double maxP95Ratio,
+            Long minSamplesThreshold,
+            Integer maxConsecutiveFailuresBeforeRollback,
+            /* null=true=继承；false=该策略禁用自动步进（仅允许 advance-step 手动推进 / rollback） */
+            Boolean enabled
     ) {}
 
     /** 灰度策略快照（不可变） */
@@ -48,12 +64,80 @@ public class GrayPolicyStore {
             Status status,
             Instant createdAt,
             Instant updatedAt,
-            String updatedBy
+            String updatedBy,
+            /* Phase N: 单策略 rollout 覆盖；null=全用全局配置 */
+            RolloutConfig rolloutConfig
     ) {
         /** 策略是否处于"可参与分流决策"的状态（注意：weight=0 但有 rules 时仍需参与，
          * 因为 rules 允许强制切基线/灰度；此时权重随机分支会落在 baseline）。 */
         public boolean active() {
-            return status == Status.ACTIVE && (canaryWeightPercent > 0 || (rules != null && !rules.isEmpty()));
+            return (status == Status.ACTIVE || status == Status.READY_FOR_GRADUATION)
+                    && (canaryWeightPercent > 0 || (rules != null && !rules.isEmpty()));
+        }
+
+        /** Lombok-like toBuilder：构造基于当前 Policy 的新副本 */
+        public PolicyBuilder toBuilder() { return new PolicyBuilder(this); }
+
+        /** builder 兼容（Policy.record 原生不带 @Builder，手写轻量 Builder 以降低侵入性）*/
+        public static PolicyBuilder builder() { return new PolicyBuilder(); }
+
+        /** 向后兼容工厂：缺失 rolloutConfig（第 12 个字段）时填 null。等价于老版本的 11 参数构造。
+         *  迁移指南：老代码 new Policy(pid,routeId,base,can,weight,rules,meta,status,ca,ua,ub) → 替换为 Policy.legacy(...) 或使用 builder。 */
+        public static Policy legacy(String policyId,
+                                     String routeId,
+                                     String baselineUri,
+                                     String canaryUri,
+                                     int canaryWeightPercent,
+                                     List<Rule> rules,
+                                     Map<String, String> meta,
+                                     Status status,
+                                     Instant createdAt,
+                                     Instant updatedAt,
+                                     String updatedBy) {
+            return new Policy(policyId, routeId, baselineUri, canaryUri, canaryWeightPercent,
+                    rules == null ? List.of() : rules,
+                    meta  == null ? Map.of() : meta,
+                    status == null ? Status.ACTIVE : status,
+                    createdAt == null ? Instant.now() : createdAt,
+                    updatedAt == null ? Instant.now() : updatedAt,
+                    updatedBy, null);
+        }
+    }
+
+    public static class PolicyBuilder {
+        String policyId; String routeId; String baselineUri; String canaryUri;
+        int canaryWeightPercent; List<Rule> rules; Map<String,String> meta;
+        Status status; Instant createdAt; Instant updatedAt; String updatedBy;
+        RolloutConfig rolloutConfig;
+        PolicyBuilder() {}
+        PolicyBuilder(Policy src) {
+            this.policyId = src.policyId; this.routeId = src.routeId;
+            this.baselineUri = src.baselineUri; this.canaryUri = src.canaryUri;
+            this.canaryWeightPercent = src.canaryWeightPercent;
+            this.rules = src.rules(); this.meta = src.meta(); this.status = src.status();
+            this.createdAt = src.createdAt(); this.updatedAt = src.updatedAt();
+            this.updatedBy = src.updatedBy(); this.rolloutConfig = src.rolloutConfig();
+        }
+        public PolicyBuilder policyId(String v) { policyId = v; return this; }
+        public PolicyBuilder routeId(String v) { routeId = v; return this; }
+        public PolicyBuilder baselineUri(String v) { baselineUri = v; return this; }
+        public PolicyBuilder canaryUri(String v) { canaryUri = v; return this; }
+        public PolicyBuilder canaryWeightPercent(int v) { canaryWeightPercent = v; return this; }
+        public PolicyBuilder rules(List<Rule> v) { rules = v; return this; }
+        public PolicyBuilder meta(Map<String,String> v) { meta = v; return this; }
+        public PolicyBuilder status(Status v) { status = v; return this; }
+        public PolicyBuilder createdAt(Instant v) { createdAt = v; return this; }
+        public PolicyBuilder updatedAt(Instant v) { updatedAt = v; return this; }
+        public PolicyBuilder updatedBy(String v) { updatedBy = v; return this; }
+        public PolicyBuilder rolloutConfig(RolloutConfig v) { rolloutConfig = v; return this; }
+        public Policy build() {
+            return new Policy(policyId, routeId, baselineUri, canaryUri, canaryWeightPercent,
+                    rules == null ? List.of() : rules,
+                    meta  == null ? Map.of() : meta,
+                    status == null ? Status.ACTIVE : status,
+                    createdAt == null ? Instant.now() : createdAt,
+                    updatedAt == null ? Instant.now() : updatedAt,
+                    updatedBy, rolloutConfig);
         }
     }
 
@@ -91,18 +175,20 @@ public class GrayPolicyStore {
     public Policy createOrUpdate(Policy in, String operator) {
         Instant now = Instant.now();
         Policy toSave = in.createdAt() == null
-                ? new Policy(in.policyId(), in.routeId(), in.baselineUri(), in.canaryUri(),
-                    clamp(in.canaryWeightPercent()),
-                    in.rules() == null ? List.of() : in.rules(),
-                    in.meta() == null ? Map.of() : in.meta(),
-                    in.status() == null ? Status.ACTIVE : in.status(),
-                    now, now, operator)
-                : new Policy(in.policyId(), in.routeId(), in.baselineUri(), in.canaryUri(),
-                    clamp(in.canaryWeightPercent()),
-                    in.rules() == null ? List.of() : in.rules(),
-                    in.meta() == null ? Map.of() : in.meta(),
-                    in.status() == null ? Status.ACTIVE : in.status(),
-                    in.createdAt(), now, operator);
+                ? Policy.builder().policyId(in.policyId()).routeId(in.routeId())
+                    .baselineUri(in.baselineUri()).canaryUri(in.canaryUri())
+                    .canaryWeightPercent(clamp(in.canaryWeightPercent()))
+                    .rules(in.rules()).meta(in.meta())
+                    .status(in.status() == null ? Status.ACTIVE : in.status())
+                    .createdAt(now).updatedAt(now).updatedBy(operator)
+                    .rolloutConfig(in.rolloutConfig()).build()
+                : Policy.builder().policyId(in.policyId()).routeId(in.routeId())
+                    .baselineUri(in.baselineUri()).canaryUri(in.canaryUri())
+                    .canaryWeightPercent(clamp(in.canaryWeightPercent()))
+                    .rules(in.rules()).meta(in.meta())
+                    .status(in.status() == null ? Status.ACTIVE : in.status())
+                    .createdAt(in.createdAt()).updatedAt(now).updatedBy(operator)
+                    .rolloutConfig(in.rolloutConfig()).build();
 
         AtomicReference<Policy> ref = policies.computeIfAbsent(toSave.policyId(),
                 k -> new AtomicReference<>());
@@ -143,10 +229,9 @@ public class GrayPolicyStore {
         AtomicReference<Policy> ref = policies.get(policyId);
         if (ref == null) return null;
         Policy cur = ref.get();
-        Policy rolledBack = new Policy(cur.policyId(), cur.routeId(),
-                cur.baselineUri(), cur.canaryUri(), 0,
-                cur.rules(), cur.meta(), Status.ROLLED_BACK,
-                cur.createdAt(), Instant.now(), operator);
+        Policy rolledBack = cur.toBuilder()
+                .canaryWeightPercent(0).status(Status.ROLLED_BACK)
+                .updatedAt(Instant.now()).updatedBy(operator).build();
         ref.set(rolledBack);
         history.addFirst(new History(Instant.now(), policyId, operator, "ROLLBACK",
                 "canaryWeight 0%; reason=" + reason));
@@ -159,11 +244,12 @@ public class GrayPolicyStore {
         if (ref == null) return null;
         Policy cur = ref.get();
         int w = clamp(weight);
-        Policy next = new Policy(cur.policyId(), cur.routeId(),
-                cur.baselineUri(), cur.canaryUri(), w,
-                cur.rules(), cur.meta(),
-                w == 0 ? Status.PAUSED : Status.ACTIVE,
-                cur.createdAt(), Instant.now(), operator);
+        Status nextStatus = w == 0
+                ? (cur.status() == Status.READY_FOR_GRADUATION ? Status.READY_FOR_GRADUATION : Status.PAUSED)
+                : (cur.status() == Status.READY_FOR_GRADUATION ? Status.READY_FOR_GRADUATION : Status.ACTIVE);
+        Policy next = cur.toBuilder().canaryWeightPercent(w)
+                .status(nextStatus)
+                .updatedAt(Instant.now()).updatedBy(operator).build();
         ref.set(next);
         history.addFirst(new History(Instant.now(), policyId, operator,
                 "WEIGHT_CHANGE", "newWeight=" + w + "%"));
@@ -191,9 +277,7 @@ public class GrayPolicyStore {
         if (ref == null) return null;
         Policy cur = ref.get();
         if (cur.status() == Status.PAUSED) return cur;
-        Policy next = new Policy(cur.policyId(), cur.routeId(), cur.baselineUri(), cur.canaryUri(),
-                cur.canaryWeightPercent(), cur.rules(), cur.meta(), Status.PAUSED,
-                cur.createdAt(), Instant.now(), operator);
+        Policy next = cur.toBuilder().status(Status.PAUSED).updatedAt(Instant.now()).updatedBy(operator).build();
         ref.set(next);
         history.addFirst(new History(Instant.now(), policyId, operator, "PAUSE",
                 "status=" + cur.status() + " -> PAUSED"));
@@ -208,9 +292,9 @@ public class GrayPolicyStore {
         if (ref == null) return null;
         Policy cur = ref.get();
         int w = cur.status() == Status.ROLLED_BACK ? 0 : cur.canaryWeightPercent();
-        Policy next = new Policy(cur.policyId(), cur.routeId(), cur.baselineUri(), cur.canaryUri(),
-                w, cur.rules(), cur.meta(), Status.ACTIVE,
-                cur.createdAt(), Instant.now(), operator);
+        Status target = Status.ACTIVE;
+        Policy next = cur.toBuilder().status(target).canaryWeightPercent(w)
+                .updatedAt(Instant.now()).updatedBy(operator).build();
         ref.set(next);
         history.addFirst(new History(Instant.now(), policyId, operator, "RESUME",
                 "status=" + cur.status() + " -> ACTIVE; weight=" + cur.canaryWeightPercent() + "% -> " + w + "%"));
@@ -223,12 +307,26 @@ public class GrayPolicyStore {
         AtomicReference<Policy> ref = policies.get(policyId);
         if (ref == null) return null;
         Policy cur = ref.get();
-        Policy next = new Policy(cur.policyId(), cur.routeId(), cur.baselineUri(), cur.canaryUri(),
-                0, cur.rules(), cur.meta(), Status.GRADUATED,
-                cur.createdAt(), Instant.now(), operator);
+        Policy next = cur.toBuilder().canaryWeightPercent(0).status(Status.GRADUATED)
+                .updatedAt(Instant.now()).updatedBy(operator).build();
         ref.set(next);
         history.addFirst(new History(Instant.now(), policyId, operator, "GRADUATE",
                 reason == null ? "promoted to baseline" : reason));
+        trimHistory();
+        return next;
+    }
+
+    /** Phase N 辅助：把策略从 ACTIVE / READY_FOR_GRADUATION 状态切到 READY_FOR_GRADUATION 并保留 weight 不变。 */
+    public Policy markReadyForGraduation(String policyId, String operator, String reason) {
+        AtomicReference<Policy> ref = policies.get(policyId);
+        if (ref == null) return null;
+        Policy cur = ref.get();
+        if (cur.status() != Status.ACTIVE && cur.status() != Status.READY_FOR_GRADUATION) return cur;
+        Policy next = cur.toBuilder().status(Status.READY_FOR_GRADUATION)
+                .updatedAt(Instant.now()).updatedBy(operator).build();
+        ref.set(next);
+        history.addFirst(new History(Instant.now(), policyId, operator, "READY_FOR_GRADUATION",
+                reason == null ? "100% SLO hold passed" : reason));
         trimHistory();
         return next;
     }
@@ -245,6 +343,13 @@ public class GrayPolicyStore {
                 "removed policy with status=" + cur.status()));
         trimHistory();
         return true;
+    }
+
+    /** Phase N：Coordinator/Service 侧额外写一条纯审计 History（不修改 policy；用于 append SLO 流水）。 */
+    public void appendExternalHistory(History h) {
+        if (h == null) return;
+        history.addFirst(h);
+        trimHistory();
     }
 
     public Stats statsFor(String policyId) {

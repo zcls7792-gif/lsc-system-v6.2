@@ -31,7 +31,7 @@ public class LocalOnlyGrayStatsAggregator implements GrayStatsAggregator {
 
     private AggregatedStats localOnly(String policyId) {
         GrayPolicyStore.Stats s = store.statsFor(policyId);
-        return new AggregatedStats(
+        return AggregatedStats.legacy(
                 s.baselineHits.get(),
                 s.canaryHits.get(),
                 s.ruleForceCanary.get(),

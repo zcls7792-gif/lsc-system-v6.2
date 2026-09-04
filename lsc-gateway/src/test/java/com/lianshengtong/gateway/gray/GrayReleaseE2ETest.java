@@ -51,7 +51,7 @@ class GrayReleaseE2ETest {
 
     // ---------- helpers ----------
     GrayPolicyStore.Policy createPolicy(String pid, int weight, List<GrayPolicyStore.Rule> rules) {
-        return store.createOrUpdate(new GrayPolicyStore.Policy(pid, "svc-e2e",
+        return store.createOrUpdate(GrayPolicyStore.Policy.legacy(pid, "svc-e2e",
                 "lb://lsc-svc", "lb://lsc-svc-canary", weight, rules,
                 Map.of(), null, null, null, null), "ops");
     }

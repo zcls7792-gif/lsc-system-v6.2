@@ -142,7 +142,8 @@ public class JdbcGrayPolicyRepository implements GrayPolicyRepository {
                         rules, meta, status,
                         toInstant(rs.getTimestamp("created_at")),
                         toInstant(rs.getTimestamp("updated_at")),
-                        rs.getString("updated_by")
+                        rs.getString("updated_by"),
+                        parseRolloutConfig(safeString(rs, "rollout_config_json"))
                 );
             } catch (Exception ex) {
                 log.error("Failed to deserialize gray policy row, policy_id={}, skipping",
@@ -181,6 +182,32 @@ public class JdbcGrayPolicyRepository implements GrayPolicyRepository {
         if (s == null || s.isBlank()) return GrayPolicyStore.Status.ACTIVE;
         try { return GrayPolicyStore.Status.valueOf(s); }
         catch (IllegalArgumentException e) { return GrayPolicyStore.Status.PAUSED; }
+    }
+
+    /** Phase N：rollout_config_json → RolloutConfig；空/null/异常 → null=继承全局默认。 */
+    @SuppressWarnings("unchecked")
+    private GrayPolicyStore.RolloutConfig parseRolloutConfig(String s) {
+        if (s == null || s.isBlank()) return null;
+        try {
+            Map<String, Object> m = mapper.readValue(s, new TypeReference<Map<String, Object>>() {});
+            List<Integer> steps = null;
+            if (m.get("steps") instanceof List<?> l && !l.isEmpty()) {
+                steps = new java.util.ArrayList<>(l.size());
+                for (Object x : l) steps.add(x instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(x)));
+            }
+            return new GrayPolicyStore.RolloutConfig(
+                    steps,
+                    m.get("minMinutesAtStep") instanceof Number n ? n.intValue() : null,
+                    m.get("maxErrorDriftPct") instanceof Number n ? n.doubleValue() : null,
+                    m.get("maxP95Ratio") instanceof Number n ? n.doubleValue() : null,
+                    m.get("minSamplesThreshold") instanceof Number n ? n.longValue() : null,
+                    m.get("maxConsecutiveFailuresBeforeRollback") instanceof Number n ? n.intValue() : null,
+                    m.get("enabled") instanceof Boolean b ? b : null
+            );
+        } catch (Exception ex) {
+            log.warn("parse rollout_config_json failed, use global default: {}", ex.getMessage());
+            return null;
+        }
     }
 
     private static Instant toInstant(Timestamp ts) { return ts == null ? Instant.now() : ts.toInstant(); }

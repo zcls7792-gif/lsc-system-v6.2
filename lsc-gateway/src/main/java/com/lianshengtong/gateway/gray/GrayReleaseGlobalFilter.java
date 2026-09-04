@@ -136,6 +136,23 @@ public class GrayReleaseGlobalFilter implements GlobalFilter, Ordered {
         else ruleForce = GrayStatsAggregator.RuleForce.FORCE_BASELINE;
         // 双写：本地 + Redis（best-effort，内部异步 fire-and-forget，非阻塞）
         statsAggregator.record(policy.policyId(), version, ruleForce);
+        final GrayStatsAggregator.Version vFinal = version;
+        final GrayStatsAggregator.RuleForce rfFinal = ruleForce;
+        final String policyId = policy.policyId();
+        // Phase N：记录响应开始时间 + afterCommit 时用 status + latency 写 err5xx + p95 桶
+        // 这里不调用 Object 上的 wait/notify；避免属性名冲突，用 GrayReleaseGlobalFilter 前缀
+        final long startNano = System.nanoTime();
+        exchange.getResponse().beforeCommit(() -> {
+            Integer status = exchange.getResponse().getStatusCode() == null ? null : exchange.getResponse().getStatusCode().value();
+            int code = status == null ? 0 : status;
+            long latencyMs = (System.nanoTime() - startNano) / 1_000_000L;
+            try {
+                statsAggregator.record(policyId, vFinal, rfFinal, code, latencyMs);
+            } catch (Exception x) {
+                // ignore：热路径不许异常上抛
+            }
+            return reactor.core.publisher.Mono.empty();
+        });
         // NOTE: ServerWebExchange.mutate() 会复制 attributes（而非共享）。
         // 先把 attributes 放到原 exchange，新 exchange 创建时会自动继承。
         ServerWebExchange nextExchange = exchange.mutate().request(mutated).build();

@@ -44,6 +44,31 @@ public class GrayPolicyService {
 
     private GrayPolicyRepository repository;
 
+    /** 单测/手工简化构造：只给 store + 一个 Repository 实例；内部通过最小 ObjectProvider 包装。 */
+    public GrayPolicyService(GrayPolicyStore store, GrayPolicyRepository repository) {
+        this(store, repository, new com.fasterxml.jackson.databind.ObjectMapper());
+    }
+    public GrayPolicyService(GrayPolicyStore store,
+                              GrayPolicyRepository repository,
+                              ObjectMapper objectMapper) {
+        this(store,
+                new ObjectProvider<GrayPolicyRepository>() {
+                    final GrayPolicyRepository single = repository;
+                    public GrayPolicyRepository getObject() { return single; }
+                    public GrayPolicyRepository getObject(Object... args) { return single; }
+                    public GrayPolicyRepository getIfAvailable() { return single; }
+                    public GrayPolicyRepository getIfUnique() { return single; }
+                    public java.util.stream.Stream<GrayPolicyRepository> orderedStream() { return java.util.stream.Stream.of(single); }
+                },
+                new ObjectProvider<JdbcTemplate>() {
+                    public JdbcTemplate getObject() { return null; }
+                    public JdbcTemplate getObject(Object... args) { return null; }
+                    public JdbcTemplate getIfAvailable() { return null; }
+                    public JdbcTemplate getIfUnique() { return null; }
+                },
+                objectMapper == null ? new com.fasterxml.jackson.databind.ObjectMapper() : objectMapper);
+    }
+
     @PostConstruct
     public void init() {
         GrayPolicyRepository selected = pickRepository();
@@ -153,6 +178,67 @@ public class GrayPolicyService {
         GrayPolicyStore.Policy next = store.graduate(policyId, operator, reason);
         if (next != null) appendStoreAndHistory(next, policyId);
         return next;
+    }
+
+    /** Phase N：由 Coordinator/advance-step API 单向步进权重。保证 newWeight ≥ 当前权重；
+     *  更小则视为 no-op（往回用 rollback 或 pause/setWeight(0)）。 */
+    public GrayPolicyStore.Policy advanceWeightTo(String policyId, int newWeight,
+                                                   String operator, String detailReason) {
+        GrayPolicyStore.Policy cur = store.get(policyId);
+        if (cur == null) return null;
+        int w = Math.max(0, Math.min(100, newWeight));
+        if (w < cur.canaryWeightPercent()) return cur;
+        if (w == cur.canaryWeightPercent()) return cur;
+        GrayPolicyStore.Policy next = store.setWeight(policyId, w, operator);
+        if (next != null) {
+            appendStoreAndHistory(next, policyId);
+            // 额外 append 一条 rollout 专属 history（operator=system:rollout 场景已有；手动 advance-step 也要留下流水）
+            appendHistory(policyId, operator,
+                    "STEP_ADVANCE from " + cur.canaryWeightPercent() + "% to " + w + "%"
+                            + (detailReason == null || detailReason.isBlank() ? "" : " (" + detailReason + ")"));
+        }
+        return next;
+    }
+
+    /** Phase N：SLO 验证通过 weight=100 hold 达到 → 仅切 READY_FOR_GRADUATION，不真正 graduate（毕业走审批/人工）。 */
+    public GrayPolicyStore.Policy markReadyForGraduation(String policyId, String operator) {
+        GrayPolicyStore.Policy cur = store.get(policyId);
+        if (cur == null) return null;
+        GrayPolicyStore.Policy next = store.markReadyForGraduation(policyId, operator, null);
+        if (next != null) appendStoreAndHistory(next, policyId);
+        return next;
+    }
+
+    /** Phase N：返回 operator 前缀为 "system:rollout"/"system:rollback" 的 history（自动操作流水）。 */
+    public List<GrayPolicyStore.History> rolloutHistory(String policyId, int limit) {
+        List<GrayPolicyStore.History> all = history(policyId, Math.max(limit * 2, 200));
+        List<GrayPolicyStore.History> filtered = new java.util.ArrayList<>();
+        for (GrayPolicyStore.History h : all) {
+            if (h.operator() == null) continue;
+            String op = h.operator();
+            // 自动动作（含 advance-step 手动触发时也走 system:rollout 前缀，便于过滤）
+            if (op.startsWith("system:")
+                    || "ROLLBACK".equals(h.action())
+                    || "GRADUATE".equals(h.action())
+                    || "READY_FOR_GRADUATION".equals(h.action())
+                    || (h.detail() != null && h.detail().startsWith("STEP_ADVANCE"))) {
+                filtered.add(h);
+                if (filtered.size() >= limit) break;
+            }
+        }
+        return filtered;
+    }
+
+    /** 写一条纯 history（不改变 policy 本身），用于 Coordinator 记录 SLO 决策流水。 */
+    public void appendHistory(String policyId, String operator, String detailActionAndMessage) {
+        // 先写内存环：复用 GrayPolicyStore 的 public 接口会改 policy，这里直接构造一条 History 需要能写入 store.history。
+        // 简化：先写入持久化 Repository.appendHistory；再额外把这条塞回到内存 deque（通过反射/或新建 store.appendHistory 方法）。
+        GrayPolicyStore.History h = new GrayPolicyStore.History(
+                java.time.Instant.now(), policyId, operator,
+                "ROLLOUT_DETAIL", /* action */
+                detailActionAndMessage);
+        persist(rep -> rep.appendHistory(h));
+        store.appendExternalHistory(h);
     }
 
     public boolean delete(String policyId, String operator) {

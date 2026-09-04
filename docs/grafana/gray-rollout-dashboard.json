@@ -1,0 +1,143 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+        "enable": true,
+        "expr": "increase(lsc_gray_rollout_event_total{event=\"ROLLBACK_TRIGGERED\"}[1h]) > 0",
+        "iconColor": "red",
+        "name": "硬回滚事件",
+        "titleFormat": "ROLLBACK $policyId"
+      },
+      {
+        "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+        "enable": true,
+        "expr": "increase(lsc_gray_rollout_event_total{event=\"STEP_ADVANCE\"}[1h]) > 0",
+        "iconColor": "green",
+        "name": "步进事件",
+        "titleFormat": "ADVANCE $policyId"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+      "fieldConfig": {
+        "defaults": { "mappings": [{ "options": { "0": { "text": "Follower" }, "1": { "text": "Leader" } }, "type": "value" }],
+        "color": { "mode": "thresholds" },
+        "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "blue", "value": 1 }] }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "background", "textMode": "value_and_name" },
+      "targets": [{ "expr": "max(lsc_gray_rollout_leader) by (nodeId)", "instant": true }],
+      "title": "Rollout Coordinator Leader",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "targets": [{ "expr": "time() - lsc_gray_rollout_last_tick_epoch_sec", "instant": true }],
+      "title": "Last Tick Age (秒)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "background", "textMode": "value_and_name" },
+      "targets": [{ "expr": "sum(increase(lsc_gray_rollout_event_total{event=\"ROLLBACK_TRIGGERED\"}[24h]))", "instant": true }],
+      "title": "24h 硬回滚次数",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "targets": [{ "expr": "sum(increase(lsc_gray_rollout_event_total{event=\"READY_FOR_GRAD\"}[24h]))", "instant": true }],
+      "title": "24h ReadyForGraduation 次数",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "targets": [{
+        "expr": "sum by (policyId, stepWeight) (lsc_gray_rollout_step_info == 1)",
+        "format": "table",
+        "instant": true
+      }],
+      "title": "各策略当前步进 (policyId → stepWeight%)",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 6,
+      "targets": [{
+        "expr": "lsc_gray_rollout_slo_result * on(policyId, nodeId) group_left lsc_gray_rollout_leader == 1",
+        "format": "table",
+        "instant": true
+      }],
+      "title": "SLO 各大门结果（仅 leader 实例）",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "id": 7,
+      "targets": [
+        { "legendFormat": "scan",             "expr": "sum(increase(lsc_gray_rollout_tick_total{action=\"scan\"}[5m]))" },
+        { "legendFormat": "skip_no_quorum",   "expr": "sum(increase(lsc_gray_rollout_tick_total{action=\"skip_no_quorum\"}[5m]))" },
+        { "legendFormat": "error",            "expr": "sum(increase(lsc_gray_rollout_tick_total{action=\"error\"}[5m]))" }
+      ],
+      "title": "Coordinator tick 分类次数（5m 滑动）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "id": 8,
+      "targets": [
+        { "legendFormat": "STEP_ADVANCE",       "expr": "sum(increase(lsc_gray_rollout_event_total{event=\"STEP_ADVANCE\"}[30m]))" },
+        { "legendFormat": "ROLLBACK_TRIGGERED", "expr": "sum(increase(lsc_gray_rollout_event_total{event=\"ROLLBACK_TRIGGERED\"}[30m]))" },
+        { "legendFormat": "READY_FOR_GRAD",     "expr": "sum(increase(lsc_gray_rollout_event_total{event=\"READY_FOR_GRAD\"}[30m]))" },
+        { "legendFormat": "MANUAL_ADVANCE",     "expr": "sum(increase(lsc_gray_rollout_event_total{event=\"MANUAL_ADVANCE\"}[30m]))" }
+      ],
+      "title": "Rollout 事件速率（30m）",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["lsc-gateway", "gray-release", "phase-n-rollout"],
+  "templating": {
+    "list": [
+      { "name": "prometheus_datasource", "type": "datasource", "query": "prometheus", "current": { "text": "Prometheus", "value": "prometheus" } }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "LSC 灰度发布自治理 (Phase N Rollout)",
+  "uid": "lsc-gray-rollout",
+  "version": 1,
+  "weekStart": ""
+}

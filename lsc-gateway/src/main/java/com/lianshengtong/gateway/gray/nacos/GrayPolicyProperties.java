@@ -82,6 +82,39 @@ public class GrayPolicyProperties {
         private String status = "ACTIVE";
         private List<RuleEntry> rules = new ArrayList<>();
         private Map<String, String> meta = new LinkedHashMap<>();
+        /** Phase N：单策略 rollout 覆盖配置（steps、门限、enabled）。null=继承全局默认。 */
+        private RolloutEntry rollout;
+
+        /** Phase N：PolicyEntry.rollout → Store.RolloutConfig；全 null 字段时返回 null（减少配置噪音）。 */
+        public GrayPolicyStore.RolloutConfig getRollout() {
+            if (rollout == null) return null;
+            GrayPolicyStore.RolloutConfig r = new GrayPolicyStore.RolloutConfig(
+                    rollout.getSteps(), rollout.getMinMinutesAtStep(), rollout.getMaxErrorDriftPct(),
+                    rollout.getMaxP95Ratio(), rollout.getMinSamplesThreshold(),
+                    rollout.getMaxConsecutiveFailuresBeforeRollback(), rollout.getEnabled());
+            boolean empty = r.steps() == null && r.minMinutesAtStep() == null && r.maxErrorDriftPct() == null
+                    && r.maxP95Ratio() == null && r.minSamplesThreshold() == null
+                    && r.maxConsecutiveFailuresBeforeRollback() == null && r.enabled() == null;
+            return empty ? null : r;
+        }
+
+        public void setRollout(RolloutEntry e) { this.rollout = e; }
+    }
+
+    /** Phase N：Nacos/YAML 中 per-policy rollout 段映射。允许部分字段缺省（null = 继承全局默认）。 */
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
+    public static class RolloutEntry {
+        /** 例 [1,5,20,50,100] */
+        private List<Integer> steps;
+        private Integer minMinutesAtStep;
+        private Double maxErrorDriftPct;
+        private Double maxP95Ratio;
+        private Long minSamplesThreshold;
+        private Integer maxConsecutiveFailuresBeforeRollback;
+        /** false=仅允许手动推进；缺省 true */
+        private Boolean enabled;
     }
 
     @Data
@@ -125,7 +158,8 @@ public class GrayPolicyProperties {
                     rules,
                     e.getMeta() == null ? Map.of() : Map.copyOf(e.getMeta()),
                     st,
-                    null, null, null     // 时间/操作人留空：GrayPolicyService.createOrUpdate 会在写入 store 时自动填
+                    null, null, null,   // 时间/操作人留空：GrayPolicyService.createOrUpdate 会在写入 store 时自动填
+                    e.getRollout()      // Phase N：单策略 rollout override；缺省 null → 走全局默认
             ));
         }
         return out;

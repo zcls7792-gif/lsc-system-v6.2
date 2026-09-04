@@ -162,7 +162,7 @@ public class GrayNacosConfigSyncTest {
     }
 
     private static GrayPolicyStore.Policy buildPolicy(String pid, String routeId, int weight, GrayPolicyStore.Status s) {
-        return new GrayPolicyStore.Policy(pid, routeId, "lb://base", "lb://canary", weight, List.of(), Map.of(), s,
+        return GrayPolicyStore.Policy.legacy(pid, routeId, "lb://base", "lb://canary", weight, List.of(), Map.of(), s,
                 Instant.now(), Instant.now(), "test");
     }
 }

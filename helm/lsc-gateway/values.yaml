@@ -135,6 +135,20 @@ env:
   # Redis 统计键前缀（支持按环境/集群隔离）
   GRAY_STATS_PREFIX: "lsc:gray:stats"
 
+  # Phase N Rollout：灰度自治理执行引擎（开启后会自动按 steps+SLO 步进/回滚）
+  GRAY_ROLLOUT_ENABLED: "true"
+  GRAY_ROLLOUT_TICK_MS: "15000"
+  GRAY_ROLLOUT_STEPS: "1,5,20,50,100"
+  GRAY_ROLLOUT_MIN_STEP_MIN: "5"
+  GRAY_ROLLOUT_MAX_ERROR_DRIFT_PCT: "0.5"
+  GRAY_ROLLOUT_MAX_P95_RATIO: "1.3"
+  GRAY_ROLLOUT_MIN_SAMPLES: "500"
+  GRAY_ROLLOUT_MAX_CONSEC_FAIL: "2"
+
+  # ======== Phase P：canary 清理 CronJob 回调 release-service 地址 ========
+  # RELEASE_SERVICE_URL 默认值与 cronjob-gray-canary-cleanup.yaml 保持一致；可按环境覆盖
+  RELEASE_SERVICE_URL: "http://lsc-release-service.lsc-system.svc.cluster.local:8080"
+
   # ======== Phase L2 W3C Tracing / Baggage（与 lsc-order-service / user-service 一致） ========
   # 使用 Micrometer Tracing + OTel/W3C；如接入 Zipkin/Jaeger/OTLP-Collector 在这里注入
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
@@ -229,6 +243,22 @@ initNacosGray:
         #   meta:
         #     created-by: ops@lianshengtong.com
         #     business: order
+
+# ---------- Phase P：canary 资源清理 CronJob（默认关；生产可在 graduated 的大促稳定后打开） ----------
+gray:
+  cleanup:
+    enabled: false
+    # 每 6h 跑一次；建议手动：kubectl create job --from=cronjob/lsc-gateway-canary-cleanup gc-$(date +%s)
+    schedule: "42 */6 * * *"
+    image:
+      repository: bitnami/kubectl
+      tag: "1.29.5"
+      pullPolicy: IfNotPresent
+    # label selector 选中要清理的 canary。默认值是把"明确标成 expired 且带 canary=true"的资源删掉，避免误删
+    labelSelector: "app.kubernetes.io/canary=true,gray=expired"
+    # 回调 lsc-release-service，让其把 expired/policies 标成 GRADUATED + 写毕业审计
+    releaseServiceUrl: "http://lsc-release-service.lsc-system.svc.cluster.local:8080"
+    tokenSecret: "lsc-release-service-token"
 
 # ---------- 网络策略 ----------
 networkPolicy:

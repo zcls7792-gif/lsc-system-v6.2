@@ -46,7 +46,7 @@ class GrayReleaseControllerPhase1Test {
     }
 
     private GrayPolicyStore.Policy sample(String id, int w) {
-        return new GrayPolicyStore.Policy(id, "svc",
+        return GrayPolicyStore.Policy.legacy(id, "svc",
                 "lb://svc", "lb://svc-canary", w,
                 List.of(), Map.of(), null, Instant.now(), Instant.now(), "ops");
     }

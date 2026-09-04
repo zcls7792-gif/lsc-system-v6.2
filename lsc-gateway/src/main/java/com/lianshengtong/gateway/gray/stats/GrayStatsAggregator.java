@@ -33,7 +33,16 @@ public interface GrayStatsAggregator {
      * @param policyId    策略 ID
      * @param version     baseline / canary（对应 baseline_hits / canary_hits）
      * @param ruleForce   null / ruleForceCanary / ruleForceBaseline：命中规则方向则加一
+     * @param statusCode  HTTP 状态码（5xx 用于错误率统计；0/负数视为"暂不可用"跳过 SloGate 的 err 门限）
+     * @param latencyMs   请求耗时（毫秒；负数忽略不写入 p95 桶）
      */
+    default void record(String policyId, Version version, RuleForce ruleForce,
+                        int statusCode, long latencyMs) {
+        // 默认兼容：旧实现仍可只调用 record(policyId, version, ruleForce) 即可
+        record(policyId, version, ruleForce);
+    }
+
+    /** 兼容热路径：只写命中计数，不传入 status/latency（SloGuard 会降级为不做错误率/P95 判断，以样本不足通过）。 */
     void record(String policyId, Version version, RuleForce ruleForce);
 
     /** 读取单个策略的聚合结果（用于 /stats）。 */
@@ -49,16 +58,44 @@ public interface GrayStatsAggregator {
 
     enum RuleForce { NONE, FORCE_CANARY, FORCE_BASELINE }
 
-    /** 聚合结果：同时暴露本地实例视图与 Redis 集群视图。 */
+    /**
+     * 聚合结果：本地实例 + 集群视图。
+     * <p>
+     * 新增 Phase N 字段：err5xxXxx（5xx 数量） + latencyP95XxxMs（P95 毫秒）。
+     * 若实现无法提供 err/p95 估算（如 Redis 端未建桶），字段保持 -1；SloGuard 会把该门视为"数据不足"。
+     */
     record AggregatedStats(
             long baselineHits,
             long canaryHits,
             long ruleForceCanary,
             long ruleForceBaseline,
-            long startEpochSec,   // 该策略在 Redis 中的最早写入时间（秒），缺失 0
-            int liveNodes,        // 当前观测到的活跃实例数（近似，可能浮动）
-            boolean clusterAvailable   // 集群层是否存在值：true=Redis 可用并能读到；false=仅本地兜底
+            long startEpochSec,
+            int liveNodes,
+            boolean clusterAvailable,
+            // Phase N 新增：错误计数（-1 表示未采集）
+            long err5xxBaseline,
+            long err5xxCanary,
+            // Phase N 新增：P95 估算（毫秒；-1 未采集）
+            long latencyP95BaselineMs,
+            long latencyP95CanaryMs
     ) {
+        /** 本地兜底 + 历史兼容构造（缺 err/p95 时填 -1）。 */
+        public static AggregatedStats legacy(long baselineHits, long canaryHits,
+                                             long ruleForceCanary, long ruleForceBaseline,
+                                             long startEpochSec, int liveNodes, boolean clusterAvailable) {
+            return new AggregatedStats(baselineHits, canaryHits, ruleForceCanary, ruleForceBaseline,
+                    startEpochSec, liveNodes, clusterAvailable, -1, -1, -1, -1);
+        }
         public long totalRequests() { return baselineHits + canaryHits; }
+        /** canary 错误率（百分比）；未采集返回 Double.NaN */
+        public double canaryErrPct() {
+            if (err5xxCanary < 0 || canaryHits <= 0) return Double.NaN;
+            return 100.0 * err5xxCanary / canaryHits;
+        }
+        /** baseline 错误率（百分比）；未采集返回 Double.NaN */
+        public double baselineErrPct() {
+            if (err5xxBaseline < 0 || baselineHits <= 0) return Double.NaN;
+            return 100.0 * err5xxBaseline / baselineHits;
+        }
     }
 }

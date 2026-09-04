@@ -23,7 +23,7 @@ class GrayReleaseControllerTest {
     }
 
     private GrayPolicyStore.Policy sample(String id, int weight) {
-        return new GrayPolicyStore.Policy(id, "order-service",
+        return GrayPolicyStore.Policy.legacy(id, "order-service",
                 "lb://lsc-order-service", "lb://lsc-order-service-canary",
                 weight, List.of(), Map.of(), GrayPolicyStore.Status.ACTIVE,
                 Instant.now(), Instant.now(), "ops");

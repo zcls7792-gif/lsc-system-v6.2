@@ -256,6 +256,30 @@ lsc:
       enabled: ${GRAY_NACOS_ENABLED:true}
       data-id: ${GRAY_NACOS_DATA_ID:gray-release.yaml}
       group:   ${GRAY_NACOS_GROUP:LSC_GROUP}
+    # Phase N：灰度发布自治理 Coordinator（硬步进 + 硬回滚）
+    rollout:
+      enabled: ${GRAY_ROLLOUT_ENABLED:true}
+      tickMs: ${GRAY_ROLLOUT_TICK_MS:15000}
+      # 默认步进台阶（最后必须到 100；自动补缺失的 100 并自动剔除 0）
+      steps: ${GRAY_ROLLOUT_STEPS:1,5,20,50,100}
+      # 每步最短保持时间（分钟）：保持期内即使 SLO 全 PASS 也不推进
+      minMinutesAtStep: ${GRAY_ROLLOUT_MIN_STEP_MIN:5}
+      # 硬门限 1：canary 错误率 - baseline 错误率 ≤ 该值（百分比）
+      maxErrorDriftPct: ${GRAY_ROLLOUT_MAX_ERROR_DRIFT_PCT:0.5}
+      # 硬门限 2：canary_p95 / baseline_p95 ≤ 该比值（1.3 = canary 最多慢 30%）
+      maxP95Ratio: ${GRAY_ROLLOUT_MAX_P95_RATIO:1.3}
+      # 硬门限 3：canary 滚动样本量 ≥ N 才允许做 rollback 判断（样本不足则不推进不回滚）
+      minSamplesThreshold: ${GRAY_ROLLOUT_MIN_SAMPLES:500}
+      # 连续多少次 tick 全部 SLO FAIL → 触发硬回滚（1 = 一次失败就立刻回滚；默认 2 抗瞬时抖动）
+      maxConsecutiveFailuresBeforeRollback: ${GRAY_ROLLOUT_MAX_CONSEC_FAIL:2}
+      # Redisson 不可用时允许 JVM 级 leader CAS（单实例部署安全；多实例仅为兜底，DB 事务+审计历史防止双写）
+      allowJvmLeaderFallback: true
+      # 分布式租约毫秒（> tickMs 避免 tick 中途丢锁）
+      leaderLeaseMs: 55000
+      # 节点标识：默认 K8s POD_NAME → HOSTNAME env → gw-unknown
+      nodeId: ${POD_NAME:${HOSTNAME:gw-unknown}}
+      # aggregated stats 读取超时（毫秒）；超时则本 tick 视为 dataUnavailable → 不推进不回滚
+      statsTimeoutMs: 2000
     # 本地兜底示例（开发 / 本地联调，Nacos 不可用时通过这里临时下发 1~2 条策略）：
     # policies:
     #   - policy-id: order_gray_001

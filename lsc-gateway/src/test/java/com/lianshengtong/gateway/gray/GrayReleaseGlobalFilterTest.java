@@ -45,7 +45,7 @@ class GrayReleaseGlobalFilterTest {
     }
 
     GrayPolicyStore.Policy createPolicy(String pid, int weight, List<GrayPolicyStore.Rule> rules) {
-        return store.createOrUpdate(new GrayPolicyStore.Policy(pid, "order-service",
+        return store.createOrUpdate(GrayPolicyStore.Policy.legacy(pid, "order-service",
                 "lb://lsc-order-service", "lb://lsc-order-service-canary",
                 weight, rules, Map.of(), null, null, null, null), "ops");
     }

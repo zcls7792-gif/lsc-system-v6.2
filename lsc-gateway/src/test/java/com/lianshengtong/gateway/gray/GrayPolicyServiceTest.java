@@ -71,7 +71,7 @@ class GrayPolicyServiceTest {
     }
 
     private GrayPolicyStore.Policy sample(String id, int w, GrayPolicyStore.Status s) {
-        return new GrayPolicyStore.Policy(id, "r-"+id,
+        return GrayPolicyStore.Policy.legacy(id, "r-"+id,
                 "lb://svc", "lb://svc-canary", w,
                 List.of(), Map.of(), s, Instant.now(), Instant.now(), "ops");
     }

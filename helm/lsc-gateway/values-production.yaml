@@ -31,6 +31,16 @@ env:
   GRAY_NACOS_DATA_ID: "gray-release.yaml"
   GRAY_NACOS_GROUP: "LSC_GROUP"
 
+  # Phase N Rollout：生产更严格（慢梯 15min，误差漂移≤0.3%，P95 最多慢 20%，连续 3 次失败才回滚抗抖）
+  GRAY_ROLLOUT_ENABLED: "true"
+  GRAY_ROLLOUT_TICK_MS: "30000"
+  GRAY_ROLLOUT_STEPS: "1,3,10,30,60,100"
+  GRAY_ROLLOUT_MIN_STEP_MIN: "15"
+  GRAY_ROLLOUT_MAX_ERROR_DRIFT_PCT: "0.3"
+  GRAY_ROLLOUT_MAX_P95_RATIO: "1.2"
+  GRAY_ROLLOUT_MIN_SAMPLES: "2000"
+  GRAY_ROLLOUT_MAX_CONSEC_FAIL: "3"
+
 hpa:
   enabled: true
   minReplicas: 4

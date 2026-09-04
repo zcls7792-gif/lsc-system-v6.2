@@ -1,0 +1,67 @@
+{{- /*
+  Phase P：毕业/回滚后 canary 资源清理 Job（建议：运维手动触发 / 或 lsc-release-service 审批 GRADUATE 时再执行 kubectl create job-from-cronjob）
+
+  默认不自动创建（挂在 CronJob 上；按需用 `kubectl create job --from=cronjob/xxx` 手动触发或让 lsc-release-service 调 K8s API）。
+
+  作用：
+    1) 删除 {{ .Values.gray.cleanup.labelSelector }} 选中的 canary Deployment/Service/HPA；
+    2) 删除 Nacos 中过期 30 天以上的 rollout history 草稿；
+    3) 给 lsc-release-service 回调 /internal/gray/cleanup 通知以便标记策略 GRADUATED。
+*/ -}}
+{{- if .Values.gray.cleanup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "lsc-gateway.fullname" . }}-canary-cleanup
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "lsc-gateway.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.gray.cleanup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          serviceAccountName: {{ include "lsc-gateway.serviceAccountName" . }}
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: {{ .Values.gray.cleanup.image.repository }}:{{ .Values.gray.cleanup.image.tag }}
+              imagePullPolicy: {{ .Values.gray.cleanup.image.pullPolicy | default "IfNotPresent" }}
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  echo "[gray-cleanup] phase=P targetNamespace=${TARGET_NAMESPACE:-lsc-system} selector=${CANARY_LABEL_SELECTOR:-app.kubernetes.io/canary=true,gray=expired}"
+                  # ========== 1) 清理过期 canary 资源 ==========
+                  kubectl -n "${TARGET_NAMESPACE:-lsc-system}" delete deploy,svc,hpa \
+                    -l "${CANARY_LABEL_SELECTOR:-app.kubernetes.io/canary=true,gray=expired}" \
+                    --ignore-not-found=true || true
+                  # ========== 2) 回调 lsc-release-service，让它把 expired/graduated 策略标记为 GRADUATED ==========
+                  callback="${RELEASE_SERVICE_URL:-http://lsc-release-service.lsc-system.svc.cluster.local:8080}/internal/gray/cleanup"
+                  curl -fsS -X POST -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer ${SERVICE_TOKEN:-}" \
+                    "${callback}" -d "{}" -w "\n[gray-cleanup] callback status=%{http_code}\n" \
+                    || echo "[gray-cleanup][warn] callback release-service FAILED; manual fix via admin UI."
+                  echo "[gray-cleanup] done"
+              env:
+                - name: TARGET_NAMESPACE
+                  valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+                - name: CANARY_LABEL_SELECTOR
+                  value: {{ .Values.gray.cleanup.labelSelector | default "app.kubernetes.io/canary=true,gray=expired" | quote }}
+                - name: RELEASE_SERVICE_URL
+                  value: {{ .Values.gray.cleanup.releaseServiceUrl | default "http://lsc-release-service.lsc-system.svc.cluster.local:8080" | quote }}
+                - name: SERVICE_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.gray.cleanup.tokenSecret | default "lsc-release-service-token" }}
+                      key: token
+                      optional: true
+              resources:
+                requests: { cpu: 50m, memory: 128Mi }
+                limits:   { cpu: 500m, memory: 512Mi }
+{{- end }}

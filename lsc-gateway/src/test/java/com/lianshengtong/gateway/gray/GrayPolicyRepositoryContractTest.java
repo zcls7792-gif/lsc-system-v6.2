@@ -68,7 +68,7 @@ class GrayPolicyRepositoryContractTest {
     }
 
     GrayPolicyStore.Policy sample(String id, int w, GrayPolicyStore.Status s) {
-        return new GrayPolicyStore.Policy(id, "route-"+id,
+        return GrayPolicyStore.Policy.legacy(id, "route-"+id,
                 "lb://svc","lb://svc-canary", w,
                 List.of(new GrayPolicyStore.Rule("HEADER","X-Canary","EQ","force",null)),
                 Map.of("owner","ops"), s, Instant.now(), Instant.now(), "junit");
@@ -123,7 +123,7 @@ class GrayPolicyRepositoryContractTest {
     void jdbcUpsertOverwrite() {
         GrayPolicyStore.Policy v1 = sample("u", 10, GrayPolicyStore.Status.ACTIVE);
         jdbc.save(v1);
-        GrayPolicyStore.Policy v2 = new GrayPolicyStore.Policy("u", "route-u",
+        GrayPolicyStore.Policy v2 = GrayPolicyStore.Policy.legacy("u", "route-u",
                 v1.baselineUri(), v1.canaryUri(), 80,
                 List.of(), Map.of("owner","new-owner"), GrayPolicyStore.Status.PAUSED,
                 v1.createdAt(), Instant.now(), "junit2");

@@ -1,0 +1,85 @@
+{{- /*
+  Phase O/P：灰度发布自治理 Prometheus 告警规则 (PrometheusRule CRD)
+
+  告警级别：
+    - P0：硬回滚触发（已发生业务止损动作）、Coordinator 死锁（2 tick 未跑）
+    - P1：SLO 持续 FAIL（连续 3 次但未达 maxConsecutiveFailures 阈值，预警可能要回滚）
+    - P2：连续多策略接近回滚线（consecutiveFails >= maxFailures-1）
+*/ -}}
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "lsc-gateway.fullname" . }}-rollout-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lsc-gateway.labels" . | nindent 4 }}
+    release: prometheus
+spec:
+  groups:
+    - name: lsc-gray-rollout
+      interval: 30s
+      rules:
+        # ========== P0 ==========
+        - alert: GrayRollbackTriggered_P0
+          expr: increase(lsc_gray_rollout_event_total{event="ROLLBACK_TRIGGERED"}[10m]) > 0
+          for: 1m
+          labels:
+            severity: P0
+            team: sre
+            category: gray-release
+          annotations:
+            summary: "灰度策略发生硬回滚 (policyId={{ $labels.policyId }})"
+            description: "10 分钟内策略 {{ $labels.policyId }} 触发了硬回滚 {{ $value }} 次，请立即关联业务影响、调查 canary 版本。\n  排障入口：Grafana → LSC 灰度发布自治理 dashboard；或调用 /api/gateway/gray/policies/{{ $labels.policyId }}/rollout 查看 SLO 明细。"
+            runbook_url: "https://docs.lianshengtong.com/runbooks/gray-rollback.html"
+
+        - alert: GrayRolloutCoordinatorDead_P0
+          expr: (time() - lsc_gray_rollout_last_tick_epoch_sec) > 180 and (max(lsc_gray_rollout_leader) by (namespace) == 1 or count(lsc_gray_rollout_leader) > 0)
+          for: 3m
+          labels:
+            severity: P0
+            team: sre
+            category: gray-release
+          annotations:
+            summary: "Rollout Coordinator 超过 3 分钟未 tick（{{ $value }}s）"
+            description: "可能 Redisson 锁漂移 / Scheduler 线程被阻塞 / Gateway 实例 leader 一直不更新。检查 gateway POD：kubectl -n {{ $labels.namespace }} logs -l app.kubernetes.io/name=lsc-gateway --tail=500 | grep gray-rollout"
+
+        # ========== P1 ==========
+        - alert: GraySloFailingHigh_P1
+          # slo 某大门 FAIL 值 = 1；leader 才是决策源（和 leader=1 做乘）
+          expr: |
+            max by (policyId, name) (
+              lsc_gray_rollout_slo_result * on(policyId, nodeId) group_left lsc_gray_rollout_leader == 1
+            ) == 0 and name != "min_samples"
+          for: 5m
+          labels:
+            severity: P1
+            team: sre
+            category: gray-release
+          annotations:
+            summary: "灰度 {{ $labels.policyId }} 门限 {{ $labels.name }} 已连续 FAIL 5 分钟"
+            description: "如果 SLO 持续 FAIL，会在 maxConsecutiveFailures 达到后触发硬回滚。建议提前介入：1) 检查该策略 canary 版本日志；2) 必要时 POST /policies/{id}/rollout/advance-step 手动推进/或者 POST /policies/{id}/rollback 主动回滚。"
+
+        # ========== P2 ==========
+        - alert: GrayConsecutiveFailsNearThreshold_P2
+          expr: lsc_gray_rollout_consecutive_failures >= on(policyId) (lsc_gray_rollout_max_failures_threshold - 1)
+          for: 2m
+          labels:
+            severity: P2
+            team: sre
+            category: gray-release
+          annotations:
+            summary: "策略 {{ $labels.policyId }} 连续 SLO FAIL 接近回滚阈值"
+            description: "当前连续失败次数={{ $value }}，距离硬回滚只差 1 tick。请关注 rollout/status 详情。"
+
+        - alert: GrayRolloutLeaderElectionInstable_P2
+          expr: count(changes(lsc_gray_rollout_leader_node_id[20m]) > 0) by (namespace) >= 3
+          for: 0m
+          labels:
+            severity: P2
+            team: sre
+            category: gray-release
+          annotations:
+            summary: "20 分钟内 leader 切换 >= 3 次"
+            description: "可能 Redisson 租约过短 / 网络抖动。检查 gray.rollout.leaderLeaseMs（建议 > 2×tickMs）。"
+{{- end }}

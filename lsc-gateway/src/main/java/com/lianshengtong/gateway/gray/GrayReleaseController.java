@@ -1,10 +1,15 @@
 package com.lianshengtong.gateway.gray;
 
 import com.lianshengtong.common.result.R;
+import com.lianshengtong.gateway.gray.rollout.GrayRolloutCoordinator;
+import com.lianshengtong.gateway.gray.rollout.GrayRolloutProperties;
+import com.lianshengtong.gateway.gray.rollout.RolloutRuntimeState;
+import com.lianshengtong.gateway.gray.rollout.SloGuard;
 import com.lianshengtong.gateway.gray.stats.GrayStatsAggregator;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,31 +30,63 @@ public class GrayReleaseController {
     private final GrayPolicyStore store;
     private final GrayPolicyService service;
     private final GrayStatsAggregator statsAggregator;
+    private final ObjectProvider<GrayRolloutCoordinator> coordinatorProvider;
+    private final ObjectProvider<GrayRolloutProperties> rolloutPropsProvider;
 
-    /** Spring 托管构造：statsAggregator 通过 ObjectProvider 可选。 */
+    /** Spring 托管构造：statsAggregator / coordinator 通过 ObjectProvider 可选。 */
     public GrayReleaseController(GrayPolicyStore store,
                                  GrayPolicyService service,
-                                 ObjectProvider<GrayStatsAggregator> aggregatorProvider) {
-        this(store, service, aggregatorProvider.getIfAvailable(() -> new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store)));
+                                 ObjectProvider<GrayStatsAggregator> aggregatorProvider,
+                                 ObjectProvider<GrayRolloutCoordinator> coordinatorProvider,
+                                 ObjectProvider<GrayRolloutProperties> rolloutPropsProvider) {
+        this(store,
+                service,
+                aggregatorProvider.getIfAvailable(() -> new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store)),
+                coordinatorProvider, rolloutPropsProvider);
     }
 
+    /** 向后兼容：老代码只传 3 个参数（stats Aggregator Provider）。 */
+    public GrayReleaseController(GrayPolicyStore store,
+                                  GrayPolicyService service,
+                                  ObjectProvider<GrayStatsAggregator> aggregatorProvider) {
+        this(store, service, aggregatorProvider,
+                GrayReleaseController.<GrayRolloutCoordinator>nullObjectProvider(),
+                GrayReleaseController.<GrayRolloutProperties>nullObjectProvider());
+    }
     private GrayReleaseController(GrayPolicyStore store,
                                   GrayPolicyService service,
-                                  GrayStatsAggregator statsAggregator) {
+                                  GrayStatsAggregator statsAggregator,
+                                  ObjectProvider<GrayRolloutCoordinator> coordinatorProvider,
+                                  ObjectProvider<GrayRolloutProperties> rolloutPropsProvider) {
         this.store = store;
         this.service = service;
-        this.statsAggregator = statsAggregator == null ? new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store) : statsAggregator;
+        this.statsAggregator = statsAggregator == null
+                ? new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store)
+                : statsAggregator;
+        this.coordinatorProvider = coordinatorProvider == null ? nullObjectProvider() : coordinatorProvider;
+        this.rolloutPropsProvider = rolloutPropsProvider == null ? nullObjectProviderProps() : rolloutPropsProvider;
     }
 
-    /** 兼容构造（已拿到 service 实例的单测场景；stats 回退 local-only）。 */
+    /** 兼容构造（单测 / 手工实例化场景）。 */
     public GrayReleaseController(GrayPolicyStore store, GrayPolicyService service) {
-        this(store, service, (GrayStatsAggregator) null);
+        this(store, service,
+                new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store),
+                nullObjectProviderCoord(), nullObjectProviderProps());
     }
+    public GrayReleaseController(GrayPolicyStore store) { this(store, defaultInMemoryService(store)); }
 
-    /** 兼容构造函数（只传入 store 时，自动创建一个纯内存 GrayPolicyService，适合单元测试 / 无 Spring 上下文场景）。 */
-    public GrayReleaseController(GrayPolicyStore store) {
-        this(store, defaultInMemoryService(store), new com.lianshengtong.gateway.gray.stats.LocalOnlyGrayStatsAggregator(store));
+    // ---------- helper: null ObjectProvider suppliers ----------
+    private static ObjectProvider<GrayRolloutCoordinator> nullObjectProviderCoord() { return nullObjectProvider(); }
+    @SuppressWarnings("unchecked")
+    private static <T> ObjectProvider<T> nullObjectProvider() {
+        return new ObjectProvider<T>() {
+            public T getObject() { return null; }
+            public T getObject(Object... args) { return null; }
+            public T getIfAvailable() { return null; }
+            public T getIfUnique() { return null; }
+        };
     }
+    private static ObjectProvider<GrayRolloutProperties> nullObjectProviderProps() { return nullObjectProvider(); }
 
     private static GrayPolicyService defaultInMemoryService(GrayPolicyStore store) {
         com.lianshengtong.gateway.gray.spi.InMemoryGrayPolicyRepository repo =
@@ -213,6 +250,106 @@ public class GrayReleaseController {
         return R.ok(out);
     }
 
+    // ======================= Phase N: Rollout 管理端点 =======================
+
+    @GetMapping("/rollout/status")
+    public R<Map<String, Object>> rolloutStatus() {
+        GrayRolloutCoordinator c = coordinatorProvider.getIfAvailable();
+        Map<String, Object> out;
+        if (c == null) {
+            out = new LinkedHashMap<>();
+            out.put("coordinatorEnabled", false);
+            out.put("reason", "GrayRolloutCoordinator bean missing (gray.rollout.enabled=false?)");
+        } else {
+            out = c.statusSnapshot(Instant.now());
+        }
+        return R.ok(out);
+    }
+
+    @GetMapping("/policies/{policyId}/rollout")
+    public R<Map<String, Object>> rolloutDetail(@PathVariable String policyId) {
+        GrayPolicyStore.Policy p = store.get(policyId);
+        if (p == null) return R.fail(404, "policy not found");
+        GrayRolloutProperties props = rolloutPropsProvider.getIfAvailable(GrayRolloutProperties::new);
+        List<Integer> steps = SloGuard.mergedSteps(props, p.rolloutConfig());
+        int stepIdx = SloGuard.currentStepIndex(steps, p.canaryWeightPercent());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("policyId", policyId);
+        out.put("status", p.status().name());
+        out.put("weight", p.canaryWeightPercent());
+        out.put("steps", steps);
+        out.put("stepIndex", stepIdx);
+        out.put("stepWeight", steps.get(stepIdx));
+
+        GrayRolloutCoordinator c = coordinatorProvider.getIfAvailable();
+        if (c != null) {
+            RolloutRuntimeState s = c.runtimeStateFor(policyId);
+            RolloutRuntimeState.Snapshot snap = (s == null)
+                    ? new RolloutRuntimeState.Snapshot(stepIdx, steps.get(stepIdx), 0L, 0, 0, null, 0L)
+                    : s.snapshot(Instant.now());
+            out.put("snapshot", snap);
+        } else {
+            out.put("snapshot", Map.of("note", "Coordinator bean unavailable; runtime snapshot empty."));
+        }
+
+        GrayStatsAggregator.AggregatedStats a = statsAggregator.aggregated(policyId);
+        SloGuard.SloResult slo = SloGuard.evaluate(a, props, p.rolloutConfig());
+        Map<String, Object> sm = new LinkedHashMap<>();
+        sm.put("overallPass", slo.overallPass());
+        sm.put("insufficientSamples", slo.insufficientSamples());
+        sm.put("dataUnavailable", slo.dataUnavailable());
+        sm.put("canaryErrPct", Double.isNaN(slo.canaryErrPct()) ? null : slo.canaryErrPct());
+        sm.put("baselineErrPct", Double.isNaN(slo.baselineErrPct()) ? null : slo.baselineErrPct());
+        sm.put("canaryP95Ms",  slo.canaryP95Ms()  < 0 ? null : slo.canaryP95Ms());
+        sm.put("baselineP95Ms", slo.baselineP95Ms() < 0 ? null : slo.baselineP95Ms());
+        sm.put("canarySamples", slo.canarySamples());
+        sm.put("baselineSamples", slo.baselineSamples());
+        sm.put("gates", slo.gates());
+        out.put("slo", sm);
+
+        Map<String, Object> ef = new LinkedHashMap<>();
+        ef.put("minMinutesAtStep", props.getMinMinutesAtStep());
+        ef.put("maxConsecutiveFailuresBeforeRollback", props.getMaxConsecutiveFailuresBeforeRollback());
+        ef.put("maxErrorDriftPct", props.getMaxErrorDriftPct());
+        ef.put("maxP95Ratio", props.getMaxP95Ratio());
+        ef.put("minSamplesThreshold", props.getMinSamplesThreshold());
+        ef.put("policyEnabled", p.rolloutConfig() == null || !Boolean.FALSE.equals(p.rolloutConfig().enabled()));
+        out.put("effectiveConfig", ef);
+
+        return R.ok(out);
+    }
+
+    @GetMapping("/policies/{policyId}/rollout/history")
+    public R<List<GrayPolicyStore.History>> rolloutHistory(@PathVariable String policyId,
+                                                           @RequestParam(defaultValue = "50") int limit) {
+        if (store.get(policyId) == null) return R.fail(404, "policy not found");
+        return R.ok(service.rolloutHistory(policyId, Math.max(1, Math.min(limit, 200))));
+    }
+
+    @PostMapping("/policies/{policyId}/rollout/advance-step")
+    public R<GrayPolicyStore.Policy> rolloutAdvanceStep(@PathVariable String policyId,
+                                                         @RequestParam(required = false) String reason,
+                                                         @RequestHeader(value = "X-Admin-User", defaultValue = "ops") String operator) {
+        GrayRolloutCoordinator c = coordinatorProvider.getIfAvailable();
+        GrayPolicyStore.Policy advanced;
+        if (c != null) {
+            advanced = c.manualAdvanceStep(policyId, operator, reason);
+            if (advanced == null) return R.fail(404, "policy not found: " + policyId);
+            return R.ok(advanced);
+        }
+        GrayPolicyStore.Policy p = store.get(policyId);
+        if (p == null) return R.fail(404, "policy not found");
+        GrayRolloutProperties props = rolloutPropsProvider.getIfAvailable(GrayRolloutProperties::new);
+        List<Integer> steps = SloGuard.mergedSteps(props, p.rolloutConfig());
+        int stepIdx = SloGuard.currentStepIndex(steps, p.canaryWeightPercent());
+        if (stepIdx >= steps.size() - 1) {
+            return R.ok(service.markReadyForGraduation(policyId, operator));
+        }
+        int next = steps.get(stepIdx + 1);
+        return R.ok(service.advanceWeightTo(policyId, next, operator,
+                reason == null ? "manual advance (no coordinator)" : reason));
+    }
+
     // ============== internals ==============
     private static Map<String, Object> clusterStatsMap(GrayStatsAggregator.AggregatedStats a) {
         long total = a.totalRequests();
@@ -227,6 +364,11 @@ public class GrayReleaseController {
         out.put("canaryRatioPercent", String.format("%.2f", ratio));
         out.put("ruleForceCanaryHits", a.ruleForceCanary());
         out.put("ruleForceBaselineHits", a.ruleForceBaseline());
+        // Phase N 新增：err5xx + P95 估算
+        out.put("err5xxBaseline", a.err5xxBaseline() < 0 ? null : a.err5xxBaseline());
+        out.put("err5xxCanary",   a.err5xxCanary()   < 0 ? null : a.err5xxCanary());
+        out.put("p95BaselineMs",  a.latencyP95BaselineMs() < 0 ? null : a.latencyP95BaselineMs());
+        out.put("p95CanaryMs",    a.latencyP95CanaryMs()   < 0 ? null : a.latencyP95CanaryMs());
         return out;
     }
 
