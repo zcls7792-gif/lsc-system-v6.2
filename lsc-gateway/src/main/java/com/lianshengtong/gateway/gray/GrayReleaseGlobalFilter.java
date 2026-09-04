@@ -112,6 +112,8 @@ public class GrayReleaseGlobalFilter implements GlobalFilter, Ordered {
             mutated = req.mutate()
                     .header("X-Gray-Policy", policy.policyId())
                     .header("X-Gray-Version", "canary")
+                    // W3C baggage 头：下游直接提取（不依赖 Micrometer/OTel 也能拿到）
+                    .header("baggage", "gray.policy_id="+policy.policyId()+",gray.version=canary")
                     .build();
             exchange.getAttributes().put(ATTR_GRAY_VERSION, "canary");
             exchange.getAttributes().put(ATTR_POLICY_ID, policy.policyId());
@@ -123,6 +125,7 @@ public class GrayReleaseGlobalFilter implements GlobalFilter, Ordered {
             mutated = req.mutate()
                     .header("X-Gray-Policy", policy.policyId())
                     .header("X-Gray-Version", "baseline")
+                    .header("baggage", "gray.policy_id="+policy.policyId()+",gray.version=baseline")
                     .build();
             exchange.getAttributes().put(ATTR_GRAY_VERSION, "baseline");
             exchange.getAttributes().put(ATTR_POLICY_ID, policy.policyId());

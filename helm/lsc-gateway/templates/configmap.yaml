@@ -1,0 +1,23 @@
+{{- /*
+  创建专用 ConfigMap（values.configMap.create=true 时）。
+  将 values.env 中所有字符串键值写入（非 secret 项），供 Deployment envFrom 使用。
+*/ -}}
+{{- if .Values.configMap.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMap.name | default "lsc-gateway-config" }}
+  namespace: {{ .Values.namespaceOverride | default .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: lsc-gateway
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  {{- range $k, $v := .Values.env }}
+  {{- if not (has $k $.Values.secretKeys) }}
+  {{ $k }}: {{ tpl $v $ | quote }}
+  {{- end }}
+  {{- end }}
+  {{- range $k, $v := .Values.configMap.data }}
+  {{ $k }}: {{ tpl $v $ | quote }}
+  {{- end }}
+{{- end }}

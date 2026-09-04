@@ -97,6 +97,23 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- Phase L2: Micrometer Tracing + OTel W3C TraceContext / Baggage
+             说明：不强制 Zipkin/Jaeger export。只需引入 bridge + otel-exporter-logging(optional)；
+             autoconfigure 由 micrometer-tracing-bridge-otel 传递依赖 + spring-boot BOM 覆盖 -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-logging</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Reactor Context 与 MDC/Baggage 桥接：Gateway WebFlux 线程不保证上下文，需要 Bridging 捕获 subscriberContext → MDC -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core-micrometer</artifactId>
+        </dependency>
 
         <!-- JSON 序列化（rules/meta 字段 JSON 持久化） -->
         <dependency>

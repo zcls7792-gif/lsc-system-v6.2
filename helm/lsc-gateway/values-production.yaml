@@ -1,0 +1,105 @@
+# 生产示例 values：请用 helm upgrade --install -f values-production.yaml
+image:
+  tag: "6.2.0"
+  pullPolicy: Always
+replicaCount: 4
+resources:
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+  limits:
+    cpu: "2"
+    memory: 4Gi
+
+# 生产：独立专用 ConfigMap/Secret（沿用现有 lsc-config / lsc-secrets）
+configMap:
+  create: false
+  existingName: lsc-config
+secret:
+  create: false
+  existingName: lsc-secrets
+
+env:
+  NACOS_ADDR: "nacos-svc.lsc-system.svc.cluster.local:8848"
+  NACOS_NAMESPACE: "prod-v1"
+  NACOS_GROUP: "LSC_GROUP"
+  REDIS_HOST: "redis-cluster-proxy.lsc-system.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "0.5"
+  GRAY_STATS_PREFIX: "prod:lsc:gray:stats"
+  GRAY_NACOS_DATA_ID: "gray-release.yaml"
+  GRAY_NACOS_GROUP: "LSC_GROUP"
+
+hpa:
+  enabled: true
+  minReplicas: 4
+  maxReplicas: 16
+  targetCPUUtilizationPercentage: 60
+  targetMemoryUtilizationPercentage: 75
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+  hosts:
+    - host: api.lianshengtong.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - api.lianshengtong.com
+      secretName: lsc-gateway-tls
+
+logging:
+  mount: true
+  mountPath: /var/log/lsc-gateway
+  useEmptyDir: false
+  size: 20Gi
+  storageClassName: "alicloud-disk-ssd"
+
+networkPolicy:
+  enabled: true
+
+initNacosGray:
+  enabled: true
+  hook: post-install,pre-upgrade
+  idempotency: diff-only
+  nacosAddr: ""              # 复用 env.NACOS_ADDR
+  namespace: "prod-v1"
+  group: "LSC_GROUP"
+  dataId: "gray-release.yaml"
+  auth:
+    enabled: true
+    usernameKey: NACOS_USERNAME
+    usernameValue: "gray-init"
+    passwordSecretKey: NACOS_PASSWORD
+  grayPolicyYaml: |
+    lsc:
+      gray:
+        policies:
+          # 生产建议 0% 权重开始：仅规则强制 + 审批后逐级放量
+          - policy-id: order_gray_prod
+            route-id: lsc-order-service
+            baseline-uri: lb://lsc-order-service
+            canary-uri: lb://lsc-order-service-canary
+            canary-weight-percent: 0
+            status: PAUSED
+            rules:
+              - type: HEADER
+                key: X-Gray-User
+                operator: IN
+                value: qa@lianshengtong.com,devops@lianshengtong.com
+                extra: force-canary
+            meta:
+              created-by: helm-chart-production-init
+              business: order
+              ticket: RELEASE-0000
+
+extraEnv:
+  - name: LOGGING_LEVEL_COM_LIANSHENGTONG
+    value: INFO

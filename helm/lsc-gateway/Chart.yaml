@@ -1,0 +1,18 @@
+apiVersion: v2
+name: lsc-gateway
+description: LSC 微服务 API 网关 (Spring Cloud Gateway) — 含灰度发布、Redis 共享命中统计、Nacos 配置推送、灰度策略首次初始化 Job。
+type: application
+version: 0.1.0
+appVersion: "6.2.0"
+keywords:
+  - lsc
+  - gateway
+  - spring-cloud-gateway
+  - gray-release
+  - nacos
+home: https://lianshengtong.com
+sources:
+  - https://git.lianshengtong.com/lsc/lsc-system
+maintainers:
+  - name: LSC DevOps
+    email: devops@lianshengtong.com

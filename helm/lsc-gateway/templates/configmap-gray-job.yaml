@@ -1,0 +1,114 @@
+{{/*
+  ConfigMap holding (1) the user-provided gray-release.yaml source and (2) the Nacos OpenAPI
+  push script that runs inside the init job. The script is intentionally minimal and uses
+  only sh + curl + md5sum (present in curlimages/curl) to avoid Python/JQ runtime dependency.
+*/}}
+{{- if .Values.initNacosGray.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lsc-gateway-gray-init
+  namespace: {{ .Values.namespaceOverride | default .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: lsc-gateway
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  gray-release.yaml: |-
+    {{- .Values.initNacosGray.grayPolicyYaml | nindent 4 }}
+  push-gray-release.sh: |-
+    #!/bin/sh
+    set -eu
+    # ------------ defaults / inputs ------------
+    NACOS_ADDR="${NACOS_ADDR:-nacos-svc:8848}"
+    NACOS_NAMESPACE="${NACOS_NAMESPACE:-public}"
+    NACOS_GROUP="${NACOS_GROUP:-LSC_GROUP}"
+    NACOS_DATA_ID="${GRAY_NACOS_DATA_ID:-gray-release.yaml}"
+    NACOS_TYPE="${NACOS_TYPE:-yaml}"
+    NACOS_TENANT="${NACOS_TENANT:-$NACOS_NAMESPACE}"
+    IDEMPOTENCY="${IDEMPOTENCY:-diff-only}"   # ensure-present | diff-only | overwrite
+    NACOS_USER="${NACOS_USER:-}"
+    NACOS_PASS="${NACOS_PASS:-}"
+
+    CFG_SRC="/cfg/gray-release.yaml"
+    echo "[gray-init] NACOS_ADDR=$NACOS_ADDR NAMESPACE=$NACOS_NAMESPACE GROUP=$NACOS_GROUP DATA_ID=$NACOS_DATA_ID IDEMPOTENCY=$IDEMPOTENCY"
+
+    if [ ! -s "$CFG_SRC" ]; then
+      echo "[gray-init] gray-release.yaml is empty; nothing to push (skip)."
+      exit 0
+    fi
+
+    # ------------ Nacos login if enabled ------------
+    AUTH_ARGS=""
+    if [ -n "$NACOS_USER" ] && [ -n "$NACOS_PASS" ]; then
+      LOGIN_URL="http://${NACOS_ADDR}/nacos/v1/auth/login"
+      echo "[gray-init] authenticating with $LOGIN_URL as $NACOS_USER"
+      LOGIN_RESP=$(curl -fsS -X POST "$LOGIN_URL" \
+        --data-urlencode "username=$NACOS_USER" \
+        --data-urlencode "password=$NACOS_PASS" || true)
+      ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | grep -oE '"accessToken"[[:space:]]*:[[:space:]]*"[^"]+"' \
+        | head -n 1 | cut -d '"' -f 4 || true)
+      if [ -z "$ACCESS_TOKEN" ]; then
+        echo "[gray-init][WARN] failed to obtain accessToken; fallback to plain username+password query params."
+        AUTH_ARGS="--data-urlencode username=$NACOS_USER --data-urlencode password=$NACOS_PASS"
+      else
+        AUTH_ARGS="--data-urlencode accessToken=$ACCESS_TOKEN"
+      fi
+    fi
+
+    # ------------ compute content MD5 for diff ------------
+    TARGET_MD5=$(md5sum "$CFG_SRC" | awk '{print $1}')
+    echo "[gray-init] target content md5=$TARGET_MD5"
+
+    BASE_URL="http://${NACOS_ADDR}/nacos/v1/cs/configs"
+
+    # ------------ (1) GET current ------------
+    set +e
+    CURRENT=$(curl -fsS "$BASE_URL?dataId=${NACOS_DATA_ID}&group=${NACOS_GROUP}&tenant=${NACOS_TENANT}" \
+      --get --data-urlencode "dataId=$NACOS_DATA_ID" --data-urlencode "group=$NACOS_GROUP" --data-urlencode "tenant=$NACOS_TENANT" \
+      $( [ -n "$ACCESS_TOKEN" ] && printf "%s" "--get --data-urlencode accessToken=${ACCESS_TOKEN}" ) 2>/dev/null)
+    GET_RC=$?
+    set -e
+    CURRENT_MD5=""
+    if [ "$GET_RC" -eq 0 ] && [ -n "$CURRENT" ]; then
+      CURRENT_MD5=$(printf "%s" "$CURRENT" | md5sum | awk '{print $1}')
+      echo "[gray-init] already published; current md5=$CURRENT_MD5"
+    else
+      echo "[gray-init] data-id not present or nacos temporarily unavailable (curl rc=$GET_RC); attempt publish."
+    fi
+
+    # ------------ (2) decide ------------
+    PUBLISH=1
+    if [ "$IDEMPOTENCY" = "ensure-present" ]; then
+      if [ -n "$CURRENT_MD5" ]; then
+        echo "[gray-init] idempotency=ensure-present; skip publish."
+        PUBLISH=0
+      fi
+    elif [ "$IDEMPOTENCY" = "diff-only" ]; then
+      if [ "$CURRENT_MD5" = "$TARGET_MD5" ] && [ -n "$CURRENT_MD5" ]; then
+        echo "[gray-init] idempotency=diff-only; content identical; skip publish."
+        PUBLISH=0
+      fi
+    fi
+
+    if [ "$PUBLISH" -eq 1 ]; then
+      echo "[gray-init] publishing content to Nacos..."
+      # Use --data-urlencode for every body param to stay safe against spaces/newlines in YAML.
+      set +e
+      RESULT=$(curl -fsS -X POST "$BASE_URL" \
+        --data-urlencode "dataId=$NACOS_DATA_ID" \
+        --data-urlencode "group=$NACOS_GROUP" \
+        --data-urlencode "tenant=$NACOS_TENANT" \
+        --data-urlencode "type=$NACOS_TYPE" \
+        --data-urlencode "content@$CFG_SRC" \
+        $( [ -n "$AUTH_ARGS" ] && printf "%s" "$AUTH_ARGS" ) 2>&1 || echo "curl-failed")
+      set -e
+      echo "[gray-init] Nacos response: $RESULT"
+      case "$RESULT" in
+        *"true"*) echo "[gray-init] publish succeeded.";;
+        "curl-failed"*)
+          echo "[gray-init][WARN] publish curl call failed; check NACOS_ADDR connectivity & authentication."
+          exit 1;;
+        *) echo "[gray-init][WARN] Nacos returned non-true: $RESULT" ; exit 2;;
+      esac
+    fi
+    echo "[gray-init] done."

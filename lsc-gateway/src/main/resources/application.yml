@@ -280,10 +280,27 @@ logging:
     com.lianshengtong.gateway: DEBUG
     org.springframework.cloud.gateway: INFO
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level traceId=%mdc{traceId:-} gray=%mdc{grayVersion:-}/%mdc{grayPolicyId:-} %logger{36} - %msg%n"
 
 # 监控
 management:
+  tracing:
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+    # Phase L2：把 W3C baggage 字段注册为远程字段，跨服务时会随 traceparent 广播；
+    # 同时在 MDC 里暴露对应 key（grayPolicyId/grayVersion/traceId）供 logback 直接打日志。
+    baggage:
+      correlation:
+        fields:
+          - traceId
+          - grayPolicyId
+          - grayVersion
+      remote-fields:
+        - ${BAGGAGE_REMOTE_FIELDS:gray.policy_id,gray.version}
+      tag:
+        fields:
+          - gray.policy_id
+          - gray.version
   endpoints:
     web:
       exposure:

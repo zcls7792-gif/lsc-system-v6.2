@@ -1,0 +1,266 @@
+# ============================================================
+# LSC Gateway Helm values  （Phase L1: 模板化注入 NACOS / REDIS / GRAY_NACOS / Baggage / 初始化 Job）
+#
+# 生产使用：
+#   helm -n lsc-system upgrade --install lsc-gateway helm/lsc-gateway \
+#     -f helm/lsc-gateway/values-production.yaml --wait
+# 最小本地 (docker-desktop / minikube)：
+#   helm -n lsc-system upgrade --install lsc-gateway helm/lsc-gateway
+# ============================================================
+
+# ---------- 全局 ----------
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: lsc-system
+
+# ---------- 镜像 ----------
+image:
+  repository: registry.cn-hangzhou.aliyuncs.com/lsc/gateway
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "6.2.0"
+imagePullSecrets: []
+# - name: aliyun-registry
+
+# ---------- 资源 ----------
+replicaCount: 2
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "1"
+    memory: 2Gi
+
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: lsc-gateway
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: api.lsc.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+# ---------- 探活 ----------
+probes:
+  liveness:
+    path: /actuator/health
+    initialDelaySeconds: 60
+    periodSeconds: 30
+  readiness:
+    path: /actuator/health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+terminationGracePeriodSeconds: 45
+
+# ---------- 配置注入：通用 (所有服务共用一份 lsc-config) ----------
+# 可以不创建，直接引用现有 ConfigMap / Secret
+configMap:
+  # 若 create=true 则创建一个独立的 gateway 专享 ConfigMap；否则用 existingConfigMap
+  create: false
+  existingName: lsc-config
+  name: lsc-gateway-config
+  data: {}
+
+secret:
+  create: false
+  existingName: lsc-secrets
+  name: lsc-gateway-secrets
+  stringData: {}
+
+# ---------- 核心：L1 模板化环境变量 ----------
+# 全部变量对应 lsc-gateway/src/main/resources/application.yml 的占位符
+env:
+  # 服务端口
+  SERVER_PORT: "8000"
+  # ======== Nacos 地址 (真实 Service 名：nacos-svc，不能写成 nacos.svc；避免 UnknownHost) ========
+  NACOS_ADDR: "nacos-svc.lsc-system.svc.cluster.local:8848"
+  NACOS_NAMESPACE: "public"
+  NACOS_GROUP: "LSC_GROUP"
+  # 若 Nacos 开启鉴权，用户从 Secret 注入
+  # NACOS_USERNAME: nacos
+  # NACOS_PASSWORD: (来自 secretRef)
+
+  # ======== Redis ========
+  REDIS_HOST: "redis-node-1.lsc-system.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  # REDIS_PASSWORD: (来自 secretRef)
+
+  # ======== JWT ========
+  # JWT_SECRET: (来自 secretRef)
+  # ADMIN_JWT_SECRET: (来自 secretRef)
+
+  # ======== Phase K 灰度发布：配置项名 / 前缀 ========
+  # Nacos 灰度发布配置 data-id / group
+  GRAY_NACOS_ENABLED: "true"
+  GRAY_NACOS_DATA_ID: "gray-release.yaml"
+  GRAY_NACOS_GROUP: "LSC_GROUP"
+  # Redis 统计键前缀（支持按环境/集群隔离）
+  GRAY_STATS_PREFIX: "lsc:gray:stats"
+
+  # ======== Phase L2 W3C Tracing / Baggage（与 lsc-order-service / user-service 一致） ========
+  # 使用 Micrometer Tracing + OTel/W3C；如接入 Zipkin/Jaeger/OTLP-Collector 在这里注入
+  MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+
+# 以下键名会从 env 中剔除，但会作为额外 envFrom/secretRef 读取
+secretKeys:
+  - REDIS_PASSWORD
+  - NACOS_PASSWORD
+  - JWT_SECRET
+  - ADMIN_JWT_SECRET
+
+# ---------- 日志卷：写到 emptyDir/PVC，防止容器 FS 只读问题 ----------
+logging:
+  mount: true
+  mountPath: /var/log/lsc-gateway
+  storageClassName: ""
+  size: 5Gi
+  # 若为空，走 emptyDir；生产请填 storageClassName
+  useEmptyDir: true
+
+# ---------- 灰度过载保护 & 自动扩缩容 ----------
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70
+  # targetMemoryUtilizationPercentage: 75
+
+# ============================================================
+#  L1: 首次初始化 gray-release.yaml Job
+#  用最小 curl/openssl/busybox 镜像 + Nacos OpenAPI 推送 gray-release.yaml
+#  特性：
+#   * helm install 时才触发（helm upgrade 不重复跑，通过 helm hooks: post-install, pre-upgrade 可选）
+#   * 幂等：若该 data-id/group 已存在且与本地值相等则跳过（SHA256 对比）
+#   * 安全：token/nacos 用户名密码从 Secret 读取
+# ============================================================
+initNacosGray:
+  enabled: true
+  # 镜像：尽量不引 python3，使用 ash+curl+sha256sum（busybox:1.36 有）
+  image:
+    repository: curlimages/curl
+    tag: "8.5.0"
+    pullPolicy: IfNotPresent
+
+  # 钩子顺序：post-install（首次安装）+ pre-upgrade（升级时可同步，但默认关闭避免覆盖运维在 Nacos 控制台改的值）
+  hook: post-install
+  hookWeight: "-5"
+  hookDeletePolicy: before-hook-creation
+
+  # 幂等策略：ensure-present(已存在不覆盖) / overwrite(强制覆盖) / diff-only(内容不同才覆盖)
+  idempotency: diff-only
+
+  # Nacos 地址；默认复用 env.NACOS_ADDR，也可单独覆盖
+  nacosAddr: ""
+  # Nacos 鉴权用户名 / 密码 key；若不需要鉴权留空 usernameKey
+  auth:
+    enabled: true
+    usernameKey: NACOS_USERNAME
+    usernameValue: "nacos"
+    passwordSecretKey: NACOS_PASSWORD
+
+  # Nacos 命名空间 / 分组 / 租户（与 gateway Nacos 配置一致）
+  namespace: public
+  group: LSC_GROUP
+  dataId: gray-release.yaml
+  type: yaml
+  tenant: ""
+
+  # ====== gray-release.yaml 初始内容（生产改 values-production.yaml）======
+  # 注意：若为空字符串，Job 仍会执行但不会推送（可用于验证连通性）
+  grayPolicyYaml: |
+    # ============================================================
+    # LSC 灰度策略配置（Phase K）。管理面请走 lsc-release-service 审批工作流
+    # 字段说明：见 docs/gray-release-ops-handbook.md
+    # ============================================================
+    lsc:
+      gray:
+        policies: []
+        # 示例：
+        # - policy-id: order_gray_001
+        #   route-id: lsc-order-service
+        #   baseline-uri: lb://lsc-order-service
+        #   canary-uri: lb://lsc-order-service-canary
+        #   canary-weight-percent: 5
+        #   status: ACTIVE
+        #   rules:
+        #     - type: HEADER
+        #       key: X-Gray
+        #       operator: EQ
+        #       value: canary
+        #       extra: force-canary
+        #   meta:
+        #     created-by: ops@lianshengtong.com
+        #     business: order
+
+# ---------- 网络策略 ----------
+networkPolicy:
+  enabled: false
+  ingressFrom:
+    - namespaceSelector: {}
+      podSelector: {}
+  egressTo:
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: nacos
+      ports:
+        - protocol: TCP
+          port: 8848
+        - protocol: TCP
+          port: 9848
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+
+# ---------- HPA 补充 ----------
+autoscaling:
+  behavior: {}
+
+# ---------- 顶置的附加 env（用户在 override values 中自定义）----------
+extraEnv: []
+# - name: LOGGING_LEVEL_ROOT
+#   value: INFO

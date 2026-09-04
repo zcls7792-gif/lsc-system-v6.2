@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Phase L2：lsc-order-service logback 模板。
+  关键：把 traceId + grayPolicyId / grayVersion 通过 %mdc 打到每行日志；
+        配合 Filebeat / Loki -> Grafana -> 按 grayVersion=canary vs baseline 做错误率对比。
+  使用方法：直接放 src/main/resources/logback-spring.xml（Spring Boot 会自动加载）。
+-->
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <property name="LOG_HOME" value="${LOG_HOME:-/var/log/lsc/order-service}"/>
+    <property name="APP_NAME" value="lsc-order-service"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- 结构化 JSON：字段名与 lsc-common TraceIdHolder/GrayBaggage 保持一致 -->
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>grayPolicyId</includeMdcKeyName>
+            <includeMdcKeyName>grayVersion</includeMdcKeyName>
+            <customFields>{"app":"${APP_NAME}","version":"6.2.0"}</customFields>
+        </encoder>
+    </appender>
+
+    <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${APP_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/history/${APP_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>200MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>grayPolicyId</includeMdcKeyName>
+            <includeMdcKeyName>grayVersion</includeMdcKeyName>
+            <customFields>{"app":"${APP_NAME}"}</customFields>
+        </encoder>
+    </appender>
+
+    <logger name="com.lianshengtong" level="${LOG_LEVEL_COM_LIANSHENGTONG:-INFO}" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ROLLING"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ROLLING"/>
+    </root>
+</configuration>
