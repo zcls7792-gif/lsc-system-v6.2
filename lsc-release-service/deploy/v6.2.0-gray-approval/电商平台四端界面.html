@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LSC 电商平台 · 四端界面预览</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --brand:#6c5ce7;
+  --brand-2:#00cec9;
+  --bg:#f4f5f9;
+  --card:#fff;
+  --text:#1a1a2e;
+  --text-2:#636e72;
+  --text-3:#b2bec3;
+  --border:#e8eaf0;
+  --green:#00b894;
+  --orange:#fdcb6e;
+  --red:#e17055;
+  --blue:#0984e3;
+}
+body{font-family:'Noto Sans SC','DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* 顶部 */
+.topbar{background:linear-gradient(135deg,#6c5ce7,#00cec9);color:#fff;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(108,92,231,.3)}
+.topbar h1{font-size:18px;font-weight:700;letter-spacing:1px}
+.topbar h1 span{opacity:.7;font-weight:400;font-size:13px;margin-left:10px}
+.topbar .meta{display:flex;gap:20px;font-size:12px;opacity:.9}
+.topbar .meta b{font-weight:600}
+
+/* Tab 导航 */
+.tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);padding:0 32px;position:sticky;top:60px;z-index:99}
+.tab{padding:14px 24px;font-size:13px;color:var(--text-2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-weight:500}
+.tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+.tab .num{display:inline-block;width:18px;height:18px;background:var(--border);color:var(--text-2);border-radius:50%;text-align:center;line-height:18px;font-size:10px;margin-right:8px}
+.tab.active .num{background:var(--brand);color:#fff}
+
+/* 主区域 */
+.stage{padding:32px;max-width:1600px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block}
+
+/* 四端容器 */
+.four-grid{display:grid;grid-template-columns:1.4fr 1.4fr 1fr 1fr;gap:24px;align-items:start}
+
+/* 设备框架 */
+.device{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.08)}
+.device-head{background:#fafbfd;padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.device-head .dots{display:flex;gap:6px}
+.device-head .dots span{width:10px;height:10px;border-radius:50%}
+.device-head .dots span:nth-child(1){background:#ff5f57}
+.device-head .dots span:nth-child(2){background:#febc2e}
+.device-head .dots span:nth-child(3){background:#28c840}
+.device-head .title{font-size:11px;color:var(--text-3);font-family:'DM Sans',monospace}
+.device-label{padding:8px 14px;font-size:11px;color:var(--brand);font-weight:600;letter-spacing:1px;background:linear-gradient(90deg,rgba(108,92,231,.06),transparent);border-bottom:1px solid var(--border)}
+.device-body{padding:0;max-height:700px;overflow:auto}
+.device-body::-webkit-scrollbar{width:4px}
+.device-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* PC 后台通用 */
+.pc-layout{display:flex;min-height:680px}
+.pc-sidebar{width:180px;background:#1a1a2e;color:#fff;padding:16px 0;flex-shrink:0}
+.pc-sidebar .logo{padding:0 16px 16px;font-size:15px;font-weight:700;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:12px}
+.pc-sidebar .menu-item{padding:10px 16px;font-size:12px;color:rgba(255,255,255,.7);cursor:pointer;border-left:3px solid transparent}
+.pc-sidebar .menu-item.active{color:#fff;background:rgba(108,92,231,.3);border-left-color:var(--brand-2)}
+.pc-sidebar .menu-item .ico{margin-right:8px}
+.pc-main{flex:1;padding:20px;background:#f4f5f9}
+.pc-breadcrumb{font-size:11px;color:var(--text-3);margin-bottom:14px}
+.pc-breadcrumb b{color:var(--text)}
+
+/* 统计卡 */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:#fff;border-radius:8px;padding:14px;border:1px solid var(--border)}
+.stat-card .v{font-size:22px;font-weight:700}
+.stat-card .l{font-size:11px;color:var(--text-3);margin-top:4px}
+.stat-card .t{font-size:10px;margin-top:4px}
+.up{color:var(--green)}.down{color:var(--red)}
+
+/* 表格 */
+.table{background:#fff;border-radius:8px;border:1px solid var(--border);overflow:hidden}
+.table-head{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;justify-content:space-between}
+table{width:100%;font-size:11px}
+th{background:#fafbfd;padding:10px 12px;text-align:left;color:var(--text-2);font-weight:500;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border:none}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px}
+.tag-green{background:rgba(0,184,148,.12);color:var(--green)}
+.tag-orange{background:rgba(253,203,110,.2);color:#e17055}
+.tag-blue{background:rgba(9,132,227,.12);color:var(--blue)}
+.tag-red{background:rgba(225,112,85,.12);color:var(--red)}
+
+/* 手机框 */
+.phone{border:10px solid #1a1a2e;border-radius:32px;overflow:hidden;background:#fff}
+.phone-notch{height:22px;background:#1a1a2e;display:flex;align-items:center;justify-content:center;color:#636e72;font-size:9px}
+.phone-status{display:flex;justify-content:space-between;padding:4px 14px;font-size:10px;background:#fff;color:var(--text)}
+.phone-body{height:600px;overflow:auto;background:#f4f5f9}
+.phone-body::-webkit-scrollbar{display:none}
+
+/* App 首页 */
+.app-header{background:linear-gradient(135deg,#6c5ce7,#00cec9);padding:14px;color:#fff}
+.app-search{background:rgba(255,255,255,.2);border-radius:20px;padding:8px 14px;font-size:12px;display:flex;align-items:center;gap:8px}
+.app-banner{margin:12px;border-radius:12px;height:90px;background:linear-gradient(135deg,#fd79a8,#fdcb6e);display:flex;align-items:center;padding:0 16px;color:#fff;font-size:13px;font-weight:600}
+.app-cats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px;text-align:center}
+.app-cats .cat{font-size:10px;color:var(--text-2)}
+.app-cats .cat .ic{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#ffeaa7,#fab1a0);display:grid;place-items:center;margin:0 auto 4px;font-size:16px}
+.app-sec-title{padding:12px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.app-sec-title .more{font-size:10px;color:var(--text-3);font-weight:400}
+.app-prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 12px}
+.app-prod{background:#fff;border-radius:8px;overflow:hidden}
+.app-prod .img{height:90px;background:linear-gradient(135deg,#a29bfe,#74b9ff)}
+.app-prod .info{padding:8px}
+.app-prod .name{font-size:11px;line-height:1.3;height:28px;overflow:hidden}
+.app-prod .price{font-size:13px;color:var(--red);font-weight:700;margin-top:4px}
+.app-tabbar{display:flex;background:#fff;border-top:1px solid var(--border);padding:6px 0}
+.app-tabbar .t{flex:1;text-align:center;font-size:9px;color:var(--text-3)}
+.app-tabbar .t.active{color:var(--brand)}
+.app-tabbar .t .i{font-size:18px;display:block;margin-bottom:1px}
+
+/* 小程序 */
+.mp-nav{background:#fff;padding:10px 14px;text-align:center;font-size:14px;font-weight:600;border-bottom:1px solid var(--border);position:relative;display:flex;justify-content:center;align-items:center}
+.mp-nav .cap{position:absolute;right:12px;display:flex;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.mp-nav .cap div{width:26px;height:20px;display:grid;place-items:center;font-size:9px;color:var(--text-3);border-right:1px solid var(--border)}
+.mp-nav .cap div:last-child{border:none}
+.mp-scroll{height:578px;overflow:auto;background:#f4f5f9}
+.mp-scroll::-webkit-scrollbar{display:none}
+.mp-search{background:#ebedf2;border-radius:16px;padding:7px 14px;font-size:11px;color:var(--text-3);margin:10px 12px;text-align:center}
+.mp-cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 12px}
+.mp-cats .c{text-align:center;font-size:10px;color:var(--text-2)}
+.mp-cats .c .i{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#dfe6e9,#b2bec3);display:grid;place-items:center;margin:0 auto 4px}
+.mp-list{padding:12px}
+.mp-item{background:#fff;border-radius:10px;padding:10px;display:flex;gap:10px;margin-bottom:8px}
+.mp-item .img{width:70px;height:70px;border-radius:8px;background:linear-gradient(135deg,#fab1a0,#fd79a8);flex-shrink:0}
+.mp-item .info{flex:1}
+.mp-item .n{font-size:12px;font-weight:500;line-height:1.3}
+.mp-item .d{font-size:10px;color:var(--text-3);margin-top:3px}
+.mp-item .b{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.mp-item .p{font-size:14px;color:var(--red);font-weight:700}
+.mp-item .s{font-size:9px;background:rgba(0,184,148,.12);color:var(--green);padding:2px 6px;border-radius:3px}
+
+/* 图表 */
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:100px;padding:10px 0}
+.chart-bars .b{flex:1;background:linear-gradient(180deg,#6c5ce7,#a29bfe);border-radius:3px 3px 0 0;position:relative}
+.chart-bars .b .lbl{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:8px;color:var(--text-3)}
+
+/* 小程序 tabbar */
+.mp-tabbar{display:flex;background:#fff;border-top:1px solid var(--border);padding:6px 0}
+.mp-tabbar .t{flex:1;text-align:center;font-size:9px;color:var(--text-3)}
+.mp-tabbar .t.active{color:var(--green)}
+.mp-tabbar .t .i{font-size:16px;display:block;margin-bottom:1px}
+
+/* 按钮 */
+.btn{display:inline-block;padding:6px 14px;border-radius:4px;font-size:11px;cursor:pointer;border:none;font-weight:500}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-outline{border:1px solid var(--border);color:var(--text-2);background:#fff}
+
+@media(max-width:1400px){
+  .four-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:800px){
+  .four-grid{grid-template-columns:1fr}
+  .topbar{padding:12px 16px}
+  .stage{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>LSC 电商平台 <span>· 四端界面预览</span></h1>
+  <div class="meta">
+    <span>平台后台 <b>PC</b></span>
+    <span>商家后台 <b>PC</b></span>
+    <span>用户端 <b>App</b></span>
+    <span>用户端 <b>小程序</b></span>
+  </div>
+</div>
+
+<nav class="tabs">
+  <div class="tab active" data-p="home"><span class="num">1</span>首页总览</div>
+  <div class="tab" data-p="order"><span class="num">2</span>订单管理</div>
+  <div class="tab" data-p="product"><span class="num">3</span>商品管理</div>
+</nav>
+
+<main class="stage">
+
+<!-- ========== 首页总览 ========== -->
+<div class="panel active" id="p-home">
+<div class="four-grid">
+
+  <!-- 1. 平台管理后台 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">admin.lsc-platform.com</div>
+      <div class="title" style="color:var(--green)">HTTPS</div>
+    </div>
+    <div class="device-label">🖥 平台管理后台 · PC Web</div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar">
+          <div class="logo">LSC 平台</div>
+          <div class="menu-item active">📊 数据概览</div>
+          <div class="menu-item">👥 商家管理</div>
+          <div class="menu-item">📦 商品审核</div>
+          <div class="menu-item">📋 订单管理</div>
+          <div class="menu-item">💰 财务结算</div>
+          <div class="menu-item">📢 营销活动</div>
+          <div class="menu-item">⚙️ 系统设置</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-breadcrumb">首页 / <b>数据概览</b></div>
+          <div class="stat-grid">
+            <div class="stat-card"><div class="v">¥128.6万</div><div class="l">今日 GMV</div><div class="t up">↑ 12.3%</div></div>
+            <div class="stat-card"><div class="v">8,642</div><div class="l">今日订单</div><div class="t up">↑ 8.1%</div></div>
+            <div class="stat-card"><div class="v">1,256</div><div class="l">入驻商家</div><div class="t up">↑ 23</div></div>
+            <div class="stat-card"><div class="v">98.6%</div><div class="l">履约率</div><div class="t down">↓ 0.3%</div></div>
+          </div>
+          <div class="table">
+            <div class="table-head">待处理事项 <span class="btn btn-primary" style="padding:3px 10px;font-size:10px">查看全部</span></div>
+            <table>
+              <tr><th>类型</th><th>内容</th><th>时间</th><th>操作</th></tr>
+              <tr><td><span class="tag tag-orange">商品审核</span></td><td>Apple iPhone 15 上架申请</td><td>10分钟前</td><td><a style="color:var(--brand);font-size:11px;cursor:pointer">审核</a></td></tr>
+              <tr><td><span class="tag tag-blue">商家入驻</span></td><td>星辰数码旗舰店 入驻申请</td><td>25分钟前</td><td><a style="color:var(--brand);font-size:11px;cursor:pointer">审核</a></td></tr>
+              <tr><td><span class="tag tag-red">投诉工单</span></td><td>订单 #20260905 售后投诉</td><td>1小时前</td><td><a style="color:var(--brand);font-size:11px;cursor:pointer">处理</a></td></tr>
+              <tr><td><span class="tag tag-green">提现申请</span></td><td>优选生鲜 ¥12,580 提现</td><td>2小时前</td><td><a style="color:var(--brand);font-size:11px;cursor:pointer">审批</a></td></tr>
+            </table>
+          </div>
+          <div style="margin-top:16px;background:#fff;border-radius:8px;padding:14px;border:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:600;margin-bottom:10px">近 7 日 GMV 趋势</div>
+            <div class="chart-bars">
+              <div class="b" style="height:45%"><span class="lbl">周一</span></div>
+              <div class="b" style="height:62%"><span class="lbl">周二</span></div>
+              <div class="b" style="height:38%"><span class="lbl">周三</span></div>
+              <div class="b" style="height:78%"><span class="lbl">周四</span></div>
+              <div class="b" style="height:55%"><span class="lbl">周五</span></div>
+              <div class="b" style="height:88%"><span class="lbl">周六</span></div>
+              <div class="b" style="height:95%"><span class="lbl">今日</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 商家管理后台 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">seller.lsc-platform.com</div>
+      <div class="title" style="color:var(--green)">HTTPS</div>
+    </div>
+    <div class="device-label">🏪 商家管理后台 · PC Web</div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar" style="background:#2d3436">
+          <div class="logo">优选生鲜</div>
+          <div class="menu-item active">📊 经营数据</div>
+          <div class="menu-item">📦 商品管理</div>
+          <div class="menu-item">📋 订单处理</div>
+          <div class="menu-item">🚚 物流发货</div>
+          <div class="menu-item">💰 资金账户</div>
+          <div class="menu-item">📢 营销推广</div>
+          <div class="menu-item">⚙️ 店铺设置</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-breadcrumb">首页 / <b>经营数据</b></div>
+          <div class="stat-grid">
+            <div class="stat-card"><div class="v">¥38,650</div><div class="l">今日销售额</div><div class="t up">↑ 15.2%</div></div>
+            <div class="stat-card"><div class="v">286</div><div class="l">今日订单</div><div class="t up">↑ 6.8%</div></div>
+            <div class="stat-card"><div class="v">1,258</div><div class="l">在售商品</div><div class="t" style="color:var(--text-3)">持平</div></div>
+            <div class="stat-card"><div class="v">4.8</div><div class="l">店铺评分</div><div class="t up">↑ 0.1</div></div>
+          </div>
+          <div class="table">
+            <div class="table-head">待发货订单 <span style="color:var(--red);font-size:11px">12 单待处理</span></div>
+            <table>
+              <tr><th>订单号</th><th>商品</th><th>金额</th><th>状态</th></tr>
+              <tr><td>#20260905001</td><td>有机蔬菜礼盒</td><td>¥128</td><td><span class="tag tag-orange">待发货</span></td></tr>
+              <tr><td>#20260905002</td><td>进口车厘子 2斤</td><td>¥98</td><td><span class="tag tag-orange">待发货</span></td></tr>
+              <tr><td>#20260905003</td><td>东北大米 10kg</td><td>¥89</td><td><span class="tag tag-orange">待发货</span></td></tr>
+              <tr><td>#20260904088</td><td>散养土鸡蛋 30枚</td><td>¥45</td><td><span class="tag tag-green">已发货</span></td></tr>
+            </table>
+          </div>
+          <div style="margin-top:16px;background:#fff;border-radius:8px;padding:14px;border:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:600;margin-bottom:10px">热销商品 TOP5</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px;font-size:11px">
+                <span style="width:18px;height:18px;background:var(--red);color:#fff;border-radius:50%;text-align:center;line-height:18px;font-size:10px">1</span>
+                <span style="flex:1">有机蔬菜礼盒</span>
+                <span style="color:var(--text-2)">328 单</span>
+                <span class="tag tag-green">+24%</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:11px">
+                <span style="width:18px;height:18px;background:var(--orange);color:#fff;border-radius:50%;text-align:center;line-height:18px;font-size:10px">2</span>
+                <span style="flex:1">进口车厘子</span>
+                <span style="color:var(--text-2)">256 单</span>
+                <span class="tag tag-green">+18%</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:11px">
+                <span style="width:18px;height:18px;background:#fdcb6e;color:#fff;border-radius:50%;text-align:center;line-height:18px;font-size:10px">3</span>
+                <span style="flex:1">东北大米</span>
+                <span style="color:var(--text-2)">198 单</span>
+                <span class="tag tag-red">-5%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 移动端 App -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC Shop App</div>
+      <div class="title" style="color:var(--green)">v6.2.0</div>
+    </div>
+    <div class="device-label">📱 移动端 App · iOS/Android</div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="phone-body">
+          <div class="app-header">
+            <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:12px">
+              <span>📍 上海·浦东新区</span>
+              <span>🔔 3</span>
+            </div>
+            <div class="app-search">🔍 搜索生鲜水果、日用品...</div>
+          </div>
+          <div class="app-banner">🎁 新人专享 · 满 99 减 30</div>
+          <div class="app-cats">
+            <div class="cat"><div class="ic">🍎</div>生鲜水果</div>
+            <div class="cat"><div class="ic">🥬</div>蔬菜豆品</div>
+            <div class="cat"><div class="ic">🥩</div>肉禽蛋品</div>
+            <div class="cat"><div class="ic">🦐</div>海鲜水产</div>
+            <div class="cat"><div class="ic">🍞</div>乳品烘焙</div>
+            <div class="cat"><div class="ic">🍜</div>米面粮油</div>
+            <div class="cat"><div class="ic">🍺</div>酒水饮料</div>
+            <div class="cat"><div class="ic">🧴</div>个护清洁</div>
+            <div class="cat"><div class="ic">📦</div>更多</div>
+          </div>
+          <div class="app-sec-title">限时秒杀 <span class="more">更多 ›</span></div>
+          <div class="app-prod-grid">
+            <div class="app-prod">
+              <div class="img"></div>
+              <div class="info"><div class="name">智利车厘子 JJ级 2斤</div><div class="price">¥98</div></div>
+            </div>
+            <div class="app-prod">
+              <div class="img" style="background:linear-gradient(135deg,#55efc4,#00b894)"></div>
+              <div class="info"><div class="name">有机蔬菜礼盒 8种</div><div class="price">¥128</div></div>
+            </div>
+            <div class="app-prod">
+              <div class="img" style="background:linear-gradient(135deg,#fdcb6e,#e17055)"></div>
+              <div class="info"><div class="name">东北五常大米 10kg</div><div class="price">¥89</div></div>
+            </div>
+            <div class="app-prod">
+              <div class="img" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7)"></div>
+              <div class="info"><div class="name">散养土鸡蛋 30枚</div><div class="price">¥45</div></div>
+            </div>
+          </div>
+          <div class="app-tabbar">
+            <div class="t active"><span class="i">🏠</span>首页</div>
+            <div class="t"><span class="i">📂</span>分类</div>
+            <div class="t"><span class="i">🛒</span>购物车</div>
+            <div class="t"><span class="i">👤</span>我的</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 微信小程序 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC 优选小程序</div>
+      <div class="title" style="color:var(--green)">WeChat</div>
+    </div>
+    <div class="device-label">💬 微信小程序</div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mp-nav">
+          LSC 优选商城
+          <div class="cap"><div>•••</div><div>○</div></div>
+        </div>
+        <div class="mp-scroll">
+          <div class="mp-search">🔍 搜索你想要的商品</div>
+          <div class="mp-cats">
+            <div class="c"><div class="i">🍎</div>水果</div>
+            <div class="c"><div class="i">🥬</div>蔬菜</div>
+            <div class="c"><div class="i">🥩</div>肉禽</div>
+            <div class="c"><div class="i">🦐</div>海鲜</div>
+          </div>
+          <div style="margin:12px;border-radius:10px;height:70px;background:linear-gradient(135deg,#6c5ce7,#00cec9);display:flex;align-items:center;padding:0 14px;color:#fff;font-size:12px;font-weight:600">
+            🎉 新人首单立减 20 元
+          </div>
+          <div class="mp-list">
+            <div class="mp-item">
+              <div class="img"></div>
+              <div class="info">
+                <div class="n">智利车厘子 JJ级 2斤装 顺丰包邮</div>
+                <div class="d">优选生鲜 · 月销 2.3万</div>
+                <div class="b"><span class="p">¥98</span><span class="s">秒杀</span></div>
+              </div>
+            </div>
+            <div class="mp-item">
+              <div class="img" style="background:linear-gradient(135deg,#55efc4,#00b894)"></div>
+              <div class="info">
+                <div class="n">有机蔬菜礼盒 8种时令蔬菜 当日达</div>
+                <div class="d">优选生鲜 · 月销 8,652</div>
+                <div class="b"><span class="p">¥128</span><span class="s">包邮</span></div>
+              </div>
+            </div>
+            <div class="mp-item">
+              <div class="img" style="background:linear-gradient(135deg,#fdcb6e,#e17055)"></div>
+              <div class="info">
+                <div class="n">东北五常大米 10kg 当季新米</div>
+                <div class="d">优选生鲜 · 月销 5,128</div>
+                <div class="b"><span class="p">¥89</span><span class="s">满减</span></div>
+              </div>
+            </div>
+            <div class="mp-item">
+              <div class="img" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7)"></div>
+              <div class="info">
+                <div class="n">散养土鸡蛋 30枚 农家直供</div>
+                <div class="d">优选生鲜 · 月销 3,201</div>
+                <div class="b"><span class="p">¥45</span><span class="s">新人价</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mp-tabbar">
+          <div class="t active"><span class="i">🏠</span>首页</div>
+          <div class="t"><span class="i">📂</span>分类</div>
+          <div class="t"><span class="i">🛒</span>购物车</div>
+          <div class="t"><span class="i">👤</span>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ========== 订单管理 ========== -->
+<div class="panel" id="p-order">
+<div class="four-grid">
+
+  <!-- 平台后台 · 订单 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">admin.lsc-platform.com/orders</div>
+      <div class="title" style="color:var(--green)">HTTPS</div>
+    </div>
+    <div class="device-label">🖥 平台管理后台 · 订单管理</div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar">
+          <div class="logo">LSC 平台</div>
+          <div class="menu-item">📊 数据概览</div>
+          <div class="menu-item">👥 商家管理</div>
+          <div class="menu-item">📦 商品审核</div>
+          <div class="menu-item active">📋 订单管理</div>
+          <div class="menu-item">💰 财务结算</div>
+          <div class="menu-item">📢 营销活动</div>
+          <div class="menu-item">⚙️ 系统设置</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-breadcrumb">订单管理 / <b>全部订单</b></div>
+          <div class="stat-grid">
+            <div class="stat-card"><div class="v">1,286</div><div class="l">待付款</div></div>
+            <div class="stat-card"><div class="v">3,452</div><div class="l">待发货</div></div>
+            <div class="stat-card"><div class="v">8,642</div><div class="l">已发货</div></div>
+            <div class="stat-card"><div class="v">98</div><div class="l">退款中</div></div>
+          </div>
+          <div class="table">
+            <div class="table-head">订单列表</div>
+            <table>
+              <tr><th>订单号</th><th>商品</th><th>金额</th><th>状态</th></tr>
+              <tr><td>#20260905001</td><td>有机蔬菜礼盒</td><td>¥128</td><td><span class="tag tag-orange">待发货</span></td></tr>
+              <tr><td>#20260905002</td><td>Apple iPhone 15</td><td>¥5,999</td><td><span class="tag tag-blue">待付款</span></td></tr>
+              <tr><td>#20260904088</td><td>散养土鸡蛋 30枚</td><td>¥45</td><td><span class="tag tag-green">已完成</span></td></tr>
+              <tr><td>#20260904077</td><td>进口车厘子 2斤</td><td>¥98</td><td><span class="tag tag-red">退款中</span></td></tr>
+              <tr><td>#20260904066</td><td>东北大米 10kg</td><td>¥89</td><td><span class="tag tag-green">已完成</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 商家后台 · 订单 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">seller.lsc-platform.com/orders</div>
+      <div class="title" style="color:var(--green)">HTTPS</div>
+    </div>
+    <div class="device-label">🏪 商家管理后台 · 订单处理</div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar" style="background:#2d3436">
+          <div class="logo">优选生鲜</div>
+          <div class="menu-item">📊 经营数据</div>
+          <div class="menu-item">📦 商品管理</div>
+          <div class="menu-item active">📋 订单处理</div>
+          <div class="menu-item">🚚 物流发货</div>
+          <div class="menu-item">💰 资金账户</div>
+          <div class="menu-item">📢 营销推广</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-breadcrumb">订单处理 / <b>待发货</b></div>
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <button class="btn btn-primary">待发货 (12)</button>
+            <button class="btn btn-outline">已发货</button>
+            <button class="btn btn-outline">已完成</button>
+            <button class="btn btn-outline">退款/售后</button>
+          </div>
+          <div class="table">
+            <div class="table-head">待发货订单</div>
+            <table>
+              <tr><th>订单号</th><th>买家</th><th>商品</th><th>金额</th><th>操作</th></tr>
+              <tr><td>#20260905001</td><td>张**</td><td>有机蔬菜礼盒</td><td>¥128</td><td><span class="btn btn-primary" style="padding:3px 8px;font-size:10px">发货</span></td></tr>
+              <tr><td>#20260905002</td><td>李**</td><td>进口车厘子</td><td>¥98</td><td><span class="btn btn-primary" style="padding:3px 8px;font-size:10px">发货</span></td></tr>
+              <tr><td>#20260905003</td><td>王**</td><td>东北大米 10kg</td><td>¥89</td><td><span class="btn btn-primary" style="padding:3px 8px;font-size:10px">发货</span></td></tr>
+              <tr><td>#20260905004</td><td>赵**</td><td>土鸡蛋 30枚</td><td>¥45</td><td><span class="btn btn-primary" style="padding:3px 8px;font-size:10px">发货</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App · 订单 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC Shop · 我的订单</div>
+      <div class="title" style="color:var(--green)">v6.2.0</div>
+    </div>
+    <div class="device-label">📱 移动端 App · 订单中心</div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="phone-body">
+          <div class="app-header" style="padding-bottom:12px">
+            <div style="font-size:16px;font-weight:600">我的订单</div>
+          </div>
+          <div style="display:flex;background:#fff;padding:12px 0;text-align:center">
+            <div style="flex:1;font-size:11px"><div style="font-size:16px;margin-bottom:2px">💰</div>待付款</div>
+            <div style="flex:1;font-size:11px"><div style="font-size:16px;margin-bottom:2px">📦</div>待发货</div>
+            <div style="flex:1;font-size:11px"><div style="font-size:16px;margin-bottom:2px">🚚</div>待收货</div>
+            <div style="flex:1;font-size:11px"><div style="font-size:16px;margin-bottom:2px">⭐</div>待评价</div>
+            <div style="flex:1;font-size:11px"><div style="font-size:16px;margin-bottom:2px">↩️</div>退款</div>
+          </div>
+          <div style="padding:12px">
+            <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:8px">
+                <span style="color:var(--text-2)">优选生鲜</span>
+                <span style="color:var(--orange)">待发货</span>
+              </div>
+              <div style="display:flex;gap:10px">
+                <div style="width:60px;height:60px;border-radius:6px;background:linear-gradient(135deg,#55efc4,#00b894)"></div>
+                <div style="flex:1">
+                  <div style="font-size:12px">有机蔬菜礼盒 8种时令</div>
+                  <div style="font-size:10px;color:var(--text-3);margin-top:3px">x1</div>
+                  <div style="font-size:13px;color:var(--red);font-weight:700;margin-top:6px">¥128</div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+                <span class="btn btn-outline" style="font-size:10px">取消订单</span>
+                <span class="btn btn-primary" style="font-size:10px">提醒发货</span>
+              </div>
+            </div>
+            <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:8px">
+                <span style="color:var(--text-2)">优选生鲜</span>
+                <span style="color:var(--blue)">待收货</span>
+              </div>
+              <div style="display:flex;gap:10px">
+                <div style="width:60px;height:60px;border-radius:6px;background:linear-gradient(135deg,#fdcb6e,#e17055)"></div>
+                <div style="flex:1">
+                  <div style="font-size:12px">东北五常大米 10kg</div>
+                  <div style="font-size:10px;color:var(--text-3);margin-top:3px">顺丰速运 SF12345678</div>
+                  <div style="font-size:13px;color:var(--red);font-weight:700;margin-top:6px">¥89</div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+                <span class="btn btn-outline" style="font-size:10px">查看物流</span>
+                <span class="btn btn-primary" style="font-size:10px">确认收货</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-tabbar">
+            <div class="t"><span class="i">🏠</span>首页</div>
+            <div class="t"><span class="i">📂</span>分类</div>
+            <div class="t"><span class="i">🛒</span>购物车</div>
+            <div class="t"><span class="i">👤</span>我的</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 小程序 · 订单 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC 优选 · 订单</div>
+      <div class="title" style="color:var(--green)">WeChat</div>
+    </div>
+    <div class="device-label">💬 微信小程序 · 我的订单</div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mp-nav">
+          我的订单
+          <div class="cap"><div>•••</div><div>○</div></div>
+        </div>
+        <div class="mp-scroll">
+          <div style="display:flex;background:#fff;padding:12px 0;text-align:center;border-bottom:1px solid var(--border)">
+            <div style="flex:1;font-size:10px"><div style="font-size:16px;margin-bottom:2px">💰</div>待付款</div>
+            <div style="flex:1;font-size:10px"><div style="font-size:16px;margin-bottom:2px">📦</div>待发货</div>
+            <div style="flex:1;font-size:10px"><div style="font-size:16px;margin-bottom:2px">🚚</div>待收货</div>
+            <div style="flex:1;font-size:10px"><div style="font-size:16px;margin-bottom:2px">⭐</div>待评价</div>
+          </div>
+          <div style="padding:12px">
+            <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:10px">
+              <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">优选生鲜 <span style="float:right;color:var(--orange)">待发货</span></div>
+              <div style="display:flex;gap:10px">
+                <div style="width:56px;height:56px;border-radius:6px;background:linear-gradient(135deg,#55efc4,#00b894)"></div>
+                <div style="flex:1">
+                  <div style="font-size:11px">有机蔬菜礼盒 8种</div>
+                  <div style="font-size:12px;color:var(--red);font-weight:700;margin-top:8px">¥128</div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:10px">
+                <span class="btn btn-outline" style="font-size:9px;padding:4px 10px">取消</span>
+                <span class="btn btn-primary" style="font-size:9px;padding:4px 10px">提醒发货</span>
+              </div>
+            </div>
+            <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:10px">
+              <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">优选生鲜 <span style="float:right;color:var(--blue)">待收货</span></div>
+              <div style="display:flex;gap:10px">
+                <div style="width:56px;height:56px;border-radius:6px;background:linear-gradient(135deg,#fdcb6e,#e17055)"></div>
+                <div style="flex:1">
+                  <div style="font-size:11px">东北五常大米 10kg</div>
+                  <div style="font-size:12px;color:var(--red);font-weight:700;margin-top:8px">¥89</div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:10px">
+                <span class="btn btn-outline" style="font-size:9px;padding:4px 10px">物流</span>
+                <span class="btn btn-primary" style="font-size:9px;padding:4px 10px">确认收货</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mp-tabbar">
+          <div class="t"><span class="i">🏠</span>首页</div>
+          <div class="t"><span class="i">📂</span>分类</div>
+          <div class="t"><span class="i">🛒</span>购物车</div>
+          <div class="t active"><span class="i">👤</span>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ========== 商品管理 ========== -->
+<div class="panel" id="p-product">
+<div class="four-grid">
+
+  <!-- 平台后台 · 商品审核 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">admin.lsc-platform.com/products</div>
+      <div class="title" style="color:var(--green)">HTTPS</div>
+    </div>
+    <div class="device-label">🖥 平台管理后台 · 商品审核</div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar">
+          <div class="logo">LSC 平台</div>
+          <div class="menu-item">📊 数据概览</div>
+          <div class="menu-item">👥 商家管理</div>
+          <div class="menu-item active">📦 商品审核</div>
+          <div class="menu-item">📋 订单管理</div>
+          <div class="menu-item">💰 财务结算</div>
+          <div class="menu-item">📢 营销活动</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-breadcrumb">商品审核 / <b>待审核</b></div>
+          <div class="stat-grid">
+            <div class="stat-card"><div class="v">156</div><div class="l">待审核</div></div>
+            <div class="stat-card"><div class="v">8,642</div><div class="l">已上架</div></div>
+            <div class="stat-card"><div class="v">23</div><div class="l">已驳回</div></div>
+            <div class="stat-card"><div class="v">12</div><div class="l">违规下架</div></div>
+          </div>
+          <div class="table">
+            <div class="table-head">待审核商品</div>
+            <table>
+              <tr><th>商品</th><th>商家</th><th>分类</th><th>操作</th></tr>
+              <tr><td>Apple iPhone 15 Pro</td><td>星辰数码</td><td>手机数码</td><td><a style="color:var(--green);font-size:11px;cursor:pointer">通过</a> / <a style="color:var(--red);font-size:11px;cursor:pointer">驳回</a></td></tr>
+              <tr><td>智利车厘子 JJ级</td><td>优选生鲜</td><td>水果</td><td><a style="color:var(--green);font-size:11px;cursor:pointer">通过</a> / <a style="color:var(--red);font-size:11px;cursor:pointer">驳回</a></td></tr>
+              <tr><td>有机蔬菜礼盒</td><td>优选生鲜</td><td>蔬菜</td><td><a style="color:var(--green);font-size:11px;cursor:pointer">通过</a> / <a style="color:var(--red);font-size:11px;cursor:pointer">驳回</a></td></tr>
+              <tr><td>东北五常大米</td><td>优选生鲜</td><td>粮油</td><td><a style="color:var(--green);font-size:11px;cursor:pointer">通过</a> / <a style="color:var(--red);font-size:11px;cursor:pointer">驳回</a></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 商家后台 · 商品管理 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">seller.lsc-platform.com/products</div>
+      <div class="title" style="color:var(--green)">HTTPS</div>
+    </div>
+    <div class="device-label">🏪 商家管理后台 · 商品管理</div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar" style="background:#2d3436">
+          <div class="logo">优选生鲜</div>
+          <div class="menu-item">📊 经营数据</div>
+          <div class="menu-item active">📦 商品管理</div>
+          <div class="menu-item">📋 订单处理</div>
+          <div class="menu-item">🚚 物流发货</div>
+          <div class="menu-item">💰 资金账户</div>
+          <div class="menu-item">📢 营销推广</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-breadcrumb">商品管理 / <b>在售商品</b></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary">在售 (1,258)</button>
+              <button class="btn btn-outline">仓库中 (86)</button>
+              <button class="btn btn-outline">已下架 (23)</button>
+            </div>
+            <button class="btn btn-primary">+ 新增商品</button>
+          </div>
+          <div class="table">
+            <div class="table-head">商品列表</div>
+            <table>
+              <tr><th>商品</th><th>价格</th><th>库存</th><th>销量</th><th>状态</th></tr>
+              <tr><td>智利车厘子 JJ级 2斤</td><td>¥98</td><td>580</td><td>2.3万</td><td><span class="tag tag-green">在售</span></td></tr>
+              <tr><td>有机蔬菜礼盒 8种</td><td>¥128</td><td>320</td><td>8,652</td><td><span class="tag tag-green">在售</span></td></tr>
+              <tr><td>东北五常大米 10kg</td><td>¥89</td><td>1,200</td><td>5,128</td><td><span class="tag tag-green">在售</span></td></tr>
+              <tr><td>散养土鸡蛋 30枚</td><td>¥45</td><td>85</td><td>3,201</td><td><span class="tag tag-orange">库存低</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App · 商品详情 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC Shop · 商品详情</div>
+      <div class="title" style="color:var(--green)">v6.2.0</div>
+    </div>
+    <div class="device-label">📱 移动端 App · 商品详情</div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="phone-body">
+          <div style="height:200px;background:linear-gradient(135deg,#fab1a0,#fd79a8);position:relative">
+            <div style="position:absolute;top:12px;left:12px;width:32px;height:32px;background:rgba(0,0,0,.3);border-radius:50%;display:grid;place-items:center;color:#fff">‹</div>
+            <div style="position:absolute;top:12px;right:12px;width:32px;height:32px;background:rgba(0,0,0,.3);border-radius:50%;display:grid;place-items:center;color:#fff">⋯</div>
+          </div>
+          <div style="background:#fff;padding:14px">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:22px;color:var(--red);font-weight:700">¥98</span>
+              <span style="font-size:12px;color:var(--text-3);text-decoration:line-through">¥158</span>
+              <span style="font-size:10px;background:var(--red);color:#fff;padding:2px 6px;border-radius:3px">秒杀</span>
+            </div>
+            <div style="font-size:15px;font-weight:600;margin-top:8px;line-height:1.4">智利车厘子 JJ级 2斤装 顺丰冷链包邮</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:6px">已售 2.3万 · 好评率 99%</div>
+          </div>
+          <div style="background:#fff;margin-top:8px;padding:14px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:10px">选择规格</div>
+            <div style="display:flex;gap:8px">
+              <span style="padding:6px 14px;border:1px solid var(--brand);color:var(--brand);border-radius:4px;font-size:11px;background:rgba(108,92,231,.06)">2斤 ¥98</span>
+              <span style="padding:6px 14px;border:1px solid var(--border);color:var(--text-2);border-radius:4px;font-size:11px">5斤 ¥228</span>
+              <span style="padding:6px 14px;border:1px solid var(--border);color:var(--text-2);border-radius:4px;font-size:11px">10斤 ¥428</span>
+            </div>
+          </div>
+          <div style="background:#fff;margin-top:8px;padding:14px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px">店铺信息</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,#6c5ce7,#00cec9)"></div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:500">优选生鲜旗舰店</div>
+                <div style="font-size:10px;color:var(--text-3)">评分 4.8 · 1258 商品</div>
+              </div>
+              <span class="btn btn-outline" style="font-size:10px">进入店铺</span>
+            </div>
+          </div>
+          <div style="background:#fff;margin-top:8px;padding:14px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px">用户评价 (8,652)</div>
+            <div style="font-size:11px;color:var(--text-2);line-height:1.6">"车厘子很新鲜，个头大，甜度高，顺丰冷链第二天就到了，下次还会回购！"</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:6px">用户***23 · 2026-09-03</div>
+          </div>
+          <div style="display:flex;background:#fff;padding:8px 12px;gap:8px;position:sticky;bottom:0">
+            <div style="width:44px;text-align:center;font-size:9px;color:var(--text-2)"><div style="font-size:18px">💬</div>客服</div>
+            <div style="width:44px;text-align:center;font-size:9px;color:var(--text-2)"><div style="font-size:18px">🛒</div>购物车</div>
+            <button class="btn btn-primary" style="flex:1;padding:12px;font-size:13px">加入购物车</button>
+            <button class="btn" style="flex:1;padding:12px;font-size:13px;background:var(--red);color:#fff">立即购买</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 小程序 · 商品详情 -->
+  <div class="device">
+    <div class="device-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC 优选 · 商品详情</div>
+      <div class="title" style="color:var(--green)">WeChat</div>
+    </div>
+    <div class="device-label">💬 微信小程序 · 商品详情</div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mp-nav">
+          商品详情
+          <div class="cap"><div>•••</div><div>○</div></div>
+        </div>
+        <div class="mp-scroll">
+          <div style="height:180px;background:linear-gradient(135deg,#fab1a0,#fd79a8)"></div>
+          <div style="background:#fff;padding:12px">
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-size:20px;color:var(--red);font-weight:700">¥98</span>
+              <span style="font-size:11px;color:var(--text-3);text-decoration:line-through">¥158</span>
+            </div>
+            <div style="font-size:14px;font-weight:600;margin-top:6px;line-height:1.4">智利车厘子 JJ级 2斤装</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:4px">顺丰冷链 · 已售 2.3万</div>
+          </div>
+          <div style="background:#fff;margin-top:6px;padding:12px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px">规格</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span style="padding:5px 12px;border:1px solid var(--green);color:var(--green);border-radius:4px;font-size:10px;background:rgba(0,184,148,.06)">2斤 ¥98</span>
+              <span style="padding:5px 12px;border:1px solid var(--border);color:var(--text-2);border-radius:4px;font-size:10px">5斤 ¥228</span>
+            </div>
+          </div>
+          <div style="background:#fff;margin-top:6px;padding:12px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px">优选生鲜旗舰店</div>
+            <div style="font-size:10px;color:var(--text-3)">评分 4.8 · 1258 商品 · 关注 12.5万</div>
+          </div>
+          <div style="background:#fff;margin-top:6px;padding:12px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:6px">评价 (8,652)</div>
+            <div style="font-size:11px;color:var(--text-2);line-height:1.5">"新鲜很甜，物流快，会回购"</div>
+            <div style="font-size:9px;color:var(--text-3);margin-top:4px">***23 · 09-03</div>
+          </div>
+          <div style="height:60px"></div>
+        </div>
+        <div style="display:flex;background:#fff;padding:8px 12px;gap:8px;border-top:1px solid var(--border)">
+          <div style="width:40px;text-align:center;font-size:9px;color:var(--text-2)"><div style="font-size:16px">🛒</div>购物车</div>
+          <button class="btn" style="flex:1;padding:10px;font-size:12px;background:var(--orange);color:#fff;border:none">加入购物车</button>
+          <button class="btn" style="flex:1;padding:10px;font-size:12px;background:var(--green);color:#fff;border:none">立即购买</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</main>
+
+<script>
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('p-'+t.dataset.p).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+</script>
+
+</body>
+</html>
