@@ -1,0 +1,33 @@
+# ===== 交付物校验和 =====
+TGZ-MD5="待归档当天计算"
+ZIP-MD5="待归档当天计算"
+
+# ===== 干系人（真实姓名）=====
+TL-NAME="张敏"
+TL-ID="100001"
+PO-NAME="刘军"
+PO-ROLE="产品负责人"
+SRE-NAME="张小熊"
+SRE-PHONE="18904201105"
+DBA-NAME="张小猛"
+DBA-ID="待填写"
+SEC-NAME="张利"
+SEC-ID="待填写"
+OP1-NAME="关民"
+OP1-ID="待填写"
+OP2-NAME="刘涛"
+OP2-ID="待填写"
+
+# ===== 环境 / 拓扑（演示值兜底，签字前可改）=====
+ENV="生产 Production"
+CLUSTER="prod-cn-shanghai / ns: prod-lsc"
+NACOS-NS="prod-lsc-release"
+NS="prod-lsc"
+PREV-IMG="registry.lsc/lsc-release:v6.1.9-main-abc1234"
+
+# ===== 日期 / 时间（留空 → 自动取今天）=====
+WINDOW-START="2026-09-05"
+WINDOW-END="2026-09-05"
+DATE=""
+NOW=""
+DATETIME=""
