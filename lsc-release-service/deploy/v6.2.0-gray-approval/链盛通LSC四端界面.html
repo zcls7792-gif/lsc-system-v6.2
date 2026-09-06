@@ -175,6 +175,7 @@ body{background:var(--lsc-bg);color:var(--lsc-text);font-family:-apple-system,Bl
   <div class="d-flex align-items-center gap-3">
     <span class="env-pill"><i class="fas fa-circle text-success" style="font-size:.55rem"></i> PROD · 正式环境</span>
     <span class="env-pill"><span class="live-dot"></span><span id="clk">--:--:--</span></span>
+    <span class="env-pill" id="apiStatus" style="margin-left:8px;background:rgba(74,222,128,.2);border-color:#4ade80;color:#86efac"><i class="fas fa-plug"></i> API 连接中...</span>
   </div>
 </div>
 
@@ -219,7 +220,7 @@ body{background:var(--lsc-bg);color:var(--lsc-text);font-family:-apple-system,Bl
           <div class="row g-2 mb-3">
             <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-primary)">1,286万</div><div class="l">全网 LSC 总量</div><div class="t up"><i class="fas fa-arrow-up"></i> 3.2%</div></div></div>
             <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-gold)">¥180万</div><div class="l">监管资金池</div><div class="t up"><i class="fas fa-arrow-up"></i> 5.1%</div></div></div>
-            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-emerald)">0.045%</div><div class="l">今日释放速率</div><div class="t" style="color:var(--lsc-text-muted)">区间内</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v admin-release-rate" style="color:var(--lsc-emerald)">0.045%</div><div class="l">今日释放速率</div><div class="t" style="color:var(--lsc-text-muted)">区间内</div></div></div>
             <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-danger)">2%</div><div class="l">技术服务费</div><div class="t" style="color:var(--lsc-text-muted)">唯一营收</div></div></div>
           </div>
 
@@ -284,10 +285,10 @@ body{background:var(--lsc-bg);color:var(--lsc-text);font-family:-apple-system,Bl
         <div class="pc-main">
           <div class="pc-crumb">首页 / <b>经营概览</b></div>
           <div class="row g-2 mb-3">
-            <div class="col-6"><div class="stat-card"><div class="v" style="color:var(--lsc-gold)">86,420</div><div class="l">可用 LSC</div><div class="t up">↑ 1,240 今日</div></div></div>
-            <div class="col-6"><div class="stat-card"><div class="v" style="color:var(--lsc-text-muted)">1,256,800</div><div class="l">锁定 LSC</div><div class="t" style="color:var(--lsc-text-muted)">每日 0.045% 释放</div></div></div>
+            <div class="col-6"><div class="stat-card"><div class="v merchant-lsc-available" style="color:var(--lsc-gold)">86,420</div><div class="l">可用 LSC</div><div class="t up">↑ 1,240 今日</div></div></div>
+            <div class="col-6"><div class="stat-card"><div class="v merchant-lsc-locked" style="color:var(--lsc-text-muted)">1,256,800</div><div class="l">锁定 LSC</div><div class="t" style="color:var(--lsc-text-muted)">每日 0.045% 释放</div></div></div>
             <div class="col-6"><div class="stat-card"><div class="v" style="color:var(--lsc-emerald)">¥38,650</div><div class="l">今日营业额</div><div class="t up">↑ 15.2%</div></div>
-            <div class="col-6"><div class="stat-card"><div class="v" style="color:var(--lsc-primary)">2,750</div><div class="l">今日核销额度</div><div class="t" style="color:var(--lsc-text-muted)">F 档 · 月营 100万</div></div>
+            <div class="col-6"><div class="stat-card"><div class="v nh-remaining" style="color:var(--lsc-primary)">2,750</div><div class="l">今日核销额度</div><div class="t" style="color:var(--lsc-text-muted)"><span class="nh-level">F</span> 档 · 月营 100万</div></div>
           </div>
 
           <div class="lsc-card mb-2">
@@ -302,11 +303,11 @@ body{background:var(--lsc-bg);color:var(--lsc-text);font-family:-apple-system,Bl
               </div>
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="text-muted" style="font-size:.78rem">今日剩余额度</span>
-                <span style="font-weight:600">2,750 LSC</span>
+                <span class="nh-daily-limit" style="font-weight:600">2,750 LSC</span>
               </div>
               <div class="lsc-progress mb-2"><div class="lsc-progress-bar" style="width:62%;background:var(--lsc-gold)"></div></div>
               <div style="font-size:.7rem;color:var(--lsc-text-muted);margin-bottom:10px">已用 1,730 / 2,750 · 核销比例 100:87</div>
-              <button class="btn-lsc gold w-100"><i class="fas fa-coins"></i> 发起核销 (100 LSC → ¥87)</button>
+              <button class="btn-lsc gold w-100" onclick="demoNhApply()"><i class="fas fa-coins"></i> 发起核销 (100 LSC → ¥87) <span style="font-size:.65rem;opacity:.8">[实时API]</span></button>
             </div>
           </div>
 
@@ -413,8 +414,8 @@ body{background:var(--lsc-bg);color:var(--lsc-text);font-family:-apple-system,Bl
         <div class="mp-scroll">
           <div style="margin:12px;border-radius:10px;padding:14px;background:linear-gradient(135deg,var(--lsc-primary-dark),var(--lsc-primary));color:#fff">
             <div style="font-size:.72rem;opacity:.8">可用 LSC</div>
-            <div style="font-size:1.6rem;font-weight:700;font-family:'Segoe UI',monospace">86,420</div>
-            <div style="font-size:.68rem;opacity:.7;margin-top:2px">锁定 1,256,800 · 1 LSC = ¥1</div>
+            <div class="app-wallet-balance" style="font-size:1.6rem;font-weight:700;font-family:'Segoe UI',monospace">86,420</div>
+            <div class="app-wallet-locked" style="font-size:.68rem;opacity:.7;margin-top:2px">锁定 1,256,800 · 1 LSC = ¥1</div>
             <div class="d-flex gap-2 mt-2">
               <button class="btn-lsc" style="flex:1;background:rgba(255,255,255,.2);color:#fff;border:none;font-size:.72rem;padding:6px"><i class="fas fa-qrcode"></i> 扫码付</button>
               <button class="btn-lsc" style="flex:1;background:var(--lsc-gold);color:#fff;border:none;font-size:.72rem;padding:6px"><i class="fas fa-coins"></i> 收 LSC</button>
@@ -425,7 +426,7 @@ body{background:var(--lsc-bg);color:var(--lsc-text);font-family:-apple-system,Bl
             <div class="lsc-card p-2 mb-2">
               <div class="d-flex justify-content-between" style="font-size:.78rem">
                 <span class="text-muted">今日释放</span>
-                <span class="lsc-coin">+565</span>
+                <span class="lsc-coin app-wallet-released">+565</span>
               </div>
               <div class="lsc-progress mt-1"><div class="lsc-progress-bar" style="width:35%"></div></div>
             </div>
@@ -762,9 +763,9 @@ body{background:var(--lsc-bg);color:var(--lsc-text);font-family:-apple-system,Bl
           <div class="lsc-card mb-2">
             <div class="p-2 border-bottom fw-semibold" style="font-size:.85rem">发起核销（每日限 1 次）</div>
             <div class="p-3">
-              <div class="d-flex justify-content-between mb-2"><span class="text-muted" style="font-size:.8rem">可用 LSC</span><span class="lsc-coin" style="font-size:1.1rem">86,420</span></div>
-              <div class="d-flex justify-content-between mb-2"><span class="text-muted" style="font-size:.8rem">今日额度 (F档)</span><span style="font-weight:600">2,750 LSC</span></div>
-              <div class="d-flex justify-content-between mb-2"><span class="text-muted" style="font-size:.8rem">已用 / 剩余</span><span>1,730 / <span style="color:var(--lsc-emerald)">1,020</span></span></div>
+              <div class="d-flex justify-content-between mb-2"><span class="text-muted" style="font-size:.8rem">可用 LSC</span><span class="lsc-coin merchant-lsc-available" style="font-size:1.1rem">86,420</span></div>
+              <div class="d-flex justify-content-between mb-2"><span class="text-muted" style="font-size:.8rem">今日额度 (F档)</span><span class="nh-daily-limit" style="font-weight:600">2,750 LSC</span></div>
+              <div class="d-flex justify-content-between mb-2"><span class="text-muted" style="font-size:.8rem">已用 / 剩余</span><span><span class="nh-used">1,730</span> / <span class="nh-remaining" style="color:var(--lsc-emerald)">1,020</span></span></div>
               <div class="lsc-progress mb-3"><div class="lsc-progress-bar" style="width:62%;background:var(--lsc-gold)"></div></div>
               <div class="mb-2"><label style="font-size:.78rem">核销数量 (LSC)</label><input type="number" value="1020" max="1020" class="form-control form-control-sm" style="font-size:.85rem"></div>
               <div class="alert alert-success py-2" style="font-size:.78rem;margin:8px 0">
@@ -799,10 +800,10 @@ body{background:var(--lsc-bg);color:var(--lsc-text);font-family:-apple-system,Bl
         <div class="phone-body">
           <div class="app-hero" style="text-align:center;padding:24px 16px">
             <div style="font-size:.75rem;opacity:.8">我的 LSC 资产</div>
-            <div class="bal" style="font-size:2rem;margin-top:8px">86,420</div>
+            <div class="bal mp-wallet-balance" style="font-size:2rem;margin-top:8px">86,420</div>
             <div style="font-size:.72rem;opacity:.7">可用 LSC · 1 LSC = ¥1</div>
             <div style="display:flex;gap:30px;justify-content:center;margin-top:16px">
-              <div><div style="font-size:1.1rem;font-weight:600">1,256,800</div><div style="font-size:.68rem;opacity:.7">锁定 LSC</div></div>
+              <div><div class="mp-wallet-locked" style="font-size:1.1rem;font-weight:600">1,256,800</div><div style="font-size:.68rem;opacity:.7">锁定 LSC</div></div>
               <div><div style="font-size:1.1rem;font-weight:600;color:#fde68a">+565</div><div style="font-size:.68rem;opacity:.7">今日释放</div></div>
             </div>
           </div>
@@ -936,6 +937,189 @@ function tick(){
   document.getElementById('clk').textContent=p(n.getHours())+':'+p(n.getMinutes())+':'+p(n.getSeconds());
 }
 tick();setInterval(tick,1000);
+
+/* ============ LSC 后端 API 对接 ============ */
+var API_BASE = 'http://localhost:8080/api/v1';
+var userToken = '', merchantToken = '';
+
+// 统一请求
+function api(method, path, body, token){
+  var opt = {method:method, headers:{'Content-Type':'application/json'}};
+  if(token) opt.headers['Authorization'] = 'Bearer ' + token;
+  if(body) opt.body = JSON.stringify(body);
+  return fetch(API_BASE + path, opt).then(function(r){return r.json()});
+}
+
+// 自动登录
+function autoLogin(){
+  var u = api('POST','/auth/user/login',{mobile:'13800138000',password:'123456'});
+  var m = api('POST','/auth/merchant/login',{mobile:'13900139000',password:'123456'});
+  return Promise.all([u,m]).then(function(rs){
+    if(rs[0].code===0) userToken = rs[0].data.token;
+    if(rs[1].code===0) merchantToken = rs[1].data.token;
+    var st = document.getElementById('apiStatus');
+    if(userToken || merchantToken){
+      st.innerHTML = '<i class="fas fa-plug"></i> API 已连接 (8080)';
+      st.style.background = 'rgba(74,222,128,.2)';
+      st.style.borderColor = '#4ade80';
+      st.style.color = '#86efac';
+    } else {
+      st.innerHTML = '<i class="fas fa-exclamation-triangle"></i> API 未连接';
+      st.style.background = 'rgba(239,68,68,.2)';
+      st.style.borderColor = '#ef4444';
+      st.style.color = '#fca5a5';
+    }
+    console.log('[LSC] 登录完成 userToken='+!!userToken+' merchantToken='+!!merchantToken);
+  }).catch(function(){
+    var st = document.getElementById('apiStatus');
+    if(st){
+      st.innerHTML = '<i class="fas fa-exclamation-triangle"></i> API 未连接';
+      st.style.background = 'rgba(239,68,68,.2)';
+      st.style.borderColor = '#ef4444';
+      st.style.color = '#fca5a5';
+    }
+  });
+}
+
+// 更新文本内容（通过选择器）
+function setText(sel, val){
+  var el = document.querySelector(sel);
+  if(el) el.textContent = val;
+}
+
+// 拉取真实数据并更新界面
+function loadLiveData(){
+  if(!userToken && !merchantToken) return;
+
+  // 1. 消费者 LSC 账户
+  if(userToken){
+    api('GET','/lsc/account',null,userToken).then(function(r){
+      if(r.code===0){
+        var d=r.data;
+        // 更新消费者 App 钱包余额
+        setText('.app-wallet-balance', d.totalAvailable.toLocaleString());
+        setText('.app-wallet-locked', d.totalLocked.toLocaleString());
+        setText('.app-wallet-released', '+' + d.todayReleased);
+        setText('.app-wallet-rate', d.releaseRate);
+        // 更新小程序钱包
+        setText('.mp-wallet-balance', d.totalAvailable.toLocaleString());
+        setText('.mp-wallet-locked', d.totalLocked.toLocaleString());
+        console.log('[LSC] 消费者账户已更新: 可用'+d.totalAvailable+' LSC');
+      }
+    });
+    // 消费者订单数
+    api('GET','/orders?pageNo=1&pageSize=1',null,userToken).then(function(r){
+      if(r.code===0 && r.data && r.data.total!==undefined){
+        setText('.app-order-count', r.data.total);
+      }
+    });
+  }
+
+  // 2. 商家 LSC 账户 + 核销额度
+  if(merchantToken){
+    api('GET','/lsc/account',null,merchantToken).then(function(r){
+      if(r.code===0){
+        var d=r.data;
+        setText('.merchant-lsc-available', d.totalAvailable.toLocaleString());
+        setText('.merchant-lsc-locked', d.totalLocked.toLocaleString());
+        setText('.merchant-lsc-released', '+' + d.todayReleased);
+        console.log('[LSC] 商家账户已更新: 可用'+d.totalAvailable+' LSC');
+      }
+    });
+    // 核销额度
+    api('GET','/nh/quota',null,merchantToken).then(function(r){
+      if(r.code===0){
+        var d=r.data;
+        setText('.nh-level', d.level);
+        setText('.nh-daily-limit', d.dailyLimit.toLocaleString());
+        setText('.nh-remaining', d.remainingToday.toLocaleString());
+        setText('.nh-used', d.usedToday.toLocaleString());
+        setText('.nh-qualified', d.qualified ? '已满足' : '待完善');
+        var qc = document.querySelector('.nh-qualified');
+        if(qc){
+          qc.className = 'nh-qualified tag-' + (d.qualified?'green':'red');
+        }
+        console.log('[LSC] 核销额度已更新: '+d.level+'档 剩余'+d.remainingToday+' LSC');
+      }
+    });
+  }
+
+  // 3. 商品列表
+  api('GET','/mall/products?pageNo=1&pageSize=6',null,userToken||merchantToken).then(function(r){
+    if(r.code===0 && r.data && r.data.records){
+      var list = r.data.records;
+      setText('.product-total', r.data.total);
+      // 更新商城商品价格显示
+      var cards = document.querySelectorAll('.mall-product-price');
+      list.forEach(function(p,i){
+        if(cards[i]) cards[i].textContent = '¥'+p.price+' = '+p.lscPrice+' LSC';
+      });
+      console.log('[LSC] 商品列表已更新: 共'+r.data.total+'件');
+    }
+  });
+
+  // 4. 释放速率参数
+  api('GET','/release/config',null,userToken||merchantToken).then(function(r){
+    if(r.code===0){
+      var d=r.data;
+      setText('.release-rate-min', d.rateMin);
+      setText('.release-rate-max', d.rateMax);
+      setText('.release-k-min', d.kMin);
+      setText('.release-k-max', d.kMax);
+      console.log('[LSC] 释放参数已更新');
+    }
+  });
+
+  // 5. 管理后台仪表盘
+  api('GET','/admin/dashboard',null,userToken||merchantToken).then(function(r){
+    if(r.code===0){
+      var d=r.data;
+      setText('.admin-total-lsc', d.totalLsc.toLocaleString());
+      setText('.admin-regulatory-pool', '¥'+Number(d.regulatoryPool).toLocaleString());
+      setText('.admin-release-rate', d.todayReleaseRate);
+      setText('.admin-today-gmv', '¥'+Number(d.todayGmv).toLocaleString());
+      setText('.admin-today-orders', d.todayOrders);
+      setText('.admin-total-merchants', d.totalMerchants);
+      setText('.admin-k-value', (d.kValue*100).toFixed(2)+'%');
+      console.log('[LSC] 仪表盘已更新');
+    }
+  });
+}
+
+// 核销按钮（商家端演示）
+function demoNhApply(){
+  if(!merchantToken){alert('商家未登录');return;}
+  var amt = prompt('请输入核销 LSC 数量（100:87）','1020');
+  if(!amt) return;
+  api('POST','/nh/apply',{lscAmount:Number(amt)},merchantToken).then(function(r){
+    if(r.code===0){
+      alert('核销成功！\n'+r.data.lscAmount+' LSC → ¥'+r.data.cashAmount+'\n订单号：'+r.data.orderNo);
+      loadLiveData();
+    } else {
+      alert('核销失败：'+r.message+' (code='+r.code+')');
+    }
+  });
+}
+
+// 混合支付按钮（消费者端演示）
+function demoMixedPay(){
+  if(!userToken){alert('消费者未登录');return;}
+  api('POST','/orders',{items:[{productId:1,quantity:1}],lscAmount:50,addressId:1},userToken).then(function(r){
+    if(r.code===0){
+      alert('下单成功！\n总价：¥'+r.data.totalPrice+'\nLSC支付：'+r.data.lscAmount+'\n人民币支付：¥'+r.data.rmbAmount+(r.data.rmbAmount>0?('\n收银台：'+r.data.payUrl):'(LSC全额支付)'));
+      loadLiveData();
+    } else {
+      alert('下单失败：'+r.message);
+    }
+  });
+}
+
+// 启动对接
+window.addEventListener('load',function(){
+  autoLogin().then(loadLiveData).catch(function(e){console.error('[LSC] 对接失败',e)});
+  // 每30秒刷新
+  setInterval(loadLiveData, 30000);
+});
 </script>
 </body>
 </html>
