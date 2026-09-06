@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>链盛通 LSC 消费权益凭证平台 · 四端界面预览</title>
+<!-- Bootstrap 5 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+  --lsc-primary:#1e40af;
+  --lsc-primary-dark:#1e3a8a;
+  --lsc-gold:#d4af37;
+  --lsc-emerald:#059669;
+  --lsc-danger:#dc2626;
+  --lsc-warning:#d97706;
+  --lsc-bg:#f8fafc;
+  --lsc-card:#ffffff;
+  --lsc-text:#1e293b;
+  --lsc-text-muted:#64748b;
+  --lsc-border:#e2e8f0;
+  --sidebar-bg:#0f172a;
+  --sidebar-text:#cbd5e1;
+  --sidebar-active:#1e40af;
+}
+*{box-sizing:border-box}
+body{background:var(--lsc-bg);color:var(--lsc-text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+.lsc-brand{color:var(--lsc-gold);font-weight:700}
+.lsc-card{background:var(--lsc-card);border:1px solid var(--lsc-border);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.lsc-stat-num{font-family:'Segoe UI',monospace;font-weight:700;font-size:1.6rem}
+.lsc-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.72rem;font-weight:500}
+.tag-green{background:#dcfce7;color:#166534}
+.tag-red{background:#fee2e2;color:#991b1b}
+.tag-blue{background:#dbeafe;color:#1e40af}
+.tag-amber{background:#fef3c7;color:#92400e}
+.tag-violet{background:#ede9fe;color:#5b21b6}
+.tag-gray{background:#f1f5f9;color:#475569}
+
+/* 顶部导航 */
+.top-bar{background:linear-gradient(135deg,var(--lsc-primary-dark),var(--lsc-primary));color:#fff;padding:14px 24px;position:sticky;top:0;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.top-bar h1{font-size:1.15rem;font-weight:700;margin:0}
+.top-bar h1 small{font-size:.8rem;font-weight:400;opacity:.7;margin-left:8px}
+.env-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);padding:4px 12px;border-radius:20px;font-size:.78rem}
+.live-dot{display:inline-block;width:8px;height:8px;background:#4ade80;border-radius:50%;margin-right:6px;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Tab 切换 */
+.view-tabs{background:#fff;border-bottom:2px solid var(--lsc-border);padding:0 24px;position:sticky;top:58px;z-index:999}
+.view-tab{display:inline-block;padding:14px 22px;font-size:.88rem;font-weight:500;color:var(--lsc-text-muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}
+.view-tab:hover{color:var(--lsc-primary)}
+.view-tab.active{color:var(--lsc-primary);border-bottom-color:var(--lsc-primary)}
+.view-tab .num{display:inline-block;width:22px;height:22px;background:var(--lsc-border);color:var(--lsc-text-muted);border-radius:50%;text-align:center;line-height:22px;font-size:.72rem;margin-right:8px;font-weight:700}
+.view-tab.active .num{background:var(--lsc-primary);color:#fff}
+
+/* 四端网格 */
+.ends-grid{display:grid;grid-template-columns:1.35fr 1.35fr 1fr 1fr;gap:20px;padding:24px;max-width:1700px;margin:0 auto}
+@media(max-width:1400px){.ends-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.ends-grid{grid-template-columns:1fr;padding:12px;gap:12px}}
+
+/* 设备框架 */
+.device-frame{background:#fff;border:1px solid var(--lsc-border);border-radius:10px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.06);display:flex;flex-direction:column}
+.device-head{background:#f1f5f9;border-bottom:1px solid var(--lsc-border);padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.device-dots{display:flex;gap:5px}
+.device-dots span{width:10px;height:10px;border-radius:50%}
+.device-dots span:nth-child(1){background:#ef4444}
+.device-dots span:nth-child(2){background:#f59e0b}
+.device-dots span:nth-child(3){background:#22c55e}
+.device-title{font-size:.72rem;color:var(--lsc-text-muted);font-family:monospace}
+.device-label{padding:7px 12px;font-size:.78rem;font-weight:600;color:var(--lsc-primary);border-bottom:1px solid var(--lsc-border);display:flex;justify-content:space-between;align-items:center;background:#f8fafc}
+.device-label .badge-end{font-size:.68rem;background:var(--lsc-primary);color:#fff;padding:2px 8px;border-radius:10px}
+.device-body{flex:1;overflow:auto;max-height:760px}
+.device-body::-webkit-scrollbar{width:5px}
+.device-body::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+
+/* PC 后台布局 */
+.pc-layout{display:flex;min-height:740px}
+.pc-sidebar{width:175px;background:var(--sidebar-bg);color:var(--sidebar-text);flex-shrink:0}
+.pc-sidebar .sb-logo{padding:16px 14px;font-size:.92rem;font-weight:700;color:#fff;border-bottom:1px solid rgba(255,255,255,.08)}
+.pc-sidebar .sb-logo .gold{color:var(--lsc-gold)}
+.pc-sidebar .mi{padding:10px 14px;font-size:.8rem;color:var(--sidebar-text);cursor:pointer;border-left:3px solid transparent;display:flex;align-items:center;gap:8px}
+.pc-sidebar .mi:hover{background:rgba(255,255,255,.05)}
+.pc-sidebar .mi.active{background:rgba(30,64,175,.25);border-left-color:var(--lsc-gold);color:#fff}
+.pc-sidebar .mi i{width:16px;text-align:center;font-size:.82rem}
+.pc-main{flex:1;padding:16px;background:var(--lsc-bg);overflow:auto}
+.pc-crumb{font-size:.75rem;color:var(--lsc-text-muted);margin-bottom:12px}
+.pc-crumb b{color:var(--lsc-text)}
+
+/* 统计卡 */
+.stat-card{background:#fff;border:1px solid var(--lsc-border);border-radius:6px;padding:12px}
+.stat-card .v{font-size:1.4rem;font-weight:700;font-family:'Segoe UI',monospace}
+.stat-card .l{font-size:.75rem;color:var(--lsc-text-muted);margin-top:2px}
+.stat-card .t{font-size:.7rem;margin-top:3px}
+.up{color:var(--lsc-emerald)}.down{color:var(--lsc-danger)}
+
+/* 手机框 */
+.phone-frame{border:9px solid #1e293b;border-radius:30px;overflow:hidden;background:#fff}
+.phone-notch{height:22px;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.65rem}
+.phone-status{display:flex;justify-content:space-between;padding:4px 14px;font-size:.7rem;background:#fff;color:#475569;font-family:monospace}
+.phone-body{height:640px;overflow:auto;background:#f8fafc}
+.phone-body::-webkit-scrollbar{display:none}
+
+/* App 样式 */
+.app-hero{background:linear-gradient(135deg,var(--lsc-primary-dark),var(--lsc-primary));color:#fff;padding:16px}
+.app-hero .bal{font-size:1.8rem;font-weight:700;font-family:'Segoe UI',monospace}
+.app-search{background:rgba(255,255,255,.2);border-radius:20px;padding:8px 14px;font-size:.8rem;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;margin-top:10px}
+.app-section-title{padding:14px 14px 8px;font-size:.85rem;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.app-section-title .more{font-size:.72rem;color:var(--lsc-text-muted);font-weight:400}
+.app-cats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 14px 14px;text-align:center}
+.app-cats .cat{font-size:.68rem;color:#475569}
+.app-cats .cat .ic{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);display:grid;place-items:center;margin:0 auto 5px;font-size:1.3rem}
+.app-prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 14px}
+.app-prod{background:#fff;border-radius:8px;overflow:hidden;border:1px solid var(--lsc-border)}
+.app-prod .img{height:90px;background:linear-gradient(135deg,#a5b4fc,#818cf8)}
+.app-prod .info{padding:8px}
+.app-prod .n{font-size:.72rem;line-height:1.3;height:30px;overflow:hidden}
+.app-prod .p{font-size:.85rem;color:var(--lsc-danger);font-weight:700;margin-top:4px}
+.app-tabbar{display:flex;background:#fff;border-top:1px solid var(--lsc-border);padding:7px 0}
+.app-tabbar .t{flex:1;text-align:center;font-size:.65rem;color:#94a3b8}
+.app-tabbar .t.active{color:var(--lsc-primary)}
+.app-tabbar .t .i{font-size:1.2rem;display:block;margin-bottom:2px}
+
+/* 小程序 */
+.mp-nav{background:#fff;padding:10px 14px;text-align:center;font-size:.88rem;font-weight:600;border-bottom:1px solid var(--lsc-border);display:flex;justify-content:center;align-items:center;position:relative}
+.mp-nav .cap{position:absolute;right:12px;display:flex;border:1px solid var(--lsc-border);border-radius:14px;overflow:hidden}
+.mp-nav .cap div{width:26px;height:20px;display:grid;place-items:center;font-size:.7rem;color:#94a3b8;border-right:1px solid var(--lsc-border)}
+.mp-nav .cap div:last-child{border:none}
+.mp-scroll{height:620px;overflow:auto;background:#f8fafc}
+.mp-scroll::-webkit-scrollbar{display:none}
+.mp-tabbar{display:flex;background:#fff;border-top:1px solid var(--lsc-border);padding:7px 0}
+.mp-tabbar .t{flex:1;text-align:center;font-size:.65rem;color:#94a3b8}
+.mp-tabbar .t.active{color:var(--lsc-emerald)}
+.mp-tabbar .t .i{font-size:1.1rem;display:block;margin-bottom:2px}
+
+/* 通用表格 */
+.lsc-table{width:100%;font-size:.78rem;border-collapse:collapse}
+.lsc-table th{background:#f8fafc;padding:8px 10px;text-align:left;color:var(--lsc-text-muted);font-weight:500;border-bottom:1px solid var(--lsc-border);font-size:.72rem}
+.lsc-table td{padding:8px 10px;border-bottom:1px solid var(--lsc-border)}
+.lsc-table tr:last-child td{border-bottom:none}
+
+/* 按钮 */
+.btn-lsc{display:inline-block;padding:5px 14px;border-radius:5px;font-size:.78rem;cursor:pointer;border:1px solid var(--lsc-border);background:#fff;color:var(--lsc-text-muted);text-align:center;font-weight:500}
+.btn-lsc.primary{background:var(--lsc-primary);color:#fff;border-color:var(--lsc-primary)}
+.btn-lsc.primary:hover{background:var(--lsc-primary-dark)}
+.btn-lsc.danger{background:var(--lsc-danger);color:#fff;border-color:var(--lsc-danger)}
+.btn-lsc.success{background:var(--lsc-emerald);color:#fff;border-color:var(--lsc-emerald)}
+.btn-lsc.gold{background:var(--lsc-gold);color:#fff;border-color:var(--lsc-gold)}
+.btn-lsc-outline{background:#fff;color:var(--lsc-primary);border-color:var(--lsc-primary)}
+
+/* 进度 */
+.lsc-progress{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.lsc-progress-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--lsc-emerald),var(--lsc-primary))}
+
+/* LSC 金色徽章 */
+.lsc-coin{display:inline-flex;align-items:center;gap:4px;color:var(--lsc-gold);font-weight:600}
+.lsc-coin::before{content:'◆';color:var(--lsc-gold)}
+
+/* 小图表柱 */
+.mini-bars{display:flex;align-items:flex-end;gap:4px;height:70px;padding:8px 0}
+.mini-bars .b{flex:1;background:linear-gradient(180deg,var(--lsc-primary),#93c5fd);border-radius:3px 3px 0 0;position:relative}
+.mini-bars .b .lbl{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:.6rem;color:var(--lsc-text-muted)}
+</style>
+</head>
+<body>
+
+<!-- 顶部 -->
+<div class="top-bar d-flex align-items-center justify-content-between">
+  <div class="d-flex align-items-center gap-3">
+    <div style="width:36px;height:36px;background:var(--lsc-gold);border-radius:6px;display:grid;place-items:center;color:var(--lsc-primary-dark);font-weight:800;font-size:.85rem">LSC</div>
+    <div>
+      <h1>链盛通 LSC 消费权益凭证平台 <small>· 四端界面预览 V6.2-AI</small></h1>
+    </div>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <span class="env-pill"><i class="fas fa-circle text-success" style="font-size:.55rem"></i> PROD · 正式环境</span>
+    <span class="env-pill"><span class="live-dot"></span><span id="clk">--:--:--</span></span>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="view-tabs">
+  <div class="view-tab active" data-p="home"><span class="num">1</span>工作台总览</div>
+  <div class="view-tab" data-p="mall"><span class="num">2</span>权益商城与消费</div>
+  <div class="view-tab" data-p="lsc"><span class="num">3</span>LSC 流转与核销</div>
+</div>
+
+<main>
+
+<!-- ==================== 视图 1：工作台总览 ==================== -->
+<div class="view-panel" id="p-home">
+<div class="ends-grid">
+
+  <!-- ============ 1. 平台管理后台 ============ -->
+  <div class="device-frame">
+    <div class="device-head">
+      <div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">admin.lsc-platform.com</div>
+      <div class="device-title" style="color:#22c55e"><i class="fas fa-lock"></i> HTTPS</div>
+    </div>
+    <div class="device-label">🖥 平台管理后台 · 超级管理员 <span class="badge-end">PC Web</span></div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar">
+          <div class="sb-logo"><span class="gold">LSC</span> 管控台</div>
+          <div class="mi active"><i class="fas fa-gauge-high"></i>数据总览</div>
+          <div class="mi"><i class="fas fa-store"></i>商家管理</div>
+          <div class="mi"><i class="fas fa-box"></i>商品审核</div>
+          <div class="mi"><i class="fas fa-file-invoice-dollar"></i>B2B 订单</div>
+          <div class="mi"><i class="fas fa-coins"></i>核销管理</div>
+          <div class="mi"><i class="fas fa-shield-halved"></i>风控中心</div>
+          <div class="mi"><i class="fas fa-sliders"></i>参数配置</div>
+          <div class="mi"><i class="fas fa-link"></i>区块链存证</div>
+          <div class="mi"><i class="fas fa-robot"></i>AI 智能体</div>
+          <div class="mi"><i class="fas fa-gear"></i>系统设置</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-crumb">首页 / <b>数据总览</b></div>
+          <div class="row g-2 mb-3">
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-primary)">1,286万</div><div class="l">全网 LSC 总量</div><div class="t up"><i class="fas fa-arrow-up"></i> 3.2%</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-gold)">¥180万</div><div class="l">监管资金池</div><div class="t up"><i class="fas fa-arrow-up"></i> 5.1%</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-emerald)">0.045%</div><div class="l">今日释放速率</div><div class="t" style="color:var(--lsc-text-muted)">区间内</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-danger)">2%</div><div class="l">技术服务费</div><div class="t" style="color:var(--lsc-text-muted)">唯一营收</div></div></div>
+          </div>
+
+          <div class="lsc-card mb-2">
+            <div class="p-2 border-bottom d-flex justify-content-between align-items-center">
+              <span class="fw-semibold" style="font-size:.85rem">待处理事项</span>
+              <span class="lsc-tag tag-amber"><i class="fas fa-bolt"></i> 8 项待办</span>
+            </div>
+            <table class="lsc-table">
+              <tr><th>类型</th><th>内容</th><th>时间</th><th>操作</th></tr>
+              <tr><td><span class="lsc-tag tag-amber">商家入驻</span></td><td>星辰商贸 营业执照审核</td><td>10分钟前</td><td><a href="#" style="color:var(--lsc-primary);font-size:.75rem">审核</a></td></tr>
+              <tr><td><span class="lsc-tag tag-blue">商品审核</span></td><td>有机蔬菜礼盒 AI可疑</td><td>25分钟前</td><td><a href="#" style="color:var(--lsc-primary);font-size:.75rem">复核</a></td></tr>
+              <tr><td><span class="lsc-tag tag-violet">B2B核验</span></td><td>订单 #B2B20260906001 AI判定可疑</td><td>1小时前</td><td><a href="#" style="color:var(--lsc-primary);font-size:.75rem">处理</a></td></tr>
+              <tr><td><span class="lsc-tag tag-red">风控预警</span></td><td>用户 U10086 异常批量下单</td><td>2小时前</td><td><a href="#" style="color:var(--lsc-primary);font-size:.75rem">查看</a></td></tr>
+            </table>
+          </div>
+
+          <div class="lsc-card">
+            <div class="p-2 border-bottom fw-semibold" style="font-size:.85rem">近 7 日 LSC 释放 & 核销趋势</div>
+            <div class="p-2">
+              <div class="mini-bars">
+                <div class="b" style="height:45%"><span class="lbl">周一</span></div>
+                <div class="b" style="height:62%"><span class="lbl">周二</span></div>
+                <div class="b" style="height:38%"><span class="lbl">周三</span></div>
+                <div class="b" style="height:78%"><span class="lbl">周四</span></div>
+                <div class="b" style="height:55%"><span class="lbl">周五</span></div>
+                <div class="b" style="height:90%"><span class="lbl">周六</span></div>
+                <div class="b" style="height:72%"><span class="lbl">今日</span></div>
+              </div>
+              <div style="margin-top:14px;display:flex;gap:16px;font-size:.72rem;color:var(--lsc-text-muted)">
+                <span><i class="fas fa-square" style="color:var(--lsc-primary)"></i> 释放量</span>
+                <span><i class="fas fa-square" style="color:var(--lsc-gold)"></i> 核销量</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2. 商家管理后台 ============ -->
+  <div class="device-frame">
+    <div class="device-head">
+      <div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">seller.lsc-platform.com</div>
+      <div class="device-title" style="color:#22c55e"><i class="fas fa-lock"></i> HTTPS</div>
+    </div>
+    <div class="device-label">🏪 商家管理后台 · 优选生鲜 <span class="badge-end">PC Web</span></div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar" style="background:#1e293b">
+          <div class="sb-logo" style="color:var(--lsc-gold)">优选生鲜</div>
+          <div class="mi active"><i class="fas fa-gauge-high"></i>经营概览</div>
+          <div class="mi"><i class="fas fa-coins"></i>LSC 账户</div>
+          <div class="mi"><i class="fas fa-box"></i>商品管理</div>
+          <div class="mi"><i class="fas fa-receipt"></i>订单管理</div>
+          <div class="mi"><i class="fas fa-handshake"></i>B2B 交易</div>
+          <div class="mi"><i class="fas fa-money-check-dollar"></i>核销中心</div>
+          <div class="mi"><i class="fas fa-location-dot"></i>门店地址</div>
+          <div class="mi"><i class="fas fa-bullhorn"></i>营销推广</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-crumb">首页 / <b>经营概览</b></div>
+          <div class="row g-2 mb-3">
+            <div class="col-6"><div class="stat-card"><div class="v" style="color:var(--lsc-gold)">86,420</div><div class="l">可用 LSC</div><div class="t up">↑ 1,240 今日</div></div></div>
+            <div class="col-6"><div class="stat-card"><div class="v" style="color:var(--lsc-text-muted)">1,256,800</div><div class="l">锁定 LSC</div><div class="t" style="color:var(--lsc-text-muted)">每日 0.045% 释放</div></div></div>
+            <div class="col-6"><div class="stat-card"><div class="v" style="color:var(--lsc-emerald)">¥38,650</div><div class="l">今日营业额</div><div class="t up">↑ 15.2%</div></div>
+            <div class="col-6"><div class="stat-card"><div class="v" style="color:var(--lsc-primary)">2,750</div><div class="l">今日核销额度</div><div class="t" style="color:var(--lsc-text-muted)">F 档 · 月营 100万</div></div>
+          </div>
+
+          <div class="lsc-card mb-2">
+            <div class="p-2 border-bottom d-flex justify-content-between align-items-center">
+              <span class="fw-semibold" style="font-size:.85rem">LSC 核销快捷入口</span>
+              <span class="lsc-tag tag-green">资格已开通</span>
+            </div>
+            <div class="p-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted" style="font-size:.78rem">可用余额</span>
+                <span class="lsc-coin" style="font-size:1.2rem">86,420</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted" style="font-size:.78rem">今日剩余额度</span>
+                <span style="font-weight:600">2,750 LSC</span>
+              </div>
+              <div class="lsc-progress mb-2"><div class="lsc-progress-bar" style="width:62%;background:var(--lsc-gold)"></div></div>
+              <div style="font-size:.7rem;color:var(--lsc-text-muted);margin-bottom:10px">已用 1,730 / 2,750 · 核销比例 100:87</div>
+              <button class="btn-lsc gold w-100"><i class="fas fa-coins"></i> 发起核销 (100 LSC → ¥87)</button>
+            </div>
+          </div>
+
+          <div class="lsc-card">
+            <div class="p-2 border-bottom fw-semibold" style="font-size:.85rem">最近订单</div>
+            <table class="lsc-table">
+              <tr><th>订单号</th><th>商品</th><th>金额</th><th>LSC</th><th>状态</th></tr>
+              <tr><td>#0906001</td><td>有机蔬菜礼盒</td><td>¥128</td><td>128</td><td><span class="lsc-tag tag-green">已完成</span></td></tr>
+              <tr><td>#0906002</td><td>进口车厘子 2斤</td><td>¥98</td><td>50</td><td><span class="lsc-tag tag-blue">待发货</span></td></tr>
+              <tr><td>#0906003</td><td>东北大米 10kg</td><td>¥89</td><td>0</td><td><span class="lsc-tag tag-green">已完成</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3. 移动端 App ============ -->
+  <div class="device-frame">
+    <div class="device-head">
+      <div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">LSC 链盛通 App</div>
+      <div class="device-title" style="color:#22c55e">v6.2</div>
+    </div>
+    <div class="device-label">📱 移动端 App · 消费者 <span class="badge-end">iOS/Android</span></div>
+    <div class="device-body">
+      <div class="phone-frame">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋 100%</span></div>
+        <div class="phone-body">
+          <div class="app-hero">
+            <div class="d-flex justify-content-between align-items-center" style="font-size:.78rem">
+              <span><i class="fas fa-location-dot"></i> 上海·浦东</span>
+              <span><i class="fas fa-bell"></i> 3</span>
+            </div>
+            <div style="margin-top:12px;font-size:.75rem;opacity:.8">我的 LSC 权益</div>
+            <div class="bal">86,420 <span style="font-size:.8rem;opacity:.7">可用 LSC</span></div>
+            <div style="font-size:.72rem;opacity:.7;margin-top:2px">锁定中 1,256,800 · 每日释放 ~565</div>
+            <div class="app-search"><i class="fas fa-search"></i> 搜索商品、商家...</div>
+          </div>
+
+          <div class="app-section-title">快捷功能</div>
+          <div class="app-cats">
+            <div class="cat"><div class="ic">🛒</div>权益商城</div>
+            <div class="cat"><div class="ic" style="background:linear-gradient(135deg,#bbf7d0,#86efac)">📱</div>扫码支付</div>
+            <div class="cat"><div class="ic" style="background:linear-gradient(135deg,#bfdbfe,#93c5fd)">📋</div>我的订单</div>
+            <div class="cat"><div class="ic" style="background:linear-gradient(135deg,#fecaca,#fca5a5)">💰</div>LSC 钱包</div>
+          </div>
+
+          <div style="margin:0 14px 10px;border-radius:10px;height:70px;background:linear-gradient(135deg,#d4af37,#f59e0b);display:flex;align-items:center;padding:0 14px;color:#fff">
+            <div>
+              <div style="font-size:.82rem;font-weight:600">新人专享 · 消费送 LSC</div>
+              <div style="font-size:.7rem;opacity:.85">每消费 100 元得 100 LSC</div>
+            </div>
+          </div>
+
+          <div class="app-section-title">限时秒杀 <span class="more">更多 ›</span></div>
+          <div class="app-prod-grid">
+            <div class="app-prod">
+              <div class="img"></div>
+              <div class="info"><div class="n">智利车厘子 JJ级 2斤</div><div class="p">¥98 <span class="lsc-coin" style="font-size:.65rem">98 LSC</span></div></div>
+            </div>
+            <div class="app-prod">
+              <div class="img" style="background:linear-gradient(135deg,#86efac,#22c55e)"></div>
+              <div class="info"><div class="n">有机蔬菜礼盒 8种</div><div class="p">¥128 <span class="lsc-coin" style="font-size:.65rem">128</span></div></div>
+            </div>
+            <div class="app-prod">
+              <div class="img" style="background:linear-gradient(135deg,#fde68a,#f59e0b)"></div>
+              <div class="info"><div class="n">东北五常大米 10kg</div><div class="p">¥89 <span class="lsc-coin" style="font-size:.65rem">89</span></div></div>
+            </div>
+            <div class="app-prod">
+              <div class="img" style="background:linear-gradient(135deg,#c4b5fd,#8b5cf6)"></div>
+              <div class="info"><div class="n">散养土鸡蛋 30枚</div><div class="p">¥45 <span class="lsc-coin" style="font-size:.65rem">45</span></div></div>
+            </div>
+          </div>
+
+          <div class="app-tabbar">
+            <div class="t active"><span class="i">🏠</span>首页</div>
+            <div class="t"><span class="i">🗂️</span>分类</div>
+            <div class="t"><span class="i">🛒</span>购物车</div>
+            <div class="t"><span class="i">👤</span>我的</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 4. 微信小程序 ============ -->
+  <div class="device-frame">
+    <div class="device-head">
+      <div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">LSC 链盛通小程序</div>
+      <div class="device-title" style="color:#22c55e">WeChat</div>
+    </div>
+    <div class="device-label">💬 微信小程序 · 消费者 <span class="badge-end">小程序</span></div>
+    <div class="device-body">
+      <div class="phone-frame">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mp-nav">
+          链盛通 LSC
+          <div class="cap"><div>•••</div><div>○</div></div>
+        </div>
+        <div class="mp-scroll">
+          <div style="margin:12px;border-radius:10px;padding:14px;background:linear-gradient(135deg,var(--lsc-primary-dark),var(--lsc-primary));color:#fff">
+            <div style="font-size:.72rem;opacity:.8">可用 LSC</div>
+            <div style="font-size:1.6rem;font-weight:700;font-family:'Segoe UI',monospace">86,420</div>
+            <div style="font-size:.68rem;opacity:.7;margin-top:2px">锁定 1,256,800 · 1 LSC = ¥1</div>
+            <div class="d-flex gap-2 mt-2">
+              <button class="btn-lsc" style="flex:1;background:rgba(255,255,255,.2);color:#fff;border:none;font-size:.72rem;padding:6px"><i class="fas fa-qrcode"></i> 扫码付</button>
+              <button class="btn-lsc" style="flex:1;background:var(--lsc-gold);color:#fff;border:none;font-size:.72rem;padding:6px"><i class="fas fa-coins"></i> 收 LSC</button>
+            </div>
+          </div>
+
+          <div style="padding:0 12px">
+            <div class="lsc-card p-2 mb-2">
+              <div class="d-flex justify-content-between" style="font-size:.78rem">
+                <span class="text-muted">今日释放</span>
+                <span class="lsc-coin">+565</span>
+              </div>
+              <div class="lsc-progress mt-1"><div class="lsc-progress-bar" style="width:35%"></div></div>
+            </div>
+
+            <div class="app-section-title" style="padding:8px 0">热门商品</div>
+            <div class="app-prod">
+              <div class="d-flex gap-2 p-2">
+                <div style="width:60px;height:60px;border-radius:6px;background:linear-gradient(135deg,#a5b4fc,#818cf8)"></div>
+                <div style="flex:1">
+                  <div style="font-size:.78rem;font-weight:500">智利车厘子 JJ级 2斤</div>
+                  <div style="font-size:.68rem;color:var(--lsc-text-muted);margin-top:2px">优选生鲜 · 月销 2.3万</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+                    <span style="color:var(--lsc-danger);font-weight:700">¥98</span>
+                    <span class="lsc-tag tag-green">包邮</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="app-prod" style="margin-top:8px">
+              <div class="d-flex gap-2 p-2">
+                <div style="width:60px;height:60px;border-radius:6px;background:linear-gradient(135deg,#86efac,#22c55e)"></div>
+                <div style="flex:1">
+                  <div style="font-size:.78rem;font-weight:500">有机蔬菜礼盒 8种时令</div>
+                  <div style="font-size:.68rem;color:var(--lsc-text-muted);margin-top:2px">优选生鲜 · 月销 8,652</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+                    <span style="color:var(--lsc-danger);font-weight:700">¥128</span>
+                    <span class="lsc-tag tag-amber">秒杀</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mp-tabbar">
+          <div class="t active"><span class="i">🏠</span>首页</div>
+          <div class="t"><span class="i">📋</span>订单</div>
+          <div class="t"><span class="i">💰</span>钱包</div>
+          <div class="t"><span class="i">👤</span>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ==================== 视图 2：权益商城与消费 ==================== -->
+<div class="view-panel" id="p-mall" style="display:none">
+<div class="ends-grid">
+
+  <!-- 平台后台 · 商品审核 -->
+  <div class="device-frame">
+    <div class="device-head"><div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">admin.lsc-platform.com/products</div><div class="device-title" style="color:#22c55e">HTTPS</div></div>
+    <div class="device-label">🖥 平台管理后台 · 商品审核 <span class="badge-end">PC Web</span></div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar">
+          <div class="sb-logo"><span class="gold">LSC</span> 管控台</div>
+          <div class="mi"><i class="fas fa-gauge-high"></i>数据总览</div>
+          <div class="mi"><i class="fas fa-store"></i>商家管理</div>
+          <div class="mi active"><i class="fas fa-box"></i>商品审核</div>
+          <div class="mi"><i class="fas fa-file-invoice-dollar"></i>B2B 订单</div>
+          <div class="mi"><i class="fas fa-coins"></i>核销管理</div>
+          <div class="mi"><i class="fas fa-shield-halved"></i>风控中心</div>
+          <div class="mi"><i class="fas fa-sliders"></i>参数配置</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-crumb">商品审核 / <b>AI 初审队列</b></div>
+          <div class="row g-2 mb-3">
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-warning)">156</div><div class="l">待审核</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-emerald)">8,642</div><div class="l">已上架</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-danger)">23</div><div class="l">已驳回</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-primary)">60%</div><div class="l">AI 减负</div></div></div>
+          </div>
+          <div class="lsc-card">
+            <div class="p-2 border-bottom fw-semibold" style="font-size:.85rem">AI 智能审核队列</div>
+            <table class="lsc-table">
+              <tr><th>商品</th><th>商家</th><th>AI 结果</th><th>价格校验</th><th>操作</th></tr>
+              <tr><td>有机蔬菜礼盒</td><td>优选生鲜</td><td><span class="lsc-tag tag-amber">AI可疑</span></td><td><span class="lsc-tag tag-green">1:1 ✓</span></td><td><a href="#" style="color:var(--lsc-primary);font-size:.75rem">复核</a></td></tr>
+              <tr><td>智利车厘子 JJ级</td><td>优选生鲜</td><td><span class="lsc-tag tag-green">AI通过</span></td><td><span class="lsc-tag tag-green">1:1 ✓</span></td><td><a href="#" style="color:var(--lsc-emerald);font-size:.75rem">通过</a></td></tr>
+              <tr><td>东北五常大米</td><td>优选生鲜</td><td><span class="lsc-tag tag-green">AI通过</span></td><td><span class="lsc-tag tag-green">1:1 ✓</span></td><td><a href="#" style="color:var(--lsc-emerald);font-size:.75rem">通过</a></td></tr>
+              <tr><td>XX 投资理财产品</td><td>XX 商家</td><td><span class="lsc-tag tag-red">违规</span></td><td><span class="lsc-tag tag-green">1:1 ✓</span></td><td><a href="#" style="color:var(--lsc-danger);font-size:.75rem">驳回</a></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 商家后台 · 商品管理 -->
+  <div class="device-frame">
+    <div class="device-head"><div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">seller.lsc-platform.com/products</div><div class="device-title" style="color:#22c55e">HTTPS</div></div>
+    <div class="device-label">🏪 商家管理后台 · 商品管理 <span class="badge-end">PC Web</span></div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar" style="background:#1e293b">
+          <div class="sb-logo" style="color:var(--lsc-gold)">优选生鲜</div>
+          <div class="mi"><i class="fas fa-gauge-high"></i>经营概览</div>
+          <div class="mi"><i class="fas fa-coins"></i>LSC 账户</div>
+          <div class="mi active"><i class="fas fa-box"></i>商品管理</div>
+          <div class="mi"><i class="fas fa-receipt"></i>订单管理</div>
+          <div class="mi"><i class="fas fa-handshake"></i>B2B 交易</div>
+          <div class="mi"><i class="fas fa-money-check-dollar"></i>核销中心</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-crumb">商品管理 / <b>在售商品</b></div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="d-flex gap-1">
+              <button class="btn-lsc primary">在售 (1,258)</button>
+              <button class="btn-lsc">审核中 (8)</button>
+              <button class="btn-lsc">已下架</button>
+            </div>
+            <button class="btn-lsc success">+ 发布商品</button>
+          </div>
+          <div class="lsc-card">
+            <div class="p-2 border-bottom fw-semibold" style="font-size:.85rem">商品列表（人民币价 = LSC 价，强制 1:1）</div>
+            <table class="lsc-table">
+              <tr><th>商品</th><th>¥ 价</th><th>LSC 价</th><th>库存</th><th>销量</th><th>状态</th></tr>
+              <tr><td>智利车厘子 JJ级 2斤</td><td>¥98</td><td>98</td><td>580</td><td>2.3万</td><td><span class="lsc-tag tag-green">在售</span></td></tr>
+              <tr><td>有机蔬菜礼盒 8种</td><td>¥128</td><td>128</td><td>320</td><td>8,652</td><td><span class="lsc-tag tag-green">在售</span></td></tr>
+              <tr><td>东北五常大米 10kg</td><td>¥89</td><td>89</td><td>1,200</td><td>5,128</td><td><span class="lsc-tag tag-green">在售</span></td></tr>
+              <tr><td>散养土鸡蛋 30枚</td><td>¥45</td><td>45</td><td>85</td><td>3,201</td><td><span class="lsc-tag tag-amber">库存低</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App · 商品详情+混合支付 -->
+  <div class="device-frame">
+    <div class="device-head"><div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">LSC App · 商品详情</div><div class="device-title" style="color:#22c55e">v6.2</div></div>
+    <div class="device-label">📱 移动端 App · 混合支付 <span class="badge-end">375×812</span></div>
+    <div class="device-body">
+      <div class="phone-frame">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="phone-body">
+          <div style="height:180px;background:linear-gradient(135deg,#a5b4fc,#818cf8);position:relative">
+            <div style="position:absolute;top:10px;left:10px;width:30px;height:30px;background:rgba(0,0,0,.3);border-radius:50%;display:grid;place-items:center;color:#fff">‹</div>
+          </div>
+          <div style="background:#fff;padding:14px">
+            <div class="d-flex align-items-baseline gap-2">
+              <span style="font-size:1.4rem;color:var(--lsc-danger);font-weight:700">¥98</span>
+              <span class="lsc-coin" style="font-size:.85rem">= 98 LSC</span>
+            </div>
+            <div style="font-size:.92rem;font-weight:600;margin-top:6px">智利车厘子 JJ级 2斤装 顺丰冷链</div>
+            <div style="font-size:.72rem;color:var(--lsc-text-muted);margin-top:4px">已售 2.3万 · 好评率 99%</div>
+          </div>
+          <div style="background:#fff;margin-top:6px;padding:14px">
+            <div style="font-size:.82rem;font-weight:600;margin-bottom:8px">混合支付</div>
+            <div style="background:#f8fafc;border-radius:6px;padding:10px">
+              <div class="d-flex justify-content-between" style="font-size:.78rem">
+                <span class="text-muted">商品总价</span>
+                <span>¥98.00</span>
+              </div>
+              <div class="d-flex justify-content-between mt-2" style="font-size:.78rem">
+                <span class="text-muted">使用 LSC</span>
+                <span><input type="number" value="50" style="width:60px;border:1px solid var(--lsc-border);border-radius:4px;padding:2px 6px;font-size:.78rem;text-align:right"> LSC</span>
+              </div>
+              <div class="d-flex justify-content-between mt-2" style="font-size:.78rem">
+                <span class="text-muted">LSC 抵扣 (1:1)</span>
+                <span style="color:var(--lsc-emerald)">- ¥50.00</span>
+              </div>
+              <hr style="margin:8px 0;border-color:var(--lsc-border)">
+              <div class="d-flex justify-content-between" style="font-size:.85rem;font-weight:600">
+                <span>还需支付</span>
+                <span style="color:var(--lsc-danger)">¥48.00</span>
+              </div>
+            </div>
+            <div class="mt-2" style="font-size:.72rem;color:var(--lsc-text-muted)">
+              <i class="fas fa-info-circle"></i> 可用 LSC 86,420 · 1 LSC = ¥1 消费权益
+            </div>
+          </div>
+          <div style="display:flex;background:#fff;padding:8px 12px;gap:8px">
+            <div style="width:44px;text-align:center;font-size:.65rem;color:var(--lsc-text-muted)"><div style="font-size:1.2rem">💬</div>客服</div>
+            <div style="width:44px;text-align:center;font-size:.65rem;color:var(--lsc-text-muted)"><div style="font-size:1.2rem">🛒</div>购物车</div>
+            <button class="btn-lsc" style="flex:1;background:var(--lsc-gold);color:#fff;border:none;padding:10px">加入购物车</button>
+            <button class="btn-lsc" style="flex:1;background:var(--lsc-danger);color:#fff;border:none;padding:10px">立即购买</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 小程序 · 扫码支付 -->
+  <div class="device-frame">
+    <div class="device-head"><div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">LSC 小程序 · 扫码付</div><div class="device-title" style="color:#22c55e">WeChat</div></div>
+    <div class="device-label">💬 微信小程序 · 线下消费 <span class="badge-end">375×812</span></div>
+    <div class="device-body">
+      <div class="phone-frame">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mp-nav">
+          扫码支付
+          <div class="cap"><div>•••</div><div>○</div></div>
+        </div>
+        <div class="mp-scroll">
+          <div style="padding:16px;text-align:center">
+            <div style="width:160px;height:160px;margin:20px auto;background:#fff;border:1px solid var(--lsc-border);border-radius:8px;display:grid;place-items:center">
+              <div style="width:140px;height:140px;background:repeating-linear-gradient(45deg,#000 0 4px,#fff 4px 8px);opacity:.85"></div>
+            </div>
+            <div style="font-size:.8rem;color:var(--lsc-text-muted)">向商家出示付款码</div>
+            <div style="font-size:.68rem;color:var(--lsc-text-muted);margin-top:4px">支持 LSC / 人民币 / 混合支付</div>
+          </div>
+
+          <div style="padding:0 14px">
+            <div class="lsc-card p-2 mb-2">
+              <div style="font-size:.82rem;font-weight:600;margin-bottom:8px">支付方式</div>
+              <div class="d-flex align-items-center justify-content-between p-2" style="border-bottom:1px solid var(--lsc-border)">
+                <span style="font-size:.8rem"><i class="fab fa-weixin" style="color:#07c160"></i> 微信支付</span>
+                <span class="lsc-tag tag-green">默认</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between p-2" style="border-bottom:1px solid var(--lsc-border)">
+                <span style="font-size:.8rem"><i class="fas fa-coins" style="color:var(--lsc-gold)"></i> LSC 支付</span>
+                <span class="lsc-tag tag-blue">余额 86,420</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between p-2">
+                <span style="font-size:.8rem"><i class="fas fa-layer-group"></i> 混合支付</span>
+                <span class="text-muted" style="font-size:.72rem">LSC + 微信</span>
+              </div>
+            </div>
+
+            <div class="lsc-card p-2">
+              <div style="font-size:.78rem;font-weight:600;margin-bottom:6px">消费须知</div>
+              <div style="font-size:.7rem;color:var(--lsc-text-muted);line-height:1.6">
+                · LSC 按 1:1 价值锚定抵扣<br>
+                · 消费 100 元得 100 锁定 LSC<br>
+                · 锁定 LSC 每日 0.03%~0.06% 释放
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mp-tabbar">
+          <div class="t"><span class="i">🏠</span>首页</div>
+          <div class="t active"><span class="i">📷</span>扫码</div>
+          <div class="t"><span class="i">💰</span>钱包</div>
+          <div class="t"><span class="i">👤</span>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ==================== 视图 3：LSC 流转与核销 ==================== -->
+<div class="view-panel" id="p-lsc" style="display:none">
+<div class="ends-grid">
+
+  <!-- 平台后台 · 核销管理 -->
+  <div class="device-frame">
+    <div class="device-head"><div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">admin.lsc-platform.com/nh</div><div class="device-title" style="color:#22c55e">HTTPS</div></div>
+    <div class="device-label">🖥 平台管理后台 · 核销管理 <span class="badge-end">PC Web</span></div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar">
+          <div class="sb-logo"><span class="gold">LSC</span> 管控台</div>
+          <div class="mi"><i class="fas fa-gauge-high"></i>数据总览</div>
+          <div class="mi"><i class="fas fa-store"></i>商家管理</div>
+          <div class="mi"><i class="fas fa-box"></i>商品审核</div>
+          <div class="mi"><i class="fas fa-file-invoice-dollar"></i>B2B 订单</div>
+          <div class="mi active"><i class="fas fa-coins"></i>核销管理</div>
+          <div class="mi"><i class="fas fa-shield-halved"></i>风控中心</div>
+          <div class="mi"><i class="fas fa-sliders"></i>参数配置</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-crumb">核销管理 / <b>核销记录</b></div>
+          <div class="row g-2 mb-3">
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-gold)">2,860</div><div class="l">今日核销笔数</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-primary)">¥24.8万</div><div class="l">今日核销金额</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-emerald)">0.42%</div><div class="l">核销率 k</div></div></div>
+            <div class="col-3"><div class="stat-card"><div class="v" style="color:var(--lsc-warning)">13%</div><div class="l">留存锚定</div></div></div>
+          </div>
+          <div class="lsc-card mb-2">
+            <div class="p-2 border-bottom fw-semibold" style="font-size:.85rem">核销资金流向（100 LSC → ¥87 + ¥13 留存）</div>
+            <div class="p-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span style="font-size:.8rem">商家核销 100 LSC</span>
+                <span class="lsc-tag tag-amber">销毁</span>
+              </div>
+              <div class="lsc-progress mb-2"><div class="lsc-progress-bar" style="width:87%;background:var(--lsc-emerald)"></div></div>
+              <div style="font-size:.72rem;color:var(--lsc-text-muted)">87% → 商家主账户（¥87） · 13% → 监管账户留存锚定（¥13）</div>
+            </div>
+          </div>
+          <div class="lsc-card">
+            <div class="p-2 border-bottom fw-semibold" style="font-size:.85rem">商家核销档位（26 档 A-Z）</div>
+            <table class="lsc-table">
+              <tr><th>档位</th><th>月营业额</th><th>日核销上限</th></tr>
+              <tr><td><span class="lsc-tag tag-blue">A</span></td><td>≥ 10万</td><td>275 LSC</td></tr>
+              <tr><td><span class="lsc-tag tag-blue">F</span></td><td>≥ 100万</td><td>2,750 LSC</td></tr>
+              <tr><td><span class="lsc-tag tag-amber">K</span></td><td>≥ 200万</td><td>5,500 LSC</td></tr>
+              <tr><td><span class="lsc-tag tag-amber">P</span></td><td>≥ 450万</td><td>12,400 LSC</td></tr>
+              <tr><td><span class="lsc-tag tag-red">Z</span></td><td>≥ 2000万</td><td>55,000 LSC</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 商家后台 · 核销中心 -->
+  <div class="device-frame">
+    <div class="device-head"><div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">seller.lsc-platform.com/nh</div><div class="device-title" style="color:#22c55e">HTTPS</div></div>
+    <div class="device-label">🏪 商家管理后台 · 核销中心 <span class="badge-end">PC Web</span></div>
+    <div class="device-body">
+      <div class="pc-layout">
+        <div class="pc-sidebar" style="background:#1e293b">
+          <div class="sb-logo" style="color:var(--lsc-gold)">优选生鲜</div>
+          <div class="mi"><i class="fas fa-gauge-high"></i>经营概览</div>
+          <div class="mi"><i class="fas fa-coins"></i>LSC 账户</div>
+          <div class="mi"><i class="fas fa-box"></i>商品管理</div>
+          <div class="mi"><i class="fas fa-receipt"></i>订单管理</div>
+          <div class="mi"><i class="fas fa-handshake"></i>B2B 交易</div>
+          <div class="mi active"><i class="fas fa-money-check-dollar"></i>核销中心</div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-crumb">核销中心 / <b>发起核销</b></div>
+          <div class="lsc-card mb-2">
+            <div class="p-2 border-bottom d-flex justify-content-between">
+              <span class="fw-semibold" style="font-size:.85rem">核销资格</span>
+              <span class="lsc-tag tag-green">✓ 三证齐全</span>
+            </div>
+            <div class="p-2" style="font-size:.75rem;color:var(--lsc-text-muted);line-height:1.8">
+              ✓ 营业执照已审核 &nbsp; ✓ 对公账户已绑定 &nbsp; ✓ 监管协议已签署
+            </div>
+          </div>
+          <div class="lsc-card mb-2">
+            <div class="p-2 border-bottom fw-semibold" style="font-size:.85rem">发起核销（每日限 1 次）</div>
+            <div class="p-3">
+              <div class="d-flex justify-content-between mb-2"><span class="text-muted" style="font-size:.8rem">可用 LSC</span><span class="lsc-coin" style="font-size:1.1rem">86,420</span></div>
+              <div class="d-flex justify-content-between mb-2"><span class="text-muted" style="font-size:.8rem">今日额度 (F档)</span><span style="font-weight:600">2,750 LSC</span></div>
+              <div class="d-flex justify-content-between mb-2"><span class="text-muted" style="font-size:.8rem">已用 / 剩余</span><span>1,730 / <span style="color:var(--lsc-emerald)">1,020</span></span></div>
+              <div class="lsc-progress mb-3"><div class="lsc-progress-bar" style="width:62%;background:var(--lsc-gold)"></div></div>
+              <div class="mb-2"><label style="font-size:.78rem">核销数量 (LSC)</label><input type="number" value="1020" max="1020" class="form-control form-control-sm" style="font-size:.85rem"></div>
+              <div class="alert alert-success py-2" style="font-size:.78rem;margin:8px 0">
+                预计到账：<b style="color:var(--lsc-emerald)">¥887.40</b>（1020 × 0.87）
+              </div>
+              <button class="btn-lsc gold w-100 py-2"><i class="fas fa-coins"></i> 确认核销</button>
+            </div>
+          </div>
+          <div class="lsc-card">
+            <div class="p-2 border-bottom fw-semibold" style="font-size:.85rem">核销记录</div>
+            <table class="lsc-table">
+              <tr><th>时间</th><th>LSC</th><th>到账</th><th>状态</th></tr>
+              <tr><td>09-06 09:15</td><td>1,730</td><td>¥1,505.10</td><td><span class="lsc-tag tag-green">成功</span></td></tr>
+              <tr><td>09-05 10:20</td><td>2,750</td><td>¥2,392.50</td><td><span class="lsc-tag tag-green">成功</span></td></tr>
+              <tr><td>09-04 14:30</td><td>2,750</td><td>¥2,392.50</td><td><span class="lsc-tag tag-green">成功</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App · LSC 钱包 -->
+  <div class="device-frame">
+    <div class="device-head"><div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">LSC App · 钱包</div><div class="device-title" style="color:#22c55e">v6.2</div></div>
+    <div class="device-label">📱 移动端 App · LSC 钱包 <span class="badge-end">375×812</span></div>
+    <div class="device-body">
+      <div class="phone-frame">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="phone-body">
+          <div class="app-hero" style="text-align:center;padding:24px 16px">
+            <div style="font-size:.75rem;opacity:.8">我的 LSC 资产</div>
+            <div class="bal" style="font-size:2rem;margin-top:8px">86,420</div>
+            <div style="font-size:.72rem;opacity:.7">可用 LSC · 1 LSC = ¥1</div>
+            <div style="display:flex;gap:30px;justify-content:center;margin-top:16px">
+              <div><div style="font-size:1.1rem;font-weight:600">1,256,800</div><div style="font-size:.68rem;opacity:.7">锁定 LSC</div></div>
+              <div><div style="font-size:1.1rem;font-weight:600;color:#fde68a">+565</div><div style="font-size:.68rem;opacity:.7">今日释放</div></div>
+            </div>
+          </div>
+          <div style="padding:0 14px">
+            <div class="lsc-card p-2 mb-2">
+              <div class="d-flex justify-content-between" style="font-size:.82rem">
+                <span class="text-muted">今日释放速率</span>
+                <span style="color:var(--lsc-primary);font-weight:600">0.045%</span>
+              </div>
+              <div style="font-size:.68rem;color:var(--lsc-text-muted);margin-top:4px">区间 0.03% ~ 0.06% · 由核销率 k 动态调节</div>
+            </div>
+            <div class="app-section-title" style="padding:8px 0">LSC 流水</div>
+            <div class="lsc-card p-2 mb-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div style="font-size:.82rem">消费发行（车厘子）</div>
+                  <div style="font-size:.68rem;color:var(--lsc-text-muted)">09-06 10:30</div>
+                </div>
+                <span style="color:var(--lsc-gold);font-weight:600">+98 锁定</span>
+              </div>
+            </div>
+            <div class="lsc-card p-2 mb-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div style="font-size:.82rem">每日释放</div>
+                  <div style="font-size:.68rem;color:var(--lsc-text-muted)">09-06 00:00</div>
+                </div>
+                <span style="color:var(--lsc-emerald);font-weight:600">+565 可用</span>
+              </div>
+            </div>
+            <div class="lsc-card p-2 mb-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div style="font-size:.82rem">商城消费（大米）</div>
+                  <div style="font-size:.68rem;color:var(--lsc-text-muted)">09-05 18:20</div>
+                </div>
+                <span style="color:var(--lsc-danger);font-weight:600">-89 可用</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-tabbar">
+            <div class="t"><span class="i">🏠</span>首页</div>
+            <div class="t"><span class="i">🗂️</span>分类</div>
+            <div class="t"><span class="i">🛒</span>购物车</div>
+            <div class="t active"><span class="i">👤</span>我的</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 小程序 · B2B/流转说明 -->
+  <div class="device-frame">
+    <div class="device-head"><div class="device-dots"><span></span><span></span><span></span></div>
+      <div class="device-title">LSC 小程序 · 规则</div><div class="device-title" style="color:#22c55e">WeChat</div></div>
+    <div class="device-label">💬 微信小程序 · 流转规则 <span class="badge-end">375×812</span></div>
+    <div class="device-body">
+      <div class="phone-frame">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mp-nav">
+          LSC 流转规则
+          <div class="cap"><div>•••</div><div>○</div></div>
+        </div>
+        <div class="mp-scroll">
+          <div style="padding:14px">
+            <div class="lsc-card p-2 mb-2" style="background:linear-gradient(135deg,#fef3c7,#fde68a)">
+              <div style="font-size:.85rem;font-weight:700;color:#92400e">核心价值锚定</div>
+              <div style="font-size:.75rem;color:#78350f;margin-top:4px;line-height:1.6">1 LSC 始终代表 1 元人民币的消费权益，在商城消费、线下消费、供应链结算等所有非核销场景按 1:1 价值流通。</div>
+            </div>
+            <div class="lsc-card p-2 mb-2">
+              <div style="font-size:.82rem;font-weight:600;margin-bottom:8px">流转权限矩阵</div>
+              <table class="lsc-table">
+                <tr><th>方向</th><th>是否允许</th></tr>
+                <tr><td>消费者 → 消费者</td><td><span class="lsc-tag tag-red">禁止</span></td></tr>
+                <tr><td>消费者 → 商家</td><td><span class="lsc-tag tag-green">允许</span></td></tr>
+                <tr><td>商家 → 消费者</td><td><span class="lsc-tag tag-red">禁止</span></td></tr>
+                <tr><td>商家 → 商家</td><td><span class="lsc-tag tag-blue">允许(B2B)</span></td></tr>
+                <tr><td>商家核销</td><td><span class="lsc-tag tag-amber">仅限商家</span></td></tr>
+              </table>
+            </div>
+            <div class="lsc-card p-2 mb-2">
+              <div style="font-size:.82rem;font-weight:600;margin-bottom:8px">分账规则</div>
+              <div style="font-size:.75rem;line-height:1.8;color:var(--lsc-text-secondary)">
+                消费 100 元 → 84元 商家主账户<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ 14元 监管账户<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ 2元 平台技术服务费
+              </div>
+            </div>
+            <div class="lsc-card p-2">
+              <div style="font-size:.82rem;font-weight:600;margin-bottom:8px">释放规则</div>
+              <div style="font-size:.75rem;line-height:1.8;color:var(--lsc-text-secondary)">
+                发行即锁定 → 次日起每日释放<br>
+                速率：0.03% ~ 0.06%（动态）<br>
+                可用 LSC 有效期 365 天
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mp-tabbar">
+          <div class="t"><span class="i">🏠</span>首页</div>
+          <div class="t"><span class="i">📋</span>订单</div>
+          <div class="t"><span class="i">💰</span>钱包</div>
+          <div class="t active"><span class="i">📖</span>规则</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</main>
+
+<!-- Bootstrap JS + Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Tab 切换
+document.querySelectorAll('.view-tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.view-tab').forEach(function(x){x.classList.remove('active')});
+    document.querySelectorAll('.view-panel').forEach(function(x){x.style.display='none'});
+    t.classList.add('active');
+    document.getElementById(t.dataset.p).style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+// 时钟
+function tick(){
+  var n=new Date(),p=function(x){return String(x).padStart(2,'0')};
+  document.getElementById('clk').textContent=p(n.getHours())+':'+p(n.getMinutes())+':'+p(n.getSeconds());
+}
+tick();setInterval(tick,1000);
+</script>
+</body>
+</html>
