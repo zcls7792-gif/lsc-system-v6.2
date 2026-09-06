@@ -57,3 +57,43 @@ lsc:
 logging:
   level:
     com.lianshengtong: debug
+
+# Actuator + Prometheus 监控配置（方案文档第十八章）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: lsc-backend
+    export:
+      prometheus:
+        enabled: true
+        step: 1m
+    # 禁用访问cgroup的binder（容器环境cgroup检测NPE）
+    binders:
+      tomcat:
+        enabled: false
+      jvm:
+        enabled: false
+      processor:
+        enabled: false
+      uptime:
+        enabled: false
+      files:
+        enabled: false
+      disk:
+        enabled: false
+
+# AI网关配置
+ai:
+  gateway:
+    enabled: false          # false=模拟模式, true=接入真实AI网关
+    endpoint: ""            # AI网关API地址
