@@ -62,17 +62,22 @@ public class ReleaseService {
         ReleaseConfig c = configMapper.selectById(1L);
         if (c == null) c = new ReleaseConfig();
         Map<String, Object> result = new HashMap<>();
-        result.put("rateMax", c.getRateMax() != null ? c.getRateMax().multiply(new BigDecimal("100")) + "%" : "0.06%");
-        result.put("rateMaxEditable", false); // 硬常量不可修改
-        result.put("rateMin", c.getRateMin() != null ? c.getRateMin().multiply(new BigDecimal("100")) + "%" : "0.03%");
-        result.put("rateMinEditable", false); // 硬常量不可修改
-        result.put("kMin", c.getKMin() != null ? c.getKMin().multiply(new BigDecimal("100")) + "%" : "0.50%");
+        result.put("rateMax", fmtPct(c.getRateMax(), "0.06%"));
+        result.put("rateMaxEditable", false);
+        result.put("rateMin", fmtPct(c.getRateMin(), "0.03%"));
+        result.put("rateMinEditable", false);
+        result.put("kMin", fmtPct(c.getKMin(), "0.50%"));
         result.put("kMinEditable", true);
-        result.put("kMax", c.getKMax() != null ? c.getKMax().multiply(new BigDecimal("100")) + "%" : "1.0%");
+        result.put("kMax", fmtPct(c.getKMax(), "1.0%"));
         result.put("kMaxEditable", true);
-        result.put("alpha", c.getAlpha() != null ? c.getAlpha().toPlainString() : "0.06");
+        result.put("alpha", c.getAlpha() != null ? c.getAlpha().stripTrailingZeros().toPlainString() : "0.06");
         result.put("alphaEditable", true);
         return result;
+    }
+
+    private String fmtPct(BigDecimal val, String def) {
+        if (val == null) return def;
+        return val.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString() + "%";
     }
 
     public Map<String, Object> updateConfig(BigDecimal kMin, BigDecimal kMax, BigDecimal alpha) {
