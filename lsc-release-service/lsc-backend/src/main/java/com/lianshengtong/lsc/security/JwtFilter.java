@@ -26,8 +26,8 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
         String path = request.getRequestURI();
-        // 放行登录、注册、H2控制台、静态资源
-        if (path.contains("/auth/") || path.contains("/h2-console") || path.contains("/error")) {
+        // 放行登录、注册、H2控制台、Actuator健康检查、静态资源
+        if (path.contains("/auth/") || path.contains("/h2-console") || path.contains("/actuator/health") || path.contains("/error")) {
             chain.doFilter(request, response);
             return;
         }

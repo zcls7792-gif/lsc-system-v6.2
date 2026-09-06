@@ -1,3 +1,16 @@
+-- 清理旧表（保证幂等初始化）
+DROP TABLE IF EXISTS nh_level;
+DROP TABLE IF EXISTS release_config;
+DROP TABLE IF EXISTS release_summary;
+DROP TABLE IF EXISTS b2b_order;
+DROP TABLE IF EXISTS nh_record;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS product;
+DROP TABLE IF EXISTS lsc_transaction;
+DROP TABLE IF EXISTS lsc_account;
+DROP TABLE IF EXISTS merchant;
+DROP TABLE IF EXISTS sys_user;
+
 -- 用户表
 CREATE TABLE IF NOT EXISTS sys_user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
