@@ -62,24 +62,29 @@ public class ReleaseService {
         ReleaseConfig c = configMapper.selectById(1L);
         if (c == null) c = new ReleaseConfig();
         Map<String, Object> result = new HashMap<>();
-        result.put("rateMax", fmtPct(c.getRateMax(), "0.06%"));
+        result.put("rateMax", fmtPct(c.getRateMax(), "0.06%", 2));
         result.put("rateMaxEditable", false);
-        result.put("rateMin", fmtPct(c.getRateMin(), "0.03%"));
+        result.put("rateMin", fmtPct(c.getRateMin(), "0.03%", 2));
         result.put("rateMinEditable", false);
-        result.put("kMin", fmtPct(c.getKMin(), "0.50%"));
+        result.put("kMin", fmtPct(c.getKMin(), "0.50%", 2));
         result.put("kMinEditable", true);
-        result.put("kMax", fmtPct(c.getKMax(), "1.0%"));
+        result.put("kMax", fmtPct(c.getKMax(), "1.0%", 1));
         result.put("kMaxEditable", true);
         result.put("alpha", c.getAlpha() != null ? c.getAlpha().stripTrailingZeros().toPlainString() : "0.06");
         result.put("alphaEditable", true);
         return result;
     }
 
-    private String fmtPct(BigDecimal val, String def) {
+    /**
+     * 百分比格式化：val(小数) × 100，保留指定小数位
+     * @param val 原始小数值（如 0.005 表示 0.5%）
+     * @param def 默认显示值
+     * @param scale 小数位数（rate/kMin=2, kMax=1，与方案文档一致）
+     */
+    private String fmtPct(BigDecimal val, String def, int scale) {
         if (val == null) return def;
         BigDecimal pct = val.multiply(new BigDecimal("100"));
-        // 保留 2 位小数，避免 0.060000% 或 0.5% 这类显示问题
-        return pct.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString() + "%";
+        return pct.setScale(scale, java.math.RoundingMode.HALF_UP).toPlainString() + "%";
     }
 
     public Map<String, Object> updateConfig(BigDecimal kMin, BigDecimal kMax, BigDecimal alpha) {
