@@ -119,6 +119,39 @@ public class OrderService {
         return ordersMapper.selectPage(new Page<>(pageNo, pageSize), qw);
     }
 
+    /**
+     * 订单退款：LSC 从商家退回消费者，订单状态置为已退款(4)
+     */
+    @Transactional
+    public Map<String, Object> refund(Long userId, String orderNo) {
+        Orders order = ordersMapper.selectOne(
+                new LambdaQueryWrapper<Orders>().eq(Orders::getOrderNo, orderNo));
+        if (order == null) throw new BusinessException(ErrorCode.NOT_FOUND);
+        // 仅订单所属消费者可发起退款
+        if (!userId.equals(order.getUserId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        if (order.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "仅已支付订单可退款");
+        }
+
+        // LSC 退回：商家 → 消费者
+        if (order.getLscAmount() != null && order.getLscAmount() > 0) {
+            lscAccountService.transfer(order.getMerchantId(), order.getUserId(),
+                    order.getLscAmount(), 6, "REFUND-" + orderNo);
+        }
+
+        order.setStatus(4); // 已退款
+        ordersMapper.updateById(order);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("orderNo", orderNo);
+        result.put("refundedLsc", order.getLscAmount());
+        result.put("refundedRmb", order.getRmbAmount());
+        result.put("status", 4);
+        return result;
+    }
+
     public Orders detail(String orderNo) {
         Orders order = ordersMapper.selectOne(
                 new LambdaQueryWrapper<Orders>().eq(Orders::getOrderNo, orderNo));
