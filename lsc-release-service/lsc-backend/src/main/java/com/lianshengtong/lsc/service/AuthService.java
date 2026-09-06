@@ -9,6 +9,7 @@ import com.lianshengtong.lsc.mapper.LscAccountMapper;
 import com.lianshengtong.lsc.mapper.SysUserMapper;
 import com.lianshengtong.lsc.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -21,6 +22,7 @@ public class AuthService {
     private final SysUserMapper sysUserMapper;
     private final LscAccountMapper lscAccountMapper;
     private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
     public Map<String, Object> register(String mobile, String password, Integer userType, Long referrerId) {
         // 手机号查重
@@ -29,7 +31,7 @@ public class AuthService {
 
         SysUser user = new SysUser();
         user.setMobile(mobile);
-        user.setPassword(password); // 生产环境需加密
+        user.setPassword(passwordEncoder.encode(password)); // BCrypt 加密存储
         user.setUserType(userType);
         user.setReferrerId(referrerId);
         sysUserMapper.insert(user);
@@ -52,7 +54,7 @@ public class AuthService {
     public Map<String, Object> login(String mobile, String password) {
         SysUser user = sysUserMapper.selectOne(
                 new LambdaQueryWrapper<SysUser>().eq(SysUser::getMobile, mobile));
-        if (user == null || !user.getPassword().equals(password)) {
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "手机号或密码错误");
         }
         String token = jwtUtil.generateToken(user.getId(), String.valueOf(user.getUserType()));

@@ -24,9 +24,9 @@ INSERT INTO nh_level (level, min_revenue, daily_limit) VALUES ('S', 15000000, 41
 INSERT INTO nh_level (level, min_revenue, daily_limit) VALUES ('T', 18000000, 49500);
 INSERT INTO nh_level (level, min_revenue, daily_limit) VALUES ('U', 20000000, 55000);
 
--- 测试用户
-INSERT INTO sys_user (mobile, password, user_type, real_name) VALUES ('13800138000', '123456', 0, '测试消费者');
-INSERT INTO sys_user (mobile, password, user_type, real_name) VALUES ('13900139000', '123456', 1, '测试商家');
+-- 测试用户（密码 123456 的 BCrypt 哈希）
+INSERT INTO sys_user (mobile, password, user_type, real_name) VALUES ('13800138000', '$2a$10$Dpgqqd3E8ZoP1wWu2SqUxeI2jT3Y/U9iGA6ti2jUrQLCZ9dedaLsO', 0, '测试消费者');
+INSERT INTO sys_user (mobile, password, user_type, real_name) VALUES ('13900139000', '$2a$10$Dpgqqd3E8ZoP1wWu2SqUxeI2jT3Y/U9iGA6ti2jUrQLCZ9dedaLsO', 1, '测试商家');
 
 -- 测试商家
 INSERT INTO merchant (user_id, store_name, business_license_url, corporate_account_no, regulatory_agreement_signed, audit_status, credit_score, level, monthly_revenue, province, city, district, address_detail, longitude, latitude)
