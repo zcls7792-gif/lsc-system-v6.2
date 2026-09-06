@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LSC 灰度审批发布平台 · 四端界面</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-deep:#05080f;
+  --bg-panel:#0b1220;
+  --bg-card:#111a2e;
+  --bg-hover:#162038;
+  --border:#1e2d4a;
+  --border-glow:#2a4070;
+  --text-primary:#e8eef8;
+  --text-secondary:#8a9bb5;
+  --text-muted:#4a5a75;
+  --accent-green:#00ff88;
+  --accent-amber:#ffb800;
+  --accent-red:#ff3355;
+  --accent-cyan:#00d4ff;
+  --accent-violet:#9d6cff;
+  --glow-green:0 0 12px rgba(0,255,136,.4);
+  --glow-amber:0 0 12px rgba(255,184,0,.4);
+  --glow-red:0 0 12px rgba(255,51,85,.4);
+  --glow-cyan:0 0 12px rgba(0,212,255,.4);
+  --mono:'JetBrains Mono','Space Mono',monospace;
+  --display:'Space Mono',monospace;
+  --sans:'Noto Sans SC','JetBrains Mono',sans-serif;
+}
+html,body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+body{background:
+  radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,.06),transparent 70%),
+  radial-gradient(ellipse 60% 50% at 0% 100%,rgba(157,108,255,.05),transparent 60%),
+  var(--bg-deep)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(30,45,74,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(30,45,74,.3) 1px,transparent 1px);
+  background-size:40px 40px;mask-image:radial-gradient(ellipse 100% 80% at 50% 30%,#000,transparent 90%)}
+
+/* 顶部 */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(5,8,15,.9);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.logo{width:36px;height:36px;border:1px solid var(--accent-cyan);border-radius:4px;display:grid;place-items:center;
+  font-family:var(--display);font-weight:700;color:var(--accent-cyan);font-size:12px;background:rgba(0,212,255,.06);box-shadow:var(--glow-cyan)}
+.topbar h1{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:2px}
+.topbar h1 span{color:var(--accent-cyan)}
+.topbar .sub{font-size:10px;color:var(--text-muted);font-family:var(--mono);margin-top:2px}
+.topbar-right{display:flex;gap:16px;align-items:center}
+.env-tag{font-family:var(--mono);font-size:10px;padding:3px 10px;border:1px solid var(--accent-green);color:var(--accent-green);
+  border-radius:2px;background:rgba(0,255,136,.08);letter-spacing:1px}
+.clock{font-family:var(--mono);font-size:12px;color:var(--accent-cyan)}
+.clock .dot{display:inline-block;width:6px;height:6px;background:var(--accent-green);border-radius:50%;margin-right:6px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:var(--glow-green)}50%{opacity:.4}}
+
+/* Tabs */
+.tabs{display:flex;background:rgba(11,18,32,.8);border-bottom:1px solid var(--border);padding:0 32px;position:sticky;top:65px;z-index:99}
+.tab{padding:13px 24px;font-family:var(--display);font-size:11px;letter-spacing:1.5px;color:var(--text-muted);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .25s;text-transform:uppercase}
+.tab.active{color:var(--accent-cyan);border-bottom-color:var(--accent-cyan)}
+.tab .n{display:inline-block;width:18px;height:18px;background:var(--border);color:var(--text-muted);border-radius:50%;
+  text-align:center;line-height:18px;font-size:9px;margin-right:8px;font-weight:700}
+.tab.active .n{background:var(--accent-cyan);color:var(--bg-deep)}
+
+.stage{padding:28px;position:relative;z-index:1;max-width:1700px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block}
+.four-grid{display:grid;grid-template-columns:1.35fr 1.35fr 1fr 1fr;gap:22px;align-items:start}
+
+/* 设备框架 */
+.device{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.5)}
+.device-head{background:linear-gradient(180deg,var(--bg-card),var(--bg-panel));border-bottom:1px solid var(--border);
+  padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.dots{display:flex;gap:5px}
+.dots span{width:9px;height:9px;border-radius:50%}
+.dots span:nth-child(1){background:#ff5f57}
+.dots span:nth-child(2){background:#febc2e}
+.dots span:nth-child(3){background:#28c840}
+.device-head .title{font-family:var(--mono);font-size:10px;color:var(--text-muted)}
+.device-label{font-family:var(--display);font-size:10px;color:var(--accent-cyan);letter-spacing:1px;padding:7px 12px;
+  border-bottom:1px solid var(--border);background:rgba(0,212,255,.03);display:flex;justify-content:space-between}
+.device-label .badge{font-size:9px;padding:1px 6px;border-radius:2px;background:rgba(0,212,255,.1);color:var(--accent-cyan);
+  border:1px solid rgba(0,212,255,.3);font-family:var(--mono)}
+.device-body{max-height:720px;overflow:auto}
+.device-body::-webkit-scrollbar{width:4px}
+.device-body::-webkit-scrollbar-thumb{background:var(--border-glow);border-radius:2px}
+
+/* PC 布局 */
+.pc{display:flex;min-height:700px}
+.sidebar{width:170px;background:#0a0f1c;color:#fff;padding:0;flex-shrink:0;border-right:1px solid var(--border)}
+.sidebar .logo-box{padding:14px 14px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);color:var(--accent-cyan);font-family:var(--display)}
+.sidebar .mi{padding:9px 14px;font-size:11px;color:rgba(255,255,255,.6);cursor:pointer;border-left:3px solid transparent;display:flex;align-items:center;gap:8px}
+.sidebar .mi.active{color:#fff;background:rgba(0,212,255,.08);border-left-color:var(--accent-cyan)}
+.sidebar .mi .ic{font-size:13px;width:16px;text-align:center}
+.pc-main{flex:1;padding:16px;background:var(--bg-deep)}
+.crumb{font-size:10px;color:var(--text-muted);font-family:var(--mono);margin-bottom:12px}
+.crumb b{color:var(--text-primary)}
+
+/* 统计卡 */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:10px}
+.stat .v{font-family:var(--display);font-size:18px;font-weight:700}
+.stat .l{font-size:10px;color:var(--text-muted);margin-top:2px}
+.stat .t{font-size:9px;margin-top:3px;font-family:var(--mono)}
+.good{color:var(--accent-green)}.warn{color:var(--accent-amber)}.bad{color:var(--accent-red)}.info{color:var(--accent-cyan)}
+
+/* 卡片 */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;margin-bottom:10px}
+.card-h{padding:9px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.card-h .live{font-size:8px;color:var(--accent-green);font-family:var(--mono)}
+.card-h .live::before{content:'';display:inline-block;width:5px;height:5px;background:var(--accent-green);border-radius:50%;margin-right:4px;animation:pulse 1.5s infinite}
+.card-b{padding:10px 12px}
+
+/* 表格 */
+table{width:100%;font-size:10px;border-collapse:collapse}
+th{background:var(--bg-panel);padding:7px 10px;text-align:left;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px}
+td{padding:7px 10px;border-bottom:1px solid var(--border)}
+tr:last-child td{border:none}
+.tag{display:inline-block;padding:1px 7px;border-radius:2px;font-size:9px;font-family:var(--mono)}
+.tag-g{background:rgba(0,255,136,.12);color:var(--accent-green)}
+.tag-a{background:rgba(255,184,0,.15);color:var(--accent-amber)}
+.tag-r{background:rgba(255,51,85,.12);color:var(--accent-red)}
+.tag-c{background:rgba(0,212,255,.12);color:var(--accent-cyan)}
+.tag-v{background:rgba(157,108,255,.12);color:var(--accent-violet)}
+
+/* 进度 */
+.prog{height:4px;background:var(--bg-panel);border-radius:2px;overflow:hidden}
+.prog-bar{height:100%;border-radius:2px}
+
+/* 手机框 */
+.phone{border:9px solid #0d1424;border-radius:28px;overflow:hidden;background:var(--bg-deep)}
+.phone-notch{height:20px;background:#0d1424;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:8px}
+.phone-status{display:flex;justify-content:space-between;padding:3px 12px;font-size:9px;background:var(--bg-card);color:var(--text-secondary);font-family:var(--mono)}
+.phone-body{height:620px;overflow:auto;background:var(--bg-deep)}
+.phone-body::-webkit-scrollbar{display:none}
+
+/* App 通用 */
+.app-top{background:linear-gradient(135deg,#1a2744,#0d1424);padding:12px;color:#fff}
+.app-search{background:rgba(255,255,255,.08);border-radius:16px;padding:6px 12px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-top:8px}
+.app-card{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;margin:10px;padding:12px}
+.app-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.app-row:last-child{border:none}
+.app-tabbar{display:flex;background:var(--bg-card);border-top:1px solid var(--border);padding:6px 0}
+.app-tabbar .t{flex:1;text-align:center;font-size:8px;color:var(--text-muted)}
+.app-tabbar .t.active{color:var(--accent-cyan)}
+.app-tabbar .t .i{font-size:16px;display:block;margin-bottom:1px}
+
+/* 小程序 */
+.mp-nav{background:var(--bg-card);padding:9px 12px;text-align:center;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);
+  display:flex;justify-content:center;align-items:center;position:relative}
+.mp-nav .cap{position:absolute;right:10px;display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.mp-nav .cap div{width:24px;height:18px;display:grid;place-items:center;font-size:8px;color:var(--text-muted);border-right:1px solid var(--border)}
+.mp-nav .cap div:last-child{border:none}
+.mp-scroll{height:600px;overflow:auto;background:var(--bg-deep)}
+.mp-scroll::-webkit-scrollbar{display:none}
+.mp-tabbar{display:flex;background:var(--bg-card);border-top:1px solid var(--border);padding:6px 0}
+.mp-tabbar .t{flex:1;text-align:center;font-size:8px;color:var(--text-muted)}
+.mp-tabbar .t.active{color:var(--accent-green)}
+.mp-tabbar .t .i{font-size:15px;display:block;margin-bottom:1px}
+
+/* Phase 步骤 */
+.phases{display:flex;gap:3px;margin-bottom:10px}
+.ph{flex:1;text-align:center;padding:5px 2px;font-family:var(--mono);font-size:8px;color:var(--text-muted);
+  border:1px solid var(--border);border-radius:2px;background:var(--bg-panel)}
+.ph.done{background:rgba(0,255,136,.1);border-color:var(--accent-green);color:var(--accent-green)}
+.ph.active{background:rgba(0,212,255,.1);border-color:var(--accent-cyan);color:var(--accent-cyan);box-shadow:var(--glow-cyan)}
+.ph .num{display:block;font-size:10px;font-weight:700}
+
+/* 图表条 */
+.bars{display:flex;align-items:flex-end;gap:4px;height:80px;padding:8px 0}
+.bars .b{flex:1;background:linear-gradient(180deg,var(--accent-cyan),rgba(0,212,255,.3));border-radius:2px 2px 0 0;position:relative}
+.bars .b .lbl{position:absolute;bottom:-14px;left:0;right:0;text-align:center;font-size:7px;color:var(--text-muted);font-family:var(--mono)}
+
+/* 按钮 */
+.btn{display:inline-block;padding:5px 12px;border-radius:3px;font-size:10px;cursor:pointer;border:1px solid var(--border);
+  background:var(--bg-panel);color:var(--text-secondary);font-family:var(--mono);text-align:center}
+.btn-p{background:rgba(0,255,136,.1);border-color:var(--accent-green);color:var(--accent-green)}
+.btn-d{background:rgba(255,51,85,.1);border-color:var(--accent-red);color:var(--accent-red)}
+.btn-c{background:rgba(0,212,255,.1);border-color:var(--accent-cyan);color:var(--accent-cyan)}
+
+/* GO 印章 */
+.go-stamp{display:inline-block;padding:6px 16px;border:2px solid var(--accent-green);border-radius:3px;
+  font-family:var(--display);font-size:14px;font-weight:700;color:var(--accent-green);letter-spacing:3px;
+  transform:rotate(-5deg);box-shadow:var(--glow-green);background:rgba(0,255,136,.05)}
+
+@media(max-width:1400px){.four-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){.four-grid{grid-template-columns:1fr}.topbar{padding:12px 16px}.stage{padding:16px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">LSC</div>
+    <div>
+      <h1>灰度审批发布平台 <span>· 四端界面</span></h1>
+      <div class="sub">V6.2.0-GRAY-APPROVAL · MULTI-END UI PREVIEW</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="env-tag">PROD · 灰度环境</span>
+    <div class="clock"><span class="dot"></span><span id="clk">--:--:--</span></div>
+  </div>
+</div>
+
+<nav class="tabs">
+  <div class="tab active" data-p="home"><span class="n">1</span>工作台总览</div>
+  <div class="tab" data-p="approval"><span class="n">2</span>审批管理</div>
+  <div class="tab" data-p="policy"><span class="n">3</span>灰度策略</div>
+</nav>
+
+<main class="stage">
+
+<!-- ========== 工作台总览 ========== -->
+<div class="panel active" id="p-home">
+<div class="four-grid">
+
+  <!-- 1. 平台管理后台 -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">admin.release.lsc.com</div><div class="title" style="color:var(--accent-green)">HTTPS</div></div>
+    <div class="device-label">🖥 平台管理后台 · PC Web<span class="badge">1440×900</span></div>
+    <div class="device-body">
+      <div class="pc">
+        <div class="sidebar">
+          <div class="logo-box">LSC 管控台</div>
+          <div class="mi active"><span class="ic">📊</span>工作台</div>
+          <div class="mi"><span class="ic">📋</span>审批管理</div>
+          <div class="mi"><span class="ic">🎯</span>灰度策略</div>
+          <div class="mi"><span class="ic">🏢</span>应用管理</div>
+          <div class="mi"><span class="ic">👥</span>审批人配置</div>
+          <div class="mi"><span class="ic">📈</span>发布监控</div>
+          <div class="mi"><span class="ic">🔔</span>告警中心</div>
+          <div class="mi"><span class="ic">⚙️</span>系统设置</div>
+        </div>
+        <div class="pc-main">
+          <div class="crumb">首页 / <b>工作台</b></div>
+          <div class="stat-row">
+            <div class="stat"><div class="v info">12</div><div class="l">待审批</div><div class="t">需处理</div></div>
+            <div class="stat"><div class="v good">156</div><div class="l">本月已发布</div><div class="t up">↑ 12%</div></div>
+            <div class="stat"><div class="v warn">3</div><div class="l">金丝雀观察中</div><div class="t">20% 流量</div></div>
+            <div class="stat"><div class="v good">99.8%</div><div class="l">发布成功率</div><div class="t">近 30 天</div></div>
+          </div>
+          <div class="card">
+            <div class="card-h">待办事项 <span class="live">实时</span></div>
+            <table>
+              <tr><th>类型</th><th>内容</th><th>应用</th><th>提交人</th><th>操作</th></tr>
+              <tr><td><span class="tag tag-a">双人审批</span></td><td>订单服务灰度 20%→40%</td><td>order-service</td><td>关民</td><td><span style="color:var(--accent-cyan);cursor:pointer;font-size:9px">审批</span></td></tr>
+              <tr><td><span class="tag tag-c">策略变更</span></td><td>用户标签策略启用</td><td>user-service</td><td>刘涛</td><td><span style="color:var(--accent-cyan);cursor:pointer;font-size:9px">审批</span></td></tr>
+              <tr><td><span class="tag tag-r">回滚申请</span></td><td>支付服务全量回退</td><td>pay-service</td><td>张小熊</td><td><span style="color:var(--accent-cyan);cursor:pointer;font-size:9px">审批</span></td></tr>
+              <tr><td><span class="tag tag-v">配置变更</span></td><td>Nacos 灰度配置更新</td><td>global</td><td>张小猛</td><td><span style="color:var(--accent-cyan);cursor:pointer;font-size:9px">审批</span></td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-h">近 7 日发布趋势</div>
+            <div class="bars">
+              <div class="b" style="height:40%"><span class="lbl">周一</span></div>
+              <div class="b" style="height:65%"><span class="lbl">周二</span></div>
+              <div class="b" style="height:35%"><span class="lbl">周三</span></div>
+              <div class="b" style="height:80%"><span class="lbl">周四</span></div>
+              <div class="b" style="height:50%"><span class="lbl">周五</span></div>
+              <div class="b" style="height:90%"><span class="lbl">周六</span></div>
+              <div class="b" style="height:75%"><span class="lbl">今日</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 商家/应用管理后台 -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">console.release.lsc.com</div><div class="title" style="color:var(--accent-green)">HTTPS</div></div>
+    <div class="device-label">🏢 应用管理后台 · PC Web<span class="badge">1440×900</span></div>
+    <div class="device-body">
+      <div class="pc">
+        <div class="sidebar" style="background:#0f1628">
+          <div class="logo-box" style="color:var(--accent-violet)">order-service</div>
+          <div class="mi active"><span class="ic">📊</span>发布概览</div>
+          <div class="mi"><span class="ic">📝</span>发起审批</div>
+          <div class="mi"><span class="ic">📋</span>我的审批</div>
+          <div class="mi"><span class="ic">🎯</span>灰度策略</div>
+          <div class="mi"><span class="ic">📈</span>发布记录</div>
+          <div class="mi"><span class="ic">🔔</span>告警通知</div>
+          <div class="mi"><span class="ic">⚙️</span>应用设置</div>
+        </div>
+        <div class="pc-main">
+          <div class="crumb">首页 / <b>发布概览</b></div>
+          <div class="stat-row">
+            <div class="stat"><div class="v good">28</div><div class="l">本月发布次数</div><div class="t up">↑ 8%</div></div>
+            <div class="stat"><div class="v warn">1</div><div class="l">审批中</div><div class="t">20%→40%</div></div>
+            <div class="stat"><div class="v info">40%</div><div class="l">当前灰度流量</div><div class="t">观察中</div></div>
+            <div class="stat"><div class="v good">100%</div><div class="l">成功率</div><div class="t">近 30 天</div></div>
+          </div>
+          <div class="phases">
+            <div class="ph done"><span class="num">0</span>准备</div>
+            <div class="ph done"><span class="num">1</span>DDL</div>
+            <div class="ph done"><span class="num">2</span>配置</div>
+            <div class="ph done"><span class="num">3</span>任务</div>
+            <div class="ph active"><span class="num">4</span>金丝雀</div>
+            <div class="ph"><span class="num">5</span>全量</div>
+          </div>
+          <div class="prog"><div class="prog-bar" style="width:83%;background:linear-gradient(90deg,var(--accent-green),var(--accent-cyan))"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--text-muted);font-family:var(--mono)">
+            <span>83% · Phase 4/5</span><span style="color:var(--accent-cyan)">观察 06:42/10:00</span>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="card-h">我的审批单</div>
+            <table>
+              <tr><th>Flow ID</th><th>类型</th><th>状态</th><th>所需审批</th></tr>
+              <tr><td>#1024</td><td><span class="tag tag-v">WEIGHT_CHANGE</span></td><td><span class="tag tag-a">审批中</span></td><td>1/2</td></tr>
+              <tr><td>#1023</td><td><span class="tag tag-v">POLICY_ENABLE</span></td><td><span class="tag tag-g">已通过</span></td><td>2/2</td></tr>
+              <tr><td>#1022</td><td><span class="tag tag-v">ROLLBACK</span></td><td><span class="tag tag-g">已通过</span></td><td>2/2</td></tr>
+              <tr><td>#1021</td><td><span class="tag tag-v">WEIGHT_CHANGE</span></td><td><span class="tag tag-c">执行中</span></td><td>2/2</td></tr>
+            </table>
+          </div>
+          <div class="btn btn-p" style="width:100%;padding:8px;margin-top:4px">+ 发起灰度审批</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 移动端 App -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC Release App</div><div class="title" style="color:var(--accent-green)">v6.2.0</div></div>
+    <div class="device-label">📱 移动端 App · iOS/Android<span class="badge">375×812</span></div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="phone-body">
+          <div class="app-top">
+            <div style="display:flex;justify-content:space-between;font-size:11px"><span>👋 张敏，你好</span><span>🔔 3</span></div>
+            <div class="app-search">🔍 搜索审批单 / 应用...</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px">
+            <div class="app-card" style="margin:0;text-align:center;padding:10px">
+              <div class="v warn" style="font-size:20px;font-weight:700">3</div>
+              <div style="font-size:9px;color:var(--text-muted);margin-top:2px">待我审批</div>
+            </div>
+            <div class="app-card" style="margin:0;text-align:center;padding:10px">
+              <div class="v good" style="font-size:20px;font-weight:700">28</div>
+              <div style="font-size:9px;color:var(--text-muted);margin-top:2px">已通过</div>
+            </div>
+            <div class="app-card" style="margin:0;text-align:center;padding:10px">
+              <div class="v info" style="font-size:20px;font-weight:700">1</div>
+              <div style="font-size:9px;color:var(--text-muted);margin-top:2px">金丝雀</div>
+            </div>
+          </div>
+          <div style="padding:0 12px">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-family:var(--mono)">待我审批</div>
+            <div class="app-card" style="border-left:3px solid var(--accent-amber)">
+              <div style="font-size:12px;font-weight:500">订单服务灰度 20%→40%</div>
+              <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin:4px 0">WEIGHT_CHANGE · Flow#1024</div>
+              <div style="display:flex;justify-content:space-between;font-size:9px">
+                <span style="color:var(--text-muted)">关民 · 14:30</span>
+                <span style="color:var(--accent-amber)">1/2 审批</span>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <div class="btn btn-d" style="flex:1;padding:5px">驳回</div>
+                <div class="btn btn-p" style="flex:1;padding:5px">通过</div>
+              </div>
+            </div>
+            <div class="app-card" style="border-left:3px solid var(--accent-amber)">
+              <div style="font-size:12px;font-weight:500">用户标签策略启用</div>
+              <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin:4px 0">POLICY_ENABLE · Flow#1025</div>
+              <div style="display:flex;justify-content:space-between;font-size:9px">
+                <span style="color:var(--text-muted)">刘涛 · 13:15</span>
+                <span style="color:var(--accent-amber)">0/2 审批</span>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin:12px 0 6px;font-family:var(--mono)">最近动态</div>
+            <div class="app-row"><span style="color:var(--text-secondary)">关民 发起 Flow#1024</span><span class="tag tag-a">待审批</span></div>
+            <div class="app-row"><span style="color:var(--text-secondary)">张小熊 审批通过 #1022</span><span class="tag tag-g">已通过</span></div>
+            <div class="app-row"><span style="color:var(--text-secondary)">order-service 进入金丝雀</span><span class="tag tag-c">20%</span></div>
+          </div>
+          <div class="app-tabbar">
+            <div class="t active"><span class="i">🏠</span>工作台</div>
+            <div class="t"><span class="i">📋</span>审批</div>
+            <div class="t"><span class="i">📈</span>监控</div>
+            <div class="t"><span class="i">👤</span>我的</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 微信小程序 -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC 灰度审批</div><div class="title" style="color:var(--accent-green)">WeChat</div></div>
+    <div class="device-label">💬 微信小程序<span class="badge">375×812</span></div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mp-nav">
+          灰度审批
+          <div class="cap"><div>•••</div><div>○</div></div>
+        </div>
+        <div class="mp-scroll">
+          <div style="padding:12px;background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(157,108,255,.08));margin:10px 12px;border-radius:8px;border:1px solid rgba(0,212,255,.2)">
+            <div style="font-size:11px;color:var(--accent-cyan);font-family:var(--mono)">order-service · Phase 4/5</div>
+            <div style="font-size:14px;font-weight:600;margin:4px 0">灰度发布进行中</div>
+            <div style="display:flex;gap:14px;margin-top:8px">
+              <div><div style="font-size:16px;font-weight:700;color:var(--accent-amber);font-family:var(--display)">40%</div><div style="font-size:8px;color:var(--text-muted)">灰度流量</div></div>
+              <div><div style="font-size:16px;font-weight:700;color:var(--accent-green);font-family:var(--display)">7/7</div><div style="font-size:8px;color:var(--text-muted)">冒烟通过</div></div>
+              <div><div style="font-size:16px;font-weight:700;color:var(--accent-cyan);font-family:var(--display)">6:42</div><div style="font-size:8px;color:var(--text-muted)">观察剩余</div></div>
+            </div>
+          </div>
+          <div style="padding:0 12px">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">待我审批 (3)</div>
+            <div class="app-card" style="border-left:3px solid var(--accent-amber)">
+              <div style="font-size:12px;font-weight:500">订单服务灰度 20%→40%</div>
+              <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin:3px 0">Flow#1024 · 1/2</div>
+              <div style="display:flex;gap:6px;margin-top:6px">
+                <div class="btn btn-d" style="flex:1;padding:4px;font-size:9px">驳回</div>
+                <div class="btn btn-p" style="flex:1;padding:4px;font-size:9px">通过</div>
+              </div>
+            </div>
+            <div class="app-card" style="border-left:3px solid var(--accent-amber)">
+              <div style="font-size:12px;font-weight:500">用户标签策略启用</div>
+              <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin:3px 0">Flow#1025 · 0/2</div>
+            </div>
+            <div class="app-card" style="border-left:3px solid var(--accent-amber)">
+              <div style="font-size:12px;font-weight:500">支付服务回滚申请</div>
+              <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin:3px 0">Flow#1026 · 0/2</div>
+            </div>
+          </div>
+        </div>
+        <div class="mp-tabbar">
+          <div class="t active"><span class="i">🏠</span>工作台</div>
+          <div class="t"><span class="i">📋</span>审批</div>
+          <div class="t"><span class="i">📈</span>监控</div>
+          <div class="t"><span class="i">👤</span>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ========== 审批管理 ========== -->
+<div class="panel" id="p-approval">
+<div class="four-grid">
+
+  <!-- 平台后台 -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">admin.release.lsc.com/approvals</div><div class="title" style="color:var(--accent-green)">HTTPS</div></div>
+    <div class="device-label">🖥 平台管理后台 · 审批管理<span class="badge">1440×900</span></div>
+    <div class="device-body">
+      <div class="pc">
+        <div class="sidebar">
+          <div class="logo-box">LSC 管控台</div>
+          <div class="mi"><span class="ic">📊</span>工作台</div>
+          <div class="mi active"><span class="ic">📋</span>审批管理</div>
+          <div class="mi"><span class="ic">🎯</span>灰度策略</div>
+          <div class="mi"><span class="ic">🏢</span>应用管理</div>
+          <div class="mi"><span class="ic">👥</span>审批人配置</div>
+          <div class="mi"><span class="ic">📈</span>发布监控</div>
+        </div>
+        <div class="pc-main">
+          <div class="crumb">审批管理 / <b>全部审批单</b></div>
+          <div class="stat-row">
+            <div class="stat"><div class="v warn">12</div><div class="l">待审批</div></div>
+            <div class="stat"><div class="v good">156</div><div class="l">已通过</div></div>
+            <div class="stat"><div class="v bad">8</div><div class="l">已驳回</div></div>
+            <div class="stat"><div class="v info">3</div><div class="l">执行中</div></div>
+          </div>
+          <div class="card">
+            <div class="card-h">审批单列表</div>
+            <table>
+              <tr><th>Flow ID</th><th>应用</th><th>类型</th><th>提交人</th><th>审批进度</th><th>状态</th></tr>
+              <tr><td>#1026</td><td>pay-service</td><td><span class="tag tag-r">ROLLBACK</span></td><td>张小熊</td><td>0/2</td><td><span class="tag tag-a">待审批</span></td></tr>
+              <tr><td>#1025</td><td>user-service</td><td><span class="tag tag-v">POLICY_ENABLE</span></td><td>刘涛</td><td>0/2</td><td><span class="tag tag-a">待审批</span></td></tr>
+              <tr><td>#1024</td><td>order-service</td><td><span class="tag tag-v">WEIGHT_CHANGE</span></td><td>关民</td><td>1/2</td><td><span class="tag tag-a">待审批</span></td></tr>
+              <tr><td>#1023</td><td>order-service</td><td><span class="tag tag-v">POLICY_ENABLE</span></td><td>刘涛</td><td>2/2</td><td><span class="tag tag-g">已通过</span></td></tr>
+              <tr><td>#1022</td><td>pay-service</td><td><span class="tag tag-r">ROLLBACK</span></td><td>张小熊</td><td>2/2</td><td><span class="tag tag-g">已通过</span></td></tr>
+              <tr><td>#1021</td><td>order-service</td><td><span class="tag tag-v">WEIGHT_CHANGE</span></td><td>关民</td><td>2/2</td><td><span class="tag tag-c">执行中</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 应用后台 -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">console.release.lsc.com/approvals</div><div class="title" style="color:var(--accent-green)">HTTPS</div></div>
+    <div class="device-label">🏢 应用管理后台 · 我的审批<span class="badge">1440×900</span></div>
+    <div class="device-body">
+      <div class="pc">
+        <div class="sidebar" style="background:#0f1628">
+          <div class="logo-box" style="color:var(--accent-violet)">order-service</div>
+          <div class="mi"><span class="ic">📊</span>发布概览</div>
+          <div class="mi active"><span class="ic">📋</span>我的审批</div>
+          <div class="mi"><span class="ic">🎯</span>灰度策略</div>
+          <div class="mi"><span class="ic">📈</span>发布记录</div>
+          <div class="mi"><span class="ic">🔔</span>告警通知</div>
+        </div>
+        <div class="pc-main">
+          <div class="crumb">我的审批 / <b>全部</b></div>
+          <div class="btn btn-p" style="margin-bottom:10px;padding:6px 14px">+ 发起灰度审批</div>
+          <div class="card">
+            <div class="card-h">审批单 #1024 · 详情</div>
+            <div class="card-b">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+                <div style="background:var(--bg-panel);padding:8px;border-radius:3px"><div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">流程类型</div><div style="font-size:11px;margin-top:2px">WEIGHT_CHANGE</div></div>
+                <div style="background:var(--bg-panel);padding:8px;border-radius:3px"><div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">策略 ID</div><div style="font-size:11px;margin-top:2px">POL-2026-0042</div></div>
+                <div style="background:var(--bg-panel);padding:8px;border-radius:3px"><div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">所需审批</div><div style="font-size:11px;margin-top:2px;color:var(--accent-green)">2/2</div></div>
+                <div style="background:var(--bg-panel);padding:8px;border-radius:3px"><div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">当前状态</div><div style="font-size:11px;margin-top:2px;color:var(--accent-amber)">PENDING</div></div>
+              </div>
+              <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px">审批链</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:10px">
+                <span style="color:var(--accent-green)">✓ 张敏 (TL)</span>
+                <span style="color:var(--text-muted)">→</span>
+                <span style="color:var(--accent-amber)">◯ 刘军 (PO)</span>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:10px">
+                <div class="btn btn-d">撤回</div>
+                <div class="btn">复制链接</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC Release · 审批</div><div class="title" style="color:var(--accent-green)">v6.2.0</div></div>
+    <div class="device-label">📱 移动端 App · 审批列表<span class="badge">375×812</span></div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="phone-body">
+          <div class="app-top"><div style="font-size:15px;font-weight:600">审批中心</div></div>
+          <div style="display:flex;background:var(--bg-card);padding:10px 0;text-align:center;border-bottom:1px solid var(--border)">
+            <div style="flex:1;font-size:10px"><div style="font-size:15px;margin-bottom:2px">⏳</div>待审批</div>
+            <div style="flex:1;font-size:10px"><div style="font-size:15px;margin-bottom:2px">✓</div>已通过</div>
+            <div style="flex:1;font-size:10px"><div style="font-size:15px;margin-bottom:2px">✗</div>已驳回</div>
+            <div style="flex:1;font-size:10px"><div style="font-size:15px;margin-bottom:2px">▶</div>执行中</div>
+          </div>
+          <div style="padding:12px">
+            <div class="app-card" style="border-left:3px solid var(--accent-amber)">
+              <div style="font-size:12px;font-weight:500">支付服务全量回退</div>
+              <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin:4px 0">ROLLBACK · Flow#1026 · pay-service</div>
+              <div style="display:flex;justify-content:space-between;font-size:9px">
+                <span style="color:var(--text-muted)">张小熊 · 15:20</span>
+                <span style="color:var(--accent-amber)">待我审批</span>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <div class="btn btn-d" style="flex:1;padding:5px">驳回</div>
+                <div class="btn btn-p" style="flex:1;padding:5px">通过</div>
+              </div>
+            </div>
+            <div class="app-card" style="border-left:3px solid var(--accent-amber)">
+              <div style="font-size:12px;font-weight:500">用户标签策略启用</div>
+              <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin:4px 0">POLICY_ENABLE · Flow#1025</div>
+              <div style="display:flex;justify-content:space-between;font-size:9px">
+                <span style="color:var(--text-muted)">刘涛 · 13:15</span>
+                <span style="color:var(--accent-amber)">待我审批</span>
+              </div>
+            </div>
+            <div class="app-card" style="border-left:3px solid var(--accent-green)">
+              <div style="font-size:12px;font-weight:500">订单服务灰度 20%→40%</div>
+              <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin:4px 0">WEIGHT_CHANGE · Flow#1024</div>
+              <div style="display:flex;justify-content:space-between;font-size:9px">
+                <span style="color:var(--text-muted)">关民 · 14:30</span>
+                <span style="color:var(--accent-green)">已通过</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-tabbar">
+            <div class="t"><span class="i">🏠</span>工作台</div>
+            <div class="t active"><span class="i">📋</span>审批</div>
+            <div class="t"><span class="i">📈</span>监控</div>
+            <div class="t"><span class="i">👤</span>我的</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 小程序 -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC 灰度审批 · 详情</div><div class="title" style="color:var(--accent-green)">WeChat</div></div>
+    <div class="device-label">💬 微信小程序 · 审批详情<span class="badge">375×812</span></div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mp-nav">
+          审批详情
+          <div class="cap"><div>•••</div><div>○</div></div>
+        </div>
+        <div class="mp-scroll">
+          <div style="padding:12px">
+            <div class="app-card">
+              <div style="font-size:13px;font-weight:600">订单服务灰度 20%→40%</div>
+              <div style="font-size:10px;color:var(--text-muted);font-family:var(--mono);margin:4px 0">Flow#1024 · WEIGHT_CHANGE</div>
+              <div style="font-size:10px;color:var(--text-muted)">提交人: 关民 · 2026-09-06 14:30</div>
+            </div>
+            <div class="app-card">
+              <div style="font-size:11px;font-weight:600;margin-bottom:8px">变更信息</div>
+              <div style="font-size:10px;line-height:1.7;color:var(--text-secondary)">
+                应用: order-service<br>
+                策略: POL-2026-0042<br>
+                灰度: 20% → 40%<br>
+                区域: 华东<br>
+                观察: 10 分钟
+              </div>
+            </div>
+            <div class="app-card">
+              <div style="font-size:11px;font-weight:600;margin-bottom:8px">审批链</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:10px">
+                  <span style="width:18px;height:18px;background:var(--accent-green);color:var(--bg-deep);border-radius:50%;display:grid;place-items:center;font-size:9px">✓</span>
+                  <span>张敏 (TL) · 已通过</span>
+                  <span style="color:var(--text-muted);margin-left:auto;font-family:var(--mono)">14:35</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:10px">
+                  <span style="width:18px;height:18px;background:var(--accent-amber);color:var(--bg-deep);border-radius:50%;display:grid;place-items:center;font-size:9px">◯</span>
+                  <span>刘军 (PO) · 待审批</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding:10px 12px;background:var(--bg-card);border-top:1px solid var(--border)">
+          <div class="btn btn-d" style="flex:1;padding:10px">驳回</div>
+          <div class="btn btn-p" style="flex:1;padding:10px">通过审批</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ========== 灰度策略 ========== -->
+<div class="panel" id="p-policy">
+<div class="four-grid">
+
+  <!-- 平台后台 -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">admin.release.lsc.com/policies</div><div class="title" style="color:var(--accent-green)">HTTPS</div></div>
+    <div class="device-label">🖥 平台管理后台 · 灰度策略<span class="badge">1440×900</span></div>
+    <div class="device-body">
+      <div class="pc">
+        <div class="sidebar">
+          <div class="logo-box">LSC 管控台</div>
+          <div class="mi"><span class="ic">📊</span>工作台</div>
+          <div class="mi"><span class="ic">📋</span>审批管理</div>
+          <div class="mi active"><span class="ic">🎯</span>灰度策略</div>
+          <div class="mi"><span class="ic">🏢</span>应用管理</div>
+          <div class="mi"><span class="ic">👥</span>审批人配置</div>
+          <div class="mi"><span class="ic">📈</span>发布监控</div>
+        </div>
+        <div class="pc-main">
+          <div class="crumb">灰度策略 / <b>全局策略</b></div>
+          <div class="stat-row">
+            <div class="stat"><div class="v info">42</div><div class="l">策略总数</div></div>
+            <div class="stat"><div class="v good">38</div><div class="l">运行中</div></div>
+            <div class="stat"><div class="v warn">3</div><div class="l">灰度中</div></div>
+            <div class="stat"><div class="v bad">1</div><div class="l">已暂停</div></div>
+          </div>
+          <div class="card">
+            <div class="card-h">灰度策略列表</div>
+            <table>
+              <tr><th>策略 ID</th><th>应用</th><th>类型</th><th>当前流量</th><th>状态</th></tr>
+              <tr><td>POL-0042</td><td>order-service</td><td><span class="tag tag-v">WEIGHT</span></td><td>40%</td><td><span class="tag tag-a">灰度中</span></td></tr>
+              <tr><td>POL-0041</td><td>user-service</td><td><span class="tag tag-v">LABEL</span></td><td>15%</td><td><span class="tag tag-g">运行中</span></td></tr>
+              <tr><td>POL-0040</td><td>pay-service</td><td><span class="tag tag-v">WEIGHT</span></td><td>100%</td><td><span class="tag tag-g">全量</span></td></tr>
+              <tr><td>POL-0039</td><td>search-service</td><td><span class="tag tag-v">CANARY</span></td><td>0%</td><td><span class="tag tag-r">已暂停</span></td></tr>
+              <tr><td>POL-0038</td><td>msg-service</td><td><span class="tag tag-v">WEIGHT</span></td><td>100%</td><td><span class="tag tag-g">全量</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 应用后台 -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">console.release.lsc.com/policies</div><div class="title" style="color:var(--accent-green)">HTTPS</div></div>
+    <div class="device-label">🏢 应用管理后台 · 灰度策略<span class="badge">1440×900</span></div>
+    <div class="device-body">
+      <div class="pc">
+        <div class="sidebar" style="background:#0f1628">
+          <div class="logo-box" style="color:var(--accent-violet)">order-service</div>
+          <div class="mi"><span class="ic">📊</span>发布概览</div>
+          <div class="mi"><span class="ic">📋</span>我的审批</div>
+          <div class="mi active"><span class="ic">🎯</span>灰度策略</div>
+          <div class="mi"><span class="ic">📈</span>发布记录</div>
+        </div>
+        <div class="pc-main">
+          <div class="crumb">灰度策略 / <b>POL-0042 详情</b></div>
+          <div class="card">
+            <div class="card-h">策略 POL-0042 · 权重灰度</div>
+            <div class="card-b">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+                <div style="background:var(--bg-panel);padding:8px;border-radius:3px"><div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">策略类型</div><div style="font-size:11px;margin-top:2px">WEIGHT_CHANGE</div></div>
+                <div style="background:var(--bg-panel);padding:8px;border-radius:3px"><div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">应用</div><div style="font-size:11px;margin-top:2px">order-service</div></div>
+                <div style="background:var(--bg-panel);padding:8px;border-radius:3px"><div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">目标流量</div><div style="font-size:11px;margin-top:2px;color:var(--accent-amber)">40%</div></div>
+                <div style="background:var(--bg-panel);padding:8px;border-radius:3px"><div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">观察时长</div><div style="font-size:11px;margin-top:2px">10 分钟</div></div>
+              </div>
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">流量调整曲线</div>
+              <div class="prog" style="margin-bottom:6px"><div class="prog-bar" style="width:40%;background:linear-gradient(90deg,var(--accent-green),var(--accent-amber))"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);font-family:var(--mono)">
+                <span>0%</span><span>20%</span><span style="color:var(--accent-amber)">40% ←</span><span>60%</span><span>80%</span><span>100%</span>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:12px">
+                <div class="btn btn-p">调整流量</div>
+                <div class="btn">暂停策略</div>
+                <div class="btn btn-d">回滚</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC Release · 监控</div><div class="title" style="color:var(--accent-green)">v6.2.0</div></div>
+    <div class="device-label">📱 移动端 App · 发布监控<span class="badge">375×812</span></div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="phone-body">
+          <div class="app-top"><div style="font-size:15px;font-weight:600">发布监控</div></div>
+          <div style="padding:12px">
+            <div class="app-card" style="text-align:center">
+              <div class="phases">
+                <div class="ph done"><span class="num">0</span></div>
+                <div class="ph done"><span class="num">1</span></div>
+                <div class="ph done"><span class="num">2</span></div>
+                <div class="ph done"><span class="num">3</span></div>
+                <div class="ph active"><span class="num">4</span></div>
+                <div class="ph"><span class="num">5</span></div>
+              </div>
+              <div style="font-size:12px;color:var(--accent-cyan);margin-top:8px">order-service · 金丝雀观察中</div>
+              <div style="font-size:10px;color:var(--text-muted);font-family:var(--mono);margin-top:2px">剩余 06:42 / 10:00</div>
+            </div>
+            <div class="app-card">
+              <div style="font-size:11px;font-weight:600;margin-bottom:8px">健康指标</div>
+              <div class="app-row"><span style="color:var(--text-secondary)">服务状态</span><span class="good">UP</span></div>
+              <div class="app-row"><span style="color:var(--text-secondary)">JVM 堆</span><span class="good">512MB / 1GB</span></div>
+              <div class="app-row"><span style="color:var(--text-secondary)">锁失败/分钟</span><span class="good">0</span></div>
+              <div class="app-row"><span style="color:var(--text-secondary)">5xx 率</span><span class="good">0.02%</span></div>
+              <div class="app-row"><span style="color:var(--text-secondary)">QPS</span><span class="info">128</span></div>
+            </div>
+            <div class="app-card">
+              <div style="font-size:11px;font-weight:600;margin-bottom:8px">冒烟测试</div>
+              <div style="display:flex;flex-direction:column;gap:4px;font-size:10px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">健康检查</span><span class="good">✓ 200</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">审批列表</span><span class="good">✓ 200</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">创建审批</span><span class="good">✓ 200</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">双人审批</span><span class="good">✓ 200</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">状态查询</span><span class="good">✓ 200</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="app-tabbar">
+            <div class="t"><span class="i">🏠</span>工作台</div>
+            <div class="t"><span class="i">📋</span>审批</div>
+            <div class="t active"><span class="i">📈</span>监控</div>
+            <div class="t"><span class="i">👤</span>我的</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 小程序 -->
+  <div class="device">
+    <div class="device-head"><div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">LSC 灰度审批 · 策略</div><div class="title" style="color:var(--accent-green)">WeChat</div></div>
+    <div class="device-label">💬 微信小程序 · 灰度策略<span class="badge">375×812</span></div>
+    <div class="device-body">
+      <div class="phone">
+        <div class="phone-notch">● ● ●</div>
+        <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mp-nav">
+          灰度策略
+          <div class="cap"><div>•••</div><div>○</div></div>
+        </div>
+        <div class="mp-scroll">
+          <div style="padding:12px">
+            <div class="app-card" style="background:linear-gradient(135deg,rgba(0,255,136,.08),rgba(0,212,255,.05));border-color:rgba(0,255,136,.2)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:13px;font-weight:600">order-service</div>
+                  <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin-top:2px">POL-0042 · WEIGHT</div>
+                </div>
+                <div class="go-stamp" style="font-size:11px;padding:4px 10px">GO</div>
+              </div>
+              <div style="margin-top:10px">
+                <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);margin-bottom:3px">
+                  <span>当前灰度</span><span style="color:var(--accent-amber)">40%</span>
+                </div>
+                <div class="prog"><div class="prog-bar" style="width:40%;background:var(--accent-amber)"></div></div>
+              </div>
+            </div>
+            <div class="app-card">
+              <div style="font-size:11px;font-weight:600;margin-bottom:8px">策略列表</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+                <div>
+                  <div style="font-size:11px">user-service</div>
+                  <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">LABEL · 15%</div>
+                </div>
+                <span class="tag tag-g">运行中</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+                <div>
+                  <div style="font-size:11px">pay-service</div>
+                  <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">WEIGHT · 100%</div>
+                </div>
+                <span class="tag tag-g">全量</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">
+                <div>
+                  <div style="font-size:11px">search-service</div>
+                  <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono)">CANARY · 0%</div>
+                </div>
+                <span class="tag tag-r">已暂停</span>
+              </div>
+            </div>
+            <div class="app-card">
+              <div style="font-size:11px;font-weight:600;margin-bottom:6px">告警通道</div>
+              <div style="font-size:10px;color:var(--accent-green)">● Feishu 主通道正常</div>
+              <div style="font-size:10px;color:var(--accent-green);margin-top:3px">● Logging 降级就绪</div>
+            </div>
+          </div>
+        </div>
+        <div class="mp-tabbar">
+          <div class="t"><span class="i">🏠</span>工作台</div>
+          <div class="t"><span class="i">📋</span>审批</div>
+          <div class="t active"><span class="i">🎯</span>策略</div>
+          <div class="t"><span class="i">👤</span>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</main>
+
+<script>
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('p-'+t.dataset.p).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+function tick(){const n=new Date(),p=x=>String(x).padStart(2,'0');
+  document.getElementById('clk').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`}
+tick();setInterval(tick,1000);
+</script>
+</body>
+</html>
