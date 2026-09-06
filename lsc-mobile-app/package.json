@@ -4,12 +4,12 @@
   "description": "链生通(LSC)移动端应用 - UniApp(Vue3) 跨平台 微信小程序/APP",
   "private": true,
   "scripts": {
-    "dev:mp-weixin": "uni -p mp-weixin",
-    "dev:app": "uni -p app",
-    "dev:h5": "uni",
-    "build:mp-weixin": "uni build -p mp-weixin",
-    "build:app": "uni build -p app",
-    "build:h5": "uni build"
+    "dev:mp-weixin": "UNI_INPUT_DIR=$PWD uni -p mp-weixin",
+    "dev:app": "UNI_INPUT_DIR=$PWD uni -p app",
+    "dev:h5": "UNI_INPUT_DIR=$PWD uni",
+    "build:mp-weixin": "UNI_INPUT_DIR=$PWD uni build -p mp-weixin",
+    "build:app": "UNI_INPUT_DIR=$PWD uni build -p app",
+    "build:h5": "UNI_INPUT_DIR=$PWD uni build"
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-4030620241128001",
