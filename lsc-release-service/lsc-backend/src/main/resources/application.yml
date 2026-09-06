@@ -1,0 +1,59 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: lsc-backend
+  datasource:
+    url: jdbc:h2:mem:lsc;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT 配置
+jwt:
+  secret: lsc-platform-secret-key-2026-must-be-at-least-256-bits-long-for-hs256
+  expiration: 604800000  # 7天
+
+# LSC 业务参数（硬约束）
+lsc:
+  release:
+    rate-max: 0.0006   # 0.06%
+    rate-min: 0.0003   # 0.03%
+    k-min: 0.005       # 0.50%
+    k-max: 0.010       # 1.0%
+    alpha: 0.06
+  nh:
+    ratio: 0.87        # 100 LSC = ¥87
+    daily-once: true
+  split:
+    merchant-main: 0.84
+    merchant-regulatory: 0.14
+    platform-fee: 0.02
+
+logging:
+  level:
+    com.lianshengtong: debug
