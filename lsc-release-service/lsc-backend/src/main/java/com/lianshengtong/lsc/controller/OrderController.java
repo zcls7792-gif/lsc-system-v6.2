@@ -53,4 +53,9 @@ public class OrderController {
     public R<Orders> detail(@PathVariable String orderNo) {
         return R.ok(orderService.detail(orderNo));
     }
+
+    @PostMapping("/{orderNo}/refund")
+    public R<Map<String, Object>> refund(@PathVariable String orderNo) {
+        return R.ok(orderService.refund(UserContext.getUserId(), orderNo));
+    }
 }
