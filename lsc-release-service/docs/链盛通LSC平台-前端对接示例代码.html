@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>链盛通 LSC 平台 - 前端对接示例代码</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css" rel="stylesheet">
+<style>
+:root{--brand:#1e40af;--gold:#d4af37;--emerald:#059669;--danger:#dc2626;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:280px;background:#0f172a;color:#cbd5e1;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;padding:20px 0;z-index:100}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:#334155}
+.toc-title{color:#fff;font-weight:700;padding:0 20px 16px;font-size:.95rem;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.toc-title .gold{color:var(--gold)}
+.toc-list{list-style:none;padding:0;margin:0}
+.toc-list li a{display:block;padding:7px 20px;color:#94a3b8;text-decoration:none;font-size:.82rem;transition:all .2s;border-left:3px solid transparent}
+.toc-list li a:hover{color:#fff;background:rgba(255,255,255,.05);border-left-color:var(--gold)}
+.toc-list .toc-l2 a{padding-left:32px;font-size:.8rem}
+.toc-list .toc-l3 a{padding-left:44px;font-size:.75rem;color:#64748b}
+.main{margin-left:280px;flex:1;padding:40px 50px;max-width:1100px}
+.doc-header{background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:30px 36px;border-radius:12px;margin-bottom:32px;box-shadow:0 4px 20px rgba(5,150,105,.2)}
+.doc-header h1{font-size:1.5rem;font-weight:700;margin:0 0 6px}
+.doc-header .meta{font-size:.8rem;opacity:.85;line-height:1.8}
+.doc-header .meta span{display:inline-block;margin-right:16px}
+h1{font-size:1.6rem;font-weight:700;color:var(--emerald);margin:36px 0 16px;padding-bottom:10px;border-bottom:3px solid var(--emerald)}
+h2{font-size:1.3rem;font-weight:700;color:var(--text);margin:32px 0 14px;padding:8px 14px;background:linear-gradient(90deg,rgba(5,150,105,.08),transparent);border-left:4px solid var(--emerald);border-radius:0 6px 6px 0}
+h3{font-size:1.05rem;font-weight:600;color:var(--text);margin:22px 0 10px}
+p{line-height:1.8;color:#475569;font-size:.92rem;margin-bottom:12px}
+blockquote{background:#f1f5f9;border-left:4px solid var(--gold);padding:12px 18px;margin:14px 0;border-radius:0 6px 6px 0;color:#475569;font-size:.88rem}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.85rem;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+th{background:#1e293b;color:#fff;padding:10px 14px;text-align:left;font-weight:600;font-size:.82rem}
+td{padding:9px 14px;border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:#f8fafc}
+tr:hover td{background:#eff6ff}
+code{background:#f1f5f9;color:#be185d;padding:2px 6px;border-radius:3px;font-size:.82rem;font-family:"JetBrains Mono",Consolas,monospace}
+pre.code-block{background:#0f172a;color:#e2e8f0;padding:16px 18px;border-radius:8px;overflow-x:auto;font-size:.82rem;line-height:1.6;font-family:"JetBrains Mono",Consolas,monospace;margin:14px 0;box-shadow:inset 0 0 30px rgba(0,0,0,.3)}
+pre.code-block code{background:none;color:inherit;padding:0;font-size:inherit}
+hr{border:none;border-top:1px solid var(--border);margin:24px 0}
+ul{padding-left:22px}
+ul li{line-height:1.8;color:#475569;font-size:.9rem}
+a{color:var(--emerald)}
+@media(max-width:992px){.sidebar{display:none}.main{margin-left:0;padding:20px}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar"><div class="toc-title"><i class="fas fa-list gold"></i> 目录导航</div><ul class="toc-list"><li class="toc-l1"><a href="#heading-1">链盛通 LSC 平台 · 前端对接示例代码</a></li><li class="toc-l2"><a href="#heading-2">目录</a></li><li class="toc-l2"><a href="#heading-3">1. 通用 HTTP 客户端封装</a></li><li class="toc-l3"><a href="#heading-4">1.1 Axios 实例（Web / App）</a></li><li class="toc-l3"><a href="#heading-5">1.2 封装后的请求方法</a></li><li class="toc-l2"><a href="#heading-6">2. 鉴权与 Token 管理</a></li><li class="toc-l3"><a href="#heading-7">2.1 登录流程（消费者）</a></li><li class="toc-l3"><a href="#heading-8">2.2 商家登录</a></li><li class="toc-l2"><a href="#heading-9">3. 平台管理后台示例</a></li><li class="toc-l3"><a href="#heading-10">3.1 数据总览仪表盘</a></li><li class="toc-l3"><a href="#heading-11">3.2 商家审核列表 + 通过/驳回</a></li><li class="toc-l3"><a href="#heading-12">3.3 商品人工审核</a></li><li class="toc-l3"><a href="#heading-13">3.4 释放参数修改（双重签名）</a></li><li class="toc-l2"><a href="#heading-14">4. 商家管理后台示例</a></li><li class="toc-l3"><a href="#heading-15">4.1 查询 LSC 账户余额</a></li><li class="toc-l3"><a href="#heading-16">4.2 核销中心（核心业务）</a></li><li class="toc-l3"><a href="#heading-17">4.3 商家发布商品（含 1:1 价格校验提示）</a></li><li class="toc-l3"><a href="#heading-18">4.4 B2B 订单创建</a></li><li class="toc-l2"><a href="#heading-19">5. 消费者 App / 小程序示例</a></li><li class="toc-l3"><a href="#heading-20">5.1 LSC 钱包首页</a></li><li class="toc-l3"><a href="#heading-21">5.2 商城混合支付下单</a></li><li class="toc-l3"><a href="#heading-22">5.3 线下扫码消费</a></li><li class="toc-l2"><a href="#heading-23">6. TypeScript 类型定义</a></li><li class="toc-l2"><a href="#heading-24">7. 错误处理与重试</a></li><li class="toc-l3"><a href="#heading-25">7.1 全局错误提示</a></li><li class="toc-l3"><a href="#heading-26">7.2 带重试的请求（针对网络抖动）</a></li><li class="toc-l2"><a href="#heading-27">8. 文件上传示例</a></li><li class="toc-l3"><a href="#heading-28">8.1 商家资质上传（营业执照等）</a></li><li class="toc-l3"><a href="#heading-29">8.2 商品图片上传</a></li><li class="toc-l2"><a href="#heading-30">9. 小程序特有适配</a></li><li class="toc-l3"><a href="#heading-31">9.1 wx.request 封装</a></li><li class="toc-l3"><a href="#heading-32">9.2 小程序 LSC 钱包接口</a></li><li class="toc-l3"><a href="#heading-33">9.3 小程序扫码支付</a></li><li class="toc-l3"><a href="#heading-34">9.4 小程序登录（微信授权）</a></li><li class="toc-l2"><a href="#heading-35">10. 联调注意事项</a></li><li class="toc-l3"><a href="#heading-36">10.1 字段命名规范</a></li><li class="toc-l3"><a href="#heading-37">10.2 幂等键</a></li><li class="toc-l3"><a href="#heading-38">10.3 金额与 LSC 数值</a></li><li class="toc-l3"><a href="#heading-39">10.4 时间格式</a></li><li class="toc-l3"><a href="#heading-40">10.5 Token 过期处理</a></li><li class="toc-l3"><a href="#heading-41">10.6 环境变量配置</a></li><li class="toc-l3"><a href="#heading-42">10.7 跨域配置（开发环境）</a></li></ul></nav><div class="main">
+<div class="doc-header">
+  <h1><i class="fas fa-code" style="color:var(--gold)"></i> 链盛通 LSC 平台 - 前端对接示例代码</h1>
+  <div class="meta">
+    <span><i class="fas fa-tag"></i> V6.2-AI</span>
+    <span><i class="fas fa-calendar"></i> 2026-09-06</span>
+    <span><i class="fas fa-code"></i> Axios + TypeScript</span>
+    <span><i class="fas fa-mobile"></i> 含小程序适配</span>
+  </div>
+</div>
+<h1 id="heading-1">链盛通 LSC 平台 · 前端对接示例代码</h1>
+<blockquote><strong>版本</strong>：V6.2-AI<br><strong>配套文档</strong>：<a href="./链盛通LSC平台-后端接口文档.md">链盛通LSC平台-后端接口文档.md</a><br><strong>Base URL</strong>：<code>https://api.lsc.com/api/v1</code>（生产）/ <code>https://api-test.lsc.com/api/v1</code>（测试）<br><strong>技术示例</strong>：Axios + TypeScript（Web/App）、wx.request（小程序）</blockquote>
+<hr>
+<h2 id="heading-2">目录</h2>
+<p>1. <a href="#1-通用-http-客户端封装">通用 HTTP 客户端封装</a> 2. <a href="#2-鉴权与-token-管理">鉴权与 Token 管理</a> 3. <a href="#3-平台管理后台示例">平台管理后台示例</a> 4. <a href="#4-商家管理后台示例">商家管理后台示例</a> 5. <a href="#5-消费者-app--小程序示例">消费者 App / 小程序示例</a> 6. <a href="#6-typescript-类型定义">TypeScript 类型定义</a> 7. <a href="#7-错误处理与重试">错误处理与重试</a> 8. <a href="#8-文件上传示例">文件上传示例</a> 9. <a href="#9-小程序特有适配">小程序特有适配</a> 10. <a href="#10-联调注意事项">联调注意事项</a></p>
+<hr>
+<h2 id="heading-3">1. 通用 HTTP 客户端封装</h2>
+<h3 id="heading-4">1.1 Axios 实例（Web / App）</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/request.ts
+import axios, { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
+
+// 接口前缀统一加 /api/v1
+const BASE_URL = import.meta.env.VITE_API_BASE || 'https://api.lsc.com/api/v1';
+
+// 三端区分：admin / merchant / user
+type TokenType = 'admin' | 'merchant' | 'user';
+
+const tokenKeyMap: Record&lt;TokenType, string&gt; = {
+  admin: 'lsc_admin_token',
+  merchant: 'lsc_merchant_token',
+  user: 'lsc_user_token',
+};
+
+function createClient(tokenType: TokenType): AxiosInstance {
+  const client = axios.create({
+    baseURL: BASE_URL,
+    timeout: 15000,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  // 请求拦截：注入 Token
+  client.interceptors.request.use((config: InternalAxiosRequestConfig) =&gt; {
+    const token = localStorage.getItem(tokenKeyMap[tokenType]);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    // 幂等键：写操作自动生成
+    if (config.method?.toUpperCase() !== 'GET') {
+      config.headers['X-Idempotent-Key'] =
+        (config.data as any)?.idempotentKey || crypto.randomUUID();
+    }
+    return config;
+  });
+
+  // 响应拦截：统一解构 + 错误处理
+  client.interceptors.response.use(
+    (resp) =&gt; {
+      const { code, message, data } = resp.data;
+      if (code === 0) return data;
+      // 业务错误
+      throw new ApiError(code, message);
+    },
+    (error) =&gt; {
+      if (error.response?.status === 401) {
+        localStorage.removeItem(tokenKeyMap[tokenType]);
+        window.location.href = '/login';
+        return Promise.reject(new ApiError(401, '登录已失效，请重新登录'));
+      }
+      if (error.code === 'ECONNABORTED') {
+        return Promise.reject(new ApiError(-1, '请求超时，请稍后重试'));
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  return client;
+}
+
+export const adminClient = createClient('admin');
+export const merchantClient = createClient('merchant');
+export const userClient = createClient('user');
+
+// 统一错误类
+export class ApiError extends Error {
+  constructor(public code: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}</code></pre>
+<h3 id="heading-5">1.2 封装后的请求方法</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/index.ts
+import { adminClient, merchantClient, userClient } from './request';
+
+export const adminApi = {
+  get: &lt;T = any&gt;(url: string, params?: any) =&gt; adminClient.get&lt;any, T&gt;(url, { params }),
+  post: &lt;T = any&gt;(url: string, data?: any) =&gt; adminClient.post&lt;any, T&gt;(url, data),
+  put: &lt;T = any&gt;(url: string, data?: any) =&gt; adminClient.put&lt;any, T&gt;(url, data),
+  delete: &lt;T = any&gt;(url: string) =&gt; adminClient.delete&lt;any, T&gt;(url),
+};
+
+export const merchantApi = {
+  get: &lt;T = any&gt;(url: string, params?: any) =&gt; merchantClient.get&lt;any, T&gt;(url, { params }),
+  post: &lt;T = any&gt;(url: string, data?: any) =&gt; merchantClient.post&lt;any, T&gt;(url, data),
+  put: &lt;T = any&gt;(url: string, data?: any) =&gt; merchantClient.put&lt;any, T&gt;(url, data),
+};
+
+export const userApi = {
+  get: &lt;T = any&gt;(url: string, params?: any) =&gt; userClient.get&lt;any, T&gt;(url, { params }),
+  post: &lt;T = any&gt;(url: string, data?: any) =&gt; userClient.post&lt;any, T&gt;(url, data),
+};</code></pre>
+<hr>
+<h2 id="heading-6">2. 鉴权与 Token 管理</h2>
+<h3 id="heading-7">2.1 登录流程（消费者）</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/auth.ts
+import { userApi } from './index';
+
+interface LoginReq {
+  mobile: string;
+  password: string;
+  loginType: 'password' | 'sms';
+  smsCode?: string;
+}
+
+interface LoginResp {
+  userId: number;
+  userType: number;  // 0=消费者, 1=商家
+  token: string;
+}
+
+export async function login(req: LoginReq): Promise&lt;LoginResp&gt; {
+  const data = await userApi.post&lt;LoginResp&gt;('/user/auth/login', req);
+  // 存储 token 和用户信息
+  localStorage.setItem('lsc_user_token', data.token);
+  localStorage.setItem('lsc_user_id', String(data.userId));
+  localStorage.setItem('lsc_user_type', String(data.userType));
+  return data;
+}
+
+export function logout() {
+  localStorage.removeItem('lsc_user_token');
+  localStorage.removeItem('lsc_user_id');
+  localStorage.removeItem('lsc_user_type');
+  window.location.href = '/login';
+}</code></pre>
+<h3 id="heading-8">2.2 商家登录</h3>
+<pre class="code-block"><code class="lang-typescript">import { merchantApi } from './index';
+
+export async function merchantLogin(mobile: string, password: string) {
+  const data = await merchantApi.post&lt;{ merchantId: number; token: string; auditStatus: number }&gt;(
+    '/merchant/auth/login',
+    { mobile, password, loginType: 'password' }
+  );
+  localStorage.setItem('lsc_merchant_token', data.token);
+  localStorage.setItem('lsc_merchant_id', String(data.merchantId));
+  // 审核中需跳转资质补充页
+  if (data.auditStatus === 0) {
+    window.location.href = '/merchant/qualification';
+  }
+  return data;
+}</code></pre>
+<hr>
+<h2 id="heading-9">3. 平台管理后台示例</h2>
+<h3 id="heading-10">3.1 数据总览仪表盘</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/admin/dashboard.ts
+import { adminApi } from '../index';
+
+interface DashboardVO {
+  totalLsc: number;
+  regulatoryPool: number;
+  todayReleaseRate: string;
+  platformFeeRate: string;
+  todayGmv: number;
+  todayOrders: number;
+  totalMerchants: number;
+  todayNhCount: number;
+  todayNhAmount: number;
+  kValue: number;
+}
+
+export function getDashboard(): Promise&lt;DashboardVO&gt; {
+  return adminApi.get&lt;DashboardVO&gt;('/admin/dashboard');
+}</code></pre>
+<pre class="code-block"><code class="lang-vue">&lt;!-- Dashboard.vue --&gt;
+&lt;script setup lang="ts"&gt;
+import { ref, onMounted } from 'vue';
+import { getDashboard } from '@/api/admin/dashboard';
+
+const data = ref&lt;DashboardVO&gt;();
+const loading = ref(true);
+
+onMounted(async () =&gt; {
+  try {
+    data.value = await getDashboard();
+  } finally {
+    loading.value = false;
+  }
+});
+
+function formatMoney(n: number) {
+  return '¥' + n.toLocaleString('zh-CN', { minimumFractionDigits: 2 });
+}
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div v-if="data"&gt;
+    &lt;div class="stat-card"&gt;
+      &lt;div class="label"&gt;全网 LSC 总量&lt;/div&gt;
+      &lt;div class="value text-primary"&gt;
+        &lt;i class="fas fa-coins text-gold"&gt;&lt;/i&gt;
+        {{ data.totalLsc.toLocaleString() }} LSC
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="stat-card"&gt;
+      &lt;div class="label"&gt;监管账户资金池&lt;/div&gt;
+      &lt;div class="value text-emerald"&gt;{{ formatMoney(data.regulatoryPool) }}&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="stat-card"&gt;
+      &lt;div class="label"&gt;今日释放速率&lt;/div&gt;
+      &lt;div class="value text-gold"&gt;{{ data.todayReleaseRate }}&lt;/div&gt;
+      &lt;div class="sub"&gt;k = {{ (data.kValue * 100).toFixed(2) }}%&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+<h3 id="heading-11">3.2 商家审核列表 + 通过/驳回</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/admin/merchant.ts
+import { adminApi } from '../index';
+
+interface MerchantAuditVO {
+  merchantId: number;
+  storeName: string;
+  mobile: string;
+  businessLicenseUrl: string;
+  corporateAccountNo: string;
+  regulatoryAgreementSigned: boolean;
+  auditStatus: number;  // 0=审核中, 1=通过, 2=驳回
+  createdAt: string;
+}
+
+export function getMerchantAuditList(params: {
+  auditStatus: number;
+  pageNo: number;
+  pageSize: number;
+}) {
+  return adminApi.get&lt;{ list: MerchantAuditVO[]; total: number }&gt;(
+    '/admin/merchants',
+    params
+  );
+}
+
+export function auditMerchant(merchantId: number, auditStatus: number, rejectReason?: string) {
+  return adminApi.put(`/admin/merchants/${merchantId}/audit`, { auditStatus, rejectReason });
+}</code></pre>
+<pre class="code-block"><code class="lang-vue">&lt;!-- MerchantAudit.vue --&gt;
+&lt;script setup lang="ts"&gt;
+import { ref } from 'vue';
+import { getMerchantAuditList, auditMerchant } from '@/api/admin/merchant';
+
+const list = ref&lt;MerchantAuditVO[]&gt;([]);
+
+async function loadData() {
+  const res = await getMerchantAuditList({ auditStatus: 0, pageNo: 1, pageSize: 20 });
+  list.value = res.list;
+}
+
+async function approve(id: number) {
+  await auditMerchant(id, 1);
+  loadData();
+}
+
+async function reject(id: number) {
+  const reason = prompt('请输入驳回原因');
+  if (!reason) return;
+  await auditMerchant(id, 2, reason);
+  loadData();
+}
+&lt;/script&gt;</code></pre>
+<h3 id="heading-12">3.3 商品人工审核</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/admin/product.ts
+export function reviewProduct(productId: number, aiReviewResult: number, rejectReason?: string) {
+  // aiReviewResult: 2=人工通过, 3=人工拒绝
+  return adminApi.put(`/admin/products/${productId}/review`, { aiReviewResult, rejectReason });
+}</code></pre>
+<h3 id="heading-13">3.4 释放参数修改（双重签名）</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/admin/release.ts
+export function updateReleaseConfig(params: {
+  kMin: string;
+  kMax: string;
+  alpha: string;
+  approver1: string;
+  approver2: string;
+  signature1: string;
+  signature2: string;
+}) {
+  return adminApi.put('/release/config', params);
+}</code></pre>
+<hr>
+<h2 id="heading-14">4. 商家管理后台示例</h2>
+<h3 id="heading-15">4.1 查询 LSC 账户余额</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/merchant/lsc.ts
+import { merchantApi } from '../index';
+
+interface LscAccountVO {
+  merchantId: number;
+  totalLocked: number;
+  totalAvailable: number;
+  todayReleased: number;
+  releaseRate: string;
+  expiringCount: number;
+}
+
+export function getLscAccount(): Promise&lt;LscAccountVO&gt; {
+  return merchantApi.get&lt;LscAccountVO&gt;('/lsc/account');
+}</code></pre>
+<h3 id="heading-16">4.2 核销中心（核心业务）</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/merchant/nh.ts
+import { merchantApi } from '../index';
+
+interface NhQuotaVO {
+  merchantId: number;
+  qualified: boolean;
+  businessLicenseVerified: boolean;
+  corporateAccountBound: boolean;
+  regulatoryAgreementSigned: boolean;
+  level: string;
+  monthlyRevenue: number;
+  dailyLimit: number;
+  usedToday: number;
+  remainingToday: number;
+  lastNhDate: string;
+  creditScore: number;
+}
+
+export function getNhQuota(): Promise&lt;NhQuotaVO&gt; {
+  return merchantApi.get&lt;NhQuotaVO&gt;('/nh/quota');
+}
+
+interface NhApplyResp {
+  orderNo: string;
+  lscAmount: number;
+  cashAmount: number;
+  status: number;
+}
+
+export function applyNh(lscAmount: number): Promise&lt;NhApplyResp&gt; {
+  return merchantApi.post&lt;NhApplyResp&gt;('/nh/apply', {
+    lscAmount,
+    idempotentKey: crypto.randomUUID(),
+  });
+}</code></pre>
+<pre class="code-block"><code class="lang-vue">&lt;!-- NhCenter.vue 核销中心 --&gt;
+&lt;script setup lang="ts"&gt;
+import { ref, computed, onMounted } from 'vue';
+import { getNhQuota, applyNh } from '@/api/merchant/nh';
+
+const quota = ref&lt;NhQuotaVO&gt;();
+const inputAmount = ref(0);
+const submitting = ref(false);
+
+// 实时计算可到账金额：100 LSC = ¥87
+const cashAmount = computed(() =&gt; {
+  return inputAmount.value * 0.87;
+});
+
+onMounted(() =&gt; {
+  getNhQuota().then((d) =&gt; (quota.value = d));
+});
+
+async function submitNh() {
+  if (!quota.value?.qualified) {
+    alert('核销资格未满足，请先完成三证核验');
+    return;
+  }
+  if (inputAmount.value &gt; quota.value.remainingToday) {
+    alert(`超过今日可用额度 ${quota.value.remainingToday} LSC`);
+    return;
+  }
+  submitting.value = true;
+  try {
+    const res = await applyNh(inputAmount.value);
+    alert(`核销成功！${res.lscAmount} LSC → ¥${res.cashAmount.toFixed(2)}`);
+  } finally {
+    submitting.value = false;
+  }
+}
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div class="nh-center"&gt;
+    &lt;div v-if="quota" class="quota-card"&gt;
+      &lt;div class="quota-header"&gt;
+        &lt;h3&gt;核销额度（档位 {{ quota.level }}）&lt;/h3&gt;
+        &lt;span class="badge" :class="quota.qualified ? 'bg-success' : 'bg-warning'"&gt;
+          {{ quota.qualified ? '资格已满足' : '资格待完善' }}
+        &lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="quota-row"&gt;
+        &lt;div&gt;&lt;strong&gt;日上限：&lt;/strong&gt;{{ quota.dailyLimit }} LSC&lt;/div&gt;
+        &lt;div&gt;&lt;strong&gt;已用：&lt;/strong&gt;{{ quota.usedToday }} LSC&lt;/div&gt;
+        &lt;div&gt;&lt;strong class="text-gold"&gt;可用：{{ quota.remainingToday }} LSC&lt;/strong&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="qualification"&gt;
+        &lt;span :class="quota.businessLicenseVerified ? 'ok' : 'no'"&gt;营业执照&lt;/span&gt;
+        &lt;span :class="quota.corporateAccountBound ? 'ok' : 'no'"&gt;对公账户&lt;/span&gt;
+        &lt;span :class="quota.regulatoryAgreementSigned ? 'ok' : 'no'"&gt;监管协议&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class="apply-form"&gt;
+      &lt;label&gt;核销 LSC 数量&lt;/label&gt;
+      &lt;input type="number" v-model="inputAmount" :max="quota?.remainingToday" /&gt;
+      &lt;div class="preview"&gt;
+        预计到账：&lt;strong class="text-emerald"&gt;¥{{ cashAmount.toFixed(2) }}&lt;/strong&gt;
+        &lt;small&gt;（100 LSC = ¥87）&lt;/small&gt;
+      &lt;/div&gt;
+      &lt;button class="btn btn-primary" @click="submitNh" :disabled="submitting"&gt;
+        {{ submitting ? '核销中...' : '确认核销' }}
+      &lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+<h3 id="heading-17">4.3 商家发布商品（含 1:1 价格校验提示）</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/merchant/product.ts
+import { merchantApi } from '../index';
+
+export function createProduct(form: FormData) {
+  return merchantApi.post('/mall/products', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  } as any);
+}</code></pre>
+<pre class="code-block"><code class="lang-vue">&lt;!-- ProductEdit.vue --&gt;
+&lt;script setup lang="ts"&gt;
+import { ref, computed } from 'vue';
+import { createProduct } from '@/api/merchant/product';
+
+const price = ref(0);
+const lscPrice = ref(0);
+const productName = ref('');
+
+// 1:1 价格校验：人民币价必须等于 LSC 价
+const priceValid = computed(() =&gt; Number(price.value) === Number(lscPrice.value));
+
+async function submit() {
+  if (!priceValid.value) {
+    alert('人民币价格必须与 LSC 价格严格一致（1 LSC = ¥1）');
+    return;
+  }
+  const form = new FormData();
+  form.append('productName', productName.value);
+  form.append('price', String(price.value));
+  // lscPrice 由后端强制等于 price，前端不传或传相同值
+  form.append('stock', '100');
+  // 图片文件
+  // form.append('productImages', fileList.value[0]);
+  await createProduct(form);
+  alert('商品已提交，等待 AI 审核');
+}
+&lt;/script&gt;</code></pre>
+<h3 id="heading-18">4.4 B2B 订单创建</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/merchant/b2b.ts
+import { merchantApi } from '../index';
+
+export function createB2BOrder(params: {
+  counterpartyId: number;
+  tradeDescription: string;
+  totalAmountRmb: number;
+  lscAmount: number;
+  contractNo: string;
+  tradeEvidenceUrls: string[];
+}) {
+  return merchantApi.post('/b2b/orders', {
+    ...params,
+    idempotentKey: crypto.randomUUID(),
+  });
+}</code></pre>
+<hr>
+<h2 id="heading-19">5. 消费者 App / 小程序示例</h2>
+<h3 id="heading-20">5.1 LSC 钱包首页</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/user/lsc.ts
+import { userApi } from '../index';
+
+export function getLscAccount() {
+  return userApi.get('/lsc/account');
+}
+
+export function getLscTransactions(params: { pageNo: number; pageSize: number; type?: number }) {
+  return userApi.get('/lsc/transactions', params);
+}</code></pre>
+<pre class="code-block"><code class="lang-vue">&lt;!-- WalletHome.vue --&gt;
+&lt;script setup lang="ts"&gt;
+import { ref, onMounted } from 'vue';
+import { getLscAccount } from '@/api/user/lsc';
+
+const account = ref&lt;any&gt;();
+
+onMounted(async () =&gt; {
+  account.value = await getLscAccount();
+});
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div class="wallet-card" v-if="account"&gt;
+    &lt;div class="balance"&gt;
+      &lt;span class="label"&gt;LSC 可用余额&lt;/span&gt;
+      &lt;span class="amount"&gt;
+        &lt;i class="fas fa-gem text-gold"&gt;&lt;/i&gt;
+        {{ account.totalAvailable.toLocaleString() }}
+      &lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="sub-info"&gt;
+      &lt;div&gt;锁定：{{ account.totalLocked.toLocaleString() }} LSC&lt;/div&gt;
+      &lt;div&gt;今日释放：+{{ account.todayReleased }} LSC&lt;/div&gt;
+      &lt;div&gt;速率：{{ account.releaseRate }}&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+<h3 id="heading-21">5.2 商城混合支付下单</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/user/order.ts
+import { userApi } from '../index';
+
+interface CreateOrderReq {
+  items: { productId: number; quantity: number }[];
+  lscAmount: number;
+  addressId: number;
+}
+
+interface CreateOrderResp {
+  orderNo: string;
+  totalPrice: number;
+  lscAmount: number;
+  rmbAmount: number;
+  status: number;
+  payUrl: string;
+}
+
+export function createOrder(req: CreateOrderReq): Promise&lt;CreateOrderResp&gt; {
+  return userApi.post&lt;CreateOrderResp&gt;('/orders', {
+    ...req,
+    idempotentKey: crypto.randomUUID(),
+  });
+}</code></pre>
+<pre class="code-block"><code class="lang-vue">&lt;!-- OrderConfirm.vue 混合支付确认页 --&gt;
+&lt;script setup lang="ts"&gt;
+import { ref, computed } from 'vue';
+import { createOrder } from '@/api/user/order';
+
+const product = ref({ id: 5001, price: 98, name: '智利车厘子' });
+const lscPay = ref(0);  // 用户选择用多少 LSC 支付
+const availableLsc = ref(86420);
+
+// 人民币差额 = 总价 - LSC 抵扣（1:1）
+const rmbPay = computed(() =&gt; Math.max(0, product.value.price - lscPay.value));
+
+async function pay() {
+  const res = await createOrder({
+    items: [{ productId: product.value.id, quantity: 1 }],
+    lscAmount: lscPay.value,
+    addressId: 8001,
+  });
+  // 跳转支付机构收银台支付人民币差额
+  if (rmbPay.value &gt; 0) {
+    window.location.href = res.payUrl;
+  } else {
+    alert('LSC 全额支付成功');
+  }
+}
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div class="pay-confirm"&gt;
+    &lt;div class="product"&gt;{{ product.name }} - ¥{{ product.price }}&lt;/div&gt;
+    &lt;div class="pay-row"&gt;
+      &lt;span&gt;LSC 支付&lt;/span&gt;
+      &lt;input type="number" v-model="lscPay" :max="availableLsc" /&gt;
+      &lt;small&gt;可用 {{ availableLsc }} LSC（1 LSC = ¥1）&lt;/small&gt;
+    &lt;/div&gt;
+    &lt;div class="pay-row"&gt;
+      &lt;span&gt;人民币支付&lt;/span&gt;
+      &lt;span class="text-danger"&gt;¥{{ rmbPay.toFixed(2) }}&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;button @click="pay"&gt;确认支付&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+<h3 id="heading-22">5.3 线下扫码消费</h3>
+<pre class="code-block"><code class="lang-typescript">export function payOffline(merchantId: number, amount: number, lscAmount: number) {
+  return userApi.post('/orders/offline', {
+    merchantId,
+    amount,
+    lscAmount,
+    idempotentKey: crypto.randomUUID(),
+  });
+}</code></pre>
+<hr>
+<h2 id="heading-23">6. TypeScript 类型定义</h2>
+<pre class="code-block"><code class="lang-typescript">// src/types/api.ts
+
+// 统一响应
+export interface ApiResponse&lt;T&gt; {
+  code: number;
+  message: string;
+  data: T;
+  timestamp: number;
+  traceId: string;
+}
+
+// 分页
+export interface PageResult&lt;T&gt; {
+  list: T[];
+  total: number;
+  pageNo: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+// LSC 账户
+export interface LscAccount {
+  userId: number;
+  totalLocked: number;
+  totalAvailable: number;
+  todayReleased: number;
+  releaseRate: string;
+  expiringCount: number;
+}
+
+// LSC 流水
+export interface LscTransaction {
+  id: number;
+  type: number;
+  typeName: string;
+  amount: number;
+  beforeLocked: number;
+  afterLocked: number;
+  beforeAvailable: number;
+  afterAvailable: number;
+  counterpartyId: number;
+  orderNo: string;
+  createdAt: string;
+}
+
+// 商品
+export interface Product {
+  id: number;
+  productName: string;
+  price: number;
+  lscPrice: number;
+  stock: number;
+  sales: number;
+  productImages: string[];
+  merchantId: number;
+  storeName: string;
+  status: number;
+}
+
+// 订单
+export interface Order {
+  orderNo: string;
+  orderType: number;
+  productName: string;
+  totalPrice: number;
+  lscAmount: number;
+  rmbAmount: number;
+  status: number;
+  statusName: string;
+  createdAt: string;
+}
+
+// 核销记录
+export interface NhRecord {
+  id: number;
+  orderNo: string;
+  lscAmount: number;
+  cashAmount: number;
+  status: number;
+  statusName: string;
+  createdAt: string;
+  completedAt: string;
+}
+
+// B2B 订单
+export interface B2BOrder {
+  id: number;
+  orderNo: string;
+  counterpartyName: string;
+  tradeDescription: string;
+  lscAmount: number;
+  aiVerificationResult: number;
+  status: number;
+  statusName: string;
+  createdAt: string;
+}
+
+// 释放汇总
+export interface ReleaseSummary {
+  date: string;
+  mTotal: number;
+  nTotal: number;
+  k: number;
+  rate: number;
+  rateDisplay: string;
+  lLocked: number;
+  tRelease: number;
+  status: number;
+}</code></pre>
+<hr>
+<h2 id="heading-24">7. 错误处理与重试</h2>
+<h3 id="heading-25">7.1 全局错误提示</h3>
+<pre class="code-block"><code class="lang-typescript">// src/utils/errorHandler.ts
+import { ApiError } from '@/api/request';
+
+const ERROR_MESSAGES: Record&lt;number, string&gt; = {
+  1001: 'LSC 余额不足，请检查可用余额',
+  1002: 'LSC 流转权限不足（消费者不可转给消费者，商家不可转给消费者）',
+  1003: '核销资格未满足，请先完成营业执照、对公账户、监管协议三项核验',
+  1004: '今日核销额度已用完，请明日再试',
+  1005: '今日已核销过，每日限核销 1 次',
+  1006: 'B2B 订单对手方尚未确认',
+  1007: 'B2B 贸易背景核验未通过',
+  1009: '商品价格校验失败：人民币价必须等于 LSC 价（1 LSC = ¥1）',
+  1010: '释放参数修改超出安全范围',
+  2001: '操作被风控拦截，请稍后重试或联系客服',
+};
+
+export function handleApiError(error: unknown): string {
+  if (error instanceof ApiError) {
+    return ERROR_MESSAGES[error.code] || error.message;
+  }
+  return '网络异常，请稍后重试';
+}</code></pre>
+<h3 id="heading-26">7.2 带重试的请求（针对网络抖动）</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/withRetry.ts
+export async function withRetry&lt;T&gt;(
+  fn: () =&gt; Promise&lt;T&gt;,
+  retries = 2,
+  delay = 1000
+): Promise&lt;T&gt; {
+  try {
+    return await fn();
+  } catch (err: any) {
+    if (retries &gt; 0 &amp;&amp; (err.code === 'ECONNABORTED' || err.response?.status &gt;= 500)) {
+      await new Promise((r) =&gt; setTimeout(r, delay));
+      return withRetry(fn, retries - 1, delay * 2);
+    }
+    throw err;
+  }
+}
+
+// 使用
+const data = await withRetry(() =&gt; getLscAccount());</code></pre>
+<hr>
+<h2 id="heading-27">8. 文件上传示例</h2>
+<h3 id="heading-28">8.1 商家资质上传（营业执照等）</h3>
+<pre class="code-block"><code class="lang-typescript">// src/api/merchant/auth.ts
+import { merchantApi } from '../index';
+
+export function registerMerchant(form: {
+  mobile: string;
+  smsCode: string;
+  password: string;
+  storeName: string;
+  businessLicense: File;
+  corporateAccountNo: string;
+  regulatoryAgreementSigned: boolean;
+  address: {
+    province: string;
+    city: string;
+    district: string;
+    detail: string;
+    longitude: number;
+    latitude: number;
+  };
+}) {
+  const fd = new FormData();
+  fd.append('mobile', form.mobile);
+  fd.append('smsCode', form.smsCode);
+  fd.append('password', form.password);
+  fd.append('storeName', form.storeName);
+  fd.append('businessLicense', form.businessLicense);
+  fd.append('corporateAccountNo', form.corporateAccountNo);
+  fd.append('regulatoryAgreementSigned', String(form.regulatoryAgreementSigned));
+  fd.append('province', form.address.province);
+  fd.append('city', form.address.city);
+  fd.append('district', form.address.district);
+  fd.append('addressDetail', form.address.detail);
+  fd.append('longitude', String(form.address.longitude));
+  fd.append('latitude', String(form.address.latitude));
+
+  return merchantApi.post('/merchant/auth/register', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  } as any);
+}</code></pre>
+<h3 id="heading-29">8.2 商品图片上传</h3>
+<pre class="code-block"><code class="lang-typescript">export function uploadProductImages(files: File[]) {
+  const fd = new FormData();
+  files.forEach((f) =&gt; fd.append('productImages', f));
+  return merchantApi.post('/mall/products/upload', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  } as any);
+}</code></pre>
+<hr>
+<h2 id="heading-30">9. 小程序特有适配</h2>
+<h3 id="heading-31">9.1 wx.request 封装</h3>
+<pre class="code-block"><code class="lang-javascript">// miniprogram/utils/request.js
+const BASE_URL = 'https://api.lsc.com/api/v1';
+
+function request(options) {
+  const token = wx.getStorageSync('lsc_user_token');
+  return new Promise((resolve, reject) =&gt; {
+    wx.request({
+      url: BASE_URL + options.url,
+      method: options.method || 'GET',
+      data: options.data,
+      header: {
+        'Content-Type': 'application/json',
+        Authorization: token ? 'Bearer ' + token : '',
+      },
+      success(res) {
+        const { code, message, data } = res.data;
+        if (code === 0) {
+          resolve(data);
+        } else if (code === 401) {
+          wx.removeStorageSync('lsc_user_token');
+          wx.redirectTo({ url: '/pages/login/login' });
+          reject(new Error('登录已失效'));
+        } else {
+          wx.showToast({ title: message, icon: 'none' });
+          reject(new Error(message));
+        }
+      },
+      fail(err) {
+        wx.showToast({ title: '网络异常', icon: 'none' });
+        reject(err);
+      },
+    });
+  });
+}
+
+module.exports = { request };</code></pre>
+<h3 id="heading-32">9.2 小程序 LSC 钱包接口</h3>
+<pre class="code-block"><code class="lang-javascript">// miniprogram/api/lsc.js
+const { request } = require('../utils/request');
+
+function getAccount() {
+  return request({ url: '/lsc/account' });
+}
+
+function getTransactions(pageNo, pageSize) {
+  return request({
+    url: '/lsc/transactions',
+    data: { pageNo, pageSize },
+  });
+}
+
+module.exports = { getAccount, getTransactions };</code></pre>
+<h3 id="heading-33">9.3 小程序扫码支付</h3>
+<pre class="code-block"><code class="lang-javascript">// miniprogram/pages/scanpay/scanpay.js
+const { request } = require('../../utils/request');
+
+Page({
+  data: { merchantId: null, amount: 0, lscAmount: 0, availableLsc: 0 },
+
+  onLoad() {
+    // 扫码获取商家 ID
+    wx.scanCode({
+      success: (res) =&gt; {
+        const merchantId = parseInt(res.result);
+        this.setData({ merchantId });
+        this.loadAccount();
+      },
+    });
+  },
+
+  loadAccount() {
+    request({ url: '/lsc/account' }).then((data) =&gt; {
+      this.setData({ availableLsc: data.totalAvailable });
+    });
+  },
+
+  onLscInput(e) {
+    const lscAmount = parseInt(e.detail.value) || 0;
+    this.setData({ lscAmount });
+  },
+
+  submitPay() {
+    const { merchantId, amount, lscAmount } = this.data;
+    request({
+      url: '/orders/offline',
+      method: 'POST',
+      data: {
+        merchantId,
+        amount,
+        lscAmount,
+        idempotentKey: Date.now().toString(),
+      },
+    }).then(() =&gt; {
+      wx.showToast({ title: '支付成功', icon: 'success' });
+      setTimeout(() =&gt; wx.navigateBack(), 1500);
+    });
+  },
+});</code></pre>
+<h3 id="heading-34">9.4 小程序登录（微信授权）</h3>
+<pre class="code-block"><code class="lang-javascript">// miniprogram/utils/auth.js
+function wxLogin() {
+  return new Promise((resolve, reject) =&gt; {
+    wx.login({
+      success: (res) =&gt; {
+        // res.code 换取后端 token
+        request({
+          url: '/user/auth/wx-login',
+          method: 'POST',
+          data: { code: res.code },
+        })
+          .then((data) =&gt; {
+            wx.setStorageSync('lsc_user_token', data.token);
+            wx.setStorageSync('lsc_user_id', data.userId);
+            resolve(data);
+          })
+          .catch(reject);
+      },
+      fail: reject,
+    });
+  });
+}
+
+module.exports = { wxLogin };</code></pre>
+<hr>
+<h2 id="heading-35">10. 联调注意事项</h2>
+<h3 id="heading-36">10.1 字段命名规范</h3>
+<blockquote><strong>重要</strong>：后端所有字段统一使用 <strong>camelCase</strong>（小驼峰），如 <code>totalAvailable</code>、<code>lscAmount</code>、<code>orderNo</code>。<br>前端请勿自行转换为 snake_case，直接使用返回字段即可。</blockquote>
+<h3 id="heading-37">10.2 幂等键</h3>
+<p>所有写操作（POST/PUT）必须携带 <code>idempotentKey</code>（UUID v4）。前端可通过 <code>crypto.randomUUID()</code> 生成，服务端会去重，重复请求返回首次结果。</p>
+<pre class="code-block"><code class="lang-typescript">// 浏览器
+const key = crypto.randomUUID();
+
+// 小程序（无 crypto API）
+const key = Date.now().toString(36) + Math.random().toString(36).slice(2);</code></pre>
+<h3 id="heading-38">10.3 金额与 LSC 数值</h3>
+<ul>
+<li>所有金额单位为 <strong>元</strong>（人民币），保留 2 位小数</li>
+<li>LSC 数量为 <strong>整数</strong></li>
+<li>前端展示时使用 <code>toLocaleString('zh-CN')</code> 格式化</li>
+</ul>
+<h3 id="heading-39">10.4 时间格式</h3>
+<p>后端返回 <code>yyyy-MM-dd HH:mm:ss</code> 字符串，前端直接展示即可，无需时间戳转换。</p>
+<h3 id="heading-40">10.5 Token 过期处理</h3>
+<ul>
+<li><code>code=401</code> 时清空本地 Token 并跳转登录页</li>
+<li>Token 有效期：管理端/商家端 2 小时，用户端 7 天</li>
+<li>建议在请求拦截器中统一处理</li>
+</ul>
+<h3 id="heading-41">10.6 环境变量配置</h3>
+<pre class="code-block"><code class="lang-bash"># .env.development
+VITE_API_BASE=https://api-test.lsc.com/api/v1
+
+# .env.production
+VITE_API_BASE=https://api.lsc.com/api/v1</code></pre>
+<h3 id="heading-42">10.7 跨域配置（开发环境）</h3>
+<pre class="code-block"><code class="lang-typescript">// vite.config.ts
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://api-test.lsc.com',
+        changeOrigin: true,
+      },
+    },
+  },
+});</code></pre>
+<hr>
+<p><em>文档结束 · 链盛通 LSC 平台前端团队</em></p></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.querySelectorAll(".toc-list a").forEach(function(a){
+  a.addEventListener("click",function(e){
+    e.preventDefault();
+    var t=document.getElementById(this.getAttribute("href").slice(1));
+    if(t)window.scrollTo({top:t.offsetTop-20,behavior:"smooth"});
+  });
+});
+</script>
+</body>
+</html>
