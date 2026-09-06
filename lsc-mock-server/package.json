@@ -1,0 +1,15 @@
+{
+  "name": "lsc-mock-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "LSC 全栈原型 Mock API 服务器（端口 8000）",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}

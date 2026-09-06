@@ -7,8 +7,8 @@
 function readEnv(): string {
   try {
     // @ts-ignore - H5/Vite 环境下存在
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) {
-      // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL !== undefined) {
+      // @ts-ignore - 空字符串表示走相对路径(由 devServer proxy 转发)
       return import.meta.env.VITE_API_BASE_URL as string
     }
   } catch (e) {

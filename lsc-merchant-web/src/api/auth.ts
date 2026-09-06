@@ -34,10 +34,12 @@ function merchantUserId(): number | undefined {
  * <p>后端 /user/login 仅返回 token 字符串, 登录成功后需调 /merchant/info 获取商家信息。</p>
  */
 export async function login(data: LoginParams): Promise<LoginResult> {
-  const token = await post<string>('/user/login', {
+  const loginResp = await post<any>('/user/login', {
     account: data.mobile,
     password: data.password
   })
+  // 兼容后端返回字符串 token 或 { token, userInfo } 对象
+  const token: string = typeof loginResp === 'string' ? loginResp : loginResp?.token
   // 将 token 暂存, 以便后续请求携带
   useMerchantStore().setAuth(token, { userId: 0, mobile: data.mobile })
   // 获取商家信息
