@@ -20,8 +20,16 @@ public class B2bOrder {
     private Long lscAmount;
     private String contractNo;
     private String tradeEvidenceUrls;
-    private Integer aiVerificationResult; // 0=AI真实,1=AI可疑,2=人工真实,3=人工虚假
-    private Integer status; // 0=待确认,1=已确认,2=已流转,3=已完成,4=已取消
+    private Integer aiVerificationResult; // 0=AI判定真实,1=AI判定可疑,2=人工确认真实,3=人工确认虚假
+    private BigDecimal aiVerificationScore;
+    private Integer counterpartyConfirmed;
     private String confirmedBy;
+    private LocalDateTime confirmedAt;
+    private Integer lscTransferred;
+    private LocalDateTime expireAt;
+    private Integer status; // 0=待确认,1=已确认,2=已流转,3=已完成,4=已取消,5=已作废
+    private String idempotentKey;
+    private Integer version;
     private LocalDateTime createdAt;
+    private LocalDateTime completedAt;
 }

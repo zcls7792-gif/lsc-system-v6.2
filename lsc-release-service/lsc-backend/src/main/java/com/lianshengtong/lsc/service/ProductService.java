@@ -66,7 +66,7 @@ public class ProductService {
         Product p = productMapper.selectById(id);
         if (p == null) throw new BusinessException(ErrorCode.NOT_FOUND);
         p.setAiReviewResult(aiResult);
-        p.setAiTags(aiTags);
+        p.setAiReviewTags(aiTags);
         productMapper.updateById(p);
     }
 }

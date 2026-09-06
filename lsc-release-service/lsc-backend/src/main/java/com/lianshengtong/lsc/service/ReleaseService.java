@@ -21,12 +21,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReleaseService {
 
+    /** 释放速率上限 0.06% —— 硬常量，编译后不可修改（方案文档18.4） */
+    public static final BigDecimal RATE_MAX = new BigDecimal("0.0006");
+    /** 释放速率下限 0.03% —— 硬常量，编译后不可修改（方案文档18.4） */
+    public static final BigDecimal RATE_MIN = new BigDecimal("0.0003");
+
     private final ReleaseConfigMapper configMapper;
     private final ReleaseSummaryMapper summaryMapper;
 
-    @Value("${lsc.release.rate-max}")
+    @Value("${lsc.release.rate-max:0.0006}")
     private BigDecimal rateMax;
-    @Value("${lsc.release.rate-min}")
+    @Value("${lsc.release.rate-min:0.0003}")
     private BigDecimal rateMin;
 
     public Map<String, Object> getSummary(String date) {
@@ -59,77 +64,99 @@ public class ReleaseService {
     }
 
     public Map<String, Object> getConfig() {
-        ReleaseConfig c = configMapper.selectById(1L);
-        if (c == null) c = new ReleaseConfig();
         Map<String, Object> result = new HashMap<>();
-        result.put("rateMax", fmtPct(c.getRateMax(), "0.06%", 2));
+        // rateMax/rateMin 为硬常量，不从数据库读取（方案文档18.4）
+        result.put("rateMax", fmtPct(RATE_MAX, "0.06%", 2));
         result.put("rateMaxEditable", false);
-        result.put("rateMin", fmtPct(c.getRateMin(), "0.03%", 2));
+        result.put("rateMin", fmtPct(RATE_MIN, "0.03%", 2));
         result.put("rateMinEditable", false);
-        result.put("kMin", fmtPct(c.getKMin(), "0.50%", 2));
+        result.put("kMin", fmtPct(getConfigDecimal("k_min", new BigDecimal("0.005")), "0.50%", 2));
         result.put("kMinEditable", true);
-        result.put("kMax", fmtPct(c.getKMax(), "1.0%", 1));
+        result.put("kMax", fmtPct(getConfigDecimal("k_max", new BigDecimal("0.010")), "1.0%", 1));
         result.put("kMaxEditable", true);
-        result.put("alpha", c.getAlpha() != null ? c.getAlpha().stripTrailingZeros().toPlainString() : "0.06");
+        BigDecimal alpha = getConfigDecimal("alpha", new BigDecimal("0.06"));
+        result.put("alpha", alpha.stripTrailingZeros().toPlainString());
         result.put("alphaEditable", true);
         return result;
     }
 
     /**
+     * 按 config_key 读取配置值并转为 BigDecimal
+     */
+    private BigDecimal getConfigDecimal(String key, BigDecimal def) {
+        ReleaseConfig c = configMapper.selectOne(
+                new LambdaQueryWrapper<ReleaseConfig>().eq(ReleaseConfig::getConfigKey, key));
+        if (c == null || c.getConfigValue() == null) return def;
+        try {
+            // 兼容 "0.50%" / "1.0%" / "0.06" 等格式
+            String val = c.getConfigValue().trim();
+            if (val.endsWith("%")) {
+                val = val.substring(0, val.length() - 1);
+                return new BigDecimal(val).divide(new BigDecimal("100"), 10, RoundingMode.HALF_UP);
+            }
+            return new BigDecimal(val);
+        } catch (NumberFormatException e) {
+            return def;
+        }
+    }
+
+    /**
      * 百分比格式化：val(小数) × 100，保留指定小数位
-     * @param val 原始小数值（如 0.005 表示 0.5%）
-     * @param def 默认显示值
-     * @param scale 小数位数（rate/kMin=2, kMax=1，与方案文档一致）
      */
     private String fmtPct(BigDecimal val, String def, int scale) {
         if (val == null) return def;
         BigDecimal pct = val.multiply(new BigDecimal("100"));
-        return pct.setScale(scale, java.math.RoundingMode.HALF_UP).toPlainString() + "%";
+        return pct.setScale(scale, RoundingMode.HALF_UP).toPlainString() + "%";
     }
 
     public Map<String, Object> updateConfig(BigDecimal kMin, BigDecimal kMax, BigDecimal alpha) {
-        ReleaseConfig c = configMapper.selectById(1L);
-        if (c == null) {
-            c = new ReleaseConfig();
-            c.setId(1L);
-        }
         // k 范围安全校验
         if (kMin.compareTo(BigDecimal.ZERO) <= 0 || kMax.compareTo(kMin) <= 0) {
             throw new BusinessException(ErrorCode.K_OUT_OF_RANGE);
         }
-        c.setKMin(kMin);
-        c.setKMax(kMax);
-        c.setAlpha(alpha);
-        // rateMax/rateMin 硬常量，不允许修改
-        if (c.getId() == null) {
-            configMapper.insert(c);
-        } else {
-            configMapper.updateById(c);
-        }
+        upsertConfig("k_min", kMin.toPlainString(), 1, "释放调节起点");
+        upsertConfig("k_max", kMax.toPlainString(), 1, "释放调节终点");
+        upsertConfig("alpha", alpha.toPlainString(), 1, "线性调节因子");
         return getConfig();
     }
 
+    private void upsertConfig(String key, String value, int editable, String desc) {
+        ReleaseConfig c = configMapper.selectOne(
+                new LambdaQueryWrapper<ReleaseConfig>().eq(ReleaseConfig::getConfigKey, key));
+        if (c == null) {
+            c = new ReleaseConfig();
+            c.setConfigKey(key);
+            c.setConfigValue(value);
+            c.setEditable(editable);
+            c.setDescription(desc);
+            configMapper.insert(c);
+        } else {
+            c.setConfigValue(value);
+            configMapper.updateById(c);
+        }
+    }
+
     /**
-     * 释放速率计算公式：
+     * 释放速率计算公式（方案文档第九章）：
      * k ≤ 0.50% → rate = 0.06%
      * k ≥ 1.0%  → rate = 0.03%
      * 中间线性：rate = 0.09% - 0.06 × k
      */
     public BigDecimal calcRate(BigDecimal k) {
-        ReleaseConfig c = configMapper.selectById(1L);
-        BigDecimal kMin = c != null && c.getKMin() != null ? c.getKMin() : new BigDecimal("0.005");
-        BigDecimal kMax = c != null && c.getKMax() != null ? c.getKMax() : new BigDecimal("0.010");
-        BigDecimal rMax = c != null && c.getRateMax() != null ? c.getRateMax() : rateMax;
-        BigDecimal rMin = c != null && c.getRateMin() != null ? c.getRateMin() : rateMin;
-        BigDecimal alpha = c != null && c.getAlpha() != null ? c.getAlpha() : new BigDecimal("0.06");
+        BigDecimal kMin = getConfigDecimal("k_min", new BigDecimal("0.005"));
+        BigDecimal kMax = getConfigDecimal("k_max", new BigDecimal("0.010"));
+        BigDecimal alpha = getConfigDecimal("alpha", new BigDecimal("0.06"));
 
-        if (k.compareTo(kMin) <= 0) return rMax;
-        if (k.compareTo(kMax) >= 0) return rMin;
-        // rate = rateMax - alpha * (k - kMin) / (kMax - kMin) * (rateMax - rateMin)... 简化为线性
-        BigDecimal rate = rMax.subtract(alpha.multiply(k)).setScale(6, RoundingMode.HALF_UP);
-        // 硬约束兜底
-        if (rate.compareTo(rMax) > 0) rate = rMax;
-        if (rate.compareTo(rMin) < 0) rate = rMin;
+        if (k.compareTo(kMin) <= 0) return RATE_MAX;
+        if (k.compareTo(kMax) >= 0) return RATE_MIN;
+        // 截距 = rateMax + rateMin = 0.06% + 0.03% = 0.09%
+        BigDecimal intercept = RATE_MAX.add(RATE_MIN);
+        BigDecimal rate = intercept.subtract(alpha.multiply(k)).setScale(6, RoundingMode.HALF_UP);
+        // 二次校验：越界直接终止（方案文档9.1）
+        if (rate.compareTo(RATE_MAX) > 0 || rate.compareTo(RATE_MIN) < 0) {
+            throw new BusinessException(ErrorCode.K_OUT_OF_RANGE.getCode(),
+                    "释放速率越界，终止当日释放任务");
+        }
         return rate;
     }
 }

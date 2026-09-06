@@ -90,6 +90,7 @@ public class LscAccountService {
         outTx.setAfterLocked(from.getTotalLocked());
         outTx.setCounterpartyId(toUserId);
         outTx.setOrderNo(orderNo);
+        outTx.setIdempotentKey(orderNo + "-" + fromUserId + "-OUT");
         outTx.setCreatedAt(LocalDateTime.now());
         txMapper.insert(outTx);
 
@@ -125,6 +126,7 @@ public class LscAccountService {
             inTx.setAfterLocked(to.getTotalLocked());
             inTx.setCounterpartyId(fromUserId);
             inTx.setOrderNo(orderNo);
+            inTx.setIdempotentKey(orderNo + "-" + toUserId + "-IN");
             inTx.setCreatedAt(LocalDateTime.now());
             txMapper.insert(inTx);
 
@@ -160,5 +162,47 @@ public class LscAccountService {
                 throw new BusinessException(ErrorCode.LSC_FLOW_FORBIDDEN); // 商→消
             }
         }
+    }
+
+    /**
+     * 退款发行回滚（流水 type=9）：
+     * 纯人民币订单退款时，扣减该笔消费原发放的锁定 LSC。
+     * 若已部分释放为可用，则优先扣减可用余额再扣减锁定余额。
+     */
+    @Transactional
+    public void recordRefundRollback(Long userId, String orderNo, BigDecimal totalRmb) {
+        if (totalRmb == null || totalRmb.compareTo(BigDecimal.ZERO) <= 0) return;
+        // 该笔消费原发行的 LSC 数量 = 消费金额（1元=1LSC）
+        long rollbackAmount = totalRmb.longValue();
+
+        LscAccount account = lscAccountMapper.selectOne(
+                new LambdaQueryWrapper<LscAccount>().eq(LscAccount::getUserId, userId));
+        if (account == null) throw new BusinessException(ErrorCode.NOT_FOUND);
+        long beforeLocked = account.getTotalLocked();
+        long beforeAvailable = account.getTotalAvailable();
+
+        // 优先扣减可用，再扣减锁定
+        long deductAvailable = Math.min(beforeAvailable, rollbackAmount);
+        long deductLocked = rollbackAmount - deductAvailable;
+        if (deductLocked > beforeLocked) deductLocked = beforeLocked;
+
+        account.setTotalAvailable(beforeAvailable - deductAvailable);
+        account.setTotalLocked(beforeLocked - deductLocked);
+        int rows = lscAccountMapper.updateById(account);
+        if (rows == 0) throw new BusinessException(ErrorCode.TOO_MANY_REQUESTS.getCode(), "操作冲突，请重试");
+
+        // 记录流水 type=9 退款发行回滚
+        LscTransaction tx = new LscTransaction();
+        tx.setUserId(userId);
+        tx.setType(9);
+        tx.setAmount(-rollbackAmount);
+        tx.setBeforeLocked(beforeLocked);
+        tx.setAfterLocked(account.getTotalLocked());
+        tx.setBeforeAvailable(beforeAvailable);
+        tx.setAfterAvailable(account.getTotalAvailable());
+        tx.setOrderNo("ROLLBACK-" + orderNo);
+        tx.setIdempotentKey("RB-" + orderNo);
+        tx.setCreatedAt(LocalDateTime.now());
+        txMapper.insert(tx);
     }
 }

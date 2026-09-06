@@ -25,6 +25,7 @@ public class B2bService {
                                            String tradeDescription, java.math.BigDecimal totalAmountRmb,
                                            Long lscAmount, String contractNo, String tradeEvidenceUrls) {
         String orderNo = "B2B" + System.currentTimeMillis();
+        String idempotentKey = "B2B-" + fromMerchantUserId + "-" + toMerchantId + "-" + System.currentTimeMillis();
         B2bOrder order = new B2bOrder();
         order.setOrderNo(orderNo);
         order.setFromMerchantId(fromMerchantUserId);
@@ -35,7 +36,12 @@ public class B2bService {
         order.setContractNo(contractNo);
         order.setTradeEvidenceUrls(tradeEvidenceUrls);
         order.setAiVerificationResult(0); // AI 默认判定真实
+        order.setCounterpartyConfirmed(0);
+        order.setLscTransferred(0);
         order.setStatus(0); // 待确认
+        order.setIdempotentKey(idempotentKey);
+        order.setVersion(1);
+        order.setExpireAt(LocalDateTime.now().plusDays(7)); // 7日未确认自动取消
         order.setCreatedAt(LocalDateTime.now());
         b2bOrderMapper.insert(order);
 
@@ -61,12 +67,16 @@ public class B2bService {
         }
         order.setStatus(1); // 已确认
         order.setConfirmedBy("user-" + confirmUserId);
+        order.setConfirmedAt(LocalDateTime.now());
+        order.setCounterpartyConfirmed(1);
         b2bOrderMapper.updateById(order);
 
         // 执行 LSC 流转：商家→商家
         lscAccountService.transfer(order.getFromMerchantId(), order.getToMerchantId(),
                 order.getLscAmount(), 8, order.getOrderNo());
         order.setStatus(2); // 已流转
+        order.setLscTransferred(1);
+        order.setCompletedAt(LocalDateTime.now());
         b2bOrderMapper.updateById(order);
 
         Map<String, Object> result = new HashMap<>();

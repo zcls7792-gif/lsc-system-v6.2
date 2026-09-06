@@ -18,5 +18,6 @@ public class LscTransaction {
     private Long beforeAvailable, afterAvailable;
     private Long counterpartyId;
     private String orderNo;
+    private String idempotentKey;
     private LocalDateTime createdAt;
 }

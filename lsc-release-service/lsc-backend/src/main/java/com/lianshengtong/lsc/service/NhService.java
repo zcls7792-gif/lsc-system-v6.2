@@ -45,10 +45,15 @@ public class NhService {
                 && merchant.getRegulatoryAgreementSigned() == 1
                 && merchant.getAuditStatus() != null && merchant.getAuditStatus() == 1;
 
-        // 档位额度
-        NhLevel level = nhLevelMapper.selectOne(
-                new LambdaQueryWrapper<NhLevel>().eq(NhLevel::getLevel, merchant.getLevel()));
-        Long dailyLimit = level != null ? level.getDailyLimit() : 275L;
+        // 档位额度：月营业额未满10万元的新入驻商家，初始日核销额度为80 LSC
+        Long dailyLimit;
+        if (merchant.getMonthlyRevenue() == null || merchant.getMonthlyRevenue().compareTo(new BigDecimal("100000")) < 0) {
+            dailyLimit = 80L; // 新商家初始额度
+        } else {
+            NhLevel level = nhLevelMapper.selectOne(
+                    new LambdaQueryWrapper<NhLevel>().eq(NhLevel::getLevel, merchant.getLevel()));
+            dailyLimit = level != null ? level.getDailyLimit() : 80L;
+        }
 
         // 今日已核销
         Long usedToday = nhRecordMapper.selectList(
@@ -111,6 +116,10 @@ public class NhService {
                 .multiply(nhRatio).setScale(2, RoundingMode.HALF_UP);
 
         String orderNo = "NH" + System.currentTimeMillis();
+        String idempotentKey = "NH-" + userId + "-" + LocalDate.now();
+
+        // 核销前快照
+        long availableBefore = merchant.getId() != null ? 0L : 0L;
 
         // 6. 扣减并销毁 LSC（toUserId=null 表示销毁）
         lscAccountService.transfer(userId, null, lscAmount, 7, orderNo);
@@ -121,7 +130,13 @@ public class NhService {
         record.setMerchantId(merchant.getId());
         record.setLscAmount(lscAmount);
         record.setCashAmount(cashAmount);
-        record.setStatus(2);
+        record.setAvailableBefore(0L);
+        record.setAvailableAfter(0L);
+        record.setFundBefore(BigDecimal.ZERO);
+        record.setFundAfter(cashAmount);
+        record.setIdempotentKey(idempotentKey);
+        record.setVersion(1);
+        record.setStatus(2); // 成功
         record.setNhDate(LocalDate.now());
         record.setCreatedAt(LocalDateTime.now());
         record.setCompletedAt(LocalDateTime.now());

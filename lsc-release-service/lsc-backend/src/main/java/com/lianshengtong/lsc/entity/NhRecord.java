@@ -17,7 +17,13 @@ public class NhRecord {
     private Long merchantId;
     private Long lscAmount;
     private BigDecimal cashAmount;
-    private Integer status; // 0=处理中,1=失败,2=成功
+    private Long availableBefore;
+    private Long availableAfter;
+    private BigDecimal fundBefore;
+    private BigDecimal fundAfter;
+    private String idempotentKey;
+    private Integer version;
+    private Integer status; // 0=待处理,1=处理中,2=成功,3=失败
     private LocalDate nhDate;
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;

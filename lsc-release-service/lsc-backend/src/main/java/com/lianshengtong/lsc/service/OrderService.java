@@ -48,6 +48,17 @@ public class OrderService {
             lscAccountService.transfer(userId, product.getMerchantId(), lscAmount, 4, orderNo);
         }
 
+        // 首单检测：用户是否已有已完成订单
+        Long prevOrderCount = ordersMapper.selectCount(
+                new LambdaQueryWrapper<Orders>().eq(Orders::getUserId, userId).gt(Orders::getStatus, 0));
+        boolean isFirst = prevOrderCount == 0 && totalPrice.compareTo(new BigDecimal("10")) >= 0;
+
+        // 支付类型：0=纯人民币, 1=LSC全额, 2=混合支付
+        int paymentType;
+        if (lscAmount == 0) paymentType = 0;
+        else if (lscAmount >= totalPrice.longValue()) paymentType = 1;
+        else paymentType = 2;
+
         Orders order = new Orders();
         order.setOrderNo(orderNo);
         order.setUserId(userId);
@@ -55,6 +66,8 @@ public class OrderService {
         order.setProductId(productId);
         order.setProductName(product.getProductName());
         order.setOrderType(0);
+        order.setPaymentType(paymentType);
+        order.setIsFirstOrder(isFirst ? 1 : 0);
         order.setTotalPrice(totalPrice);
         order.setLscAmount(lscAmount);
         order.setRmbAmount(rmbAmount);
@@ -69,6 +82,8 @@ public class OrderService {
         result.put("lscAmount", lscAmount);
         result.put("rmbAmount", rmbAmount);
         result.put("status", 1);
+        result.put("isFirstOrder", isFirst);
+        result.put("paymentType", paymentType);
         result.put("payUrl", rmbAmount.compareTo(BigDecimal.ZERO) > 0
                 ? "https://pay.lsc.com/cashier?orderNo=" + orderNo : "");
         return result;
@@ -90,11 +105,24 @@ public class OrderService {
             lscAccountService.transfer(userId, merchantId, lscAmount, 5, orderNo);
         }
 
+        // 首单检测
+        Long prevOrderCount = ordersMapper.selectCount(
+                new LambdaQueryWrapper<Orders>().eq(Orders::getUserId, userId).gt(Orders::getStatus, 0));
+        boolean isFirst = prevOrderCount == 0 && amount.compareTo(new BigDecimal("10")) >= 0;
+
+        // 支付类型
+        int paymentType;
+        if (lscAmount == 0) paymentType = 0;
+        else if (lscAmount >= amount.longValue()) paymentType = 1;
+        else paymentType = 2;
+
         Orders order = new Orders();
         order.setOrderNo(orderNo);
         order.setUserId(userId);
         order.setMerchantId(merchantId);
         order.setOrderType(1);
+        order.setPaymentType(paymentType);
+        order.setIsFirstOrder(isFirst ? 1 : 0);
         order.setTotalPrice(amount);
         order.setLscAmount(lscAmount);
         order.setRmbAmount(rmbAmount);
@@ -120,7 +148,11 @@ public class OrderService {
     }
 
     /**
-     * 订单退款：LSC 从商家退回消费者，订单状态置为已退款(4)
+     * 订单退款（方案文档 P0 规则）：
+     * - 首单不退（is_first_order=1）
+     * - LSC订单不退（lsc_amount > 0，含LSC全额和混合支付）
+     * - 仅纯人民币支付(payment_type=0)的非首单订单可退款
+     * - 退款仅涉及人民币原路退回，LSC不退回（仅触发LSC发行回滚 type=9）
      */
     @Transactional
     public Map<String, Object> refund(Long userId, String orderNo) {
@@ -134,20 +166,33 @@ public class OrderService {
         if (order.getStatus() != 1) {
             throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "仅已支付订单可退款");
         }
-
-        // LSC 退回：商家 → 消费者
+        // 首单不退
+        if (order.getIsFirstOrder() != null && order.getIsFirstOrder() == 1) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "首单消费不支持退款");
+        }
+        // LSC订单不退（lscAmount > 0 即含 LSC 支付）
         if (order.getLscAmount() != null && order.getLscAmount() > 0) {
-            lscAccountService.transfer(order.getMerchantId(), order.getUserId(),
-                    order.getLscAmount(), 6, "REFUND-" + orderNo);
+            throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "使用LSC的订单不支持退款");
+        }
+        // 仅纯人民币支付可退
+        if (order.getPaymentType() != null && order.getPaymentType() != 0) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "仅纯人民币支付的非首单订单支持退款");
         }
 
+        // 纯人民币退款：LSC 发行回滚（type=9），人民币原路退回（由支付机构处理）
+        // 此处仅记录 LSC 发行回滚流水，实际人民币退回由支付机构接口完成
+        lscAccountService.recordRefundRollback(userId, order.getOrderNo(), order.getTotalPrice());
+
         order.setStatus(4); // 已退款
+        order.setRefundRmbAmount(order.getRmbAmount());
+        order.setRefundLscAmount(0L);
+        order.setCompletedAt(LocalDateTime.now());
         ordersMapper.updateById(order);
 
         Map<String, Object> result = new HashMap<>();
         result.put("orderNo", orderNo);
-        result.put("refundedLsc", order.getLscAmount());
         result.put("refundedRmb", order.getRmbAmount());
+        result.put("refundType", "纯人民币原路退回");
         result.put("status", 4);
         return result;
     }
