@@ -84,8 +84,6 @@ if grep -q "CREATE UNIQUE INDEX uk_nh_merchant_date" "$SCHEMA_SQL"; then
     if $DRY_RUN; then
         echo "  [DRY-RUN] 将 UNIQUE INDEX uk_nh_merchant_date 改回 INDEX idx_nh_merchant_date"
     else
-        sed -i 's/CREATE UNIQUE INDEX uk_nh_merchant_date ON nh_record(CREATE INDEX idx_nh_merchant_date ON nh_record(/' "$SCHEMA_SQL"
-        # sed 替换更稳妥的写法
         sed -i 's/CREATE UNIQUE INDEX uk_nh_merchant_date/CREATE INDEX idx_nh_merchant_date/' "$SCHEMA_SQL"
         ok "schema.sql 索引定义已回滚"
     fi

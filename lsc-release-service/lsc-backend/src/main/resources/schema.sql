@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS nh_record (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP
 );
-CREATE UNIQUE INDEX uk_nh_merchant_date ON nh_record(merchant_id, nh_date);
+CREATE INDEX idx_nh_merchant_date ON nh_record(merchant_id, nh_date);
 
 -- B2B 订单表
 CREATE TABLE IF NOT EXISTS b2b_order (
