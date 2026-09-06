@@ -84,8 +84,8 @@ public class B2bService {
 
     public Page<B2bOrder> list(Long merchantUserId, Integer status, int pageNo, int pageSize) {
         LambdaQueryWrapper<B2bOrder> qw = new LambdaQueryWrapper<B2bOrder>()
-                .eq(B2bOrder::getFromMerchantId, merchantUserId)
-                .or().eq(B2bOrder::getToMerchantId, merchantUserId)
+                .and(w -> w.eq(B2bOrder::getFromMerchantId, merchantUserId)
+                        .or().eq(B2bOrder::getToMerchantId, merchantUserId))
                 .orderByDesc(B2bOrder::getCreatedAt);
         if (status != null) qw.eq(B2bOrder::getStatus, status);
         return b2bOrderMapper.selectPage(new Page<>(pageNo, pageSize), qw);

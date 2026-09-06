@@ -2,6 +2,7 @@ package com.lianshengtong.lsc.common;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,6 +23,16 @@ public class GlobalExceptionHandler {
                 .findFirst().map(f -> f.getField() + ": " + f.getDefaultMessage())
                 .orElse("参数校验失败");
         return R.fail(ErrorCode.BAD_REQUEST.getCode(), msg);
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public R<Void> handleOptimisticLock(OptimisticLockingFailureException e) {
+        return R.fail(ErrorCode.TOO_MANY_REQUESTS.getCode(), "操作冲突，请重试");
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public R<Void> handleIllegalArg(IllegalArgumentException e) {
+        return R.fail(ErrorCode.BAD_REQUEST.getCode(), e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

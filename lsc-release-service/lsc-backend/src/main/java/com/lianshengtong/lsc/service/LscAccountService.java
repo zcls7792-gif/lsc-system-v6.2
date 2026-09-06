@@ -11,6 +11,7 @@ import com.lianshengtong.lsc.mapper.LscAccountMapper;
 import com.lianshengtong.lsc.mapper.LscTransactionMapper;
 import com.lianshengtong.lsc.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,7 +95,14 @@ public class LscAccountService {
 
         from.setTotalAvailable(from.getTotalAvailable() - amount);
         from.setUpdatedAt(LocalDateTime.now());
-        lscAccountMapper.updateById(from);
+        try {
+            int rows = lscAccountMapper.updateById(from);
+            if (rows == 0) {
+                throw new BusinessException(ErrorCode.TOO_MANY_REQUESTS.getCode(), "操作冲突，请重试");
+            }
+        } catch (OptimisticLockingFailureException e) {
+            throw new BusinessException(ErrorCode.TOO_MANY_REQUESTS.getCode(), "操作冲突，请重试");
+        }
 
         // 转入方（核销时 toUserId=null，LSC 销毁）
         if (toUserId != null) {
@@ -122,7 +130,14 @@ public class LscAccountService {
 
             to.setTotalAvailable(to.getTotalAvailable() + amount);
             to.setUpdatedAt(LocalDateTime.now());
-            lscAccountMapper.updateById(to);
+            try {
+                int rows = lscAccountMapper.updateById(to);
+                if (rows == 0) {
+                    throw new BusinessException(ErrorCode.TOO_MANY_REQUESTS.getCode(), "操作冲突，请重试");
+                }
+            } catch (OptimisticLockingFailureException e) {
+                throw new BusinessException(ErrorCode.TOO_MANY_REQUESTS.getCode(), "操作冲突，请重试");
+            }
         }
     }
 
@@ -132,12 +147,16 @@ public class LscAccountService {
      */
     public void checkFlowPermission(Long fromUserId, Long toUserId) {
         SysUser from = sysUserMapper.selectById(fromUserId);
+        if (from == null) throw new BusinessException(ErrorCode.NOT_FOUND);
         if (toUserId != null) {
             SysUser to = sysUserMapper.selectById(toUserId);
-            if (from.getUserType() == 0 && to.getUserType() == 0) {
+            if (to == null) throw new BusinessException(ErrorCode.NOT_FOUND);
+            if (from.getUserType() != null && from.getUserType() == 0
+                    && to.getUserType() != null && to.getUserType() == 0) {
                 throw new BusinessException(ErrorCode.LSC_FLOW_FORBIDDEN); // 消→消
             }
-            if (from.getUserType() == 1 && to.getUserType() == 0) {
+            if (from.getUserType() != null && from.getUserType() == 1
+                    && to.getUserType() != null && to.getUserType() == 0) {
                 throw new BusinessException(ErrorCode.LSC_FLOW_FORBIDDEN); // 商→消
             }
         }

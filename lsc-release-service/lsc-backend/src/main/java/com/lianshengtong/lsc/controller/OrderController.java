@@ -1,6 +1,7 @@
 package com.lianshengtong.lsc.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lianshengtong.lsc.common.ErrorCode;
 import com.lianshengtong.lsc.common.R;
 import com.lianshengtong.lsc.entity.Orders;
 import com.lianshengtong.lsc.security.UserContext;
@@ -22,6 +23,9 @@ public class OrderController {
     @PostMapping
     public R<Map<String, Object>> create(@RequestBody Map<String, Object> body) {
         List<Map<String, Object>> items = (List<Map<String, Object>>) body.get("items");
+        if (items == null || items.isEmpty()) {
+            return R.fail(ErrorCode.BAD_REQUEST.getCode(), "商品列表不能为空");
+        }
         Long productId = Long.valueOf(items.get(0).get("productId").toString());
         Integer quantity = items.get(0).get("quantity") != null ? Integer.valueOf(items.get(0).get("quantity").toString()) : 1;
         Long lscAmount = body.get("lscAmount") != null ? Long.valueOf(body.get("lscAmount").toString()) : 0L;

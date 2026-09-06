@@ -28,11 +28,14 @@ public class OrderService {
     @Transactional
     public Map<String, Object> createOrder(Long userId, Long productId, Integer quantity,
                                            Long lscAmount, Long addressId) {
+        if (quantity == null || quantity <= 0) throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "数量必须大于 0");
+        if (lscAmount == null || lscAmount < 0) lscAmount = 0L;
+
         Product product = productMapper.selectById(productId);
         if (product == null) throw new BusinessException(ErrorCode.NOT_FOUND);
 
         BigDecimal totalPrice = product.getPrice().multiply(BigDecimal.valueOf(quantity));
-        // LSC 抵扣不能超过总价
+        // LSC 抵扣不能超过总价（LSC 为整数，取总价整数部分）
         long lscCap = totalPrice.longValue();
         if (lscAmount > lscCap) lscAmount = lscCap;
 
@@ -73,6 +76,9 @@ public class OrderService {
 
     @Transactional
     public Map<String, Object> payOffline(Long userId, Long merchantId, BigDecimal amount, Long lscAmount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0)
+            throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "金额必须大于 0");
+        if (lscAmount == null || lscAmount < 0) lscAmount = 0L;
         // 线下消费：消费者→商家
         long lscCap = amount.longValue();
         if (lscAmount > lscCap) lscAmount = lscCap;
