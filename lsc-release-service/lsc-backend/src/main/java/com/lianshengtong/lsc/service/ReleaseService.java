@@ -77,7 +77,9 @@ public class ReleaseService {
 
     private String fmtPct(BigDecimal val, String def) {
         if (val == null) return def;
-        return val.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString() + "%";
+        BigDecimal pct = val.multiply(new BigDecimal("100"));
+        // 保留 2 位小数，避免 0.060000% 或 0.5% 这类显示问题
+        return pct.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString() + "%";
     }
 
     public Map<String, Object> updateConfig(BigDecimal kMin, BigDecimal kMax, BigDecimal alpha) {
