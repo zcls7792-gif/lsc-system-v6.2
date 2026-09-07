@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicReference;
  *   <li>{@code lsc_gray_rollout_step_info} Gauge：policyId/stepIndex/stepWeight 三维；值=1 表示当前策略位于该步；0 由 idleness 自动处理（Gauge 懒读 Map）。</li>
  *   <li>{@code lsc_gray_rollout_slo_result} Gauge：policyId + gate=(error_drift_pct/p95_ratio/min_samples/slo_unavailable)；value=1 PASS，0 FAIL。</li>
  *   <li>{@code lsc_gray_rollout_event_total} Counter：policyId + event=(STEP_ADVANCE/ROLLBACK_TRIGGERED/READY_FOR_GRAD/MANUAL_ADVANCE)。</li>
+ *   <li>{@code lsc_gray_rollout_consecutive_failures} Gauge：policyId；当前连续 SLO 失败次数（PASS/回滚/手动推进归零）。</li>
+ *   <li>{@code lsc_gray_rollout_max_failures_threshold} Gauge：policyId；触发硬回滚的连续失败上限。</li>
  * </ul>
  */
 @Slf4j
@@ -38,6 +40,10 @@ public class RolloutMetrics {
     private final ConcurrentHashMap<String, AtomicInteger> sloGauges = new ConcurrentHashMap<>();
     // Step gauge state：key = policyId + "|" + stepIndex + "|" + stepWeight；值 0/1
     private final ConcurrentHashMap<String, AtomicInteger> stepGauges = new ConcurrentHashMap<>();
+    // Consecutive failures gauge：key = policyId；值 = 当前连续 SLO 失败次数（PASS/回滚/手动推进时归零）
+    private final ConcurrentHashMap<String, AtomicInteger> consecFailGauges = new ConcurrentHashMap<>();
+    // Max failures threshold gauge：key = policyId；值 = 该策略触发硬回滚的连续失败上限（全局或 policy override）
+    private final ConcurrentHashMap<String, AtomicInteger> maxFailThresholdGauges = new ConcurrentHashMap<>();
 
     // Global tick/last-run Gauge：简单 atomicLong
     private final AtomicLong lastTickEpochSec = new AtomicLong(Instant.now().getEpochSecond());
@@ -137,6 +143,40 @@ public class RolloutMetrics {
             return a;
         });
         atom.set(1);
+    }
+
+    /** 连续 SLO 失败次数 Gauge：PASS / 回滚 / 手动推进时归零，FAIL 时累加。供 P2 告警 "接近回滚阈值" 使用。 */
+    public void consecutiveFailures(String policyId, int count) {
+        if (policyId == null) return;
+        AtomicInteger atom = consecFailGauges.computeIfAbsent(policyId, k -> {
+            AtomicInteger a = new AtomicInteger(Math.max(0, count));
+            try {
+                Gauge.builder("lsc_gray_rollout_consecutive_failures", a, AtomicInteger::get)
+                        .description("Consecutive SLO failures for the policy (resets on pass/advance/rollback).")
+                        .tag("policyId", policyId)
+                        .tag("nodeId", nodeId())
+                        .register(registry);
+            } catch (Exception ignore) { /* 重复注册忽略 */ }
+            return a;
+        });
+        atom.set(Math.max(0, count));
+    }
+
+    /** 触发硬回滚的连续失败上限 Gauge（全局 gray.rollout.maxConsecutiveFailuresBeforeRollback 或 policy.rolloutConfig 覆盖值）。 */
+    public void maxFailuresThreshold(String policyId, int threshold) {
+        if (policyId == null) return;
+        AtomicInteger atom = maxFailThresholdGauges.computeIfAbsent(policyId, k -> {
+            AtomicInteger a = new AtomicInteger(Math.max(1, threshold));
+            try {
+                Gauge.builder("lsc_gray_rollout_max_failures_threshold", a, AtomicInteger::get)
+                        .description("Configured max consecutive failures before hard rollback for the policy.")
+                        .tag("policyId", policyId)
+                        .tag("nodeId", nodeId())
+                        .register(registry);
+            } catch (Exception ignore) { /* 重复注册忽略 */ }
+            return a;
+        });
+        atom.set(Math.max(1, threshold));
     }
 
     public void markLeader(boolean isLeader, String nodeIdReporting) {

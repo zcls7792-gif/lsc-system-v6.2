@@ -177,12 +177,14 @@ public class GrayRolloutCoordinator {
         // 单策略 override 参数（与 SloGuard 同名同语义，再次合并避免错读）
         int minMin = firstNonNullInt(policy.rolloutConfig() == null ? null : policy.rolloutConfig().minMinutesAtStep(), props.getMinMinutesAtStep());
         int maxFails = firstNonNullInt(policy.rolloutConfig() == null ? null : policy.rolloutConfig().maxConsecutiveFailuresBeforeRollback(), props.getMaxConsecutiveFailuresBeforeRollback());
+        metrics.maxFailuresThreshold(policy.policyId(), maxFails);
 
         // 样本不足 → 不步进不回滚；但如果 SLO 同时整体 PASS，也不累计 pass（避免一上来就把 consecutivePasses 冲很高）
         if (slo.insufficientSamples()) return;
 
         if (slo.overallPass()) {
             state.consecutiveSloFailures = 0;
+            metrics.consecutiveFailures(policy.policyId(), 0);
             state.consecutiveSloPasses = Math.min(1_000_000, state.consecutiveSloPasses + 1);
             long holdSec = Duration.between(state.enteredStepAt, now).getSeconds();
             long needSec = (long) minMin * 60L;
@@ -210,12 +212,14 @@ public class GrayRolloutCoordinator {
         } else {
             state.consecutiveSloPasses = 0;
             state.consecutiveSloFailures = Math.min(1000, state.consecutiveSloFailures + 1);
+            metrics.consecutiveFailures(policy.policyId(), state.consecutiveSloFailures);
             if (state.consecutiveSloFailures >= Math.max(1, maxFails)) {
                 // 硬回滚
                 String reason = "SLO_BREAK " + slo.failSummary();
                 GrayPolicyStore.Policy rolled = service.rollback(policy.policyId(), "system:rollback", reason);
                 if (rolled != null) {
                     runtime.remove(policy.policyId());
+                    metrics.consecutiveFailures(policy.policyId(), 0);
                     metrics.event("ROLLBACK_TRIGGERED", policy.policyId());
                     log.warn("[gray-rollout] policy={} HARD ROLLBACK triggered (consecFail={}): {}",
                             policy.policyId(), state.consecutiveSloFailures, reason);
@@ -348,6 +352,7 @@ public class GrayRolloutCoordinator {
             s.enteredStepAt = Instant.now();
             s.consecutiveSloFailures = 0;
             s.consecutiveSloPasses = 0;
+            metrics.consecutiveFailures(policyId, 0);
             return advanced;
         } finally {
             policyWeightWriteLock.unlock();
