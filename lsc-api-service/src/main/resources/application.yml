@@ -12,6 +12,40 @@ spring:
     time-zone: Asia/Shanghai
     date-format: yyyy-MM-dd HH:mm:ss
 
+  # ==================== 数据源配置 ====================
+  # 当前使用 H2 文件模式（嵌入式，数据落盘到 ./data/lsc.mv.db，重启不丢失）
+  # 切换 MySQL：注释掉 H2 段，放开 MySQL 段，并在 pom.xml 启用 mysql-connector-java
+  datasource:
+    url: jdbc:h2:file:./data/lsc;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;AUTO_RECONNECT=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+    # ----- MySQL 切换配置（取消注释即可）-----
+    # url: jdbc:mysql://localhost:3306/lsc?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    # driver-class-name: com.mysql.cj.jdbc.Driver
+    # username: root
+    # password: root
+
+  jpa:
+    hibernate:
+      # update: 启动时按 Entity 自动建表/加列，不破坏已有数据
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        # 切换 MySQL 时改用: org.hibernate.dialect.MySQL8Dialect
+    open-in-view: false
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
 logging:
   level:
     com.lianshengtong: INFO
+    org.hibernate.SQL: WARN

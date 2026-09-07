@@ -3,6 +3,8 @@ package com.lianshengtong.api.controller;
 import com.lianshengtong.api.data.MockData;
 import com.lianshengtong.api.dto.ApiResponse;
 import com.lianshengtong.api.dto.PageResult;
+import com.lianshengtong.api.entity.Product;
+import com.lianshengtong.api.repository.ProductRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -12,54 +14,66 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/product")
 public class ProductController {
 
+    private final ProductRepository productRepo;
+
+    public ProductController(ProductRepository productRepo) {
+        this.productRepo = productRepo;
+    }
+
     @GetMapping("/list")
-    public ApiResponse<PageResult<Map<String, Object>>> list(
+    public ApiResponse<PageResult<Product>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer status,
             @RequestParam(required = false) Integer categoryId,
-            @RequestParam(required = false) Integer merchantId) {
-        List<Map<String, Object>> filtered = MockData.products.stream().filter(p -> {
+            @RequestParam(required = false) Long merchantId) {
+        List<Product> filtered = productRepo.findAll().stream().filter(p -> {
             if (keyword != null && !keyword.isEmpty()) {
-                String name = (String) p.get("productName");
-                if (name == null || !name.contains(keyword)) return false;
+                if (p.getProductName() == null || !p.getProductName().contains(keyword)) return false;
             }
-            if (status != null && !status.equals(p.get("status"))) return false;
-            if (categoryId != null && !categoryId.equals(p.get("categoryId"))) return false;
-            if (merchantId != null && !merchantId.equals(p.get("merchantId"))) return false;
+            if (status != null && !status.equals(p.getStatus())) return false;
+            if (categoryId != null && !categoryId.equals(p.getCategoryId())) return false;
+            if (merchantId != null && !merchantId.equals(p.getMerchantId())) return false;
             return true;
         }).collect(Collectors.toList());
         return ApiResponse.success(PageResult.of(filtered, page, size));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<Map<String, Object>> detail(@PathVariable int id) {
-        return MockData.products.stream().filter(p -> ((Integer) p.get("id")) == id)
-                .findFirst().map(ApiResponse::success).orElse(ApiResponse.fail("商品不存在"));
+    public ApiResponse<Product> detail(@PathVariable long id) {
+        return productRepo.findById(id)
+                .map(ApiResponse::success)
+                .orElse(ApiResponse.fail("商品不存在"));
     }
 
     @GetMapping("/detail")
-    public ApiResponse<Map<String, Object>> detailByParam(@RequestParam int id) {
+    public ApiResponse<Product> detailByParam(@RequestParam long id) {
         return detail(id);
     }
 
     @GetMapping("/hot")
-    public ApiResponse<List<Map<String, Object>>> hot() {
-        return ApiResponse.success(MockData.products.stream()
-                .sorted((a, b) -> ((Integer) b.get("sales")).compareTo((Integer) a.get("sales")))
-                .limit(6).collect(Collectors.toList()));
+    public ApiResponse<List<Product>> hot() {
+        return ApiResponse.success(productRepo.findAll().stream()
+                .sorted((a, b) -> {
+                    int sa = a.getSales() == null ? 0 : a.getSales();
+                    int sb = b.getSales() == null ? 0 : b.getSales();
+                    return Integer.compare(sb, sa);
+                })
+                .limit(6)
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/recommend")
-    public ApiResponse<List<Map<String, Object>>> recommend() {
-        return ApiResponse.success(MockData.products.stream()
-                .filter(p -> p.get("status").equals(1))
-                .limit(8).collect(Collectors.toList()));
+    public ApiResponse<List<Product>> recommend() {
+        return ApiResponse.success(productRepo.findAll().stream()
+                .filter(p -> p.getStatus() != null && p.getStatus() == 1)
+                .limit(8)
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/search")
-    public ApiResponse<PageResult<Map<String, Object>>> search(
+    public ApiResponse<PageResult<Product>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -92,48 +106,68 @@ public class ProductController {
     public ApiResponse<List<Map<String, Object>>> nearbyStores(
             @RequestParam(required = false) Double lng,
             @RequestParam(required = false) Double lat) {
+        // 附近门店返回商家摘要，数据源沿用 MockData（未持久化的表）
         return ApiResponse.success(MockData.merchants.stream().limit(5).collect(Collectors.toList()));
     }
 
     @GetMapping("/audit/list")
-    public ApiResponse<PageResult<Map<String, Object>>> auditList(
+    public ApiResponse<PageResult<Product>> auditList(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
-        List<Map<String, Object>> pending = MockData.products.stream()
-                .filter(p -> p.get("status").equals(2))
+        List<Product> pending = productRepo.findAll().stream()
+                .filter(p -> p.getStatus() != null && p.getStatus() == 2)
                 .collect(Collectors.toList());
         return ApiResponse.success(PageResult.of(pending, page, size));
     }
 
+    /** 商品审核落库：更新 status */
     @PostMapping("/audit")
     public ApiResponse<Void> audit(@RequestBody Map<String, Object> body) {
+        Object idObj = body.get("id");
+        Object statusObj = body.get("status");
+        if (idObj == null) return ApiResponse.fail("缺少 id");
+        long id = Long.parseLong(idObj.toString());
+        productRepo.findById(id).ifPresent(p -> {
+            if (statusObj != null) p.setStatus(Integer.parseInt(statusObj.toString()));
+            productRepo.save(p);
+        });
         return ApiResponse.success(null);
     }
 
     @GetMapping("/{id}/ai-review")
-    public ApiResponse<Map<String, Object>> aiReview(@PathVariable int id) {
+    public ApiResponse<Map<String, Object>> aiReview(@PathVariable long id) {
         Map<String, Object> r = mapOf("result", 1, "tags", List.of("图片合规", "文本无敏感词"),
                 "score", 95, "suggestion", "商品信息合规");
         return ApiResponse.success(r);
     }
 
+    /** 新建商品落库 */
     @PostMapping
-    public ApiResponse<Map<String, Object>> create(@RequestBody Map<String, Object> body) {
-        body.put("id", 3000 + MockData.products.size());
-        body.put("status", 2);
-        MockData.products.add(0, body);
-        return ApiResponse.success(body);
+    public ApiResponse<Product> create(@RequestBody Product body) {
+        long newId = 3000L + (productRepo.count() + 1);
+        body.setId(newId);
+        if (body.getStatus() == null) body.setStatus(2);
+        if (body.getSales() == null) body.setSales(0);
+        if (body.getProductImages() == null) body.setProductImages(new ArrayList<>());
+        if (body.getImages() == null) body.setImages(new ArrayList<>());
+        if (body.getCreatedAt() == null) {
+            body.setCreatedAt(java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        return ApiResponse.success(productRepo.save(body));
     }
 
+    /** 更新商品落库 */
     @PutMapping("/{id}")
-    public ApiResponse<Map<String, Object>> update(@PathVariable int id, @RequestBody Map<String, Object> body) {
-        body.put("id", id);
-        return ApiResponse.success(body);
+    public ApiResponse<Product> update(@PathVariable long id, @RequestBody Product body) {
+        body.setId(id);
+        return ApiResponse.success(productRepo.save(body));
     }
 
+    /** 删除商品落库 */
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable int id) {
-        MockData.products.removeIf(p -> ((Integer) p.get("id")) == id);
+    public ApiResponse<Void> delete(@PathVariable long id) {
+        productRepo.deleteById(id);
         return ApiResponse.success(null);
     }
 
