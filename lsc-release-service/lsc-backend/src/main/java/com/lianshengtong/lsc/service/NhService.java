@@ -45,14 +45,23 @@ public class NhService {
                 && merchant.getRegulatoryAgreementSigned() == 1
                 && merchant.getAuditStatus() != null && merchant.getAuditStatus() == 1;
 
-        // 档位额度：月营业额未满10万元的新入驻商家，初始日核销额度为80 LSC
+        // 档位额度：根据月营业额动态匹配26档（A-Z），不依赖merchant.level字段
+        // 月营业额未满10万元的新入驻商家，初始日核销额度为80 LSC
         Long dailyLimit;
-        if (merchant.getMonthlyRevenue() == null || merchant.getMonthlyRevenue().compareTo(new BigDecimal("100000")) < 0) {
+        String matchedLevel;
+        BigDecimal revenue = merchant.getMonthlyRevenue();
+        if (revenue == null || revenue.compareTo(new BigDecimal("100000")) < 0) {
             dailyLimit = 80L; // 新商家初始额度
+            matchedLevel = "0";
         } else {
+            // 取 min_revenue <= 月营业额 的最高档位（按min_revenue降序取第一条）
             NhLevel level = nhLevelMapper.selectOne(
-                    new LambdaQueryWrapper<NhLevel>().eq(NhLevel::getLevel, merchant.getLevel()));
+                    new LambdaQueryWrapper<NhLevel>()
+                            .le(NhLevel::getMinRevenue, revenue)
+                            .orderByDesc(NhLevel::getMinRevenue)
+                            .last("LIMIT 1"));
             dailyLimit = level != null ? level.getDailyLimit() : 80L;
+            matchedLevel = level != null ? level.getLevel() : "0";
         }
 
         // 今日已核销
@@ -77,7 +86,7 @@ public class NhService {
         result.put("businessLicenseVerified", merchant.getBusinessLicenseUrl() != null);
         result.put("corporateAccountBound", merchant.getCorporateAccountNo() != null);
         result.put("regulatoryAgreementSigned", merchant.getRegulatoryAgreementSigned() != null && merchant.getRegulatoryAgreementSigned() == 1);
-        result.put("level", merchant.getLevel());
+        result.put("level", matchedLevel);
         result.put("monthlyRevenue", merchant.getMonthlyRevenue());
         result.put("dailyLimit", dailyLimit);
         result.put("usedToday", usedToday);

@@ -24,7 +24,7 @@ INSERT INTO sys_user (mobile, password, user_type, real_name, is_verified) VALUE
 
 -- 测试商家
 INSERT INTO merchant (user_id, store_name, business_license_url, corporate_account_no, regulatory_agreement_signed, audit_status, credit_score, level, monthly_revenue, province, city, district, address_detail, longitude, latitude)
-VALUES (2, '优选生鲜', 'https://cdn.lsc.com/license1.jpg', '6222021234567890', 1, 1, 100, 'F', 1280000, '上海市', '上海市', '浦东新区', '世纪大道100号', 121.506377, 31.245105);
+VALUES (2, '优选生鲜', 'https://cdn.lsc.com/license1.jpg', '6222021234567890', 1, 1, 100, 'G', 1280000, '上海市', '上海市', '浦东新区', '世纪大道100号', 121.506377, 31.245105);
 
 -- LSC 账户
 INSERT INTO lsc_account (user_id, total_locked, total_available, version) VALUES (1, 1256800, 86420, 1);
