@@ -203,7 +203,7 @@ public class MockData {
             evidenceRecords.add(map(
                     "id", i + 1, "merchantId", 10001 + (i % 12),
                     "merchantName", merchants.get(i % 12).get("name"),
-                    "evidenceHash", "0x" + UUID.randomUUID().toString().replace("-", "").substring(0, 40),
+                    "evidenceHash", "0x" + UUID.randomUUID().toString().replace("-", ""),
                     "blockHeight", 100000 + i, "txId", "TX" + i,
                     "status", i % 2 == 0 ? 1 : 0,
                     "createdAt", now()
