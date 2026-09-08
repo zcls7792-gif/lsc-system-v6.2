@@ -417,7 +417,7 @@ async function assertMerchantTierCard(page, appName) {
     const tCnt = await tierSpans.count();
     expect(tCnt, `${appName} SR-13d: 档位标签 ≥ 1 个（role=img + aria-label 可朗读）`).toBeGreaterThanOrEqual(1);
     const firstTierAl = await tierSpans.first().getAttribute('aria-label');
-    expect(firstTierAl, `${appName} SR-13e: 档位 aria-label 含 "档位"+ 档位字母/初始`).toMatch(/^档位(初始|[A-Q])$/);
+    expect(firstTierAl, `${appName} SR-13e: 档位 aria-label 含 "档位"+ 档位字母/初始`).toMatch(/^档位(初始|[A-Z])$/);
 
     // 信用分 role=img + aria-label 断言
     const creditSpans = page.locator('.merchant-m [role="img"][aria-label^="信用分"]');

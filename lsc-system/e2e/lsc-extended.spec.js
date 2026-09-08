@@ -726,11 +726,11 @@ test.describe('LSC V6.2-AI · 移动端 (mobile)', () => {
     const cardCount = await mCards.count();
     expect(cardCount).toBeGreaterThanOrEqual(4);
 
-    // 1) 档位标签: 每张卡都含「档位 X」 文本 (X 为 A–Q / 初始)
+    // 1) 档位标签: 每张卡都含「档位 X」 文本 (X 为 A–Z / 初始)
     const tierTexts = await mCards.locator('.merchant-m-name').allInnerTexts();
     expect(tierTexts.length).toBeGreaterThanOrEqual(4);
     for (const t of tierTexts) {
-      expect(t).toMatch(/档位 (初始|[A-Q])/);
+      expect(t).toMatch(/档位 (初始|[A-Z])/);
     }
 
     // 2) 信用分非空 + 颜色态：meta 行必须带「信用 NN」 数字 (NN=0–100)；且 tag 类名匹配颜色

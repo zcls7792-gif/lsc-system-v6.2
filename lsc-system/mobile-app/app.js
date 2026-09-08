@@ -56,8 +56,8 @@ function _creditTagClass(color) {
 }
 function _tierTagClass(level) {
   if (level === '初始') return 'tag tag-default';
-  const order = 'ABCDEFGHIJKLMNOPQ'.indexOf(level);
-  if (order >= 12) return 'tag tag-primary';   // M-Q 头部
+  const order = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.indexOf(level);
+  if (order >= 12) return 'tag tag-primary';   // M-Z 头部
   if (order >= 7)  return 'tag tag-accent';    // H-L 中高
   if (order >= 3)  return 'tag tag-available'; // D-G 中
   return 'tag tag-info';                        // A-C / 未知
@@ -79,7 +79,7 @@ function renderMerchantCard(m, opts = {}) {
   const creditLine = credit != null
     ? `<span class="${creditCls}" role="img" aria-label="信用分${credit}分，${label}" title="信用分 ${credit} 分">信用 ${credit}·${label}</span>`
     : '';
-  const tierLine = `<span class="${tierCls}" role="img" aria-label="档位${tier}" title="档位 ${tier} · 月营业额 ${m.minRevenue != null ? '≥' + (m.minRevenue / 10000).toFixed(0) + '万' : '未满2万'}">档位 ${tier}</span>`;
+  const tierLine = `<span class="${tierCls}" role="img" aria-label="档位${tier}" title="档位 ${tier} · 月营业额 ${m.minRevenue != null ? '≥' + (m.minRevenue / 10000).toFixed(0) + '万' : '未满10万'}">档位 ${tier}</span>`;
   return `<div class="merchant-m${dimCls}" role="link" aria-label="${name}${disabled ? ' 核销权限受限' : ''}"${disabled ? ' aria-disabled="true"' : ''} onclick="${disabled ? '' : "showScreen('scan')"}">
     <div class="merchant-m-logo">${logo}</div>
     <div class="merchant-m-info">
@@ -93,10 +93,10 @@ function renderMerchantCard(m, opts = {}) {
 /* ===== 首页 ===== */
 function renderHome() {
   // 首页附近商家（按距离 / 信用分排序：信用分高优先）
-  const jh = _getMerchantByName('锦华餐饮连锁·总店') || { name:'锦华餐饮连锁·总店', type:'餐饮', credit:92, nhLevel:'D', creditColor:'success', statusLabel:'100%标准执行', minRevenue:200000 };
-  const yp = _getMerchantByName('御品茶业工坊')   || { name:'御品茶业工坊',   type:'零售', credit:96, nhLevel:'B', creditColor:'success', statusLabel:'100%标准执行', minRevenue:50000 };
-  const xz = _getMerchantByName('鲜之源生鲜超市') || { name:'鲜之源生鲜超市', type:'零售', credit:78, nhLevel:'D', creditColor:'warning', statusLabel:'50%限额执行', minRevenue:200000 };
-  const ys = _getMerchantByName('云裳服饰有限公司') || { name:'云裳服饰有限公司', type:'服装', credit:55, nhLevel:'D', creditColor:'warning', statusLabel:'暂停核销权限', minRevenue:200000, nhStatus:'suspended' };
+  const jh = _getMerchantByName('锦华餐饮连锁·总店') || { name:'锦华餐饮连锁·总店', type:'餐饮', credit:92, nhLevel:'B', creditColor:'success', statusLabel:'100%标准执行', minRevenue:200000 };
+  const yp = _getMerchantByName('御品茶业工坊')   || { name:'御品茶业工坊',   type:'零售', credit:96, nhLevel:'初始', creditColor:'success', statusLabel:'100%标准执行', minRevenue:0 };
+  const xz = _getMerchantByName('鲜之源生鲜超市') || { name:'鲜之源生鲜超市', type:'零售', credit:78, nhLevel:'B', creditColor:'warning', statusLabel:'50%限额执行', minRevenue:200000 };
+  const ys = _getMerchantByName('云裳服饰有限公司') || { name:'云裳服饰有限公司', type:'服装', credit:55, nhLevel:'B', creditColor:'warning', statusLabel:'暂停核销权限', minRevenue:200000, nhStatus:'suspended' };
 
   const jhCard = renderMerchantCard(jh, { distance: '280m', rating: 4.9 });
   const ypCard = renderMerchantCard(yp, { distance: '650m', rating: 4.8 });

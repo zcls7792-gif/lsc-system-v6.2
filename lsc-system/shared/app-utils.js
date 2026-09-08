@@ -49,27 +49,36 @@ const LSC = {
     if (k >= 0.01)  return 0.0003;   // k≥1.0%  → rate_min = 0.03%
     return 0.0009 - 0.06 * k;        // 线性插值: rate = 0.09% - 0.06×k
   },
-  /* ---- 十七档核销限额配置 (唯一权威来源 · 按 minRevenue 从高到低排列) ---- */
+  /* ---- 二十六档核销限额配置 (唯一权威来源 · 按 minRevenue 从高到低排列 · 与后端 nh_level 表一致) ---- */
   NH_TIERS: [
-    { minRevenue: 50000000, level: 'Q', dailyLsc: 115000 }, // ≥5000万
-    { minRevenue: 45000000, level: 'P', dailyLsc: 100000 }, // ≥4500万
-    { minRevenue: 40000000, level: 'O', dailyLsc:  90000 }, // ≥4000万
-    { minRevenue: 35000000, level: 'N', dailyLsc:  80000 }, // ≥3500万
-    { minRevenue: 30000000, level: 'M', dailyLsc:  69000 }, // ≥3000万
-    { minRevenue: 25000000, level: 'L', dailyLsc:  57000 }, // ≥2500万
-    { minRevenue: 20000000, level: 'K', dailyLsc:  46000 }, // ≥2000万
-    { minRevenue: 12000000, level: 'J', dailyLsc:  29000 }, // ≥1200万
-    { minRevenue:  6000000, level: 'I', dailyLsc:  15000 }, // ≥600万
-    { minRevenue:  3200000, level: 'H', dailyLsc:   7000 }, // ≥320万
-    { minRevenue:  1600000, level: 'G', dailyLsc:   3600 }, // ≥160万
-    { minRevenue:   800000, level: 'F', dailyLsc:   1800 }, // ≥80万
-    { minRevenue:   400000, level: 'E', dailyLsc:    900 }, // ≥40万
-    { minRevenue:   200000, level: 'D', dailyLsc:    450 }, // ≥20万
-    { minRevenue:   100000, level: 'C', dailyLsc:    200 }, // ≥10万
-    { minRevenue:    50000, level: 'B', dailyLsc:    115 }, // ≥5万
-    { minRevenue:    20000, level: 'A', dailyLsc:     50 }, // ≥2万
+    { minRevenue: 20000000, level: 'Z', dailyLsc:  55000 }, // ≥2000万
+    { minRevenue: 17000000, level: 'Y', dailyLsc:  46900 }, // ≥1700万
+    { minRevenue: 15000000, level: 'X', dailyLsc:  41000 }, // ≥1500万
+    { minRevenue: 12000000, level: 'W', dailyLsc:  33000 }, // ≥1200万
+    { minRevenue: 10000000, level: 'V', dailyLsc:  27600 }, // ≥1000万
+    { minRevenue:  9000000, level: 'U', dailyLsc:  24800 }, // ≥900万
+    { minRevenue:  8000000, level: 'T', dailyLsc:  22000 }, // ≥800万
+    { minRevenue:  7000000, level: 'S', dailyLsc:  19000 }, // ≥700万
+    { minRevenue:  6000000, level: 'R', dailyLsc:  16500 }, // ≥600万
+    { minRevenue:  5000000, level: 'Q', dailyLsc:  13800 }, // ≥500万
+    { minRevenue:  4500000, level: 'P', dailyLsc:  12400 }, // ≥450万
+    { minRevenue:  4000000, level: 'O', dailyLsc:  11000 }, // ≥400万
+    { minRevenue:  3500000, level: 'N', dailyLsc:   9660 }, // ≥350万
+    { minRevenue:  3000000, level: 'M', dailyLsc:   8250 }, // ≥300万
+    { minRevenue:  2500000, level: 'L', dailyLsc:   6900 }, // ≥250万
+    { minRevenue:  2000000, level: 'K', dailyLsc:   5500 }, // ≥200万
+    { minRevenue:  1800000, level: 'J', dailyLsc:   4950 }, // ≥180万
+    { minRevenue:  1600000, level: 'I', dailyLsc:   4400 }, // ≥160万
+    { minRevenue:  1400000, level: 'H', dailyLsc:   3850 }, // ≥140万
+    { minRevenue:  1200000, level: 'G', dailyLsc:   3300 }, // ≥120万
+    { minRevenue:  1000000, level: 'F', dailyLsc:   2750 }, // ≥100万
+    { minRevenue:   800000, level: 'E', dailyLsc:   2200 }, // ≥80万
+    { minRevenue:   600000, level: 'D', dailyLsc:   1650 }, // ≥60万
+    { minRevenue:   400000, level: 'C', dailyLsc:   1100 }, // ≥40万
+    { minRevenue:   200000, level: 'B', dailyLsc:    550 }, // ≥20万
+    { minRevenue:   100000, level: 'A', dailyLsc:    275 }, // ≥10万
   ],
-  NH_INITIAL_TIER: { minRevenue: 0, level: '初始', dailyLsc: 30 }, // 新入驻未满2万
+  NH_INITIAL_TIER: { minRevenue: 0, level: '初始', dailyLsc: 80 }, // 新入驻未满10万
   // 根据月营业额(元)匹配档位
   getNhTierByRevenue(monthRevenue) {
     const rev = Number(monthRevenue) || 0;
@@ -206,8 +215,8 @@ const MOCK = {
     { id:'M20006', name:'金泰百货商行', type:'百货', credit:71, aiRisk:52, monthRevenue:542000, nhLevel:'B', nhLimitDaily:30000, status:'warning', addr:'南京市玄武区中山路200号', aiAddr:'pass' },
     { id:'M20007', name:'海纳科技公司', type:'数码', credit:88, aiRisk:25, monthRevenue:2160000, nhLevel:'A', nhLimitDaily:50000, status:'normal', addr:'北京市海淀区中关村大街1号', aiAddr:'pass' },
     { id:'M20008', name:'云裳服饰有限公司', type:'服装', credit:55, aiRisk:75, monthRevenue:428000, nhLevel:'C', nhLimitDaily:10000, status:'penalty', addr:'广州市天河区天河北路90号', aiAddr:'suspect' },
-    // 边界样本1: 新入驻未满2万 → 初始档 30 LSC/日
-    { id:'M20009', name:'阳光社区便利铺', type:'零售', credit:85, aiRisk:12, monthRevenue:12800, nhLevel:'初始', nhLimitDaily:30, status:'normal', addr:'成都市锦江区春熙路18号', aiAddr:'pass' },
+    // 边界样本1: 新入驻未满10万 → 初始档 80 LSC/日
+    { id:'M20009', name:'阳光社区便利铺', type:'零售', credit:85, aiRisk:12, monthRevenue:12800, nhLevel:'初始', nhLimitDaily:80, status:'normal', addr:'成都市锦江区春熙路18号', aiAddr:'pass' },
     // 边界样本2: 信用分<20 → 永久关闭核销+B2B (无论营业额多少)
     { id:'M20010', name:'星耀数码(已永久关停)', type:'数码', credit:15, aiRisk:96, monthRevenue:2800000, nhLevel:'H', nhLimitDaily:0, status:'normal', addr:'武汉市洪山区珞喻路88号', aiAddr:'fail' },
   ],

@@ -1390,40 +1390,43 @@ async function main() {
     assert(c1.getAttribute('tabindex') === '0' && !c1.getAttribute('role'), 'D36. a11yEnhance 保留已有 tabindex 且不强制 role');
     assert(c2.getAttribute('tabindex') === '0' && c2.getAttribute('role') === 'region' && c2.getAttribute('aria-label') === '可滚动区域', 'D37. a11yEnhance 空文本滚动 aria-label=可滚动区域');
     assert(c3.getAttribute('tabindex') === '0' && /可滚动区域:/.test(c3.getAttribute('aria-label')||''), 'D38. a11yEnhance 有文本滚动 aria-label 带 "可滚动区域: ..." 前缀');
-    // ===== D39-D58: 十七档核销限额 × 信用分5档 联动核心函数 (档位映射+信用分边界+联动合成) =====
-    // D39. NH_TIERS 配置表完整性: 必须 17 档, Q→A 单调降
-    assert(Array.isArray(LSC.NH_TIERS) && LSC.NH_TIERS.length === 17, 'D39. NH_TIERS 共 17 档 (Q→A), 实际='+LSC.NH_TIERS.length);
+    // ===== D39-D58: 二十六档核销限额 × 信用分5档 联动核心函数 (档位映射+信用分边界+联动合成) =====
+    // D39. NH_TIERS 配置表完整性: 必须 26 档, Z→A 单调降
+    assert(Array.isArray(LSC.NH_TIERS) && LSC.NH_TIERS.length === 26, 'D39. NH_TIERS 共 26 档 (Z→A), 实际='+LSC.NH_TIERS.length);
     let prevRev = Infinity, prevLsc = Infinity;
     for (let i=0;i<LSC.NH_TIERS.length;i++) {
       const t = LSC.NH_TIERS[i];
       assert(t.minRevenue < prevRev && t.dailyLsc < prevLsc, `D39.${i} NH_TIERS[${i}] 档 (${t.level}) 必须按营业额/限额降序排列`);
       prevRev = t.minRevenue; prevLsc = t.dailyLsc;
     }
-    // D40. NH_INITIAL_TIER 新入驻档: 营业额 0, 30 LSC
-    assert(LSC.NH_INITIAL_TIER.minRevenue === 0 && LSC.NH_INITIAL_TIER.level === '初始' && LSC.NH_INITIAL_TIER.dailyLsc === 30, 'D40. NH_INITIAL_TIER 正确 (初始档 / 30 LSC)');
-    // D41. getNhTierByRevenue 17 档 minRevenue 边界 (等于 minRevenue 就命中该档)
+    // D40. NH_INITIAL_TIER 新入驻档: 营业额 0, 80 LSC
+    assert(LSC.NH_INITIAL_TIER.minRevenue === 0 && LSC.NH_INITIAL_TIER.level === '初始' && LSC.NH_INITIAL_TIER.dailyLsc === 80, 'D40. NH_INITIAL_TIER 正确 (初始档 / 80 LSC)');
+    // D41. getNhTierByRevenue 26 档 minRevenue 边界 (等于 minRevenue 就命中该档)
     const tierBoundary = [
-      [50000000,'Q',115000],[45000000,'P',100000],[40000000,'O',90000],[35000000,'N',80000],
-      [30000000,'M',69000],[25000000,'L',57000],[20000000,'K',46000],[12000000,'J',29000],
-      [6000000,'I',15000],[3200000,'H',7000],[1600000,'G',3600],[800000,'F',1800],
-      [400000,'E',900],[200000,'D',450],[100000,'C',200],[50000,'B',115],[20000,'A',50],
+      [20000000,'Z',55000],[17000000,'Y',46900],[15000000,'X',41000],[12000000,'W',33000],
+      [10000000,'V',27600],[9000000,'U',24800],[8000000,'T',22000],[7000000,'S',19000],
+      [6000000,'R',16500],[5000000,'Q',13800],[4500000,'P',12400],[4000000,'O',11000],
+      [3500000,'N',9660],[3000000,'M',8250],[2500000,'L',6900],[2000000,'K',5500],
+      [1800000,'J',4950],[1600000,'I',4400],[1400000,'H',3850],[1200000,'G',3300],
+      [1000000,'F',2750],[800000,'E',2200],[600000,'D',1650],[400000,'C',1100],
+      [200000,'B',550],[100000,'A',275],
     ];
     for (let i=0;i<tierBoundary.length;i++) {
       const [rev,level,lsc] = tierBoundary[i];
       const t = LSC.getNhTierByRevenue(rev);
       assert(t.level === level && t.dailyLsc === lsc, `D41.${i} getNhTierByRevenue(${rev}) = ${level}档 / ${lsc} LSC (实际 ${t.level}/${t.dailyLsc})`);
     }
-    // D42. getNhTierByRevenue 初始档分支: 负数/0/19999 都落入 初始档
-    const initCases = [-1, 0, 1, 19999, null, undefined, NaN, 'abc'];
+    // D42. getNhTierByRevenue 初始档分支: 负数/0/99999 (未满10万) 都落入 初始档
+    const initCases = [-1, 0, 1, 99999, null, undefined, NaN, 'abc'];
     for (let i=0;i<initCases.length;i++) {
       const t = LSC.getNhTierByRevenue(initCases[i]);
-      assert(t.level === '初始' && t.dailyLsc === 30, `D42.${i} getNhTierByRevenue(${JSON.stringify(initCases[i])}) = 初始档 / 30 LSC (实际 ${t.level}/${t.dailyLsc})`);
+      assert(t.level === '初始' && t.dailyLsc === 80, `D42.${i} getNhTierByRevenue(${JSON.stringify(initCases[i])}) = 初始档 / 80 LSC (实际 ${t.level}/${t.dailyLsc})`);
     }
-    // D43. getNhTierByRevenue 稍高于 minRevenue 仍命中同档 (如 50000001 仍 Q 档)
-    const q = LSC.getNhTierByRevenue(50000001);
-    assert(q.level === 'Q' && q.dailyLsc === 115000, 'D43. getNhTierByRevenue(50000001) = Q档/115000 (超Q档下限仍算Q档,因为>=取最高匹配)');
-    const b = LSC.getNhTierByRevenue(51000);
-    assert(b.level === 'B' && b.dailyLsc === 115, 'D43b. getNhTierByRevenue(51000) = B档/115 (5.1万 介于 B下限 5万 / C下限 10万)');
+    // D43. getNhTierByRevenue 稍高于 minRevenue 仍命中同档 (如 20000001 仍 Z 档)
+    const z = LSC.getNhTierByRevenue(20000001);
+    assert(z.level === 'Z' && z.dailyLsc === 55000, 'D43. getNhTierByRevenue(20000001) = Z档/55000 (超Z档下限仍算Z档,因为>=取最高匹配)');
+    const b = LSC.getNhTierByRevenue(210000);
+    assert(b.level === 'B' && b.dailyLsc === 550, 'D43b. getNhTierByRevenue(210000) = B档/550 (21万 介于 B下限 20万 / C下限 40万)');
     // D44. getCreditEffect 5档边界: 100/80/79/60/59/40/39/20/19/10/0/负数/null/NaN/undefined
     const creditCases = [
       [100, 1.0, 'allowed',     'allowed',     'success'],
@@ -1451,14 +1454,14 @@ async function main() {
       assert(e.nh === 'closed_perm' && e.b2b === 'closed_perm' && e.factor === 0,
         `D45. getCreditEffect(${JSON.stringify(inval)}) 非法输入 → 永久关闭 (实际 ${JSON.stringify(e)})`);
     }
-    // D46. getEffectiveNhLimit 组合联动: Q档 5000万营收 × 5档信用分 → 最终限额
-    const qMerch = { monthRevenue: 50000000 };
+    // D46. getEffectiveNhLimit 组合联动: Q档 500万营收 × 5档信用分 → 最终限额
+    const qMerch = { monthRevenue: 5000000 };
     const q_85 = LSC.getEffectiveNhLimit({ ...qMerch, credit: 85 });
-    assert(q_85.baseLevel==='Q' && q_85.baseDailyLsc===115000 && q_85.creditFactor===1 && q_85.finalDailyLsc===115000 && q_85.nhLevel==='Q',
-      `D46a. Q档×100% → final=115,000 LSC (实际 ${JSON.stringify(q_85)})`);
+    assert(q_85.baseLevel==='Q' && q_85.baseDailyLsc===13800 && q_85.creditFactor===1 && q_85.finalDailyLsc===13800 && q_85.nhLevel==='Q',
+      `D46a. Q档×100% → final=13,800 LSC (实际 ${JSON.stringify(q_85)})`);
     const q_70 = LSC.getEffectiveNhLimit({ ...qMerch, credit: 70 });
-    assert(q_70.creditFactor===0.5 && q_70.finalDailyLsc===57500 && q_70.statusLabel.includes('50%'),
-      `D46b. Q档×50% → final=57,500 LSC (实际 ${JSON.stringify(q_70)})`);
+    assert(q_70.creditFactor===0.5 && q_70.finalDailyLsc===6900 && q_70.statusLabel.includes('50%'),
+      `D46b. Q档×50% → final=6,900 LSC (实际 ${JSON.stringify(q_70)})`);
     const q_50 = LSC.getEffectiveNhLimit({ ...qMerch, credit: 50 });
     assert(q_50.creditFactor===0 && q_50.finalDailyLsc===0 && q_50.nhStatus==='suspended',
       `D46c. Q档×暂停核销 → final=0 (实际 ${JSON.stringify(q_50)})`);
@@ -1468,14 +1471,14 @@ async function main() {
     const q_10 = LSC.getEffectiveNhLimit({ ...qMerch, credit: 10 });
     assert(q_10.nhStatus==='closed_perm' && q_10.b2bStatus==='closed_perm' && q_10.finalDailyLsc===0,
       `D46e. Q档×10分 → 永久关闭 (实际 ${JSON.stringify(q_10)})`);
-    // D47. A档 2万 × 60分: 50 LSC × 0.5 = 25 LSC
-    const a_60 = LSC.getEffectiveNhLimit({ monthRevenue: 20000, credit: 60 });
-    assert(a_60.baseLevel==='A' && a_60.baseDailyLsc===50 && a_60.finalDailyLsc===25,
-      `D47. A档×60分 → 25 LSC (实际 ${JSON.stringify(a_60)})`);
-    // D48. 初始档 × 79分: 30 × 0.5 = 15 LSC
+    // D47. A档 10万 × 60分: 275 LSC × 0.5 = 137 LSC
+    const a_60 = LSC.getEffectiveNhLimit({ monthRevenue: 100000, credit: 60 });
+    assert(a_60.baseLevel==='A' && a_60.baseDailyLsc===275 && a_60.finalDailyLsc===137,
+      `D47. A档×60分 → 137 LSC (实际 ${JSON.stringify(a_60)})`);
+    // D48. 初始档 × 79分: 80 × 0.5 = 40 LSC
     const init_79 = LSC.getEffectiveNhLimit({ monthRevenue: 0, credit: 79 });
-    assert(init_79.baseLevel==='初始' && init_79.baseDailyLsc===30 && init_79.finalDailyLsc===15,
-      `D48. 初始档×79分 → 15 LSC (实际 ${JSON.stringify(init_79)})`);
+    assert(init_79.baseLevel==='初始' && init_79.baseDailyLsc===80 && init_79.finalDailyLsc===40,
+      `D48. 初始档×79分 → 40 LSC (实际 ${JSON.stringify(init_79)})`);
     // D49. getEffectiveNhLimit 兜底: 空对象 → 初始档 但 credit=NaN → 永久关闭
     const empty = LSC.getEffectiveNhLimit({});
     assert(empty.baseLevel==='初始' && empty.nhStatus==='closed_perm' && empty.finalDailyLsc===0,
@@ -1508,7 +1511,7 @@ async function main() {
     LSC.applyTierAndCredit(testMerchN);
     assert(testMerchN[0].status === 'closed_perm', `D52f. status=undefined + credit=10 → 兜底 closed_perm`);
     passed += 58; // D0..D52 = 累计 39(D0-38) + 13(D39-51) + 6(D52a-f) = 58
-    console.log('  D. 共享 LSC 工具 58 项分支覆盖 OK (新增 D39..D52: 十七档核销 + 信用分5档联动 + 组合钳制 + applyTierAndCredit 6分支)');
+    console.log('  D. 共享 LSC 工具 58 项分支覆盖 OK (新增 D39..D52: 二十六档核销 + 信用分5档联动 + 组合钳制 + applyTierAndCredit 6分支)');
     [c1,c2,c3,c4].forEach(n => n.parentNode?.removeChild(n));
     cleanupSession(sess);
   }
@@ -2750,8 +2753,8 @@ async function main() {
               var homeHtml = document.getElementById('screen-home').innerHTML;
               var cardCount = (homeHtml.match(/merchant-m/g) || []).length;
               res.j1_cards4 = (cardCount >= 4) ? 'ok' : 'fail:count='+cardCount;
-              res.j2_tierD = (homeHtml.indexOf('档位 D') >= 0) ? 'ok' : 'fail';
-              // j3: 档位标签存在 (锦华=D档=≥20万, 御品=B档=≥5万<10万, 鲜之源=D档, 云裳=D档)
+              res.j2_tierB = (homeHtml.indexOf('档位 B') >= 0) ? 'ok' : 'fail';
+              // j3: 档位标签存在 (锦华=B档=≥20万, 御品=初始档<10万, 鲜之源=B档, 云裳=C档)
               var tierMatches = homeHtml.match(/档位 [A-共末初][始P]?/g) || [];
               res.j3_tiers = (tierMatches.length >= 4) ? 'ok' : 'fail:matches='+tierMatches.join('|');
               res.j4_credit92 = (homeHtml.indexOf('信用 92') >= 0) ? 'ok' : 'fail';
@@ -2768,7 +2771,7 @@ async function main() {
           mk('低信55卡(暂停)', r20, 'h1_disabled_cls', 'h2_aria', 'h3_onclick');
           mk('15分永久关闭', r20, 'i1_danger', 'i2_init_tier', 'i3_closed_disabled');
           if (r20.j_err) throw new Error(r20.j_err);
-          mk('renderHome首页4卡', r20, 'j1_cards4', 'j2_tierD', 'j3_tiers', 'j4_credit92', 'j5_warn_card');
+          mk('renderHome首页4卡', r20, 'j1_cards4', 'j2_tierB', 'j3_tiers', 'j4_credit92', 'j5_warn_card');
           passed++;
         } catch(e) { assert(false, `${fp}.20 档位+信用分消费端卡片 15 子场景 失败: `+e.message); }
         // TM1. meta theme-color + mobile 端 themeToggle 三态 + fixed+z9999
@@ -2857,8 +2860,8 @@ async function main() {
             var c4 = renderMerchantCard({ name:'缺省', type:'零售', credit:85 });
             res.f_tier_default = (c4.indexOf('档位 初始') >= 0) ? 'ok' : 'fail';
             res.g_color_default = (c4.indexOf('tag-success') >= 0) ? 'ok' : 'fail';
-            // (f) L82 minRevenue 缺省 → '未满2万'
-            res.h_minrev_default = (c4.indexOf('未满2万') >= 0) ? 'ok' : 'fail';
+            // (f) L82 minRevenue 缺省 → '未满10万'
+            res.h_minrev_default = (c4.indexOf('未满10万') >= 0) ? 'ok' : 'fail';
             // (g) L87 m.type 缺省 → '零售'
             var c5 = renderMerchantCard({ name:'无类型', credit:90, nhLevel:'D', creditColor:'success', statusLabel:'正常' });
             res.i_type_default = (c5.indexOf('零售') >= 0) ? 'ok' : 'fail';

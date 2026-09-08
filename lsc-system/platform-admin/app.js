@@ -1564,24 +1564,33 @@ function showAdjustLimit(mid) {
       <div class="detail-field"><div class="detail-label">当前日限额</div><div class="detail-value mono">${LSC.fmtNum(m.nhLimitDaily)} LSC</div></div>
       <div class="detail-field"><div class="detail-label">调整后日限额</div><div class="detail-value">
         <select class="select" id="new-limit" style="padding:6px 10px;">
-          <option value="30">30 LSC (初始档 · 新入驻)</option>
-          <option value="50">50 LSC (A档 · ≥2万)</option>
-          <option value="115">115 LSC (B档 · ≥5万)</option>
-          <option value="200">200 LSC (C档 · ≥10万)</option>
-          <option value="450">450 LSC (D档 · ≥20万)</option>
-          <option value="900">900 LSC (E档 · ≥40万)</option>
-          <option value="1800">1,800 LSC (F档 · ≥80万)</option>
-          <option value="3600">3,600 LSC (G档 · ≥160万)</option>
-          <option value="7000">7,000 LSC (H档 · ≥320万)</option>
-          <option value="15000">15,000 LSC (I档 · ≥600万)</option>
-          <option value="29000">29,000 LSC (J档 · ≥1200万)</option>
-          <option value="46000">46,000 LSC (K档 · ≥2000万)</option>
-          <option value="57000">57,000 LSC (L档 · ≥2500万)</option>
-          <option value="69000">69,000 LSC (M档 · ≥3000万)</option>
-          <option value="80000">80,000 LSC (N档 · ≥3500万)</option>
-          <option value="90000">90,000 LSC (O档 · ≥4000万)</option>
-          <option value="100000">100,000 LSC (P档 · ≥4500万)</option>
-          <option value="115000" selected>115,000 LSC (Q档 · ≥5000万)</option>
+          <option value="80">80 LSC (初始档 · 未满10万)</option>
+          <option value="275">275 LSC (A档 · ≥10万)</option>
+          <option value="550">550 LSC (B档 · ≥20万)</option>
+          <option value="1100">1,100 LSC (C档 · ≥40万)</option>
+          <option value="1650">1,650 LSC (D档 · ≥60万)</option>
+          <option value="2200">2,200 LSC (E档 · ≥80万)</option>
+          <option value="2750">2,750 LSC (F档 · ≥100万)</option>
+          <option value="3300">3,300 LSC (G档 · ≥120万)</option>
+          <option value="3850">3,850 LSC (H档 · ≥140万)</option>
+          <option value="4400">4,400 LSC (I档 · ≥160万)</option>
+          <option value="4950">4,950 LSC (J档 · ≥180万)</option>
+          <option value="5500">5,500 LSC (K档 · ≥200万)</option>
+          <option value="6900">6,900 LSC (L档 · ≥250万)</option>
+          <option value="8250">8,250 LSC (M档 · ≥300万)</option>
+          <option value="9660">9,660 LSC (N档 · ≥350万)</option>
+          <option value="11000">11,000 LSC (O档 · ≥400万)</option>
+          <option value="12400">12,400 LSC (P档 · ≥450万)</option>
+          <option value="13800">13,800 LSC (Q档 · ≥500万)</option>
+          <option value="16500">16,500 LSC (R档 · ≥600万)</option>
+          <option value="19000">19,000 LSC (S档 · ≥700万)</option>
+          <option value="22000">22,000 LSC (T档 · ≥800万)</option>
+          <option value="24800">24,800 LSC (U档 · ≥900万)</option>
+          <option value="27600">27,600 LSC (V档 · ≥1000万)</option>
+          <option value="33000">33,000 LSC (W档 · ≥1200万)</option>
+          <option value="41000">41,000 LSC (X档 · ≥1500万)</option>
+          <option value="46900">46,900 LSC (Y档 · ≥1700万)</option>
+          <option value="55000" selected>55,000 LSC (Z档 · ≥2000万)</option>
         </select>
       </div></div>
     </div>`,
