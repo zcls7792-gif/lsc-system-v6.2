@@ -30,6 +30,8 @@ public class DataInit implements CommandLineRunner {
     private final LscAccountRepository lscAccountRepo;
     private final DailyReleaseSummaryRepository dailyReleaseRepo;
     private final ReleaseConfigRepository releaseConfigRepo;
+    private final UserRepository userRepo;
+    private final PromotionPendingRepository promotionPendingRepo;
 
     public DataInit(MerchantRepository merchantRepo,
                     ProductRepository productRepo,
@@ -41,7 +43,9 @@ public class DataInit implements CommandLineRunner {
                     RiskLogRepository riskRepo,
                     LscAccountRepository lscAccountRepo,
                     DailyReleaseSummaryRepository dailyReleaseRepo,
-                    ReleaseConfigRepository releaseConfigRepo) {
+                    ReleaseConfigRepository releaseConfigRepo,
+                    UserRepository userRepo,
+                    PromotionPendingRepository promotionPendingRepo) {
         this.merchantRepo = merchantRepo;
         this.productRepo = productRepo;
         this.orderRepo = orderRepo;
@@ -53,6 +57,8 @@ public class DataInit implements CommandLineRunner {
         this.lscAccountRepo = lscAccountRepo;
         this.dailyReleaseRepo = dailyReleaseRepo;
         this.releaseConfigRepo = releaseConfigRepo;
+        this.userRepo = userRepo;
+        this.promotionPendingRepo = promotionPendingRepo;
     }
 
     @Override
@@ -62,6 +68,7 @@ public class DataInit implements CommandLineRunner {
                 + " 商品" + MockData.products.size()
                 + " 订单" + MockData.orders.size());
 
+        seedUsers();
         seedMerchants();
         seedProducts();
         seedOrders();
@@ -73,6 +80,53 @@ public class DataInit implements CommandLineRunner {
         seedLscAccounts();
         seedReleaseConfigs();
         seedDailyReleaseSummary();
+        // V6.2 推广奖励挂账表（默认空，由 PromotionController 运行时生成）
+        if (promotionPendingRepo.count() == 0) {
+            System.out.println("[LSC DB] promotion_pending 表为空，运行时由 PromotionController 生成");
+        }
+    }
+
+    /**
+     * V6.2 第十四章 14.1 用户表初始化
+     * 消费者会员(0) 和 商家会员(1)
+     */
+    private void seedUsers() {
+        if (userRepo.count() > 0) {
+            System.out.println("[LSC DB] users 表已存在 " + userRepo.count() + " 条，跳过 seed");
+            return;
+        }
+        List<User> list = new ArrayList<>();
+        // 商家会员（与 merchants 表对齐）
+        for (Map<String, Object> m : MockData.merchants) {
+            User u = new User();
+            u.setUserId(toLong(m.get("userId")));
+            u.setUserType(1); // 商家会员
+            u.setMobile((String) m.get("mobile"));
+            u.setIsVerified(1); // 商家已实名认证
+            u.setReferrerId(null);
+            u.setFirstOrderCompleted(1);
+            u.setUserName((String) m.get("merchantName"));
+            u.setCreatedAt((String) m.get("createdAt"));
+            list.add(u);
+        }
+        // 消费者会员（与订单中 userId 对齐）
+        int consumerStart = 20001;
+        for (int i = 0; i < 30; i++) {
+            User u = new User();
+            u.setUserId((long) (consumerStart + i));
+            u.setUserType(0); // 消费者会员
+            u.setMobile("1390000" + String.format("%05d", i));
+            u.setIsVerified(1);
+            // 第一个消费者无推荐人，后续以前一个为推荐人（演示一级直推）
+            u.setReferrerId(i == 0 ? null : (long) (consumerStart + i - 1));
+            u.setFirstOrderCompleted(i < 10 ? 1 : 0);
+            u.setUserName("消费者" + i);
+            u.setCreatedAt(java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            list.add(u);
+        }
+        userRepo.saveAll(list);
+        System.out.println("[LSC DB] users 表 seed 完成: " + list.size() + " 条");
     }
 
     private void seedMerchants() {
@@ -107,6 +161,14 @@ public class DataInit implements CommandLineRunner {
             e.setLongitude(toDouble(m.get("longitude")));
             e.setLatitude(toDouble(m.get("latitude")));
             e.setBusinessHours((String) m.get("businessHours"));
+            // V6.2 第十四章 14.2 商家合规准入三要件
+            e.setBusinessLicense((String) m.get("businessLicense"));
+            e.setCorporateAccountNo((String) m.get("corporateAccountNo"));
+            e.setRegulatoryAgreementSigned(toInt(m.get("regulatoryAgreementSigned")));
+            e.setRegulatoryAccountNo((String) m.get("regulatoryAccountNo"));
+            e.setMainAccountNo((String) m.get("mainAccountNo"));
+            e.setLastNhDate((String) m.get("lastNhDate"));
+            e.setAddressUpdateCount(toInt(m.get("addressUpdateCount")));
             e.setCreatedAt((String) m.get("createdAt"));
             list.add(e);
         }
@@ -295,11 +357,19 @@ public class DataInit implements CommandLineRunner {
             LedgerTxn e = new LedgerTxn();
             e.setId(toLong(t.get("id")));
             e.setUserId(toLong(t.get("userId")));
-            e.setType((String) t.get("type"));
-            e.setTypeCode(toInt(t.get("typeCode")));
-            e.setAmount(toDouble(t.get("amount")));
+            e.setType(toInt(t.get("type")));
+            e.setTypeStr((String) t.get("typeStr"));
+            e.setAmount(toLong(t.get("amount")));
+            e.setBeforeLocked(toLong(t.get("beforeLocked")));
+            e.setAfterLocked(toLong(t.get("afterLocked")));
+            e.setBeforeAvailable(toLong(t.get("beforeAvailable")));
+            e.setAfterAvailable(toLong(t.get("afterAvailable")));
+            e.setCounterpartyId(toLong(t.get("counterpartyId")));
+            e.setOrderNo((String) t.get("orderNo"));
+            e.setIdempotentKey((String) t.get("idempotentKey"));
             e.setBalance(toDouble(t.get("balance")));
             e.setRemark((String) t.get("remark"));
+            e.setEvidenceHash((String) t.get("evidenceHash"));
             e.setCreatedAt((String) t.get("createdAt"));
             list.add(e);
         }
@@ -316,10 +386,14 @@ public class DataInit implements CommandLineRunner {
         for (Map<String, Object> r : MockData.riskLogs) {
             RiskLog e = new RiskLog();
             e.setId(toLong(r.get("id")));
+            e.setUserId(toLong(r.get("userId")));
             e.setMerchantId(toLong(r.get("merchantId")));
             e.setMerchantName((String) r.get("merchantName"));
             e.setLevel((String) r.get("level"));
             e.setLevelCode(toInt(r.get("levelCode")));
+            e.setType((String) r.get("type"));
+            e.setRemark((String) r.get("remark"));
+            e.setStatus(toInt(r.get("status")));
             e.setContent((String) r.get("content"));
             e.setCreatedAt((String) r.get("createdAt"));
             list.add(e);
@@ -330,6 +404,7 @@ public class DataInit implements CommandLineRunner {
 
     /**
      * V6.2 LSC 账户初始化（lsc_accounts）
+     * 为商家(10001-10012)和消费者(20001-20030)创建LSC账户
      */
     private void seedLscAccounts() {
         if (lscAccountRepo.count() > 0) {
@@ -337,12 +412,22 @@ public class DataInit implements CommandLineRunner {
             return;
         }
         List<LscAccount> list = new ArrayList<>();
-        // 为每个用户和商家创建LSC账户
+        // 商家LSC账户
         for (int i = 0; i < 12; i++) {
             LscAccount a = new LscAccount();
             a.setUserId(10001L + i);
             a.setTotalLocked(50000L + (long)(Math.random() * 100000));
             a.setTotalAvailable(5000L + (long)(Math.random() * 20000));
+            a.setVersion(1);
+            a.setUpdatedAt(java.time.LocalDateTime.now().toString());
+            list.add(a);
+        }
+        // 消费者LSC账户
+        for (int i = 0; i < 30; i++) {
+            LscAccount a = new LscAccount();
+            a.setUserId((long)(20001 + i));
+            a.setTotalLocked(20000L + (long)(Math.random() * 50000));
+            a.setTotalAvailable(3000L + (long)(Math.random() * 10000));
             a.setVersion(1);
             a.setUpdatedAt(java.time.LocalDateTime.now().toString());
             list.add(a);

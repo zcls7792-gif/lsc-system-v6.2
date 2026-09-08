@@ -3,31 +3,52 @@ package com.lianshengtong.api.controller;
 import com.lianshengtong.api.dto.ApiResponse;
 import com.lianshengtong.api.dto.PageResult;
 import com.lianshengtong.api.entity.Order;
+import com.lianshengtong.api.entity.LedgerTxn;
+import com.lianshengtong.api.entity.LscAccount;
+import com.lianshengtong.api.repository.LedgerTxnRepository;
+import com.lianshengtong.api.repository.LscAccountRepository;
 import com.lianshengtong.api.repository.OrderRepository;
+import com.lianshengtong.api.util.HashUtil;
+import com.lianshengtong.api.util.SnowflakeIdGenerator;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 订单控制器（V6.2 退款规则更新）
+ * 订单控制器（V6.2 退款规则 + LSC 消费发行）
  * 退款规则：首单不退，LSC订单不退，仅纯人民币非首单可退
  * 订单状态：0待支付 1已支付 2已完成 3已取消 4已退款 5部分退款
  * 订单类型：0纯人民币 1 LSC全额抵扣 2混合支付
+ *
+ * V6.2 消费发行：纯人民币支付时，消费者获得100%锁定LSC，商家获得16%锁定LSC
+ * 流水类型：1 消费发行
  */
 @RestController
 @RequestMapping("/api/order")
 public class OrderController {
 
     private static final String[] STATUS_DESC = {"待支付", "已支付", "已完成", "已取消", "已退款", "部分退款"};
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     // V6.2 首单消费门槛
     private static final double FIRST_ORDER_MIN_AMOUNT = 10.0;
+    // V6.2 消费发行：消费者获得100% LSC，商家获得16% LSC
+    private static final double CONSUMER_LSC_RATE = 1.0;
+    private static final double MERCHANT_LSC_RATE = 0.16;
 
     private final OrderRepository orderRepo;
+    private final LscAccountRepository lscAccountRepo;
+    private final LedgerTxnRepository ledgerRepo;
 
-    public OrderController(OrderRepository orderRepo) {
+    public OrderController(OrderRepository orderRepo,
+                           LscAccountRepository lscAccountRepo,
+                           LedgerTxnRepository ledgerRepo) {
         this.orderRepo = orderRepo;
+        this.lscAccountRepo = lscAccountRepo;
+        this.ledgerRepo = ledgerRepo;
     }
 
     @GetMapping("/list")
@@ -142,18 +163,110 @@ public class OrderController {
 
         Order saved = orderRepo.save(body);
 
-        // V6.2 人民币消费触发LSC发行
+        // V6.2 人民币消费触发LSC发行：纯RMB订单在创建时即发行
         double rmbAmount = body.getRmbAmount() != null ? body.getRmbAmount() : 0;
         if (rmbAmount > 0 && body.getOrderType() != null && body.getOrderType() == 0) {
-            // 纯人民币支付：消费者获得100%锁定LSC，商家获得16%
-            long consumerLsc = (long) rmbAmount;
-            long merchantLsc = (long)(rmbAmount * 0.16);
-            System.out.println("[V6.2 LSC发行] 订单" + body.getOrderNo()
-                    + " 消费者" + userId + "获得" + consumerLsc + "锁定LSC"
-                    + " 商家获得" + merchantLsc + "锁定LSC");
+            issueLscForRmbPayment(body, userId, rmbAmount);
         }
 
         return ApiResponse.success(saved);
+    }
+
+    /**
+     * V6.2 消费发行：纯人民币支付时，消费者获得100%锁定LSC，商家获得16%锁定LSC
+     * 流水类型：1 消费发行，落库 + 哈希存证
+     */
+    private void issueLscForRmbPayment(Order order, Long consumerId, double rmbAmount) {
+        Long merchantId = order.getMerchantId();
+        long consumerLsc = (long) (rmbAmount * CONSUMER_LSC_RATE);
+        long merchantLsc = (long) (rmbAmount * MERCHANT_LSC_RATE);
+        String now = LocalDateTime.now().format(FMT);
+
+        // 消费者锁定LSC增加
+        if (consumerId != null && consumerLsc > 0) {
+            LscAccount acct = lscAccountRepo.findById(consumerId).orElse(null);
+            if (acct == null) {
+                acct = new LscAccount();
+                acct.setUserId(consumerId);
+                acct.setTotalLocked(0L);
+                acct.setTotalAvailable(0L);
+                acct.setVersion(0);
+            }
+            long beforeLocked = acct.getTotalLocked() == null ? 0 : acct.getTotalLocked();
+            acct.setTotalLocked(beforeLocked + consumerLsc);
+            acct.setUpdatedAt(now);
+            lscAccountRepo.save(acct);
+
+            // 消费发行流水（消费者侧）
+            LedgerTxn txn = new LedgerTxn();
+            txn.setId(SnowflakeIdGenerator.getInstance().nextId());
+            txn.setUserId(consumerId);
+            txn.setType(1);
+            txn.setTypeStr("消费发行");
+            txn.setAmount(consumerLsc);
+            txn.setBeforeLocked(beforeLocked);
+            txn.setAfterLocked(acct.getTotalLocked());
+            txn.setCounterpartyId(merchantId);
+            txn.setOrderNo(order.getOrderNo());
+            txn.setIdempotentKey("ISSUE-C-" + order.getOrderNo());
+            txn.setRemark("消费发行：消费者获得100%锁定LSC");
+            Map<String, Object> evidence = new LinkedHashMap<>();
+            evidence.put("type", 1);
+            evidence.put("userId", consumerId);
+            evidence.put("counterpartyId", merchantId);
+            evidence.put("amount", consumerLsc);
+            evidence.put("orderNo", order.getOrderNo());
+            evidence.put("beforeLocked", beforeLocked);
+            evidence.put("afterLocked", acct.getTotalLocked());
+            txn.setEvidenceHash(HashUtil.sha256(evidence));
+            txn.setCreatedAt(now);
+            ledgerRepo.save(txn);
+        }
+
+        // 商家锁定LSC增加（16%）
+        if (merchantId != null && merchantLsc > 0) {
+            LscAccount mAcct = lscAccountRepo.findById(merchantId).orElse(null);
+            if (mAcct == null) {
+                mAcct = new LscAccount();
+                mAcct.setUserId(merchantId);
+                mAcct.setTotalLocked(0L);
+                mAcct.setTotalAvailable(0L);
+                mAcct.setVersion(0);
+            }
+            long mBefore = mAcct.getTotalLocked() == null ? 0 : mAcct.getTotalLocked();
+            mAcct.setTotalLocked(mBefore + merchantLsc);
+            mAcct.setUpdatedAt(now);
+            lscAccountRepo.save(mAcct);
+
+            // 消费发行流水（商家侧）
+            LedgerTxn txn = new LedgerTxn();
+            txn.setId(SnowflakeIdGenerator.getInstance().nextId());
+            txn.setUserId(merchantId);
+            txn.setType(1);
+            txn.setTypeStr("消费发行-商家");
+            txn.setAmount(merchantLsc);
+            txn.setBeforeLocked(mBefore);
+            txn.setAfterLocked(mAcct.getTotalLocked());
+            txn.setCounterpartyId(consumerId);
+            txn.setOrderNo(order.getOrderNo());
+            txn.setIdempotentKey("ISSUE-M-" + order.getOrderNo());
+            txn.setRemark("消费发行：商家获得16%锁定LSC");
+            Map<String, Object> evidence = new LinkedHashMap<>();
+            evidence.put("type", 1);
+            evidence.put("userId", merchantId);
+            evidence.put("counterpartyId", consumerId);
+            evidence.put("amount", merchantLsc);
+            evidence.put("orderNo", order.getOrderNo());
+            evidence.put("beforeLocked", mBefore);
+            evidence.put("afterLocked", mAcct.getTotalLocked());
+            txn.setEvidenceHash(HashUtil.sha256(evidence));
+            txn.setCreatedAt(now);
+            ledgerRepo.save(txn);
+        }
+
+        System.out.println("[V6.2 LSC发行] 订单" + order.getOrderNo()
+                + " 消费者" + consumerId + "获得" + consumerLsc + "锁定LSC"
+                + " 商家" + merchantId + "获得" + merchantLsc + "锁定LSC");
     }
 
     /** 支付订单：status 0 -> 1 */

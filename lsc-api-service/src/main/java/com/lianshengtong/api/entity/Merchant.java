@@ -43,4 +43,13 @@ public class Merchant {
     private Double latitude;
     @Column(name = "business_hours") private String businessHours;
     @Column(name = "created_at") private String createdAt;
+
+    // V6.2 第十四章 14.2 商家扩展字段（合规准入三要件）
+    @Column(name = "business_license", length = 128) private String businessLicense;
+    @Column(name = "corporate_account_no", length = 64) private String corporateAccountNo;
+    @Column(name = "regulatory_agreement_signed") private Integer regulatoryAgreementSigned;
+    @Column(name = "regulatory_account_no", length = 64) private String regulatoryAccountNo;
+    @Column(name = "main_account_no", length = 64) private String mainAccountNo;
+    @Column(name = "last_nh_date") private String lastNhDate;
+    @Column(name = "address_update_count") private Integer addressUpdateCount;
 }

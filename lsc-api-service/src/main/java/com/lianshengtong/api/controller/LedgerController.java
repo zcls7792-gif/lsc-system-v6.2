@@ -54,10 +54,10 @@ public class LedgerController {
     public ApiResponse<PageResult<LedgerTxn>> transactions(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Integer typeCode,
+            @RequestParam(required = false) Integer type,
             @RequestParam(required = false) Integer userId) {
         List<LedgerTxn> filtered = ledgerRepo.findAll().stream().filter(t -> {
-            if (typeCode != null && !typeCode.equals(t.getTypeCode())) return false;
+            if (type != null && !type.equals(t.getType())) return false;
             if (userId != null && t.getUserId() != null && userId.longValue() != t.getUserId()) return false;
             return true;
         }).collect(Collectors.toList());
@@ -66,13 +66,17 @@ public class LedgerController {
 
     @GetMapping("/transaction-types")
     public ApiResponse<List<Map<String, Object>>> transactionTypes() {
+        // V6.2 第十四章 14.4 流水类型枚举 1-9
         List<Map<String, Object>> types = new ArrayList<>();
-        types.add(Map.of("code", 0, "name", "释放"));
-        types.add(Map.of("code", 1, "name", "核销"));
-        types.add(Map.of("code", 2, "name", "消费"));
-        types.add(Map.of("code", 3, "name", "退款"));
-        types.add(Map.of("code", 4, "name", "转入"));
-        types.add(Map.of("code", 5, "name", "转出"));
+        types.add(Map.of("code", 1, "name", "消费发行"));
+        types.add(Map.of("code", 2, "name", "每日释放"));
+        types.add(Map.of("code", 3, "name", "推广奖励释放"));
+        types.add(Map.of("code", 4, "name", "权益商城消费"));
+        types.add(Map.of("code", 5, "name", "线下消费"));
+        types.add(Map.of("code", 6, "name", "过期转回"));
+        types.add(Map.of("code", 7, "name", "商家核销"));
+        types.add(Map.of("code", 8, "name", "B2B流转支付"));
+        types.add(Map.of("code", 9, "name", "退款发行回滚"));
         return ApiResponse.success(types);
     }
 

@@ -107,6 +107,28 @@ public class WriteoffController {
             return ApiResponse.fail("商家信用分低于40，核销权限已暂停");
         }
 
+        // V6.2 规则七：每日限核销1次（同一商家当日仅可发起1笔核销）
+        String today = java.time.LocalDate.now().toString();
+        long todayWriteoffCount = writeoffRepo.findAll().stream()
+                .filter(w -> body.getMerchantId().equals(w.getMerchantId())
+                        && w.getCreatedAt() != null && w.getCreatedAt().startsWith(today)
+                        && w.getStatus() != null && w.getStatus() <= 2)
+                .count();
+        if (todayWriteoffCount > 0) {
+            return ApiResponse.fail("每日限核销1次，商家当日已发起核销（规则七）");
+        }
+
+        // V6.2 准入三要件：营业执照 + 对公账户 + 监管协议
+        if (merchant.getBusinessLicense() == null || merchant.getBusinessLicense().isEmpty()) {
+            return ApiResponse.fail("未上传营业执照，不具备核销资格");
+        }
+        if (merchant.getCorporateAccountNo() == null || merchant.getCorporateAccountNo().isEmpty()) {
+            return ApiResponse.fail("未开立对公账户，不具备核销资格");
+        }
+        if (merchant.getRegulatoryAgreementSigned() == null || merchant.getRegulatoryAgreementSigned() != 1) {
+            return ApiResponse.fail("未签署第三方监管协议，不具备核销资格");
+        }
+
         // V6.2 每日核销限额校验
         int dailyLimit = getDailyNhLimit(merchant);
         double lscAmount = body.getLscAmount() != null ? body.getLscAmount() : 0;

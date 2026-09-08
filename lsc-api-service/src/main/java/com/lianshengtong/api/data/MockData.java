@@ -75,6 +75,14 @@ public class MockData {
                     "longitude", 120.0 + R.nextInt(200) / 100.0,
                     "latitude", 30.0 + R.nextInt(100) / 100.0,
                     "businessHours", "09:00-22:00",
+                    // V6.2 第十四章 14.2 商家合规准入三要件
+                    "businessLicense", "BL-" + (9000 + i),
+                    "corporateAccountNo", "CORP-" + (6000 + i),
+                    "regulatoryAgreementSigned", i == 5 ? 0 : 1, // 第6家未签协议，演示拒绝
+                    "regulatoryAccountNo", "REG-" + (7000 + i),
+                    "mainAccountNo", "MAIN-" + (8000 + i),
+                    "lastNhDate", i % 3 == 0 ? java.time.LocalDate.now().minusDays(i).toString() : null,
+                    "addressUpdateCount", i % 2,
                     "createdAt", now(), "created_at", now()
             ));
         }
@@ -203,15 +211,26 @@ public class MockData {
     }
 
     private static void initLedgerTxns() {
-        String[] types = {"释放", "核销", "消费", "退款", "转入", "转出"};
+        // V6.2 第十四章 14.4 流水类型枚举：1 消费发行 2 每日释放 3 推广奖励释放 4 权益商城消费
+        // 5 线下消费 6 过期转回 7 商家核销 8 B2B流转支付 9 退款发行回滚
+        String[] typeStrs = {"消费发行", "每日释放", "推广奖励释放", "权益商城消费", "线下消费", "过期转回", "商家核销", "B2B流转支付", "退款发行回滚"};
         for (int i = 0; i < 25; i++) {
-            int typeIdx = i % 6;
+            int typeIdx = (i % 9) + 1; // 1-9
+            long amount = 100L + R.nextInt(5000);
+            long lockedBefore = 10000L + R.nextInt(100000);
+            long availBefore = 5000L + R.nextInt(50000);
             ledgerTxns.add(map(
-                    "id", i + 1, "userId", 10001 + (i % 12),
-                    "type", types[typeIdx], "typeCode", typeIdx,
-                    "amount", (typeIdx % 2 == 0 ? 1 : -1) * (100 + R.nextInt(5000)),
-                    "balance", 10000 + R.nextInt(100000),
-                    "remark", types[typeIdx] + "流水",
+                    "id", (long)(i + 1), "userId", (long)(10001 + (i % 12)),
+                    "type", typeIdx, "typeStr", typeStrs[typeIdx - 1],
+                    "amount", amount,
+                    "beforeLocked", lockedBefore, "afterLocked", lockedBefore - (typeIdx == 2 ? amount : 0),
+                    "beforeAvailable", availBefore, "afterAvailable", availBefore + (typeIdx == 2 ? amount : 0),
+                    "counterpartyId", (long)(20001 + (i % 30)),
+                    "orderNo", "MOCK-" + (i + 1),
+                    "idempotentKey", "IDEM-" + (i + 1),
+                    "balance", (double)(availBefore + amount),
+                    "remark", typeStrs[typeIdx - 1] + "流水",
+                    "evidenceHash", "0x" + java.util.UUID.randomUUID().toString().replace("-", ""),
                     "createdAt", now()
             ));
         }
@@ -219,12 +238,23 @@ public class MockData {
 
     private static void initRiskLogs() {
         String[] levels = {"低", "中", "高"};
+        String[] types = {"固定规则1", "固定规则2", "固定规则3", "AI动态风控"};
+        String[] remarks = {
+                "1小时下单超10笔", "连续3笔LSC支付超90%",
+                "同一商品超5次高比例LSC支付", "异常批量注册",
+                "代刷LSC嫌疑", "拆分套利嫌疑"
+        };
         for (int i = 0; i < 15; i++) {
             riskLogs.add(map(
-                    "id", i + 1, "merchantId", 10001 + (i % 12),
+                    "id", (long)(i + 1),
+                    "userId", (long)(20001 + (i % 30)),
+                    "merchantId", (long)(10001 + (i % 12)),
                     "merchantName", merchants.get(i % 12).get("name"),
                     "level", levels[i % 3], "levelCode", i % 3,
-                    "content", "风控规则触发：异常交易监测",
+                    "type", types[i % types.length],
+                    "remark", remarks[i % remarks.length],
+                    "status", i % 4, // 0待处理 1已处理 2申诉中 3已关闭
+                    "content", "风控规则触发：" + remarks[i % remarks.length],
                     "createdAt", now()
             ));
         }
