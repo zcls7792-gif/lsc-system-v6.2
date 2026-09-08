@@ -14,9 +14,13 @@ import java.util.*;
 /**
  * 推广奖励控制器（V6.2 第八章）
  *
+ * 【推荐层级约束】严格仅支持一级推荐关系，无二级、无三级。
+ *   被推荐人仅触发其直接推荐人（referrer_id，唯一）的首单奖励；
+ *   不向上递归追溯父级推荐人，不向下分发到下下级。
+ *
  * 规则要点：
  * 8.1 首单定义：用户实名认证后第一笔有效消费，金额不低于10元，状态为已完成，首单不退款
- * 8.2 奖励数量 = 首单消费金额 × 10%，从推荐人锁定池划转至可用池，即时到账
+ * 8.2 奖励数量 = 首单消费金额 × 10%，从【直接推荐人】锁定池划转至可用池，即时到账
  *     锁定余额不足部分记入挂账表
  *     奖励从推荐人自身锁定池扣减转为可用，不产生新增发行
  * 8.3 推广奖励一旦发放，永久有效，不存在回滚场景
@@ -31,6 +35,8 @@ public class PromotionController {
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final double REWARD_RATE = 0.10; // 首单消费金额 × 10%
     private static final double FIRST_ORDER_MIN_AMOUNT = 10.0; // 首单门槛
+    /** 推荐关系层级上限：仅一级，禁止多级分发 */
+    private static final int MAX_REFERRAL_DEPTH = 1;
 
     private final UserRepository userRepo;
     private final MerchantRepository merchantRepo;
@@ -98,6 +104,12 @@ public class PromotionController {
         }
         User user = userOpt.get();
         Long referrerId = user.getReferrerId();
+
+        // 【一级推荐强约束】仅向直接推荐人发放，不递归向上追溯
+        // 不查询 referrerId 的 referrerId，确保无二级、无三级
+        if (MAX_REFERRAL_DEPTH != 1) {
+            return ApiResponse.fail("系统配置异常：仅支持一级推荐");
+        }
 
         // V6.2 奖励数量 = 首单消费金额 × 10%（向下取整）
         long rewardAmount = (long) (totalAmount * REWARD_RATE);
@@ -300,6 +312,7 @@ public class PromotionController {
         s.put("totalPaidAmount", totalPaidAmount);
         s.put("pendingRecords", pendings.size());
         s.put("permanent", true);
+        s.put("maxReferralDepth", MAX_REFERRAL_DEPTH); // 仅一级，无二级、无三级
         return ApiResponse.success(s);
     }
 

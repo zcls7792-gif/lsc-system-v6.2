@@ -89,6 +89,9 @@ public class DataInit implements CommandLineRunner {
     /**
      * V6.2 第十四章 14.1 用户表初始化
      * 消费者会员(0) 和 商家会员(1)
+     *
+     * 【推荐关系约束】严格一级直推，referrer_id 仅记录直接推荐人；
+     * 不维护 referrer_of_referrer、grandparent 等字段，不向上递归追溯。
      */
     private void seedUsers() {
         if (userRepo.count() > 0) {
