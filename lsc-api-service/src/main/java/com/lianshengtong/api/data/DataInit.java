@@ -2,15 +2,19 @@ package com.lianshengtong.api.data;
 
 import com.lianshengtong.api.entity.B2BOrder;
 import com.lianshengtong.api.entity.Evidence;
+import com.lianshengtong.api.entity.LedgerTxn;
 import com.lianshengtong.api.entity.Merchant;
 import com.lianshengtong.api.entity.Order;
 import com.lianshengtong.api.entity.Product;
+import com.lianshengtong.api.entity.RiskLog;
 import com.lianshengtong.api.entity.Writeoff;
 import com.lianshengtong.api.repository.B2BOrderRepository;
 import com.lianshengtong.api.repository.EvidenceRepository;
+import com.lianshengtong.api.repository.LedgerTxnRepository;
 import com.lianshengtong.api.repository.MerchantRepository;
 import com.lianshengtong.api.repository.OrderRepository;
 import com.lianshengtong.api.repository.ProductRepository;
+import com.lianshengtong.api.repository.RiskLogRepository;
 import com.lianshengtong.api.repository.WriteoffRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -34,19 +38,25 @@ public class DataInit implements CommandLineRunner {
     private final B2BOrderRepository b2bRepo;
     private final WriteoffRepository writeoffRepo;
     private final EvidenceRepository evidenceRepo;
+    private final LedgerTxnRepository ledgerRepo;
+    private final RiskLogRepository riskRepo;
 
     public DataInit(MerchantRepository merchantRepo,
                     ProductRepository productRepo,
                     OrderRepository orderRepo,
                     B2BOrderRepository b2bRepo,
                     WriteoffRepository writeoffRepo,
-                    EvidenceRepository evidenceRepo) {
+                    EvidenceRepository evidenceRepo,
+                    LedgerTxnRepository ledgerRepo,
+                    RiskLogRepository riskRepo) {
         this.merchantRepo = merchantRepo;
         this.productRepo = productRepo;
         this.orderRepo = orderRepo;
         this.b2bRepo = b2bRepo;
         this.writeoffRepo = writeoffRepo;
         this.evidenceRepo = evidenceRepo;
+        this.ledgerRepo = ledgerRepo;
+        this.riskRepo = riskRepo;
     }
 
     @Override
@@ -62,6 +72,8 @@ public class DataInit implements CommandLineRunner {
         seedB2BOrders();
         seedWriteoffs();
         seedEvidence();
+        seedLedgerTxns();
+        seedRiskLogs();
     }
 
     private void seedMerchants() {
@@ -240,6 +252,49 @@ public class DataInit implements CommandLineRunner {
         }
         evidenceRepo.saveAll(list);
         System.out.println("[LSC DB] evidence_records 表 seed 完成: " + list.size() + " 条");
+    }
+
+    private void seedLedgerTxns() {
+        if (ledgerRepo.count() > 0) {
+            System.out.println("[LSC DB] ledger_txns 表已存在 " + ledgerRepo.count() + " 条，跳过 seed");
+            return;
+        }
+        List<LedgerTxn> list = new ArrayList<>();
+        for (Map<String, Object> t : MockData.ledgerTxns) {
+            LedgerTxn e = new LedgerTxn();
+            e.setId(toLong(t.get("id")));
+            e.setUserId(toLong(t.get("userId")));
+            e.setType((String) t.get("type"));
+            e.setTypeCode(toInt(t.get("typeCode")));
+            e.setAmount(toDouble(t.get("amount")));
+            e.setBalance(toDouble(t.get("balance")));
+            e.setRemark((String) t.get("remark"));
+            e.setCreatedAt((String) t.get("createdAt"));
+            list.add(e);
+        }
+        ledgerRepo.saveAll(list);
+        System.out.println("[LSC DB] ledger_txns 表 seed 完成: " + list.size() + " 条");
+    }
+
+    private void seedRiskLogs() {
+        if (riskRepo.count() > 0) {
+            System.out.println("[LSC DB] risk_logs 表已存在 " + riskRepo.count() + " 条，跳过 seed");
+            return;
+        }
+        List<RiskLog> list = new ArrayList<>();
+        for (Map<String, Object> r : MockData.riskLogs) {
+            RiskLog e = new RiskLog();
+            e.setId(toLong(r.get("id")));
+            e.setMerchantId(toLong(r.get("merchantId")));
+            e.setMerchantName((String) r.get("merchantName"));
+            e.setLevel((String) r.get("level"));
+            e.setLevelCode(toInt(r.get("levelCode")));
+            e.setContent((String) r.get("content"));
+            e.setCreatedAt((String) r.get("createdAt"));
+            list.add(e);
+        }
+        riskRepo.saveAll(list);
+        System.out.println("[LSC DB] risk_logs 表 seed 完成: " + list.size() + " 条");
     }
 
     private static Long toLong(Object v) {

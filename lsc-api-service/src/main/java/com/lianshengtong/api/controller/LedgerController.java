@@ -1,15 +1,23 @@
 package com.lianshengtong.api.controller;
 
-import com.lianshengtong.api.data.MockData;
 import com.lianshengtong.api.dto.ApiResponse;
 import com.lianshengtong.api.dto.PageResult;
+import com.lianshengtong.api.entity.LedgerTxn;
+import com.lianshengtong.api.repository.LedgerTxnRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/ledger")
 public class LedgerController {
+
+    private final LedgerTxnRepository ledgerRepo;
+
+    public LedgerController(LedgerTxnRepository ledgerRepo) {
+        this.ledgerRepo = ledgerRepo;
+    }
 
     @GetMapping("/account")
     public ApiResponse<Map<String, Object>> account(@RequestParam(required = false) Integer userId) {
@@ -43,14 +51,16 @@ public class LedgerController {
     }
 
     @GetMapping("/transactions")
-    public ApiResponse<PageResult<Map<String, Object>>> transactions(
+    public ApiResponse<PageResult<LedgerTxn>> transactions(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Integer typeCode,
             @RequestParam(required = false) Integer userId) {
-        List<Map<String, Object>> filtered = new ArrayList<>(MockData.ledgerTxns);
-        if (typeCode != null) filtered = filtered.stream().filter(t -> typeCode.equals(t.get("typeCode"))).toList();
-        if (userId != null) filtered = filtered.stream().filter(t -> userId.equals(t.get("userId"))).toList();
+        List<LedgerTxn> filtered = ledgerRepo.findAll().stream().filter(t -> {
+            if (typeCode != null && !typeCode.equals(t.getTypeCode())) return false;
+            if (userId != null && t.getUserId() != null && userId.longValue() != t.getUserId()) return false;
+            return true;
+        }).collect(Collectors.toList());
         return ApiResponse.success(PageResult.of(filtered, page, size));
     }
 
