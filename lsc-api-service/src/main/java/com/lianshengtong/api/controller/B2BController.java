@@ -1,8 +1,9 @@
 package com.lianshengtong.api.controller;
 
-import com.lianshengtong.api.data.MockData;
 import com.lianshengtong.api.dto.ApiResponse;
 import com.lianshengtong.api.dto.PageResult;
+import com.lianshengtong.api.entity.B2BOrder;
+import com.lianshengtong.api.repository.B2BOrderRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -12,48 +13,71 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/b2b")
 public class B2BController {
 
+    private static final String[] STATUS_DESC = {"待确认", "已确认", "已完成", "已取消"};
+
+    private final B2BOrderRepository b2bRepo;
+
+    public B2BController(B2BOrderRepository b2bRepo) {
+        this.b2bRepo = b2bRepo;
+    }
+
     @GetMapping("/list")
-    public ApiResponse<PageResult<Map<String, Object>>> list(
+    public ApiResponse<PageResult<B2BOrder>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Integer status) {
-        List<Map<String, Object>> filtered = MockData.b2bOrders.stream().filter(o -> {
-            if (status != null && !status.equals(o.get("status"))) return false;
+        List<B2BOrder> filtered = b2bRepo.findAll().stream().filter(o -> {
+            if (status != null && !status.equals(o.getStatus())) return false;
             return true;
         }).collect(Collectors.toList());
         return ApiResponse.success(PageResult.of(filtered, page, size));
     }
 
     @GetMapping("/{orderNo}")
-    public ApiResponse<Map<String, Object>> detail(@PathVariable String orderNo) {
-        return MockData.b2bOrders.stream().filter(o -> o.get("orderNo").equals(orderNo))
-                .findFirst().map(ApiResponse::success).orElse(ApiResponse.fail("B2B订单不存在"));
+    public ApiResponse<B2BOrder> detail(@PathVariable String orderNo) {
+        return b2bRepo.findAll().stream()
+                .filter(o -> orderNo.equals(o.getOrderNo()))
+                .findFirst()
+                .map(ApiResponse::success)
+                .orElse(ApiResponse.fail("B2B订单不存在"));
     }
 
+    /** 创建 B2B 订单落库 */
     @PostMapping("/create")
-    public ApiResponse<Map<String, Object>> create(@RequestBody Map<String, Object> body) {
-        Map<String, Object> order = new LinkedHashMap<>(body);
-        order.put("id", MockData.b2bOrders.size() + 1);
-        order.put("orderNo", "B2B" + System.currentTimeMillis());
-        order.put("status", 0);
-        order.put("statusDesc", "待确认");
-        order.put("createdAt", java.time.LocalDateTime.now().toString());
-        MockData.b2bOrders.add(0, order);
-        return ApiResponse.success(order);
+    public ApiResponse<B2BOrder> create(@RequestBody B2BOrder body) {
+        long newId = b2bRepo.count() + 1;
+        body.setId(newId);
+        if (body.getOrderNo() == null || body.getOrderNo().isEmpty()) {
+            body.setOrderNo("B2B" + System.currentTimeMillis());
+        }
+        if (body.getStatus() == null) body.setStatus(0);
+        if (body.getStatusDesc() == null && body.getStatus() >= 0 && body.getStatus() < STATUS_DESC.length) {
+            body.setStatusDesc(STATUS_DESC[body.getStatus()]);
+        }
+        if (body.getCreatedAt() == null) {
+            body.setCreatedAt(java.time.LocalDateTime.now().toString());
+        }
+        return ApiResponse.success(b2bRepo.save(body));
     }
 
+    /** 确认订单落库：status 0 -> 1 */
     @PostMapping("/confirm")
     public ApiResponse<Void> confirm(@RequestBody Map<String, Object> body) {
+        updateStatus(body, 1, "已确认");
         return ApiResponse.success(null);
     }
 
+    /** 取消订单落库：status -> 3 */
     @PostMapping("/cancel")
     public ApiResponse<Void> cancel(@RequestBody Map<String, Object> body) {
+        updateStatus(body, 3, "已取消");
         return ApiResponse.success(null);
     }
 
+    /** 完成订单落库：status -> 2 */
     @PostMapping("/complete")
     public ApiResponse<Void> complete(@RequestBody Map<String, Object> body) {
+        updateStatus(body, 2, "已完成");
         return ApiResponse.success(null);
     }
 
@@ -74,6 +98,29 @@ public class B2BController {
     @PostMapping("/{orderNo}/verify-confirm")
     public ApiResponse<Void> verifyConfirm(@PathVariable String orderNo, @RequestBody Map<String, Object> body) {
         return ApiResponse.success(null);
+    }
+
+    private void updateStatus(Map<String, Object> body, int status, String statusDesc) {
+        Object orderNoObj = body.get("orderNo");
+        Object idObj = body.get("id");
+        if (orderNoObj != null) {
+            String orderNo = orderNoObj.toString();
+            b2bRepo.findAll().stream()
+                    .filter(o -> orderNo.equals(o.getOrderNo()))
+                    .findFirst()
+                    .ifPresent(o -> {
+                        o.setStatus(status);
+                        o.setStatusDesc(statusDesc);
+                        b2bRepo.save(o);
+                    });
+        } else if (idObj != null) {
+            long id = Long.parseLong(idObj.toString());
+            b2bRepo.findById(id).ifPresent(o -> {
+                o.setStatus(status);
+                o.setStatusDesc(statusDesc);
+                b2bRepo.save(o);
+            });
+        }
     }
 
     private Map<String, Object> mapOf(Object... kvs) {

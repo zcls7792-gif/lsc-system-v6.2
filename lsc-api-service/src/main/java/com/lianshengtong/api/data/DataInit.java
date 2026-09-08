@@ -1,11 +1,17 @@
 package com.lianshengtong.api.data;
 
+import com.lianshengtong.api.entity.B2BOrder;
+import com.lianshengtong.api.entity.Evidence;
 import com.lianshengtong.api.entity.Merchant;
 import com.lianshengtong.api.entity.Order;
 import com.lianshengtong.api.entity.Product;
+import com.lianshengtong.api.entity.Writeoff;
+import com.lianshengtong.api.repository.B2BOrderRepository;
+import com.lianshengtong.api.repository.EvidenceRepository;
 import com.lianshengtong.api.repository.MerchantRepository;
 import com.lianshengtong.api.repository.OrderRepository;
 import com.lianshengtong.api.repository.ProductRepository;
+import com.lianshengtong.api.repository.WriteoffRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -25,13 +31,22 @@ public class DataInit implements CommandLineRunner {
     private final MerchantRepository merchantRepo;
     private final ProductRepository productRepo;
     private final OrderRepository orderRepo;
+    private final B2BOrderRepository b2bRepo;
+    private final WriteoffRepository writeoffRepo;
+    private final EvidenceRepository evidenceRepo;
 
     public DataInit(MerchantRepository merchantRepo,
                     ProductRepository productRepo,
-                    OrderRepository orderRepo) {
+                    OrderRepository orderRepo,
+                    B2BOrderRepository b2bRepo,
+                    WriteoffRepository writeoffRepo,
+                    EvidenceRepository evidenceRepo) {
         this.merchantRepo = merchantRepo;
         this.productRepo = productRepo;
         this.orderRepo = orderRepo;
+        this.b2bRepo = b2bRepo;
+        this.writeoffRepo = writeoffRepo;
+        this.evidenceRepo = evidenceRepo;
     }
 
     @Override
@@ -44,6 +59,9 @@ public class DataInit implements CommandLineRunner {
         seedMerchants();
         seedProducts();
         seedOrders();
+        seedB2BOrders();
+        seedWriteoffs();
+        seedEvidence();
     }
 
     private void seedMerchants() {
@@ -153,6 +171,75 @@ public class DataInit implements CommandLineRunner {
         }
         orderRepo.saveAll(list);
         System.out.println("[LSC DB] orders 表 seed 完成: " + list.size() + " 条");
+    }
+
+    private void seedB2BOrders() {
+        if (b2bRepo.count() > 0) {
+            System.out.println("[LSC DB] b2b_orders 表已存在 " + b2bRepo.count() + " 条，跳过 seed");
+            return;
+        }
+        List<B2BOrder> list = new ArrayList<>();
+        for (Map<String, Object> o : MockData.b2bOrders) {
+            B2BOrder e = new B2BOrder();
+            e.setId(toLong(o.get("id")));
+            e.setOrderNo((String) o.get("orderNo"));
+            e.setInitiatorId(toLong(o.get("initiatorId")));
+            e.setInitiatorName((String) o.get("initiatorName"));
+            e.setCounterpartyId(toLong(o.get("counterpartyId")));
+            e.setCounterpartyName((String) o.get("counterpartyName"));
+            e.setLscAmount(toDouble(o.get("lscAmount")));
+            e.setRmbAmount(toDouble(o.get("rmbAmount")));
+            e.setStatus(toInt(o.get("status")));
+            e.setStatusDesc((String) o.get("statusDesc"));
+            e.setCreatedAt((String) o.get("createdAt"));
+            list.add(e);
+        }
+        b2bRepo.saveAll(list);
+        System.out.println("[LSC DB] b2b_orders 表 seed 完成: " + list.size() + " 条");
+    }
+
+    private void seedWriteoffs() {
+        if (writeoffRepo.count() > 0) {
+            System.out.println("[LSC DB] writeoffs 表已存在 " + writeoffRepo.count() + " 条，跳过 seed");
+            return;
+        }
+        List<Writeoff> list = new ArrayList<>();
+        for (Map<String, Object> w : MockData.writeoffs) {
+            Writeoff e = new Writeoff();
+            e.setId(toLong(w.get("id")));
+            e.setOrderNo((String) w.get("orderNo"));
+            e.setMerchantId(toLong(w.get("merchantId")));
+            e.setMerchantName((String) w.get("merchantName"));
+            e.setLscAmount(toDouble(w.get("lscAmount")));
+            e.setStatus(toInt(w.get("status")));
+            e.setStatusDesc((String) w.get("statusDesc"));
+            e.setCreatedAt((String) w.get("createdAt"));
+            list.add(e);
+        }
+        writeoffRepo.saveAll(list);
+        System.out.println("[LSC DB] writeoffs 表 seed 完成: " + list.size() + " 条");
+    }
+
+    private void seedEvidence() {
+        if (evidenceRepo.count() > 0) {
+            System.out.println("[LSC DB] evidence_records 表已存在 " + evidenceRepo.count() + " 条，跳过 seed");
+            return;
+        }
+        List<Evidence> list = new ArrayList<>();
+        for (Map<String, Object> r : MockData.evidenceRecords) {
+            Evidence e = new Evidence();
+            e.setId(toLong(r.get("id")));
+            e.setMerchantId(toLong(r.get("merchantId")));
+            e.setMerchantName((String) r.get("merchantName"));
+            e.setEvidenceHash((String) r.get("evidenceHash"));
+            e.setBlockHeight(toLong(r.get("blockHeight")));
+            e.setTxId((String) r.get("txId"));
+            e.setStatus(toInt(r.get("status")));
+            e.setCreatedAt((String) r.get("createdAt"));
+            list.add(e);
+        }
+        evidenceRepo.saveAll(list);
+        System.out.println("[LSC DB] evidence_records 表 seed 完成: " + list.size() + " 条");
     }
 
     private static Long toLong(Object v) {
