@@ -1,21 +1,7 @@
 package com.lianshengtong.api.data;
 
-import com.lianshengtong.api.entity.B2BOrder;
-import com.lianshengtong.api.entity.Evidence;
-import com.lianshengtong.api.entity.LedgerTxn;
-import com.lianshengtong.api.entity.Merchant;
-import com.lianshengtong.api.entity.Order;
-import com.lianshengtong.api.entity.Product;
-import com.lianshengtong.api.entity.RiskLog;
-import com.lianshengtong.api.entity.Writeoff;
-import com.lianshengtong.api.repository.B2BOrderRepository;
-import com.lianshengtong.api.repository.EvidenceRepository;
-import com.lianshengtong.api.repository.LedgerTxnRepository;
-import com.lianshengtong.api.repository.MerchantRepository;
-import com.lianshengtong.api.repository.OrderRepository;
-import com.lianshengtong.api.repository.ProductRepository;
-import com.lianshengtong.api.repository.RiskLogRepository;
-import com.lianshengtong.api.repository.WriteoffRepository;
+import com.lianshengtong.api.entity.*;
+import com.lianshengtong.api.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -24,10 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 启动数据初始化：
- * 1. 调用 MockData.init() 初始化内存数据（为未持久化的表提供数据，也为 Seeder 提供源数据）
- * 2. 若 Merchant/Product/Order 三张表为空，从 MockData 同步到 H2（仅首次启动）
- * 3. 后续重启直接从 H2 读取已持久化数据，MockData 仅作为其他表的内存源
+ * 启动数据初始化（V6.2 更新版）
+ * 1. 调用 MockData.init() 初始化内存数据
+ * 2. 若表为空，从 MockData 同步到 H2（仅首次启动）
+ * 3. 后续重启直接从 H2 读取已持久化数据
+ * 4. V6.2 新增：LscAccount、DailyReleaseSummary、ReleaseConfig 初始化
  */
 @Component
 public class DataInit implements CommandLineRunner {
@@ -40,6 +27,9 @@ public class DataInit implements CommandLineRunner {
     private final EvidenceRepository evidenceRepo;
     private final LedgerTxnRepository ledgerRepo;
     private final RiskLogRepository riskRepo;
+    private final LscAccountRepository lscAccountRepo;
+    private final DailyReleaseSummaryRepository dailyReleaseRepo;
+    private final ReleaseConfigRepository releaseConfigRepo;
 
     public DataInit(MerchantRepository merchantRepo,
                     ProductRepository productRepo,
@@ -48,7 +38,10 @@ public class DataInit implements CommandLineRunner {
                     WriteoffRepository writeoffRepo,
                     EvidenceRepository evidenceRepo,
                     LedgerTxnRepository ledgerRepo,
-                    RiskLogRepository riskRepo) {
+                    RiskLogRepository riskRepo,
+                    LscAccountRepository lscAccountRepo,
+                    DailyReleaseSummaryRepository dailyReleaseRepo,
+                    ReleaseConfigRepository releaseConfigRepo) {
         this.merchantRepo = merchantRepo;
         this.productRepo = productRepo;
         this.orderRepo = orderRepo;
@@ -57,6 +50,9 @@ public class DataInit implements CommandLineRunner {
         this.evidenceRepo = evidenceRepo;
         this.ledgerRepo = ledgerRepo;
         this.riskRepo = riskRepo;
+        this.lscAccountRepo = lscAccountRepo;
+        this.dailyReleaseRepo = dailyReleaseRepo;
+        this.releaseConfigRepo = releaseConfigRepo;
     }
 
     @Override
@@ -74,6 +70,9 @@ public class DataInit implements CommandLineRunner {
         seedEvidence();
         seedLedgerTxns();
         seedRiskLogs();
+        seedLscAccounts();
+        seedReleaseConfigs();
+        seedDailyReleaseSummary();
     }
 
     private void seedMerchants() {
@@ -175,10 +174,16 @@ public class DataInit implements CommandLineRunner {
             e.setTotalAmount(toDouble(o.get("totalAmount")));
             e.setLscAmount(toDouble(o.get("lscAmount")));
             e.setRmbAmount(toDouble(o.get("rmbAmount")));
+            // V6.2 新增字段
+            e.setOrderType(toInt(o.get("orderType")));
             e.setPaymentType(toInt(o.get("paymentType")));
+            e.setIsFirstOrder(toInt(o.get("isFirstOrder")));
             e.setStatus(toInt(o.get("status")));
             e.setStatusDesc((String) o.get("statusDesc"));
+            e.setRefundLscAmount(toDouble(o.get("refundLscAmount")));
+            e.setRefundRmbAmount(toDouble(o.get("refundRmbAmount")));
             e.setCreatedAt((String) o.get("createdAt"));
+            e.setCompletedAt((String) o.get("completedAt"));
             list.add(e);
         }
         orderRepo.saveAll(list);
@@ -199,11 +204,26 @@ public class DataInit implements CommandLineRunner {
             e.setInitiatorName((String) o.get("initiatorName"));
             e.setCounterpartyId(toLong(o.get("counterpartyId")));
             e.setCounterpartyName((String) o.get("counterpartyName"));
+            // V6.2 新增字段
+            e.setTradeDescription((String) o.get("tradeDescription"));
+            e.setTotalAmountRmb(toDouble(o.get("totalAmountRmb")));
             e.setLscAmount(toDouble(o.get("lscAmount")));
             e.setRmbAmount(toDouble(o.get("rmbAmount")));
+            e.setContractNo((String) o.get("contractNo"));
+            e.setTradeEvidenceUrls((String) o.get("tradeEvidenceUrls"));
+            e.setAiVerificationResult(toInt(o.get("aiVerificationResult")));
+            e.setAiVerificationScore(toDouble(o.get("aiVerificationScore")));
+            e.setCounterpartyConfirmed(toInt(o.get("counterpartyConfirmed")));
+            e.setConfirmedBy((String) o.get("confirmedBy"));
+            e.setConfirmedAt((String) o.get("confirmedAt"));
+            e.setLscTransferred(toInt(o.get("lscTransferred")));
+            e.setExpireAt((String) o.get("expireAt"));
+            e.setIdempotentKey((String) o.get("idempotentKey"));
+            e.setVersion(toInt(o.get("version")));
             e.setStatus(toInt(o.get("status")));
             e.setStatusDesc((String) o.get("statusDesc"));
             e.setCreatedAt((String) o.get("createdAt"));
+            e.setCompletedAt((String) o.get("completedAt"));
             list.add(e);
         }
         b2bRepo.saveAll(list);
@@ -223,9 +243,20 @@ public class DataInit implements CommandLineRunner {
             e.setMerchantId(toLong(w.get("merchantId")));
             e.setMerchantName((String) w.get("merchantName"));
             e.setLscAmount(toDouble(w.get("lscAmount")));
+            // V6.2 三笔划拨
+            e.setCashAmount(toDouble(w.get("cashAmount")));
+            e.setPlatformFeeAmount(toDouble(w.get("platformFeeAmount")));
+            e.setRetainedAmount(toDouble(w.get("retainedAmount")));
+            e.setAvailableBefore(toDouble(w.get("availableBefore")));
+            e.setAvailableAfter(toDouble(w.get("availableAfter")));
+            e.setFundBefore(toDouble(w.get("fundBefore")));
+            e.setFundAfter(toDouble(w.get("fundAfter")));
+            e.setIdempotentKey((String) w.get("idempotentKey"));
+            e.setVersion(toInt(w.get("version")));
             e.setStatus(toInt(w.get("status")));
             e.setStatusDesc((String) w.get("statusDesc"));
             e.setCreatedAt((String) w.get("createdAt"));
+            e.setCompletedAt((String) w.get("completedAt"));
             list.add(e);
         }
         writeoffRepo.saveAll(list);
@@ -295,6 +326,134 @@ public class DataInit implements CommandLineRunner {
         }
         riskRepo.saveAll(list);
         System.out.println("[LSC DB] risk_logs 表 seed 完成: " + list.size() + " 条");
+    }
+
+    /**
+     * V6.2 LSC 账户初始化（lsc_accounts）
+     */
+    private void seedLscAccounts() {
+        if (lscAccountRepo.count() > 0) {
+            System.out.println("[LSC DB] lsc_accounts 表已存在 " + lscAccountRepo.count() + " 条，跳过 seed");
+            return;
+        }
+        List<LscAccount> list = new ArrayList<>();
+        // 为每个用户和商家创建LSC账户
+        for (int i = 0; i < 12; i++) {
+            LscAccount a = new LscAccount();
+            a.setUserId(10001L + i);
+            a.setTotalLocked(50000L + (long)(Math.random() * 100000));
+            a.setTotalAvailable(5000L + (long)(Math.random() * 20000));
+            a.setVersion(1);
+            a.setUpdatedAt(java.time.LocalDateTime.now().toString());
+            list.add(a);
+        }
+        lscAccountRepo.saveAll(list);
+        System.out.println("[LSC DB] lsc_accounts 表 seed 完成: " + list.size() + " 条");
+    }
+
+    /**
+     * V6.2 释放比例配置初始化（release_config）
+     * 预置：rate_max=0.06%不可编辑, rate_min=0.03%不可编辑, k_min=0.50%可配置, k_max=1.0%可配置, alpha=0.06可配置
+     */
+    private void seedReleaseConfigs() {
+        if (releaseConfigRepo.count() > 0) {
+            System.out.println("[LSC DB] release_config 表已存在 " + releaseConfigRepo.count() + " 条，跳过 seed");
+            return;
+        }
+        List<ReleaseConfig> list = new ArrayList<>();
+        String now = java.time.LocalDateTime.now().toString();
+
+        ReleaseConfig rateMax = new ReleaseConfig();
+        rateMax.setConfigKey("rate_max");
+        rateMax.setConfigValue("0.0006");
+        rateMax.setEditable(0);
+        rateMax.setDescription("释放速率上限0.06%（硬常量，不可修改）");
+        rateMax.setUpdatedAt(now);
+        list.add(rateMax);
+
+        ReleaseConfig rateMin = new ReleaseConfig();
+        rateMin.setConfigKey("rate_min");
+        rateMin.setConfigValue("0.0003");
+        rateMin.setEditable(0);
+        rateMin.setDescription("释放速率下限0.03%（硬常量，不可修改）");
+        rateMin.setUpdatedAt(now);
+        list.add(rateMin);
+
+        ReleaseConfig kMin = new ReleaseConfig();
+        kMin.setConfigKey("k_min");
+        kMin.setConfigValue("0.005");
+        kMin.setEditable(1);
+        kMin.setDescription("调节起点k_min=0.50%（可配置，需双重管理员审批）");
+        kMin.setUpdatedAt(now);
+        list.add(kMin);
+
+        ReleaseConfig kMax = new ReleaseConfig();
+        kMax.setConfigKey("k_max");
+        kMax.setConfigValue("0.01");
+        kMax.setEditable(1);
+        kMax.setDescription("调节终点k_max=1.0%（可配置，需双重管理员审批）");
+        kMax.setUpdatedAt(now);
+        list.add(kMax);
+
+        ReleaseConfig alpha = new ReleaseConfig();
+        alpha.setConfigKey("alpha");
+        alpha.setConfigValue("0.06");
+        alpha.setEditable(1);
+        alpha.setDescription("调节因子alpha=0.06（可配置，需双重管理员审批）");
+        alpha.setUpdatedAt(now);
+        list.add(alpha);
+
+        releaseConfigRepo.saveAll(list);
+        System.out.println("[LSC DB] release_config 表 seed 完成: " + list.size() + " 条");
+    }
+
+    /**
+     * V6.2 每日释放汇总初始化（daily_release_summary）
+     * 生成最近7天的释放记录
+     */
+    private void seedDailyReleaseSummary() {
+        if (dailyReleaseRepo.count() > 0) {
+            System.out.println("[LSC DB] daily_release_summary 表已存在 " + dailyReleaseRepo.count() + " 条，跳过 seed");
+            return;
+        }
+        List<DailyReleaseSummary> list = new ArrayList<>();
+        java.util.Random r = new java.util.Random(42);
+        for (int i = 7; i > 0; i--) {
+            java.time.LocalDate date = java.time.LocalDate.now().minusDays(i);
+            DailyReleaseSummary s = new DailyReleaseSummary();
+            s.setId((long)(8 - i));
+            s.setDate(date.toString());
+            double mTotal = 9800000 + r.nextInt(200000);
+            double nTotal = r.nextInt(50000);
+            double k = nTotal / mTotal;
+            // V6.2 动态释放算法：k<=0.5% → rate=0.06%, k>=1.0% → rate=0.03%, 中间 → 0.09% - 0.06*k
+            double rate;
+            if (k <= 0.005) {
+                rate = 0.0006;
+            } else if (k >= 0.01) {
+                rate = 0.0003;
+            } else {
+                rate = 0.0009 - 0.06 * k;
+            }
+            long lLocked = 8000000 + r.nextInt(2000000);
+            long tRelease = (long)(lLocked * rate);
+            s.setMTotal(mTotal);
+            s.setNTotal(nTotal);
+            s.setK(k);
+            s.setRate(rate);
+            s.setLLocked(lLocked);
+            s.setTRelease(tRelease);
+            s.setBatchCount(10);
+            s.setFailedBatchCount(0);
+            s.setAiPredictedK7d(k + (r.nextDouble() - 0.5) * 0.002);
+            s.setAiPredictedK30d(k + (r.nextDouble() - 0.5) * 0.004);
+            s.setStatus(2); // 完成
+            s.setCreatedAt(date.atStartOfDay().toString());
+            s.setUpdatedAt(java.time.LocalDateTime.now().toString());
+            list.add(s);
+        }
+        dailyReleaseRepo.saveAll(list);
+        System.out.println("[LSC DB] daily_release_summary 表 seed 完成: " + list.size() + " 条");
     }
 
     private static Long toLong(Object v) {

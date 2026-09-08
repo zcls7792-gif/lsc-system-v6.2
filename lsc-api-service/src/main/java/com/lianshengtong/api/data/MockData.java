@@ -128,6 +128,10 @@ public class MockData {
             double lscAmt = payType == 0 ? 0 : payType == 1 ? Math.floor(total) : Math.floor(total * 0.5);
             double rmbAmt = Math.round((total - lscAmt) * 100) / 100.0;
             int status = i % 6;
+            // V6.2 订单类型：0纯RMB 1 LSC全额 2混合
+            int orderType = payType == 0 ? 0 : payType == 1 ? 1 : 2;
+            // V6.2 首单标记：第一个用户的订单为首单
+            int isFirstOrder = (i == 0) ? 1 : 0;
             orders.add(map(
                     "id", i + 1, "orderNo", "LS" + System.currentTimeMillis() + i,
                     "userId", 10001 + (i % 12), "userName", "用户" + (i % 12),
@@ -136,36 +140,64 @@ public class MockData {
                     "productImage", prod.get("cover"),
                     "quantity", qty, "price", prod.get("price"),
                     "totalAmount", total, "lscAmount", lscAmt, "rmbAmount", rmbAmt,
-                    "paymentType", payType, "status", status, "statusDesc", statusDesc[status],
-                    "createdAt", now(), "created_at", now()
+                    "orderType", orderType, "paymentType", payType,
+                    "isFirstOrder", isFirstOrder,
+                    "status", status, "statusDesc", statusDesc[status],
+                    "refundLscAmount", 0.0, "refundRmbAmount", 0.0,
+                    "createdAt", now(), "created_at", now(),
+                    "completedAt", status == 2 ? now() : null
             ));
         }
     }
 
     private static void initB2bOrders() {
-        String[] statusDesc = {"待确认", "已确认", "已完成", "已取消"};
+        // V6.2 状态：0待确认 1已确认 2已流转 3已完成 4已取消 5已作废
+        String[] statusDesc = {"待确认", "已确认", "已流转", "已完成", "已取消", "已作废"};
+        String[] tradeDescs = {"食品原料采购", "日用品批发", "建材供应链采购", "电子产品批发", "农产品收购"};
         for (int i = 0; i < 15; i++) {
             double amt = Math.round((1000 + R.nextInt(50000)) * 100) / 100.0;
-            int status = i % 4;
+            int status = i % 6;
             b2bOrders.add(map(
                     "id", i + 1, "orderNo", "B2B" + System.currentTimeMillis() + i,
                     "initiatorId", 10001 + (i % 6), "initiatorName", merchants.get(i % 6).get("name"),
                     "counterpartyId", 10001 + ((i + 3) % 6), "counterpartyName", merchants.get((i + 3) % 6).get("name"),
-                    "lscAmount", Math.floor(amt), "rmbAmount", 0, "status", status, "statusDesc", statusDesc[status],
-                    "createdAt", now()
+                    "tradeDescription", tradeDescs[i % tradeDescs.length],
+                    "totalAmountRmb", amt, "lscAmount", Math.floor(amt), "rmbAmount", 0,
+                    "contractNo", "CN-" + (1000 + i),
+                    "tradeEvidenceUrls", "/files/contract" + i + ".pdf",
+                    "aiVerificationResult", i % 5 == 0 ? 1 : 0, "aiVerificationScore", 80 + R.nextInt(20),
+                    "counterpartyConfirmed", status >= 1 ? 1 : 0,
+                    "confirmedBy", status >= 1 ? merchants.get((i + 3) % 6).get("name") : null,
+                    "confirmedAt", status >= 1 ? now() : null,
+                    "lscTransferred", status >= 2 ? 1 : 0,
+                    "expireAt", java.time.LocalDateTime.now().plusDays(7).toString(),
+                    "idempotentKey", "B2B-" + i, "version", 1,
+                    "status", status, "statusDesc", statusDesc[status],
+                    "createdAt", now(), "completedAt", status == 3 ? now() : null
             ));
         }
     }
 
     private static void initWriteoffs() {
-        String[] statusDesc = {"待审核", "已通过", "已拒绝"};
+        // V6.2 状态：0待处理 1处理中 2成功 3失败
+        String[] statusDesc = {"待处理", "处理中", "成功", "失败"};
         for (int i = 0; i < 20; i++) {
-            int status = i % 3;
+            int status = i % 4;
+            double lsc = 100 + R.nextInt(9900);
+            // V6.2 三笔划拨：87% + 3% + 10%
+            double cash = Math.round(lsc * 0.87 * 100) / 100.0;
+            double fee = Math.round(lsc * 0.03 * 100) / 100.0;
+            double retained = Math.round(lsc * 0.10 * 100) / 100.0;
             writeoffs.add(map(
                     "id", i + 1, "orderNo", "WO" + System.currentTimeMillis() + i,
                     "merchantId", 10001 + (i % 12), "merchantName", merchants.get(i % 12).get("name"),
-                    "lscAmount", 100 + R.nextInt(9900), "status", status, "statusDesc", statusDesc[status],
-                    "createdAt", now()
+                    "lscAmount", lsc,
+                    "cashAmount", cash, "platformFeeAmount", fee, "retainedAmount", retained,
+                    "availableBefore", lsc + 10000, "availableAfter", 10000.0,
+                    "fundBefore", 50000.0, "fundAfter", 50000.0 + cash,
+                    "idempotentKey", "NH-" + (i + 1), "version", 1,
+                    "status", status, "statusDesc", statusDesc[status],
+                    "createdAt", now(), "completedAt", status == 2 ? now() : null
             ));
         }
     }
