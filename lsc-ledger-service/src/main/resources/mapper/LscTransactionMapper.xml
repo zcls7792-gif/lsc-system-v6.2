@@ -8,6 +8,7 @@
         SELECT id, user_id, type, amount,
                before_locked, after_locked,
                before_available, after_available,
+               before_frozen, after_frozen,
                counterparty_id, order_no,
                idempotent_key, remark, created_at
         FROM lsc_transactions

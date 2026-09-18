@@ -47,6 +47,12 @@ public class LscTransaction implements Serializable {
     /** 操作后可用余额 */
     private Long afterAvailable;
 
+    /** 操作前冻结余额(V7.3新增) */
+    private Long beforeFrozen;
+
+    /** 操作后冻结余额(V7.3新增) */
+    private Long afterFrozen;
+
     /** 交易对手方用户ID */
     private Long counterpartyId;
 
@@ -67,7 +73,7 @@ public class LscTransaction implements Serializable {
 
     public LscTransaction() {
     }
-    public LscTransaction(Long id, Long userId, Integer type, Long amount, Long beforeLocked, Long afterLocked, Long beforeAvailable, Long afterAvailable, Long counterpartyId, String orderNo, String idempotentKey, String remark, LocalDateTime createdAt) {
+    public LscTransaction(Long id, Long userId, Integer type, Long amount, Long beforeLocked, Long afterLocked, Long beforeAvailable, Long afterAvailable, Long beforeFrozen, Long afterFrozen, Long counterpartyId, String orderNo, String idempotentKey, String remark, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
         this.type = type;
@@ -76,6 +82,8 @@ public class LscTransaction implements Serializable {
         this.afterLocked = afterLocked;
         this.beforeAvailable = beforeAvailable;
         this.afterAvailable = afterAvailable;
+        this.beforeFrozen = beforeFrozen;
+        this.afterFrozen = afterFrozen;
         this.counterpartyId = counterpartyId;
         this.orderNo = orderNo;
         this.idempotentKey = idempotentKey;
@@ -99,6 +107,10 @@ public class LscTransaction implements Serializable {
     public void setBeforeAvailable(Long beforeAvailable) { this.beforeAvailable = beforeAvailable; }
     public Long getAfterAvailable() { return afterAvailable; }
     public void setAfterAvailable(Long afterAvailable) { this.afterAvailable = afterAvailable; }
+    public Long getBeforeFrozen() { return beforeFrozen; }
+    public void setBeforeFrozen(Long beforeFrozen) { this.beforeFrozen = beforeFrozen; }
+    public Long getAfterFrozen() { return afterFrozen; }
+    public void setAfterFrozen(Long afterFrozen) { this.afterFrozen = afterFrozen; }
     public Long getCounterpartyId() { return counterpartyId; }
     public void setCounterpartyId(Long counterpartyId) { this.counterpartyId = counterpartyId; }
     public String getOrderNo() { return orderNo; }
@@ -121,6 +133,8 @@ public class LscTransaction implements Serializable {
         public Builder afterLocked(Long v) { obj.afterLocked = v; return this; }
         public Builder beforeAvailable(Long v) { obj.beforeAvailable = v; return this; }
         public Builder afterAvailable(Long v) { obj.afterAvailable = v; return this; }
+        public Builder beforeFrozen(Long v) { obj.beforeFrozen = v; return this; }
+        public Builder afterFrozen(Long v) { obj.afterFrozen = v; return this; }
         public Builder counterpartyId(Long v) { obj.counterpartyId = v; return this; }
         public Builder orderNo(String v) { obj.orderNo = v; return this; }
         public Builder idempotentKey(String v) { obj.idempotentKey = v; return this; }

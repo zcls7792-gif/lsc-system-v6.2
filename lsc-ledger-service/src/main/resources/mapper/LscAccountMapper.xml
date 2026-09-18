@@ -5,13 +5,13 @@
 
     <!-- 初始化账户(若不存在则插入，存在则忽略) -->
     <insert id="insertIfNotExists">
-        INSERT IGNORE INTO lsc_accounts (user_id, total_locked, total_available, version)
-        VALUES (#{userId}, 0, 0, 1)
+        INSERT IGNORE INTO lsc_accounts (user_id, total_locked, total_available, total_frozen, version)
+        VALUES (#{userId}, 0, 0, 0, 1)
     </insert>
 
     <!-- 查询所有锁定余额 > 0 的账户(跨分片广播) -->
     <select id="selectAllLockedAccounts" resultType="com.lianshengtong.ledger.entity.LscAccount">
-        SELECT user_id, total_locked, total_available, version, updated_at
+        SELECT user_id, total_locked, total_available, total_frozen, version, updated_at
         FROM lsc_accounts
         WHERE total_locked > 0
     </select>
