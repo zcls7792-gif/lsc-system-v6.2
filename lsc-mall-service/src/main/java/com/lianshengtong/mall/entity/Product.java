@@ -51,6 +51,12 @@ public class Product implements Serializable {
     /** 价格(人民币元 = LSC枚，1:1 强制一致) */
     private BigDecimal price;
 
+    /** 成本价/进货价(人民币元，V7.3 用于计算进销差赠送LSC) */
+    private BigDecimal costPrice;
+
+    /** 赠送LSC积分数量(V7.3 按进销差自动计算，可手动覆盖，上限为 price 的 100%) */
+    private Long grantPoints;
+
     /** 库存 */
     private Integer stock;
 

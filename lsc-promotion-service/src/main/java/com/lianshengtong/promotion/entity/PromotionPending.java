@@ -45,7 +45,7 @@ public class PromotionPending implements Serializable {
     /** 首单消费金额(元) */
     private BigDecimal firstOrderAmount;
 
-    /** 奖励金额(元) = 首单消费金额 * 10% */
+    /** 奖励 LSC 数量 = 首单实际赠送LSC(grantedLsc) * 10% */
     private BigDecimal rewardAmount;
 
     /** 状态 0待补发 1已补发 2已废弃 */

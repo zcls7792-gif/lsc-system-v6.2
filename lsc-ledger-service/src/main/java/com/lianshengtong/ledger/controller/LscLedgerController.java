@@ -52,7 +52,7 @@ public class LscLedgerController {
         this.ledgerService = ledgerService;
     }
 
-    @Operation(summary = "消费发行LSC(锁定池增加)")
+    @Operation(summary = "消费赠送LSC(锁定池增加)")
     @PostMapping("/issue")
     public R<LscAccount> issue(@RequestBody LscLedgerOpDTO dto) {
         return R.ok(ledgerService.issueLsc(dto.getUserId(), resolveAmount(dto, true), dto.getOrderNo()));
@@ -64,42 +64,46 @@ public class LscLedgerController {
         return R.ok(ledgerService.releaseLsc(dto.getUserId(), resolveAmount(dto, false), dto.getOrderNo()));
     }
 
-    @Operation(summary = "消费支付(消费者可用转商家可用)")
-    @PostMapping("/pay")
-    public R<LscAccount> pay(@RequestBody LscLedgerOpDTO dto) {
-        return R.ok(ledgerService.payLsc(dto.getUserId(), dto.getCounterpartyId(),
-                resolveAmount(dto, false), dto.getOrderNo()));
-    }
-
-    @Operation(summary = "B2B流转(商家间1:1,接收方有效期重置365天)")
-    @PostMapping("/b2b-transfer")
-    public R<LscAccount> b2bTransfer(@RequestBody LscLedgerOpDTO dto) {
-        return R.ok(ledgerService.b2bTransfer(dto.getUserId(), dto.getCounterpartyId(),
-                resolveAmount(dto, false), dto.getOrderNo()));
-    }
-
-    @Operation(summary = "商家核销(可用余额销毁)")
-    @PostMapping("/write-off")
-    public R<LscAccount> writeOff(@RequestBody LscLedgerOpDTO dto) {
-        return R.ok(ledgerService.writeOffLsc(dto.getUserId(), resolveAmount(dto, false), dto.getOrderNo()));
-    }
-
     @Operation(summary = "退款退回(消费者可用余额入账)")
     @PostMapping("/refund")
     public R<LscAccount> refund(@RequestBody LscLedgerOpDTO dto) {
         return R.ok(ledgerService.refundLsc(dto.getUserId(), resolveAmount(dto, false), dto.getOrderNo()));
     }
 
-    @Operation(summary = "过期转回(可用转锁定)")
-    @PostMapping("/expire-transfer")
-    public R<Long> expireTransfer(@RequestBody LscLedgerOpDTO dto) {
-        return R.ok(ledgerService.expireTransfer(dto.getUserId()));
+    @Operation(summary = "订单抵扣(消费者可用LSC销毁)")
+    @PostMapping("/deduct")
+    public R<LscAccount> deduct(@RequestBody LscLedgerOpDTO dto) {
+        return R.ok(ledgerService.deductLsc(dto.getUserId(), resolveAmount(dto, false), dto.getOrderNo()));
     }
 
-    @Operation(summary = "全网过期转回(扫描全网可用明细，由 release-service 定时任务调用)")
-    @PostMapping("/expire-transfer-all")
-    public R<Map<String, Object>> expireTransferAll() {
-        return R.ok(ledgerService.expireTransferAll());
+    @Operation(summary = "退款回扣(锁定池扣回赠送LSC)")
+    @PostMapping("/refund-deduct")
+    public R<LscAccount> refundDeduct(@RequestBody LscLedgerOpDTO dto) {
+        return R.ok(ledgerService.refundDeductLsc(dto.getUserId(), resolveAmount(dto, true), dto.getOrderNo()));
+    }
+
+    @Operation(summary = "到期作废(可用LSC过期销毁)")
+    @PostMapping("/expire-writeoff")
+    public R<LscAccount> expireWriteoff(@RequestBody LscLedgerOpDTO dto) {
+        return R.ok(ledgerService.expireWriteoff(dto.getUserId(), resolveAmount(dto, false), dto.getOrderNo()));
+    }
+
+    @Operation(summary = "风控冻结(可用转冻结池)")
+    @PostMapping("/freeze")
+    public R<LscAccount> freeze(@RequestBody LscLedgerOpDTO dto) {
+        return R.ok(ledgerService.freezeLsc(dto.getUserId(), resolveAmount(dto, false), dto.getOrderNo()));
+    }
+
+    @Operation(summary = "风控解冻(冻结池转可用)")
+    @PostMapping("/unfreeze")
+    public R<LscAccount> unfreeze(@RequestBody LscLedgerOpDTO dto) {
+        return R.ok(ledgerService.unfreezeLsc(dto.getUserId(), resolveAmount(dto, false), dto.getOrderNo()));
+    }
+
+    @Operation(summary = "推荐奖励(入锁定池)")
+    @PostMapping("/promotion-reward")
+    public R<LscAccount> promotionReward(@RequestBody LscLedgerOpDTO dto) {
+        return R.ok(ledgerService.promotionRewardLsc(dto.getUserId(), resolveAmount(dto, true), dto.getOrderNo()));
     }
 
     @Operation(summary = "账户余额查询")

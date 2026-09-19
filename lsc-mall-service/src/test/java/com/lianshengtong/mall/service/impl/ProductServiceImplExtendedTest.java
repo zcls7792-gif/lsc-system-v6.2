@@ -448,7 +448,7 @@ class ProductServiceImplExtendedTest {
     }
 
     @Test
-    @DisplayName("calc: reqLsc超过总价截断到总价")
+    @DisplayName("calc: reqLsc超过总价截断到50%上限")
     void calc_reqLscExceedsTotal_clamped() {
         HybridPayCalcDTO dto = new HybridPayCalcDTO();
         dto.setTotalPrice(new BigDecimal("50.00"));
@@ -456,8 +456,9 @@ class ProductServiceImplExtendedTest {
 
         HybridPayDTO result = hybridPayService.calc(dto);
 
-        assertEquals(50L, result.getLscAmount().longValue());
-        assertEquals(new BigDecimal("0.00"), result.getRmbAmount());
+        // V7.3: 50%上限 = 50 × 0.5 = 25
+        assertEquals(25L, result.getLscAmount().longValue());
+        assertEquals(new BigDecimal("25.00"), result.getRmbAmount());
     }
 
     @Test
@@ -515,7 +516,7 @@ class ProductServiceImplExtendedTest {
     }
 
     @Test
-    @DisplayName("calc: 全部LSC支付无RMB")
+    @DisplayName("calc: 全部LSC支付受50%上限约束")
     void calc_allLsc_noRmb() {
         HybridPayCalcDTO dto = new HybridPayCalcDTO();
         dto.setTotalPrice(new BigDecimal("100.00"));
@@ -523,8 +524,9 @@ class ProductServiceImplExtendedTest {
 
         HybridPayDTO result = hybridPayService.calc(dto);
 
-        assertEquals(100L, result.getLscAmount().longValue());
-        assertEquals(new BigDecimal("0.00"), result.getRmbAmount());
+        // V7.3: 50%上限 = 100 × 0.5 = 50
+        assertEquals(50L, result.getLscAmount().longValue());
+        assertEquals(new BigDecimal("50.00"), result.getRmbAmount());
     }
 
     @Test
@@ -541,7 +543,7 @@ class ProductServiceImplExtendedTest {
     }
 
     @Test
-    @DisplayName("calc: RMB计算结果为负时归零")
+    @DisplayName("calc: LSC请求超过50%上限时被截断")
     void calc_rmbAmountNegative_clampedToZero() {
         HybridPayCalcDTO dto = new HybridPayCalcDTO();
         dto.setTotalPrice(new BigDecimal("10.00"));
@@ -550,8 +552,9 @@ class ProductServiceImplExtendedTest {
 
         HybridPayDTO result = hybridPayService.calc(dto);
 
-        assertEquals(10L, result.getLscAmount().longValue());
-        assertEquals(new BigDecimal("0.00"), result.getRmbAmount());
+        // V7.3: 50%上限 = floor(10 × 0.5) = 5，可用余额30不约束
+        assertEquals(5L, result.getLscAmount().longValue());
+        assertEquals(new BigDecimal("5.00"), result.getRmbAmount());
     }
 
     @Test

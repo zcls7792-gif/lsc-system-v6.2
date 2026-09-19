@@ -30,4 +30,8 @@ public class HybridPayCalcDTO implements Serializable {
 
     /** LSC最大可用数量(用户可用余额，可选上限校验) */
     private Long maxAvailableLsc;
+
+    /** 商品赠送LSC积分数量(单件商品，用于计算预计赠送) */
+    @Min(value = 0, message = "赠送积分不能为负")
+    private Long grantPoints;
 }

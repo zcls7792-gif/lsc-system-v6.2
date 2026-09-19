@@ -29,6 +29,9 @@ public class FirstOrderCheckDTO implements Serializable {
     @NotNull(message = "订单金额不能为空")
     private BigDecimal orderAmount;
 
+    /** 本订单实际赠送 LSC 数量(V7.3，奖励基数=grantedLsc×10%) */
+    private Long grantedLsc;
+
     /** 订单状态: 2已完成(必填，需已完成且未全额退款) */
     @NotNull(message = "订单状态不能为空")
     private Integer orderStatus;

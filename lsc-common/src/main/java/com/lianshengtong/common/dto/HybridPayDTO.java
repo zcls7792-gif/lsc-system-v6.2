@@ -8,13 +8,16 @@ public class HybridPayDTO implements Serializable {
     private Long lscAmount;
     private BigDecimal rmbAmount;
     private BigDecimal totalPrice;
+    /** 预计赠送 LSC 数量(V7.3: 仅人民币支付部分按比例赠送) */
+    private Long estimatedGrantLsc;
 
     public HybridPayDTO() {}
 
-    public HybridPayDTO(Long lscAmount, BigDecimal rmbAmount, BigDecimal totalPrice) {
+    public HybridPayDTO(Long lscAmount, BigDecimal rmbAmount, BigDecimal totalPrice, Long estimatedGrantLsc) {
         this.lscAmount = lscAmount;
         this.rmbAmount = rmbAmount;
         this.totalPrice = totalPrice;
+        this.estimatedGrantLsc = estimatedGrantLsc;
     }
 
     
@@ -25,6 +28,7 @@ public class HybridPayDTO implements Serializable {
         public Builder lscAmount(Long v) { obj.lscAmount = v; return this; }
         public Builder rmbAmount(BigDecimal v) { obj.rmbAmount = v; return this; }
         public Builder totalPrice(BigDecimal v) { obj.totalPrice = v; return this; }
+        public Builder estimatedGrantLsc(Long v) { obj.estimatedGrantLsc = v; return this; }
         public HybridPayDTO build() { return obj; }
     }
 
@@ -35,6 +39,8 @@ public class HybridPayDTO implements Serializable {
     public void setRmbAmount(BigDecimal v) { this.rmbAmount = v; }
     public BigDecimal getTotalPrice() { return totalPrice; }
     public void setTotalPrice(BigDecimal v) { this.totalPrice = v; }
+    public Long getEstimatedGrantLsc() { return estimatedGrantLsc; }
+    public void setEstimatedGrantLsc(Long v) { this.estimatedGrantLsc = v; }
 
 
 }

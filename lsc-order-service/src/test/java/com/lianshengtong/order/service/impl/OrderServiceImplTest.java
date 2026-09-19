@@ -91,9 +91,10 @@ class OrderServiceImplTest {
         Order order = orderService.createOrder(dto);
 
         assertNotNull(order);
-        assertEquals(60L, order.getLscAmount());
-        assertEquals(0, new BigDecimal("40.00").compareTo(order.getRmbAmount()),
-                "人民币 = 100 - 60 = 40");
+        // V7.3: LSC抵扣上限=50%，60被截断为50
+        assertEquals(50L, order.getLscAmount());
+        assertEquals(0, new BigDecimal("50.00").compareTo(order.getRmbAmount()),
+                "人民币 = 100 - 50 = 50");
         assertEquals(OrderStatusEnum.PENDING_PAY.getCode(), order.getStatus());
         // 退款金额初始化
         assertEquals(0L, order.getRefundLscAmount());
@@ -102,7 +103,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    @DisplayName("createOrder: LSC 数量超过订单总价应抛异常")
+    @DisplayName("createOrder: LSC 数量超过50%上限时截断到50%")
     void createOrder_lscExceedsTotal() {
         OrderCreateDTO dto = new OrderCreateDTO();
         dto.setOrderType(0);
@@ -111,8 +112,13 @@ class OrderServiceImplTest {
         dto.setTotalPrice(new BigDecimal("100.00"));
         dto.setLscAmount(200L);
 
-        BizException ex = assertThrows(BizException.class, () -> orderService.createOrder(dto));
-        assertTrue(ex.getMessage().contains("LSC支付数量不能超过订单总价"));
+        when(orderMapper.insert(any(Order.class))).thenReturn(1);
+
+        Order order = orderService.createOrder(dto);
+
+        // V7.3: LSC抵扣上限=50%，200被截断为50
+        assertEquals(50L, order.getLscAmount());
+        assertEquals(0, new BigDecimal("50.00").compareTo(order.getRmbAmount()));
     }
 
     @Test
@@ -357,7 +363,7 @@ class OrderServiceImplTest {
         when(redissonClient.getLock(anyString())).thenReturn(rLock);
         when(rLock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
         when(rLock.isHeldByCurrentThread()).thenReturn(true);
-        when(lscLedgerFeignClient.payLsc(any(LscLedgerOpDTO.class))).thenReturn(R.ok());
+        when(lscLedgerFeignClient.deductLsc(any(LscLedgerOpDTO.class))).thenReturn(R.ok());
         when(orderMapper.updateById(any(Order.class))).thenReturn(1);
 
         OrderPayDTO dto = new OrderPayDTO();
@@ -367,7 +373,7 @@ class OrderServiceImplTest {
         Order result = orderService.payOrder(dto);
         assertEquals(OrderStatusEnum.PAID.getCode(), result.getStatus());
         assertNotNull(result.getPayTime());
-        verify(lscLedgerFeignClient).payLsc(any(LscLedgerOpDTO.class));
+        verify(lscLedgerFeignClient).deductLsc(any(LscLedgerOpDTO.class));
         verify(orderMapper).updateById(any(Order.class));
         verify(rLock).unlock();
     }
@@ -442,7 +448,7 @@ class OrderServiceImplTest {
         when(redissonClient.getLock(anyString())).thenReturn(rLock);
         when(rLock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
         when(rLock.isHeldByCurrentThread()).thenReturn(true);
-        when(lscLedgerFeignClient.payLsc(any(LscLedgerOpDTO.class))).thenReturn(null);
+        when(lscLedgerFeignClient.deductLsc(any(LscLedgerOpDTO.class))).thenReturn(null);
 
         OrderPayDTO dto = new OrderPayDTO();
         dto.setOrderNo(ORDER_NO);
@@ -468,7 +474,7 @@ class OrderServiceImplTest {
         when(redissonClient.getLock(anyString())).thenReturn(rLock);
         when(rLock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
         when(rLock.isHeldByCurrentThread()).thenReturn(true);
-        when(lscLedgerFeignClient.payLsc(any(LscLedgerOpDTO.class))).thenReturn(R.fail("余额不足"));
+        when(lscLedgerFeignClient.deductLsc(any(LscLedgerOpDTO.class))).thenReturn(R.fail("余额不足"));
 
         OrderPayDTO dto = new OrderPayDTO();
         dto.setOrderNo(ORDER_NO);
@@ -512,13 +518,13 @@ class OrderServiceImplTest {
         Order order = buildPaidOrder();
         when(orderMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(order);
         when(orderMapper.updateById(any(Order.class))).thenReturn(1);
-        when(promotionFeignClient.notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any()))
+        when(promotionFeignClient.notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any(), any()))
                 .thenReturn(R.ok());
 
         Order result = orderService.completeOrder(ORDER_NO, 2001L);
         assertEquals(OrderStatusEnum.COMPLETED.getCode(), result.getStatus());
         assertNotNull(result.getCompletedAt());
-        verify(promotionFeignClient).notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any());
+        verify(promotionFeignClient).notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any(), any());
         verify(orderMapper).updateById(any(Order.class));
     }
 
@@ -555,7 +561,7 @@ class OrderServiceImplTest {
         order.setTotalPrice(new BigDecimal("100.00"));
         when(orderMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(order);
         when(orderMapper.updateById(any(Order.class))).thenReturn(1);
-        when(promotionFeignClient.notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any()))
+        when(promotionFeignClient.notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any(), any()))
                 .thenThrow(new RuntimeException("推广服务不可用"));
 
         Order result = orderService.completeOrder(ORDER_NO, 2001L);
@@ -571,14 +577,14 @@ class OrderServiceImplTest {
         order.setRefundRmbAmount(null);
         when(orderMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(order);
         when(orderMapper.updateById(any(Order.class))).thenReturn(1);
-        when(promotionFeignClient.notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any()))
+        when(promotionFeignClient.notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any(), any()))
                 .thenReturn(R.ok());
 
         Order result = orderService.completeOrder(ORDER_NO, 2001L);
         assertEquals(OrderStatusEnum.COMPLETED.getCode(), result.getStatus());
         ArgumentCaptor<BigDecimal> amountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
         verify(promotionFeignClient).notifyFirstOrder(anyLong(), anyString(),
-                amountCaptor.capture(), anyInt(), any());
+                amountCaptor.capture(), anyInt(), any(), any());
         assertEquals(0, BigDecimal.ZERO.compareTo(amountCaptor.getValue()));
     }
 

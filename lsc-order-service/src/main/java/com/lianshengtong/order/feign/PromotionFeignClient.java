@@ -31,5 +31,6 @@ public interface PromotionFeignClient {
                              @RequestParam("orderNo") String orderNo,
                              @RequestParam("orderAmount") BigDecimal orderAmount,
                              @RequestParam("orderStatus") Integer orderStatus,
-                             @RequestParam(value = "refundAmount", required = false) BigDecimal refundAmount);
+                             @RequestParam(value = "refundAmount", required = false) BigDecimal refundAmount,
+                             @RequestParam(value = "grantedLsc", required = false) Long grantedLsc);
 }

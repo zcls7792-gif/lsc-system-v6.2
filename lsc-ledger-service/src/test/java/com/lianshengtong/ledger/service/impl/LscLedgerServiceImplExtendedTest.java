@@ -32,7 +32,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +41,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@DisplayName("账本服务扩展单元测试 - 补充覆盖")
+@DisplayName("账本服务扩展单元测试 (V7.3)")
 class LscLedgerServiceImplExtendedTest {
 
     @Mock
@@ -69,8 +68,7 @@ class LscLedgerServiceImplExtendedTest {
         ReflectionTestUtils.setField(ledgerService, "transactionTemplate", txTemplate);
         ReflectionTestUtils.setField(ledgerService, "lockWaitMs", 3000L);
         ReflectionTestUtils.setField(ledgerService, "lockLeaseMs", 10000L);
-        ReflectionTestUtils.setField(ledgerService, "b2bValidityDays", 365);
-        ReflectionTestUtils.setField(ledgerService, "expireBatchSize", 500);
+        ReflectionTestUtils.setField(ledgerService, "detailValidityDays", 365);
         ReflectionTestUtils.setField(ledgerService, "optimisticLockEnabled", false);
 
         lenient().when(redissonClient.getLock(anyString())).thenReturn(rLock);
@@ -115,7 +113,7 @@ class LscLedgerServiceImplExtendedTest {
     @DisplayName("transactionList: 带所有过滤条件查询")
     void transactionList_withAllFilters() {
         Long userId = 1001L;
-        Integer type = LscTransactionTypeEnum.MALL_CONSUMPTION.getCode();
+        Integer type = LscTransactionTypeEnum.ORDER_DEDUCT.getCode();
         String startDate = "2025-01-01";
         String endDate = "2025-01-31";
         String orderNo = "ORD_001";
@@ -205,106 +203,40 @@ class LscLedgerServiceImplExtendedTest {
         assertNotNull(result);
         assertEquals(500L, result.get("totalLocked"));
         assertEquals(200L, result.get("totalAvailable"));
+        assertEquals(0L, result.get("totalFrozen"));
         assertEquals(0L, result.get("totalWrittenOff"));
         assertEquals(0L, result.get("totalUsed"));
         assertEquals(0L, result.get("monthlyRevenue"));
     }
 
     @Test
-    @DisplayName("overview: 含核销和月收入")
-    void overview_withWriteOffAndMonthlyRevenue() {
+    @DisplayName("overview: 含已使用和月收入")
+    void overview_withUsedAndMonthlyRevenue() {
         Long userId = 1001L;
         LscAccount acc = buildAccount(userId, 500L, 200L);
 
-        LscTransaction writeOffTx = new LscTransaction();
-        writeOffTx.setAmount(100L);
-        writeOffTx.setType(LscTransactionTypeEnum.MERCHANT_WRITE_OFF.getCode());
+        // V7.3: 已使用 = 订单抵扣(ORDER_DEDUCT), 月收入 = 每日释放(DAILY_RELEASE)
+        LscTransaction usedTx = new LscTransaction();
+        usedTx.setAmount(100L);
+        usedTx.setType(LscTransactionTypeEnum.ORDER_DEDUCT.getCode());
         LscTransaction monthTx = new LscTransaction();
         monthTx.setAmount(200L);
-        monthTx.setType(LscTransactionTypeEnum.MALL_CONSUMPTION.getCode());
+        monthTx.setType(LscTransactionTypeEnum.DAILY_RELEASE.getCode());
 
         when(accountMapper.selectById(userId)).thenReturn(acc);
         when(transactionMapper.selectList(any()))
-                .thenReturn(Collections.singletonList(writeOffTx))
+                .thenReturn(Collections.singletonList(usedTx))
                 .thenReturn(Collections.singletonList(monthTx));
 
         Map<String, Object> result = ledgerService.overview(userId);
 
         assertNotNull(result);
-        assertEquals(100L, result.get("totalWrittenOff"));
+        assertEquals(0L, result.get("totalWrittenOff")); // V7.3 禁止核销
         assertEquals(100L, result.get("totalUsed"));
         assertEquals(200L, result.get("monthlyRevenue"));
     }
 
-    // ==================== 4. expireTransfer 补充测试 ====================
-
-    @Test
-    @DisplayName("expireTransfer: 幂等键重复直接返回0")
-    void expireTransfer_idempotentKeyExists() {
-        Long userId = 1001L;
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(new LscTransaction());
-
-        long result = ledgerService.expireTransfer(userId);
-
-        assertEquals(0L, result);
-    }
-
-    @Test
-    @DisplayName("expireTransfer: 无过期明细返回0")
-    void expireTransfer_noExpiredDetails() {
-        Long userId = 1001L;
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(detailMapper.selectExpiredForTransfer(eq(userId), any(), anyInt()))
-                .thenReturn(Collections.emptyList());
-
-        long result = ledgerService.expireTransfer(userId);
-
-        assertEquals(0L, result);
-    }
-
-    @Test
-    @DisplayName("expireTransfer: 可用余额不足抛异常")
-    void expireTransfer_balanceInsufficient() {
-        Long userId = 1001L;
-        LscAccount acc = buildAccount(userId, 0L, 50L);
-
-        AvailableLscDetail d = new AvailableLscDetail();
-        d.setId(1L);
-        d.setUserId(userId);
-        d.setAmount(300L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(detailMapper.selectExpiredForTransfer(eq(userId), any(), anyInt()))
-                .thenReturn(Collections.singletonList(d));
-        when(accountService.getOrCreateAccount(userId)).thenReturn(acc);
-
-        BizException ex = assertThrows(BizException.class,
-                () -> ledgerService.expireTransfer(userId));
-        assertEquals(ResultCode.LSC_BALANCE_INSUFFICIENT.getCode(), ex.getCode());
-    }
-
-    @Test
-    @DisplayName("expireTransfer: 账户更新乐观锁冲突抛异常")
-    void expireTransfer_optimisticLockConflict() {
-        Long userId = 1001L;
-        LscAccount acc = buildAccount(userId, 0L, 500L);
-
-        AvailableLscDetail d = new AvailableLscDetail();
-        d.setId(1L);
-        d.setUserId(userId);
-        d.setAmount(200L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(detailMapper.selectExpiredForTransfer(eq(userId), any(), anyInt()))
-                .thenReturn(Collections.singletonList(d));
-        when(accountService.getOrCreateAccount(userId)).thenReturn(acc);
-        when(accountMapper.updateById(any(LscAccount.class))).thenReturn(0);
-
-        assertThrows(BizException.class,
-                () -> ledgerService.expireTransfer(userId));
-    }
-
-    // ==================== 5. DuplicateKeyException 幂等冲突 ====================
+    // ==================== 4. DuplicateKeyException 幂等冲突 ====================
 
     @Test
     @DisplayName("recordTransaction: insert 抛 DuplicateKeyException 时静默忽略")
@@ -322,7 +254,7 @@ class LscLedgerServiceImplExtendedTest {
         assertDoesNotThrow(() -> ledgerService.releaseLsc(userId, 50L, "REL_DUP_KEY"));
     }
 
-    // ==================== 6. applyAccountChange 负值边界 ====================
+    // ==================== 5. applyAccountChange 负值边界 ====================
 
     @Test
     @DisplayName("applyAccountChange: newLocked < 0 抛 LSC_LOCKED_INSUFFICIENT")
@@ -338,21 +270,7 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(ResultCode.LSC_LOCKED_INSUFFICIENT.getCode(), ex.getCode());
     }
 
-    @Test
-    @DisplayName("applyAccountChange: newAvailable < 0 抛 LSC_BALANCE_INSUFFICIENT")
-    void applyAccountChange_availableInsufficient() {
-        Long userId = 1001L;
-        LscAccount acc = buildAccount(userId, 200L, 10L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(userId)).thenReturn(acc);
-
-        BizException ex = assertThrows(BizException.class,
-                () -> ledgerService.writeOffLsc(userId, 100L, "WO_AVAIL_NEG"));
-        assertEquals(ResultCode.LSC_BALANCE_INSUFFICIENT.getCode(), ex.getCode());
-    }
-
-    // ==================== 7. toLongFromObject 边界 ====================
+    // ==================== 6. toLongFromObject 边界 ====================
 
     @Test
     @DisplayName("toLongFromObject: null 返回 0")
@@ -399,7 +317,22 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(10L, result.get("totalCount"));
     }
 
-    // ==================== 8. buildIdemKey 空订单号 ====================
+    @Test
+    @DisplayName("toLongFromObject: String 类型值走 Long.parseLong 路径")
+    void toLongFromObject_stringValue() {
+        Map<String, Object> row = new HashMap<>();
+        row.put("totalAmount", "5000");
+        row.put("totalCount", "10");
+        when(transactionMapper.aggregateByTimeRange(any(), any(), any()))
+                .thenReturn(Collections.singletonList(row));
+
+        Map<String, Object> result = ledgerService.dailySummary(null, null);
+
+        assertEquals(5000L, result.get("totalAmount"));
+        assertEquals(10L, result.get("totalCount"));
+    }
+
+    // ==================== 7. buildIdemKey 空订单号 ====================
 
     @Test
     @DisplayName("buildIdemKey: 空订单号时使用随机生成器")
@@ -418,7 +351,7 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(200L, result.getTotalLocked());
     }
 
-    // ==================== 9. 各种幂等键重复路径 ====================
+    // ==================== 8. 幂等键重复路径 ====================
 
     @Test
     @DisplayName("releaseLsc: 幂等键重复返回已有账户")
@@ -438,127 +371,23 @@ class LscLedgerServiceImplExtendedTest {
     }
 
     @Test
-    @DisplayName("writeOffLsc: 幂等键重复返回已有账户")
-    void writeOffLsc_idempotentKeyExists() {
-        Long merchantId = 2001L;
-        LscAccount existingAcc = buildAccount(merchantId, 0L, 300L);
+    @DisplayName("issueLsc: 空订单号发行成功")
+    void issueLsc_blankOrderNo() {
+        Long userId = 1001L;
+        LscAccount acc = buildAccount(userId, 0L, 0L);
 
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(new LscTransaction());
-        when(accountMapper.selectById(merchantId)).thenReturn(existingAcc);
+        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
+        when(accountService.getOrCreateAccount(userId)).thenReturn(acc);
+        when(accountMapper.updateById(any(LscAccount.class))).thenReturn(1);
+        when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
 
-        LscAccount result = ledgerService.writeOffLsc(merchantId, 50L, "WO_DUP");
+        LscAccount result = ledgerService.issueLsc(userId, 100L, "");
 
         assertNotNull(result);
-        assertEquals(300L, result.getTotalAvailable());
-        verify(accountMapper, never()).updateById(any(LscAccount.class));
+        assertEquals(100L, result.getTotalLocked());
     }
 
-    @Test
-    @DisplayName("b2bTransfer: 幂等键重复返回发起方账户")
-    void b2bTransfer_idempotentKeyExists() {
-        Long fromId = 2001L;
-        Long toId = 2002L;
-        LscAccount existingAcc = buildAccount(fromId, 0L, 500L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(new LscTransaction());
-        when(accountMapper.selectById(fromId)).thenReturn(existingAcc);
-
-        LscAccount result = ledgerService.b2bTransfer(fromId, toId, 80L, "B2B_DUP");
-
-        assertNotNull(result);
-        assertEquals(500L, result.getTotalAvailable());
-        verify(accountMapper, never()).updateById(any(LscAccount.class));
-    }
-
-    // ==================== 10. payLsc 单边更新失败 ====================
-
-    @Test
-    @DisplayName("payLsc: 消费者账户更新失败抛异常")
-    void payLsc_consumerUpdateFails() {
-        Long consumerId = 1001L;
-        Long merchantId = 2001L;
-        Long amount = 80L;
-
-        LscAccount consumerAcc = buildAccount(consumerId, 0L, 200L);
-        LscAccount merchantAcc = buildAccount(merchantId, 0L, 50L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(consumerId)).thenReturn(consumerAcc);
-        when(accountService.getOrCreateAccount(merchantId)).thenReturn(merchantAcc);
-        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(consumerId))))
-                .thenReturn(0);
-
-        assertThrows(BizException.class,
-                () -> ledgerService.payLsc(consumerId, merchantId, amount, "PAY_CONSUMER_FAIL"));
-    }
-
-    @Test
-    @DisplayName("payLsc: 商家账户更新失败抛异常")
-    void payLsc_merchantUpdateFails() {
-        Long consumerId = 1001L;
-        Long merchantId = 2001L;
-        Long amount = 80L;
-
-        LscAccount consumerAcc = buildAccount(consumerId, 0L, 200L);
-        LscAccount merchantAcc = buildAccount(merchantId, 0L, 50L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(consumerId)).thenReturn(consumerAcc);
-        when(accountService.getOrCreateAccount(merchantId)).thenReturn(merchantAcc);
-        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(consumerId))))
-                .thenReturn(1);
-        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(merchantId))))
-                .thenReturn(0);
-
-        assertThrows(BizException.class,
-                () -> ledgerService.payLsc(consumerId, merchantId, amount, "PAY_MERCHANT_FAIL"));
-    }
-
-    // ==================== 11. b2bTransfer 单边更新失败 ====================
-
-    @Test
-    @DisplayName("b2bTransfer: 发起方账户更新失败抛异常")
-    void b2bTransfer_fromUpdateFails() {
-        Long fromId = 2001L;
-        Long toId = 2002L;
-        Long amount = 80L;
-
-        LscAccount fromAcc = buildAccount(fromId, 0L, 200L);
-        LscAccount toAcc = buildAccount(toId, 0L, 50L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(fromId)).thenReturn(fromAcc);
-        when(accountService.getOrCreateAccount(toId)).thenReturn(toAcc);
-        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(fromId))))
-                .thenReturn(0);
-
-        assertThrows(BizException.class,
-                () -> ledgerService.b2bTransfer(fromId, toId, amount, "B2B_FROM_FAIL"));
-    }
-
-    @Test
-    @DisplayName("b2bTransfer: 接收方账户更新失败抛异常")
-    void b2bTransfer_toUpdateFails() {
-        Long fromId = 2001L;
-        Long toId = 2002L;
-        Long amount = 80L;
-
-        LscAccount fromAcc = buildAccount(fromId, 0L, 200L);
-        LscAccount toAcc = buildAccount(toId, 0L, 50L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(fromId)).thenReturn(fromAcc);
-        when(accountService.getOrCreateAccount(toId)).thenReturn(toAcc);
-        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(fromId))))
-                .thenReturn(1);
-        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(toId))))
-                .thenReturn(0);
-
-        assertThrows(BizException.class,
-                () -> ledgerService.b2bTransfer(fromId, toId, amount, "B2B_TO_FAIL"));
-    }
-
-    // ==================== 12. lockedSummary 过滤锁定<=0 ====================
+    // ==================== 9. lockedSummary 过滤锁定<=0 ====================
 
     @Test
     @DisplayName("lockedSummary: 过滤锁定余额<=0 的账户")
@@ -581,7 +410,7 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(1001L, accounts.get(0).get("userId"));
     }
 
-    // ==================== 13. releaseBatch null userId 过滤 ====================
+    // ==================== 10. releaseBatch null userId 过滤 ====================
 
     @Test
     @DisplayName("releaseBatch: null userId 的操作被过滤掉")
@@ -607,7 +436,7 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(50L, result.get("releasedAmount"));
     }
 
-    // ==================== 14. releaseUserBatch amount<=0 跳过 ====================
+    // ==================== 11. releaseUserBatch amount<=0 跳过 ====================
 
     @Test
     @DisplayName("releaseUserBatch: amount<=0 操作被跳过不抛异常")
@@ -633,61 +462,21 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(50L, result.get("releasedAmount"));
     }
 
-    // ==================== 15. payLscOptimistically 幂等键存在路径 ====================
-
     @Test
-    @DisplayName("payLscOptimistically: 幂等键存在直接返回消费者账户")
-    void payLscOptimistically_idempotentKeyExists() {
-        ReflectionTestUtils.setField(ledgerService, "optimisticLockEnabled", true);
-        Long consumerId = 1001L;
-        Long merchantId = 2001L;
-        LscAccount consumerAcc = buildAccount(consumerId, 0L, 120L);
+    @DisplayName("releaseBatch: 所有操作 amount<=0 释放金额为0")
+    void releaseBatch_allAmountsZeroOrNegative() {
+        List<LscLedgerOpDTO> ops = Arrays.asList(
+                LscLedgerOpDTO.builder().userId(1001L).lockedDelta(0L).availableDelta(0L).orderNo("Z1").build(),
+                LscLedgerOpDTO.builder().userId(1001L).lockedDelta(null).availableDelta(null).orderNo("Z2").build()
+        );
 
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(new LscTransaction());
-        when(accountMapper.selectById(consumerId)).thenReturn(consumerAcc);
+        Map<String, Object> result = ledgerService.releaseBatch(ops);
 
-        LscAccount result = ledgerService.payLsc(consumerId, merchantId, 80L, "PAY_OPT_DUP");
-
-        assertNotNull(result);
-        assertEquals(consumerId, result.getUserId());
-        assertEquals(120L, result.getTotalAvailable());
-        verify(accountMapper, never()).updateById(any(LscAccount.class));
+        assertEquals(2, result.get("total"));
+        assertEquals(0L, result.get("releasedAmount"));
     }
 
-    // ==================== 16. expireTransferAll 单用户异常隔离 ====================
-
-    @Test
-    @DisplayName("expireTransferAll: 单个用户异常不影响其他用户处理")
-    void expireTransferAll_userExceptionIsolated() {
-        LscAccount acc1 = buildAccount(1001L, 0L, 1000L);
-        LscAccount acc2 = buildAccount(1002L, 0L, 500L);
-
-        AvailableLscDetail d1 = new AvailableLscDetail();
-        d1.setId(1L);
-        d1.setUserId(1001L);
-        d1.setAmount(200L);
-        AvailableLscDetail d2 = new AvailableLscDetail();
-        d2.setId(2L);
-        d2.setUserId(1002L);
-        d2.setAmount(100L);
-
-        lenient().when(detailMapper.selectBatchExpiredForTransfer(any(), anyInt()))
-                .thenReturn(Arrays.asList(d1, d2))
-                .thenReturn(Collections.emptyList());
-        lenient().when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        lenient().when(accountService.getOrCreateAccount(1001L)).thenReturn(acc1);
-        lenient().when(accountService.getOrCreateAccount(1002L))
-                .thenThrow(new RuntimeException("用户1002账户异常"));
-        lenient().when(accountMapper.updateById(any(LscAccount.class))).thenReturn(1);
-        lenient().when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
-
-        Map<String, Object> result = ledgerService.expireTransferAll();
-
-        assertEquals(1, result.get("userCount"));
-        assertEquals(200L, result.get("transferAmount"));
-    }
-
-    // ==================== 17. dailySummary 指定日期 ====================
+    // ==================== 12. dailySummary 指定日期 ====================
 
     @Test
     @DisplayName("dailySummary: 指定日期聚合")
@@ -706,7 +495,7 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(5L, result.get("totalCount"));
     }
 
-    // ==================== 18. recentTrend 正天数 ====================
+    // ==================== 13. recentTrend ====================
 
     @Test
     @DisplayName("recentTrend: 指定正天数查询")
@@ -737,16 +526,18 @@ class LscLedgerServiceImplExtendedTest {
     @Test
     @DisplayName("recentTrend: 含收入类流水统计")
     void recentTrend_withRevenue() {
+        // V7.3 收入类: 退款退回(REFUND_RETURN) + 每日释放(DAILY_RELEASE)
         LscTransaction tx1 = new LscTransaction();
-        tx1.setType(LscTransactionTypeEnum.MALL_CONSUMPTION.getCode());
+        tx1.setType(LscTransactionTypeEnum.REFUND_RETURN.getCode());
         tx1.setAmount(200L);
         tx1.setOrderNo("ORD_001");
         LscTransaction tx2 = new LscTransaction();
         tx2.setType(LscTransactionTypeEnum.DAILY_RELEASE.getCode());
         tx2.setAmount(100L);
         tx2.setOrderNo("ORD_002");
+        // 消费赠送入锁定(GRANT_LOCKED) 不计入可用收入
         LscTransaction tx3 = new LscTransaction();
-        tx3.setType(LscTransactionTypeEnum.CONSUMPTION_ISSUE.getCode());
+        tx3.setType(LscTransactionTypeEnum.GRANT_LOCKED.getCode());
         tx3.setAmount(500L);
         tx3.setOrderNo(null);
 
@@ -760,57 +551,7 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(2L, result.get(0).get("orderCount"));
     }
 
-    // ==================== 19. expireTransferAll 循环5次空数据 ====================
-
-    @Test
-    @DisplayName("expireTransferAll: 循环5次均为空后退出")
-    void expireTransferAll_emptyLoopGuard() {
-        when(detailMapper.selectBatchExpiredForTransfer(any(), anyInt()))
-                .thenReturn(Collections.emptyList());
-
-        Map<String, Object> result = ledgerService.expireTransferAll();
-
-        assertEquals(0, result.get("userCount"));
-        assertEquals(0L, result.get("transferAmount"));
-    }
-
-    // ==================== 20. payLscOptimistically 重试返回0 ====================
-
-    @Test
-    @DisplayName("payLscOptimistically: 全部重试失败抛 OptimisticLockingFailure")
-    void payLscOptimistically_allRetriesFail() {
-        ReflectionTestUtils.setField(ledgerService, "optimisticLockEnabled", true);
-        Long consumerId = 1001L;
-        Long merchantId = 2001L;
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(eq(consumerId)))
-                .thenAnswer(inv -> buildAccount(consumerId, 0L, 200L));
-        when(accountService.getOrCreateAccount(eq(merchantId)))
-                .thenAnswer(inv -> buildAccount(merchantId, 0L, 50L));
-        when(accountMapper.updateById(any(LscAccount.class))).thenReturn(0);
-
-        assertThrows(RuntimeException.class,
-                () -> ledgerService.payLsc(consumerId, merchantId, 80L, "PAY_ALL_FAIL"));
-    }
-
-    // ==================== 21. releaseBatch 全部 amount<=0 ====================
-
-    @Test
-    @DisplayName("releaseBatch: 所有操作 amount<=0 释放金额为0")
-    void releaseBatch_allAmountsZeroOrNegative() {
-        List<LscLedgerOpDTO> ops = Arrays.asList(
-                LscLedgerOpDTO.builder().userId(1001L).lockedDelta(0L).availableDelta(0L).orderNo("Z1").build(),
-                LscLedgerOpDTO.builder().userId(1001L).lockedDelta(null).availableDelta(null).orderNo("Z2").build()
-        );
-
-        Map<String, Object> result = ledgerService.releaseBatch(ops);
-
-        assertEquals(2, result.get("total"));
-        assertEquals(0L, result.get("releasedAmount"));
-    }
-
-    // ==================== 22. getBalance 账户为null时创建新账户 ====================
+    // ==================== 14. getBalance null 账户 ====================
 
     @Test
     @DisplayName("getBalance: 账户为null返回带默认值的账户")
@@ -826,159 +567,12 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(0, result.getVersion());
     }
 
-    // ==================== 23. expireTransferAll 循环多次用户成功 ====================
-
-    @Test
-    @DisplayName("expireTransferAll: 多轮循环处理多批用户")
-    void expireTransferAll_multipleBatches() {
-        LscAccount acc1 = buildAccount(1001L, 0L, 1000L);
-        LscAccount acc2 = buildAccount(1002L, 0L, 500L);
-
-        AvailableLscDetail d1 = new AvailableLscDetail();
-        d1.setId(1L);
-        d1.setUserId(1001L);
-        d1.setAmount(100L);
-        AvailableLscDetail d2 = new AvailableLscDetail();
-        d2.setId(2L);
-        d2.setUserId(1002L);
-        d2.setAmount(200L);
-
-        when(detailMapper.selectBatchExpiredForTransfer(any(), anyInt()))
-                .thenReturn(Collections.singletonList(d1))
-                .thenReturn(Collections.singletonList(d2))
-                .thenReturn(Collections.emptyList());
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(anyLong())).thenReturn(acc1, acc2);
-        when(accountMapper.updateById(any(LscAccount.class))).thenReturn(1);
-        when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
-
-        Map<String, Object> result = ledgerService.expireTransferAll();
-
-        assertEquals(2, result.get("userCount"));
-        assertEquals(300L, result.get("transferAmount"));
-    }
-
-    // ==================== 24. applyAccountChange 负可用核销 ====================
-
-    @Test
-    @DisplayName("writeOffLsc: 可用余额刚好等于核销金额成功")
-    void writeOffLsc_exactBalanceSuccess() {
-        Long merchantId = 2001L;
-        Long amount = 50L;
-
-        LscAccount acc = buildAccount(merchantId, 0L, 50L);
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(merchantId)).thenReturn(acc);
-        when(accountMapper.updateById(any(LscAccount.class))).thenReturn(1);
-        when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
-
-        LscAccount result = ledgerService.writeOffLsc(merchantId, amount, "WO_EXACT");
-
-        assertNotNull(result);
-        assertEquals(0L, result.getTotalAvailable());
-    }
-
-    // ==================== 25. issueLsc 空订单号 ====================
-
-    @Test
-    @DisplayName("issueLsc: 空订单号发行成功")
-    void issueLsc_blankOrderNo() {
-        Long userId = 1001L;
-        LscAccount acc = buildAccount(userId, 0L, 0L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(userId)).thenReturn(acc);
-        when(accountMapper.updateById(any(LscAccount.class))).thenReturn(1);
-        when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
-
-        LscAccount result = ledgerService.issueLsc(userId, 100L, "");
-
-        assertNotNull(result);
-        assertEquals(100L, result.getTotalLocked());
-    }
-
-    // ==================== 26. payLscOptimistically 余额不足分支 ====================
-
-    @Test
-    @DisplayName("payLscOptimistically: 乐观锁模式下余额不足抛 LSC_BALANCE_INSUFFICIENT")
-    void payLscOptimistically_balanceInsufficient() {
-        ReflectionTestUtils.setField(ledgerService, "optimisticLockEnabled", true);
-        Long consumerId = 1001L;
-        Long merchantId = 2001L;
-
-        // 消费者可用余额 50 < 支付金额 80
-        LscAccount consumerAcc = buildAccount(consumerId, 0L, 50L);
-        LscAccount merchantAcc = buildAccount(merchantId, 0L, 0L);
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(eq(consumerId)))
-                .thenAnswer(inv -> buildAccount(consumerId, 0L, 50L));
-        when(accountService.getOrCreateAccount(eq(merchantId)))
-                .thenAnswer(inv -> buildAccount(merchantId, 0L, 0L));
-
-        BizException ex = assertThrows(BizException.class,
-                () -> ledgerService.payLsc(consumerId, merchantId, 80L, "PAY_OPT_INSUFF"));
-        assertEquals(ResultCode.LSC_BALANCE_INSUFFICIENT.getCode(), ex.getCode());
-    }
-
-    // ==================== 27. payLscOptimistically 商家更新失败触发 OptConflict ====================
-
-    @Test
-    @DisplayName("payLscOptimistically: 商家账户更新失败触发 OptConflict 重试后成功")
-    void payLscOptimistically_merchantUpdateFails() {
-        ReflectionTestUtils.setField(ledgerService, "optimisticLockEnabled", true);
-        Long consumerId = 1001L;
-        Long merchantId = 2001L;
-
-        when(transactionMapper.selectByIdempotentKey(anyString())).thenReturn(null);
-        when(accountService.getOrCreateAccount(eq(consumerId)))
-                .thenAnswer(inv -> buildAccount(consumerId, 0L, 200L));
-        when(accountService.getOrCreateAccount(eq(merchantId)))
-                .thenAnswer(inv -> buildAccount(merchantId, 0L, 50L));
-        // 消费者更新始终成功
-        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(consumerId))))
-                .thenReturn(1);
-        // 商家更新第一次失败（触发 OptConflict），第二次成功
-        when(accountMapper.updateById(argThat(a -> a != null && a.getUserId().equals(merchantId))))
-                .thenReturn(0)
-                .thenReturn(1);
-        when(accountMapper.selectById(consumerId))
-                .thenReturn(buildAccount(consumerId, 0L, 120L));
-        when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
-        when(detailMapper.insert(any(AvailableLscDetail.class))).thenReturn(1);
-
-        LscAccount result = ledgerService.payLsc(consumerId, merchantId, 80L, "PAY_OPT_M_FAIL");
-
-        assertNotNull(result);
-        assertEquals(consumerId, result.getUserId());
-        // 验证商家更新被调用两次（第一次失败，第二次成功）
-        verify(accountMapper, times(2)).updateById(argThat(a -> a != null && a.getUserId().equals(merchantId)));
-    }
-
-    // ==================== 28. toLongFromObject String 类型转换分支 ====================
-
-    @Test
-    @DisplayName("toLongFromObject: String 类型值走 Long.parseLong 路径")
-    void toLongFromObject_stringValue() {
-        Map<String, Object> row = new HashMap<>();
-        row.put("totalAmount", "5000");
-        row.put("totalCount", "10");
-        when(transactionMapper.aggregateByTimeRange(any(), any(), any()))
-                .thenReturn(Collections.singletonList(row));
-
-        Map<String, Object> result = ledgerService.dailySummary(null, null);
-
-        assertEquals(5000L, result.get("totalAmount"));
-        assertEquals(10L, result.get("totalCount"));
-    }
-
-    // ==================== 29. nvl(Long) null 分支 ====================
+    // ==================== 15. nvl null 分支 ====================
 
     @Test
     @DisplayName("nvl(Long): 账户 totalLocked 和 totalAvailable 为 null 时返回 0")
     void nvl_long_nullBranch() {
         Long userId = 1001L;
-        // 构建账户，totalLocked 和 totalAvailable 均为 null
         LscAccount acc = new LscAccount();
         acc.setUserId(userId);
         acc.setTotalLocked(null);
@@ -990,9 +584,6 @@ class LscLedgerServiceImplExtendedTest {
         when(accountMapper.updateById(any(LscAccount.class))).thenReturn(1);
         when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
 
-        // issueLsc: lockedDelta=200, availableDelta=0
-        // nvl(null)=0 -> beforeLocked=0, newLocked=0+200=200
-        // nvl(null)=0 -> beforeAvailable=0, newAvailable=0+0=0
         LscAccount result = ledgerService.issueLsc(userId, 200L, "NVL_LONG_NULL");
 
         assertNotNull(result);
@@ -1000,13 +591,10 @@ class LscLedgerServiceImplExtendedTest {
         assertEquals(0L, result.getTotalAvailable());
     }
 
-    // ==================== 30. nvl(Integer) null 分支 ====================
-
     @Test
     @DisplayName("nvl(Integer): 账户 version 为 null 时返回 0")
     void nvl_integer_nullBranch() {
         Long userId = 1001L;
-        // 构建账户，version 为 null
         LscAccount acc = new LscAccount();
         acc.setUserId(userId);
         acc.setTotalLocked(0L);
@@ -1018,11 +606,9 @@ class LscLedgerServiceImplExtendedTest {
         when(accountMapper.updateById(any(LscAccount.class))).thenReturn(1);
         when(transactionMapper.insert(any(LscTransaction.class))).thenReturn(1);
 
-        // applyAccountChange 调用 nvl(acc.getVersion()) -> nvl(null)=0 -> setVersion(0+1=1)
         LscAccount result = ledgerService.issueLsc(userId, 200L, "NVL_INT_NULL");
 
         assertNotNull(result);
-        // nvl(null) + 1 = 0 + 1 = 1
         assertEquals(1, result.getVersion());
     }
 }

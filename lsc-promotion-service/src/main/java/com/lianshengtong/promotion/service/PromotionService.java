@@ -11,7 +11,7 @@ import com.lianshengtong.promotion.entity.PromotionPending;
  * <p>
  * 严格限定一级推荐(users.referrer_id 单一外键约束，禁止链式)。
  * 首单定义：实名后第一笔金额 >= 1 元的有效消费(已完成且未全额退款)。
- * 奖励 = 首单消费金额 × 10%，从推荐人锁定池划转至可用池。
+ * V7.3: 奖励 = 首单实际赠送 LSC(grantedLsc) × 10%，从推荐人锁定池划转至可用池。
  * </p>
  */
 public interface PromotionService {
@@ -27,7 +27,7 @@ public interface PromotionService {
 
     /**
      * 奖励计算与划转
-     * <p>奖励 = 首单消费金额 × 10%，从推荐人锁定池划转至可用池(交易类型 PROMOTION_REWARD=3)。
+     * <p>V7.3: 奖励 = 首单实际赠送 LSC(grantedLsc) × 10%，从推荐人锁定池划转至可用池(交易类型 PROMOTION_REWARD_LOCKED=6)。
      * 划转失败写入挂账表，由每日定时任务补发。基于 Seata AT 保障一致性。</p>
      *
      * @param dto 首单判定请求
@@ -63,9 +63,10 @@ public interface PromotionService {
      * @param orderAmount  订单实付金额(元)
      * @param orderStatus  订单状态(2=已完成)
      * @param refundAmount 累计退款金额(元，无退款传0/null)
+     * @param grantedLsc   本订单实际赠送LSC数量(V7.3，奖励基数)
      */
     void notifyFirstOrder(Long consumerId, String orderNo, java.math.BigDecimal orderAmount,
-                          Integer orderStatus, java.math.BigDecimal refundAmount);
+                          Integer orderStatus, java.math.BigDecimal refundAmount, Long grantedLsc);
 
     /**
      * 分页查询挂账列表

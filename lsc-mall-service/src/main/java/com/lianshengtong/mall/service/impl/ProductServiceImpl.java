@@ -7,6 +7,7 @@ import com.lianshengtong.common.enums.AiReviewResultEnum;
 import com.lianshengtong.common.enums.ProductStatusEnum;
 import com.lianshengtong.common.exception.BizException;
 import com.lianshengtong.common.result.R;
+import com.lianshengtong.mall.constant.MallConstants;
 import com.lianshengtong.mall.dto.ProductPublishDTO;
 import com.lianshengtong.mall.entity.Product;
 import com.lianshengtong.mall.entity.ProductCategory;
@@ -18,6 +19,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * 商品服务实现
@@ -44,12 +48,15 @@ public class ProductServiceImpl implements ProductService {
         product.setMainImage(dto.getMainImage());
         // 人民币价格 = LSC 价格，共用 price 字段(1:1)
         product.setPrice(dto.getPrice());
+        product.setCostPrice(dto.getCostPrice());
+        // V7.3: 赠送 LSC 数量，未提供则按进销差自动计算，硬上限不超过售价
+        product.setGrantPoints(resolveGrantPoints(dto.getPrice(), dto.getCostPrice(), dto.getGrantPoints()));
         product.setStock(dto.getStock());
         product.setStatus(ProductStatusEnum.UNDER_REVIEW.getCode());
         product.setAiReview(AiReviewResultEnum.NOT_REVIEWED.getCode());
         product.setSalesCount(0L);
         productMapper.insert(product);
-        log.info("商品发布成功 id={} merchantId={}", product.getId(), product.getMerchantId());
+        log.info("商品发布成功 id={} merchantId={} grantPoints={}", product.getId(), product.getMerchantId(), product.getGrantPoints());
 
         // 异步提交 AI 审核
         try {
@@ -73,9 +80,11 @@ public class ProductServiceImpl implements ProductService {
         product.setDescription(dto.getDescription());
         product.setMainImage(dto.getMainImage());
         product.setPrice(dto.getPrice());
+        product.setCostPrice(dto.getCostPrice());
+        product.setGrantPoints(resolveGrantPoints(dto.getPrice(), dto.getCostPrice(), dto.getGrantPoints()));
         product.setStock(dto.getStock());
         productMapper.updateById(product);
-        log.info("商品更新成功 id={}", id);
+        log.info("商品更新成功 id={} grantPoints={}", id, product.getGrantPoints());
     }
 
     @Override
@@ -198,6 +207,51 @@ public class ProductServiceImpl implements ProductService {
             throw new BizException(404, "商品不存在");
         }
         return product;
+    }
+
+    /**
+     * 解析商品赠送 LSC 数量 (V7.3)
+     * <p>
+     * 规则：
+     * <ol>
+     *   <li>商家手动传入 grantPoints 时，校验不超过售价(MAX_GRANT_RATIO=100%)，超过则抛异常</li>
+     *   <li>未传入时，按进销差自动计算：grantPoints = floor(price - costPrice)</li>
+     *   <li>自动计算结果同样受 MAX_GRANT_RATIO 上限约束(进销差不可能超过售价，理论上不会触发)</li>
+     *   <li>costPrice 为空或为 0 时，自动计算结果为 0（无利润则不赠送）</li>
+     * </ol>
+     *
+     * @param price       售价(元)
+     * @param costPrice   成本价(元，可空)
+     * @param grantPoints 商家手动指定的赠送数量(可空)
+     * @return 最终赠送 LSC 数量
+     */
+    private Long resolveGrantPoints(BigDecimal price, BigDecimal costPrice, Long grantPoints) {
+        // price 合法性由 DTO 校验层(@NotNull, @DecimalMin)保证；此处防御性处理
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            return grantPoints != null ? grantPoints : 0L;
+        }
+        long maxGrant = price.multiply(MallConstants.MAX_GRANT_RATIO)
+                .setScale(0, RoundingMode.FLOOR).longValue();
+
+        // 商家手动指定
+        if (grantPoints != null) {
+            if (grantPoints > maxGrant) {
+                throw new BizException(400,
+                        "赠送LSC数量(" + grantPoints + ")不可超过售价(" + maxGrant + ")");
+            }
+            return grantPoints;
+        }
+
+        // 自动按进销差计算
+        if (costPrice == null || costPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            return 0L;
+        }
+        long autoGrant = price.subtract(costPrice)
+                .setScale(0, RoundingMode.FLOOR).longValue();
+        if (autoGrant < 0) {
+            return 0L;
+        }
+        return Math.min(autoGrant, maxGrant);
     }
 
     @Override

@@ -37,7 +37,8 @@ public abstract class PromotionContractBase {
                         eq("ORD-20260901-00100"),
                         eq(new BigDecimal("168.00")),
                         eq(2),
-                        any(BigDecimal.class)
+                        any(BigDecimal.class),
+                        anyLong()
                 );
 
         RestAssuredMockMvc.standaloneSetup(promotionController);

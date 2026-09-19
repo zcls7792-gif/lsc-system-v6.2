@@ -44,4 +44,7 @@ public class OrderCreateDTO implements Serializable {
 
     /** LSC支付数量(1:1对应人民币元，可空表示全部用人民币) */
     private Long lscAmount;
+
+    /** 单件商品赠送LSC积分(V7.3，从商品快照带入，用于计算订单赠送LSC) */
+    private Long grantPoints;
 }

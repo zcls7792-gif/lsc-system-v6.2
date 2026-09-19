@@ -227,7 +227,7 @@ class PromotionControllerTest {
                     .andExpect(status().isOk());
             verify(promotionService).notifyFirstOrder(
                     eq(1001L), eq("ORD001"),
-                    eq(new BigDecimal("100.00")), eq(2), eq(null));
+                    eq(new BigDecimal("100.00")), eq(2), eq(null), eq(null));
         }
 
         @Test
@@ -243,7 +243,7 @@ class PromotionControllerTest {
             verify(promotionService).notifyFirstOrder(
                     eq(1001L), eq("ORD002"),
                     eq(new BigDecimal("200.00")), eq(3),
-                    eq(new BigDecimal("30.00")));
+                    eq(new BigDecimal("30.00")), eq(null));
         }
     }
 
@@ -257,7 +257,7 @@ class PromotionControllerTest {
         @DisplayName("notifyFirstOrder 抛异常 -> 仍由 Controller 原样冒泡不吞")
         void notifyFirstOrder_exceptionPropagates() throws Exception {
             doThrow(new com.lianshengtong.common.exception.BizException("重复通知"))
-                    .when(promotionService).notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any());
+                    .when(promotionService).notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any(), any());
             try {
                 mockMvc.perform(post("/api/promotion/first-order-notify")
                                 .param("consumerId", "1")

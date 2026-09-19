@@ -96,7 +96,7 @@ class OrderServiceBranchTest {
         when(redissonClient.getLock(anyString())).thenReturn(rLock);
         when(rLock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
         when(rLock.isHeldByCurrentThread()).thenReturn(true);
-        when(lscLedgerFeignClient.payLsc(any(LscLedgerOpDTO.class)))
+        when(lscLedgerFeignClient.deductLsc(any(LscLedgerOpDTO.class)))
                 .thenReturn(R.fail("余额不足"));
 
         OrderPayDTO dto = new OrderPayDTO();
@@ -130,7 +130,7 @@ class OrderServiceBranchTest {
         Order result = orderService.payOrder(dto);
 
         assertEquals(OrderStatusEnum.PAID.getCode(), result.getStatus());
-        verify(lscLedgerFeignClient, never()).payLsc(any());
+        verify(lscLedgerFeignClient, never()).deductLsc(any());
         verify(orderMapper).updateById(any(Order.class));
         verify(rLock).unlock();
     }
@@ -181,7 +181,7 @@ class OrderServiceBranchTest {
         BizException ex = assertThrows(BizException.class, () -> orderService.payOrder(dto));
         assertTrue(ex.getMessage().contains("订单支付处理中"));
         // 支付/更新逻辑均不应执行
-        verify(lscLedgerFeignClient, never()).payLsc(any());
+        verify(lscLedgerFeignClient, never()).deductLsc(any());
         verify(orderMapper, never()).updateById(any(Order.class));
     }
 
@@ -193,7 +193,7 @@ class OrderServiceBranchTest {
         Order order = buildPaidOrder();
         when(orderMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(order);
         when(orderMapper.updateById(any(Order.class))).thenReturn(1);
-        when(promotionFeignClient.notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any()))
+        when(promotionFeignClient.notifyFirstOrder(anyLong(), anyString(), any(), anyInt(), any(), any()))
                 .thenReturn(R.ok());
 
         Order result = orderService.completeOrder(ORDER_NO, 2001L);
@@ -339,7 +339,7 @@ class OrderServiceBranchTest {
         when(redissonClient.getLock(anyString())).thenReturn(rLock);
         when(rLock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
         when(rLock.isHeldByCurrentThread()).thenReturn(true);
-        when(lscLedgerFeignClient.payLsc(any(LscLedgerOpDTO.class))).thenReturn(R.ok());
+        when(lscLedgerFeignClient.deductLsc(any(LscLedgerOpDTO.class))).thenReturn(R.ok());
         when(orderMapper.updateById(any(Order.class))).thenReturn(1);
 
         OrderPayDTO dto1 = new OrderPayDTO();
@@ -355,7 +355,7 @@ class OrderServiceBranchTest {
         // 捕获两次调用 idempotentKey，必须不同
         org.mockito.ArgumentCaptor<LscLedgerOpDTO> captor =
                 org.mockito.ArgumentCaptor.forClass(LscLedgerOpDTO.class);
-        verify(lscLedgerFeignClient, times(2)).payLsc(captor.capture());
+        verify(lscLedgerFeignClient, times(2)).deductLsc(captor.capture());
         java.util.List<LscLedgerOpDTO> ops = captor.getAllValues();
         assertNotEquals(ops.get(0).getIdempotentKey(), ops.get(1).getIdempotentKey(),
                 "两个不同消费者的支付幂等 key 应不同");

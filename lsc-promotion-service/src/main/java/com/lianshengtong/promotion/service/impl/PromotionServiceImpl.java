@@ -124,14 +124,16 @@ public class PromotionServiceImpl implements PromotionService {
             log.warn("用户 {} 无推荐人，跳过奖励计算", dto.getUserId());
             return RewardResultDTO.builder().firstOrder(true).success(false).build();
         }
-        BigDecimal rewardAmount = dto.getOrderAmount()
+        // V7.3: 奖励基数 = 本订单实际赠送 LSC(grantedLsc) × 10%
+        long grantedLsc = dto.getGrantedLsc() == null ? 0L : dto.getGrantedLsc();
+        BigDecimal rewardAmount = BigDecimal.valueOf(grantedLsc)
                 .multiply(rewardRate)
-                .setScale(2, RoundingMode.HALF_UP);
+                .setScale(0, RoundingMode.FLOOR);
 
         // 尝试调用账本服务划转: 推荐人锁定池 -> 可用池
         LscLedgerOpDTO opDTO = LscLedgerOpDTO.builder()
                 .idempotentKey("PROMOTION_" + dto.getUserId() + "_" + dto.getOrderNo())
-                .transactionType(LscTransactionTypeEnum.PROMOTION_REWARD.getCode())
+                .transactionType(LscTransactionTypeEnum.PROMOTION_REWARD_LOCKED.getCode())
                 .userId(referrerId)
                 .lockedDelta(rewardAmount.negate().longValue())
                 .availableDelta(rewardAmount.longValue())
@@ -194,7 +196,7 @@ public class PromotionServiceImpl implements PromotionService {
             // 已补发 -> 反向划转扣回奖励(推荐人可用池 -> 锁定池)
             LscLedgerOpDTO opDTO = LscLedgerOpDTO.builder()
                     .idempotentKey("PROMOTION_RB_" + dto.getUserId() + "_" + dto.getOrderNo())
-                    .transactionType(LscTransactionTypeEnum.PROMOTION_REWARD.getCode())
+                    .transactionType(LscTransactionTypeEnum.PROMOTION_REWARD_LOCKED.getCode())
                     .userId(pending.getReferrerId())
                     .lockedDelta(pending.getRewardAmount().longValue())
                     .availableDelta(pending.getRewardAmount().negate().longValue())
@@ -229,7 +231,7 @@ public class PromotionServiceImpl implements PromotionService {
             try {
                 LscLedgerOpDTO opDTO = LscLedgerOpDTO.builder()
                         .idempotentKey("PROMOTION_FILL_" + pending.getId())
-                        .transactionType(LscTransactionTypeEnum.PROMOTION_REWARD.getCode())
+                        .transactionType(LscTransactionTypeEnum.PROMOTION_REWARD_LOCKED.getCode())
                         .userId(pending.getReferrerId())
                         .lockedDelta(pending.getRewardAmount().negate().longValue())
                         .availableDelta(pending.getRewardAmount().longValue())
@@ -270,7 +272,7 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public void notifyFirstOrder(Long consumerId, String orderNo, BigDecimal orderAmount,
-                                  Integer orderStatus, BigDecimal refundAmount) {
+                                  Integer orderStatus, BigDecimal refundAmount, Long grantedLsc) {
         if (consumerId == null || orderNo == null || orderAmount == null || orderStatus == null) {
             log.warn("首单通知参数缺失 consumerId={} orderNo={}", consumerId, orderNo);
             return;
@@ -295,6 +297,7 @@ public class PromotionServiceImpl implements PromotionService {
         dto.setReferrerId(referrerId);
         dto.setOrderNo(orderNo);
         dto.setOrderAmount(orderAmount);
+        dto.setGrantedLsc(grantedLsc);
         dto.setOrderStatus(orderStatus);
         dto.setRefundAmount(refundAmount == null ? BigDecimal.ZERO : refundAmount);
         try {

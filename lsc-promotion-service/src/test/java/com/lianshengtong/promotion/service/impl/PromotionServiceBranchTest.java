@@ -101,7 +101,7 @@ class PromotionServiceBranchTest {
     @DisplayName("首单通知：参数缺失(consumerId为null)直接返回")
     void testNotifyFirstOrder_nullConsumerId() {
         promotionService.notifyFirstOrder(null, "ORD001", new BigDecimal("100"),
-                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO);
+                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO, 0L);
         verify(userFeignClient, never()).getUserInfo(anyLong());
     }
 
@@ -109,7 +109,7 @@ class PromotionServiceBranchTest {
     @DisplayName("首单通知：参数缺失(orderNo为null)直接返回")
     void testNotifyFirstOrder_nullOrderNo() {
         promotionService.notifyFirstOrder(1L, null, new BigDecimal("100"),
-                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO);
+                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO, 0L);
         verify(userFeignClient, never()).getUserInfo(anyLong());
     }
 
@@ -120,7 +120,7 @@ class PromotionServiceBranchTest {
         when(promotionPendingMapper.selectCount(any())).thenReturn(0L);
 
         promotionService.notifyFirstOrder(1L, "ORD001", new BigDecimal("100"),
-                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO);
+                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO, 0L);
 
         verify(userFeignClient).getUserInfo(1L);
     }
@@ -131,7 +131,7 @@ class PromotionServiceBranchTest {
         when(userFeignClient.getUserInfo(1L)).thenThrow(new RuntimeException("用户服务不可用"));
 
         promotionService.notifyFirstOrder(1L, "ORD001", new BigDecimal("100"),
-                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO);
+                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO, 0L);
 
         verify(userFeignClient).getUserInfo(1L);
     }
@@ -146,7 +146,7 @@ class PromotionServiceBranchTest {
         when(promotionPendingMapper.selectCount(any())).thenReturn(0L);
 
         promotionService.notifyFirstOrder(1L, "ORD001", new BigDecimal("100"),
-                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO);
+                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO, 0L);
 
         verify(userFeignClient).getUserInfo(1L);
     }
@@ -163,7 +163,7 @@ class PromotionServiceBranchTest {
         when(ledgerFeignClient.ledgerOp(any())).thenReturn(ok);
 
         promotionService.notifyFirstOrder(1L, "ORD001", new BigDecimal("100"),
-                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO);
+                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO, 0L);
 
         verify(ledgerFeignClient).ledgerOp(any());
         verify(promotionPendingMapper).selectCount(any());
@@ -181,7 +181,7 @@ class PromotionServiceBranchTest {
         when(ledgerFeignClient.ledgerOp(any())).thenReturn(ok);
 
         promotionService.notifyFirstOrder(1L, "ORD001", new BigDecimal("100"),
-                OrderStatusEnum.COMPLETED.getCode(), null);
+                OrderStatusEnum.COMPLETED.getCode(), null, 0L);
 
         verify(ledgerFeignClient).ledgerOp(any());
     }
@@ -194,7 +194,7 @@ class PromotionServiceBranchTest {
         when(promotionPendingMapper.selectCount(any())).thenReturn(0L);
 
         promotionService.notifyFirstOrder(1L, "ORD001", new BigDecimal("100"),
-                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO);
+                OrderStatusEnum.COMPLETED.getCode(), BigDecimal.ZERO, 0L);
 
         verify(userFeignClient).getUserInfo(1L);
     }

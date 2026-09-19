@@ -40,10 +40,6 @@ public abstract class LedgerContractBase {
         when(ledgerService.issueLsc(eq(10001L), eq(5000L), anyString()))
                 .thenReturn(accountOf(10001L, 5000L, 0L, 1));
 
-        // --- pay 契约 (消费者 10001 可用 3000 -> 商家 20001) ---
-        when(ledgerService.payLsc(eq(10001L), eq(20001L), eq(3000L), anyString()))
-                .thenReturn(accountOf(10001L, 0L, 2000L, 2));
-
         // --- refund 契约 (消费者 10001 可用 1500 入账) ---
         when(ledgerService.refundLsc(eq(10001L), eq(1500L), anyString()))
                 .thenReturn(accountOf(10001L, 3500L, 3500L, 3));

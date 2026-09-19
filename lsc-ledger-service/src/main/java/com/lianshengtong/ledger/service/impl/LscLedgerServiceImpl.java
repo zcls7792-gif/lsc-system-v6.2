@@ -9,7 +9,6 @@ import com.lianshengtong.common.enums.LscTransactionTypeEnum;
 import com.lianshengtong.common.exception.BizException;
 import com.lianshengtong.common.idempotent.IdempotentKeyGenerator;
 import com.lianshengtong.common.result.ResultCode;
-import com.lianshengtong.common.utils.OptimisticLockHelper;
 import com.lianshengtong.ledger.entity.AvailableLscDetail;
 import com.lianshengtong.ledger.entity.LscAccount;
 import com.lianshengtong.ledger.entity.LscTransaction;
@@ -28,7 +27,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,14 +39,19 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * LSC 账本核心服务实现
+ * LSC 账本核心服务实现 (V7.3)
+ * <p>
+ * V7.3 合规基线：LSC 不可转让、兑现、提现，仅限自营体系内抵扣消费。
+ * 因此 V6.2 的 B2B 流转、商家核销、消费者→商家支付、过期转回(可用→锁定) 接口已删除。
+ * 保留：消费赠送入锁定、每日释放、退款退回。新增(Task4)：订单抵扣、退款回扣、到期作废、风控冻结/解冻、推荐奖励。
+ * </p>
  * <p>
  * 所有写操作均保证：
  * <ul>
  *   <li>幂等性：基于 {@code lsc_transactions.idempotent_key} 唯一索引 + 操作前预查</li>
- *   <li>并发安全：Redisson 分布式锁(按 userId 排序加锁避免死锁) + MyBatis-Plus 乐观锁(version)</li>
+ *   <li>并发安全：Redisson 分布式锁 + MyBatis-Plus 乐观锁(version)</li>
  *   <li>原子事务：通过 {@link TransactionTemplate} 编程式事务保证锁内多表操作原子提交</li>
- *   <li>流水记录：每笔操作落一条流水，含操作前/后锁定与可用余额快照</li>
+ *   <li>流水记录：每笔操作落一条流水，含操作前/后锁定、可用、冻结余额快照</li>
  * </ul>
  * </p>
  *
@@ -72,14 +75,11 @@ public class LscLedgerServiceImpl implements LscLedgerService {
     @Value("${lsc.ledger.lock-lease-ms:10000}")
     private long lockLeaseMs;
 
-    @Value("${lsc.ledger.b2b-validity-days:365}")
-    private int b2bValidityDays;
+    @Value("${lsc.ledger.detail-validity-days:365}")
+    private int detailValidityDays;
 
     @Value("${lsc.ledger.optimistic-lock-enabled:true}")
     private boolean optimisticLockEnabled;
-
-    @Value("${lsc.ledger.expire-batch-size:500}")
-    private int expireBatchSize;
 
     public LscLedgerServiceImpl(LscAccountMapper accountMapper,
                                 LscTransactionMapper transactionMapper,
@@ -96,20 +96,20 @@ public class LscLedgerServiceImpl implements LscLedgerService {
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    // ============================ 消费发行 ============================
+    // ============================ 消费赠送(入锁定) ============================
 
     @Override
     public LscAccount issueLsc(Long userId, Long amount, String orderNo) {
         assertPositive(amount);
-        // 业务约定：消费发行的 LSC 进入推荐人锁定池，调用方传入推荐人 userId 即可
+        // V7.3 spec 3.1: 消费赠送的 LSC 进入消费者本人锁定池，按日释放为可用
         return executeWithLock(userId, () -> transactionTemplate.execute(status -> {
-            String idemKey = buildIdemKey("ISSUE", orderNo, userId);
+            String idemKey = buildIdemKey("GRANT", orderNo, userId);
             if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
                 return accountMapper.selectById(userId);
             }
             LscAccount acc = accountService.getOrCreateAccount(userId);
-            return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.CONSUMPTION_ISSUE,
-                    amount, 0L, null, orderNo, "消费发行LSC到锁定池");
+            return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.GRANT_LOCKED,
+                    amount, 0L, 0L, null, orderNo, "消费赠送LSC入锁定池");
         }));
     }
 
@@ -125,225 +125,131 @@ public class LscLedgerServiceImpl implements LscLedgerService {
             }
             LscAccount acc = accountService.getOrCreateAccount(userId);
             // 先写可用明细(有效期365天)，再扣锁定增可用
-            writeAvailableDetail(userId, amount, LscTransactionTypeEnum.DAILY_RELEASE.getDesc(), b2bValidityDays);
+            writeAvailableDetail(userId, amount, LscTransactionTypeEnum.DAILY_RELEASE.getDesc(), detailValidityDays);
             return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.DAILY_RELEASE,
-                    -amount, amount, null, orderNo, "每日释放:锁定转可用");
+                    -amount, amount, 0L, null, orderNo, "每日释放:锁定转可用");
         }));
     }
 
-    // ============================ 消费支付 ============================
-
-    @Override
-    public LscAccount payLsc(Long consumerId, Long merchantId, Long amount, String orderNo) {
-        assertPositive(amount);
-        if (consumerId == null || merchantId == null) {
-            throw new BizException(400, "收付款方不能为空");
-        }
-        if (consumerId.equals(merchantId)) {
-            throw new BizException(400, "收付款方不能相同");
-        }
-        if (optimisticLockEnabled) {
-            return payLscOptimistically(consumerId, merchantId, amount, orderNo);
-        }
-        return executeWithLocks(Arrays.asList(consumerId, merchantId), () -> transactionTemplate.execute(status -> {
-            String idemKey = buildIdemKey("PAY", orderNo, consumerId);
-            if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
-                return accountMapper.selectById(consumerId);
-            }
-            LscAccount consumer = accountService.getOrCreateAccount(consumerId);
-            LscAccount merchant = accountService.getOrCreateAccount(merchantId);
-            long cBeforeAvail = nvl(consumer.getTotalAvailable());
-            long mBeforeAvail = nvl(merchant.getTotalAvailable());
-            if (cBeforeAvail < amount) {
-                throw new BizException(ResultCode.LSC_BALANCE_INSUFFICIENT);
-            }
-            // 扣减消费者可用
-            consumer.setTotalAvailable(cBeforeAvail - amount);
-            if (accountMapper.updateById(consumer) <= 0) {
-                throw new BizException(ResultCode.SYSTEM_ERROR, "消费者账户更新失败(乐观锁冲突)");
-            }
-            // 增加商家可用
-            merchant.setTotalAvailable(mBeforeAvail + amount);
-            if (accountMapper.updateById(merchant) <= 0) {
-                throw new BizException(ResultCode.SYSTEM_ERROR, "商家账户更新失败(乐观锁冲突)");
-            }
-            // 商家可用明细(有效期365天)
-            writeAvailableDetail(merchantId, amount, LscTransactionTypeEnum.MALL_CONSUMPTION.getDesc(), b2bValidityDays);
-            // 流水(消费者视角)
-            recordTransaction(consumerId, LscTransactionTypeEnum.MALL_CONSUMPTION, amount,
-                    nvl(consumer.getTotalLocked()), nvl(consumer.getTotalLocked()),
-                    cBeforeAvail, cBeforeAvail - amount, merchantId, orderNo, idemKey, "商城/线下消费支付");
-            consumer.setVersion(nvl(consumer.getVersion()) + 1);
-            return consumer;
-        }));
-    }
-
-    /**
-     * 乐观锁版支付：单账户高频场景，无分布式锁开销
-     */
-    private LscAccount payLscOptimistically(Long consumerId, Long merchantId, Long amount, String orderNo) {
-        String idemKey = buildIdemKey("PAY_OPT", orderNo, consumerId);
-        if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
-            return accountMapper.selectById(consumerId);
-        }
-        Integer rows = OptimisticLockHelper.execute("payLsc", 3, () -> {
-            try {
-                return transactionTemplate.execute(status -> {
-                    LscAccount consumer = accountService.getOrCreateAccount(consumerId);
-                    LscAccount merchant = accountService.getOrCreateAccount(merchantId);
-                    long cBeforeAvail = nvl(consumer.getTotalAvailable());
-                    long mBeforeAvail = nvl(merchant.getTotalAvailable());
-                    if (cBeforeAvail < amount) {
-                        throw new BizException(ResultCode.LSC_BALANCE_INSUFFICIENT);
-                    }
-                    consumer.setTotalAvailable(cBeforeAvail - amount);
-                    int cRows = accountMapper.updateById(consumer);
-                    if (cRows <= 0) {
-                        throw new OptConflict();
-                    }
-                    merchant.setTotalAvailable(mBeforeAvail + amount);
-                    int mRows = accountMapper.updateById(merchant);
-                    if (mRows <= 0) {
-                        throw new OptConflict();
-                    }
-                    writeAvailableDetail(merchantId, amount, LscTransactionTypeEnum.MALL_CONSUMPTION.getDesc(), b2bValidityDays);
-                    recordTransaction(consumerId, LscTransactionTypeEnum.MALL_CONSUMPTION, amount,
-                            nvl(consumer.getTotalLocked()), nvl(consumer.getTotalLocked()),
-                            cBeforeAvail, cBeforeAvail - amount, merchantId, orderNo, idemKey, "商城消费支付(乐观锁)");
-                    consumer.setVersion(nvl(consumer.getVersion()) + 1);
-                    return 1;
-                });
-            } catch (OptConflict e) {
-                return 0;
-            }
-        });
-        if (rows == null || rows == 0) {
-            return accountMapper.selectById(consumerId);
-        }
-        return accountMapper.selectById(consumerId);
-    }
-
-    private static class OptConflict extends RuntimeException {
-    }
-
-    // ============================ B2B 流转 ============================
-
-    @Override
-    public LscAccount b2bTransfer(Long fromMerchantId, Long toMerchantId, Long amount, String orderNo) {
-        assertPositive(amount);
-        if (fromMerchantId == null || toMerchantId == null) {
-            throw new BizException(400, "流转双方不能为空");
-        }
-        if (fromMerchantId.equals(toMerchantId)) {
-            throw new BizException(400, "流转双方不能相同");
-        }
-        // 注：商家身份校验由上游服务(user-service)保证，此处执行 1:1 流转与有效期重置
-        return executeWithLocks(Arrays.asList(fromMerchantId, toMerchantId), () -> transactionTemplate.execute(status -> {
-            String idemKey = buildIdemKey("B2B", orderNo, fromMerchantId);
-            if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
-                return accountMapper.selectById(fromMerchantId);
-            }
-            LscAccount from = accountService.getOrCreateAccount(fromMerchantId);
-            LscAccount to = accountService.getOrCreateAccount(toMerchantId);
-            long fBeforeAvail = nvl(from.getTotalAvailable());
-            long tBeforeAvail = nvl(to.getTotalAvailable());
-            if (fBeforeAvail < amount) {
-                throw new BizException(ResultCode.LSC_BALANCE_INSUFFICIENT);
-            }
-            from.setTotalAvailable(fBeforeAvail - amount);
-            if (accountMapper.updateById(from) <= 0) {
-                throw new BizException(ResultCode.SYSTEM_ERROR, "发起方账户更新失败(乐观锁冲突)");
-            }
-            to.setTotalAvailable(tBeforeAvail + amount);
-            if (accountMapper.updateById(to) <= 0) {
-                throw new BizException(ResultCode.SYSTEM_ERROR, "接收方账户更新失败(乐观锁冲突)");
-            }
-            // 接收方可用明细，有效期重置365天
-            writeAvailableDetail(toMerchantId, amount, LscTransactionTypeEnum.B2B_TRANSFER.getDesc(), b2bValidityDays);
-            recordTransaction(fromMerchantId, LscTransactionTypeEnum.B2B_TRANSFER, amount,
-                    nvl(from.getTotalLocked()), nvl(from.getTotalLocked()),
-                    fBeforeAvail, fBeforeAvail - amount, toMerchantId, orderNo, idemKey,
-                    "B2B流转(1:1),接收方有效期重置365天");
-            from.setVersion(nvl(from.getVersion()) + 1);
-            return from;
-        }));
-    }
-
-    // ============================ 商家核销 ============================
-
-    @Override
-    public LscAccount writeOffLsc(Long merchantId, Long amount, String orderNo) {
-        assertPositive(amount);
-        return executeWithLock(merchantId, () -> transactionTemplate.execute(status -> {
-            String idemKey = buildIdemKey("WRITEOFF", orderNo, merchantId);
-            if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
-                return accountMapper.selectById(merchantId);
-            }
-            LscAccount acc = accountService.getOrCreateAccount(merchantId);
-            return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.MERCHANT_WRITE_OFF,
-                    0L, -amount, null, orderNo, "商家核销销毁");
-        }));
-    }
-
-    // ============================ 退款退回 ============================
+    // ============================ 退款退回(消费者可用入账) ============================
 
     @Override
     public LscAccount refundLsc(Long userId, Long amount, String orderNo) {
         assertPositive(amount);
         // 接口约定：userId 为接收退款的消费者，本方法负责消费者可用余额入账；
-        // 对应的商家可用余额扣减由退款编排流程(持有 merchantId)另行调用，保证账务平衡。
+        // 对应的商家/抵扣销毁部分由退款编排流程另行调用 refundDeductLsc(Task4)，保证账务平衡。
         return executeWithLock(userId, () -> transactionTemplate.execute(status -> {
             String idemKey = buildIdemKey("REFUND", orderNo, userId);
             if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
                 return accountMapper.selectById(userId);
             }
             LscAccount acc = accountService.getOrCreateAccount(userId);
-            writeAvailableDetail(userId, amount, LscTransactionTypeEnum.REFUND_RETURN.getDesc(), b2bValidityDays);
+            writeAvailableDetail(userId, amount, LscTransactionTypeEnum.REFUND_RETURN.getDesc(), detailValidityDays);
             return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.REFUND_RETURN,
-                    0L, amount, null, orderNo, "退款退回:消费者可用余额入账");
+                    0L, amount, 0L, null, orderNo, "退款退回:消费者可用余额入账");
         }));
     }
 
-    // ============================ 过期转回 ============================
+    // ============================ 订单抵扣(可用余额销毁) ============================
 
     @Override
-    public long expireTransfer(Long userId) {
-        Long result = executeWithLock(userId, () -> transactionTemplate.execute(status -> {
-            String today = LocalDate.now().toString();
-            String idemKey = "EXPIRE_" + userId + "_" + today;
+    public LscAccount deductLsc(Long userId, Long amount, String orderNo) {
+        assertPositive(amount);
+        // V7.3 spec: 订单抵扣时 LSC 直接从消费者可用余额销毁，不流转给商家
+        return executeWithLock(userId, () -> transactionTemplate.execute(status -> {
+            String idemKey = buildIdemKey("DEDUCT", orderNo, userId);
             if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
-                return 0L;
+                return accountMapper.selectById(userId);
             }
-            List<AvailableLscDetail> expired = detailMapper.selectExpiredForTransfer(
-                    userId, LocalDate.now(), expireBatchSize);
-            if (expired.isEmpty()) {
-                return 0L;
-            }
-            long total = expired.stream().mapToLong(d -> nvl(d.getAmount())).sum();
             LscAccount acc = accountService.getOrCreateAccount(userId);
-            long beforeLocked = nvl(acc.getTotalLocked());
-            long beforeAvailable = nvl(acc.getTotalAvailable());
-            if (beforeAvailable < total) {
-                throw new BizException(ResultCode.LSC_BALANCE_INSUFFICIENT);
-            }
-            acc.setTotalAvailable(beforeAvailable - total);
-            acc.setTotalLocked(beforeLocked + total);
-            if (accountMapper.updateById(acc) <= 0) {
-                throw new BizException(ResultCode.SYSTEM_ERROR, "账户更新失败(乐观锁冲突)");
-            }
-            // 明细状态置为已过期转回
-            for (AvailableLscDetail d : expired) {
-                AvailableLscDetail upd = new AvailableLscDetail();
-                upd.setId(d.getId());
-                upd.setStatus(AvailableLscStatusEnum.EXPIRED_TRANSFERRED.getCode());
-                detailMapper.updateById(upd);
-            }
-            recordTransaction(userId, LscTransactionTypeEnum.EXPIRE_TRANSFER, total,
-                    beforeLocked, beforeLocked + total, beforeAvailable, beforeAvailable - total,
-                    null, null, idemKey, "过期转回:可用转锁定");
-            return total;
+            return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.ORDER_DEDUCT,
+                    0L, -amount, 0L, null, orderNo, "订单抵扣:可用LSC销毁");
         }));
-        return result;
+    }
+
+    // ============================ 退款回扣(锁定池扣回赠送LSC) ============================
+
+    @Override
+    public LscAccount refundDeductLsc(Long userId, Long amount, String orderNo) {
+        assertPositive(amount);
+        // 与 refundLsc 配对：退款时扣回该订单已赠送的锁定 LSC，保证账务平衡
+        return executeWithLock(userId, () -> transactionTemplate.execute(status -> {
+            String idemKey = buildIdemKey("REFUND_DEDUCT", orderNo, userId);
+            if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
+                return accountMapper.selectById(userId);
+            }
+            LscAccount acc = accountService.getOrCreateAccount(userId);
+            return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.REFUND_DEDUCT,
+                    -amount, 0L, 0L, null, orderNo, "退款回扣:锁定池扣回赠送LSC");
+        }));
+    }
+
+    // ============================ 到期作废(可用明细过期销毁) ============================
+
+    @Override
+    public LscAccount expireWriteoff(Long userId, Long amount, String orderNo) {
+        assertPositive(amount);
+        // 可用 LSC 明细到期作废，扣减可用余额；明细状态更新由调用方批量处理
+        return executeWithLock(userId, () -> transactionTemplate.execute(status -> {
+            String idemKey = buildIdemKey("EXPIRE", orderNo, userId);
+            if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
+                return accountMapper.selectById(userId);
+            }
+            LscAccount acc = accountService.getOrCreateAccount(userId);
+            return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.EXPIRE_WRITEOFF,
+                    0L, -amount, 0L, null, orderNo, "到期作废:可用LSC过期销毁");
+        }));
+    }
+
+    // ============================ 风控冻结(可用 -> 冻结) ============================
+
+    @Override
+    public LscAccount freezeLsc(Long userId, Long amount, String orderNo) {
+        assertPositive(amount);
+        // 风控冻结：可用余额转入冻结池，冻结期间不可抵扣
+        return executeWithLock(userId, () -> transactionTemplate.execute(status -> {
+            String idemKey = buildIdemKey("FREEZE", orderNo, userId);
+            if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
+                return accountMapper.selectById(userId);
+            }
+            LscAccount acc = accountService.getOrCreateAccount(userId);
+            return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.RISK_FREEZE,
+                    0L, -amount, amount, null, orderNo, "风控冻结:可用转冻结池");
+        }));
+    }
+
+    // ============================ 风控解冻(冻结 -> 可用) ============================
+
+    @Override
+    public LscAccount unfreezeLsc(Long userId, Long amount, String orderNo) {
+        assertPositive(amount);
+        // 风控解冻：冻结池余额转回可用余额
+        return executeWithLock(userId, () -> transactionTemplate.execute(status -> {
+            String idemKey = buildIdemKey("UNFREEZE", orderNo, userId);
+            if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
+                return accountMapper.selectById(userId);
+            }
+            LscAccount acc = accountService.getOrCreateAccount(userId);
+            return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.RISK_UNFREEZE,
+                    0L, amount, -amount, null, orderNo, "风控解冻:冻结池转可用");
+        }));
+    }
+
+    // ============================ 推荐奖励(入锁定) ============================
+
+    @Override
+    public LscAccount promotionRewardLsc(Long userId, Long amount, String orderNo) {
+        assertPositive(amount);
+        // 推荐/推广奖励 LSC 进入锁定池，按日释放规则转为可用
+        return executeWithLock(userId, () -> transactionTemplate.execute(status -> {
+            String idemKey = buildIdemKey("PROMO_REWARD", orderNo, userId);
+            if (transactionMapper.selectByIdempotentKey(idemKey) != null) {
+                return accountMapper.selectById(userId);
+            }
+            LscAccount acc = accountService.getOrCreateAccount(userId);
+            return applyAccountChange(acc, idemKey, LscTransactionTypeEnum.PROMOTION_REWARD_LOCKED,
+                    amount, 0L, 0L, null, orderNo, "推荐奖励LSC入锁定池");
+        }));
     }
 
     // ============================ 余额查询 ============================
@@ -356,6 +262,7 @@ public class LscLedgerServiceImpl implements LscLedgerService {
             acc.setUserId(userId);
             acc.setTotalLocked(0L);
             acc.setTotalAvailable(0L);
+            acc.setTotalFrozen(0L);
             acc.setVersion(0);
         }
         return acc;
@@ -506,106 +413,6 @@ public class LscLedgerServiceImpl implements LscLedgerService {
         }
     }
 
-    /**
-     * 全网过期转团单用户（批量优化版）
-     * <p>
-     * 相比逐条 expireTransfer 的 N 次查询 + N 次锁获取，
-     * 改为一次性拉取所有过期明细 → 按用户分组 → 单用户单次锁批量处理。
-     * </p>
-     */
-    @Override
-    public java.util.Map<String, Object> expireTransferAll() {
-        LocalDate today = LocalDate.now();
-        int batchLimit = 2000;
-        long totalTransfer = 0L;
-        int userCount = 0;
-        int emptyLoopGuard = 0;
-
-        while (emptyLoopGuard < 5) {
-            List<AvailableLscDetail> allExpired = detailMapper.selectBatchExpiredForTransfer(today, batchLimit);
-            if (allExpired == null || allExpired.isEmpty()) {
-                break;
-            }
-            emptyLoopGuard++;
-
-            // 按 userId 分组
-            Map<Long, List<AvailableLscDetail>> byUser = allExpired.stream()
-                    .collect(Collectors.groupingBy(AvailableLscDetail::getUserId));
-
-            for (Map.Entry<Long, List<AvailableLscDetail>> entry : byUser.entrySet()) {
-                Long userId = entry.getKey();
-                List<AvailableLscDetail> userDetails = entry.getValue();
-                try {
-                    long transferred = expireTransferUserBatch(userId, userDetails);
-                    if (transferred > 0) {
-                        totalTransfer += transferred;
-                        userCount++;
-                    }
-                } catch (RuntimeException e) {
-                    log.warn("全网过期转团单用户失败 userId={} err={}", userId, e.getMessage());
-                }
-            }
-        }
-
-        java.util.Map<String, Object> result = new java.util.HashMap<>();
-        result.put("userCount", userCount);
-        result.put("transferAmount", totalTransfer);
-        return result;
-    }
-
-    /**
-     * 单用户批量过期转回（单次锁 + 单次事务 + 批量更新）
-     */
-    private long expireTransferUserBatch(Long userId, List<AvailableLscDetail> expired) {
-        long total = expired.stream().mapToLong(d -> nvl(d.getAmount())).sum();
-        if (total <= 0) {
-            return 0L;
-        }
-
-        RLock lock;
-        try {
-            lock = redissonClient.getLock("lsc:ledger:lock:" + userId);
-            boolean acquired = lock.tryLock(3, 10, TimeUnit.SECONDS);
-            if (!acquired) {
-                log.warn("批量过期转回锁获取失败 userId={}", userId);
-                return 0L;
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("批量过期转回被中断 userId={}", userId);
-            return 0L;
-        }
-        try {
-            return transactionTemplate.execute(status -> {
-                LscAccount acc = accountService.getOrCreateAccount(userId);
-                long beforeLocked = nvl(acc.getTotalLocked());
-                long beforeAvailable = nvl(acc.getTotalAvailable());
-                if (beforeAvailable < total) {
-                    throw new BizException(ResultCode.LSC_BALANCE_INSUFFICIENT);
-                }
-                acc.setTotalAvailable(beforeAvailable - total);
-                acc.setTotalLocked(beforeLocked + total);
-                if (accountMapper.updateById(acc) <= 0) {
-                    throw new BizException(ResultCode.SYSTEM_ERROR, "账户批量更新失败(乐观锁冲突)");
-                }
-                // 批量更新明细状态
-                List<Long> detailIds = expired.stream()
-                        .map(AvailableLscDetail::getId).collect(Collectors.toList());
-                detailMapper.batchUpdateStatus(detailIds, AvailableLscStatusEnum.EXPIRED_TRANSFERRED.getCode());
-                // 记录流水
-                String idemKey = "EXPIRE_BATCH_" + userId + "_" + System.currentTimeMillis();
-                recordTransaction(userId, LscTransactionTypeEnum.EXPIRE_TRANSFER, total,
-                        beforeLocked, beforeLocked + total, beforeAvailable, beforeAvailable - total,
-                        null, null, idemKey, "批量过期转回:可用转锁定");
-                return total;
-            });
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
-    }
-
     // ============================ 商家/管理后台查询 ============================
 
     @Override
@@ -664,9 +471,9 @@ public class LscLedgerServiceImpl implements LscLedgerService {
             long lscIn = 0;
             long orderCount = 0;
             for (LscTransaction tx : txs) {
-                // 收入类: 2每日释放 3推广奖励 4商城消费(商家收入) 5线下消费 8B2B流转(接收方)
-                if (tx.getType() != null && (tx.getType() == 2 || tx.getType() == 3
-                        || tx.getType() == 4 || tx.getType() == 5 || tx.getType() == 8)) {
+                // V7.3 收入类(增加可用): 3退款退回 7每日释放
+                if (tx.getType() != null && (tx.getType() == LscTransactionTypeEnum.REFUND_RETURN.getCode()
+                        || tx.getType() == LscTransactionTypeEnum.DAILY_RELEASE.getCode())) {
                     lscIn += nvl(tx.getAmount());
                 }
                 if (StrUtil.isNotBlank(tx.getOrderNo())) {
@@ -689,17 +496,18 @@ public class LscLedgerServiceImpl implements LscLedgerService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("totalLocked", nvl(account.getTotalLocked()));
         result.put("totalAvailable", nvl(account.getTotalAvailable()));
-        // 已核销 = 流水类型7(商家核销) 累计金额
-        LambdaQueryWrapper<LscTransaction> writeOffW = new LambdaQueryWrapper<>();
+        result.put("totalFrozen", nvl(account.getTotalFrozen()));
+        // V7.3: 已使用 = 流水类型2(订单抵扣) 累计金额（无核销概念）
+        LambdaQueryWrapper<LscTransaction> usedW = new LambdaQueryWrapper<>();
         if (userId != null) {
-            writeOffW.eq(LscTransaction::getUserId, userId);
+            usedW.eq(LscTransaction::getUserId, userId);
         }
-        writeOffW.eq(LscTransaction::getType, LscTransactionTypeEnum.MERCHANT_WRITE_OFF.getCode());
-        List<LscTransaction> writeOffTxs = transactionMapper.selectList(writeOffW);
-        long totalWrittenOff = writeOffTxs.stream().mapToLong(t -> nvl(t.getAmount())).sum();
-        result.put("totalWrittenOff", totalWrittenOff);
-        result.put("totalUsed", totalWrittenOff);
-        // 月收入 = 当月收入类流水累计
+        usedW.eq(LscTransaction::getType, LscTransactionTypeEnum.ORDER_DEDUCT.getCode());
+        List<LscTransaction> usedTxs = transactionMapper.selectList(usedW);
+        long totalUsed = usedTxs.stream().mapToLong(t -> nvl(t.getAmount())).sum();
+        result.put("totalUsed", totalUsed);
+        result.put("totalWrittenOff", 0L); // V7.3 禁止核销
+        // 月收入 = 当月收入类流水累计(每日释放+退款退回)
         LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
         LambdaQueryWrapper<LscTransaction> monthW = new LambdaQueryWrapper<>();
         if (userId != null) {
@@ -707,8 +515,8 @@ public class LscLedgerServiceImpl implements LscLedgerService {
         }
         monthW.ge(LscTransaction::getCreatedAt, monthStart.atStartOfDay());
         monthW.in(LscTransaction::getType,
-                LscTransactionTypeEnum.MALL_CONSUMPTION.getCode(),
-                LscTransactionTypeEnum.OFFLINE_CONSUMPTION.getCode());
+                LscTransactionTypeEnum.DAILY_RELEASE.getCode(),
+                LscTransactionTypeEnum.REFUND_RETURN.getCode());
         List<LscTransaction> monthTxs = transactionMapper.selectList(monthW);
         long monthlyRevenue = monthTxs.stream().mapToLong(t -> nvl(t.getAmount())).sum();
         result.put("monthlyRevenue", monthlyRevenue);
@@ -725,32 +533,41 @@ public class LscLedgerServiceImpl implements LscLedgerService {
      * @param type           流水类型
      * @param lockedDelta    锁定变更量(可负)
      * @param availableDelta 可用变更量(可负)
+     * @param frozenDelta    冻结变更量(可负，V7.3 风控冻结/解冻使用)
      * @param counterpartyId 对手方用户ID
      * @param orderNo        关联订单号
      * @param remark         备注
      * @return 变更后账户
      */
     private LscAccount applyAccountChange(LscAccount acc, String idemKey, LscTransactionTypeEnum type,
-                                          long lockedDelta, long availableDelta, Long counterpartyId,
-                                          String orderNo, String remark) {
+                                          long lockedDelta, long availableDelta, long frozenDelta,
+                                          Long counterpartyId, String orderNo, String remark) {
         long beforeLocked = nvl(acc.getTotalLocked());
         long beforeAvailable = nvl(acc.getTotalAvailable());
+        long beforeFrozen = nvl(acc.getTotalFrozen());
         long newLocked = beforeLocked + lockedDelta;
         long newAvailable = beforeAvailable + availableDelta;
+        long newFrozen = beforeFrozen + frozenDelta;
         if (newLocked < 0) {
             throw new BizException(ResultCode.LSC_LOCKED_INSUFFICIENT);
         }
         if (newAvailable < 0) {
             throw new BizException(ResultCode.LSC_BALANCE_INSUFFICIENT);
         }
+        if (newFrozen < 0) {
+            throw new BizException(ResultCode.LSC_FROZEN_INSUFFICIENT);
+        }
         acc.setTotalLocked(newLocked);
         acc.setTotalAvailable(newAvailable);
+        acc.setTotalFrozen(newFrozen);
         if (accountMapper.updateById(acc) <= 0) {
             throw new BizException(ResultCode.SYSTEM_ERROR, "账户并发更新失败(乐观锁冲突)");
         }
-        long txAmount = Math.abs(lockedDelta != 0 ? lockedDelta : availableDelta);
+        long txAmount = Math.abs(lockedDelta != 0 ? lockedDelta
+                : (availableDelta != 0 ? availableDelta : frozenDelta));
         recordTransaction(acc.getUserId(), type, txAmount, beforeLocked, newLocked,
-                beforeAvailable, newAvailable, counterpartyId, orderNo, idemKey, remark);
+                beforeAvailable, newAvailable, beforeFrozen, newFrozen,
+                counterpartyId, orderNo, idemKey, remark);
         acc.setVersion(nvl(acc.getVersion()) + 1);
         return acc;
     }
@@ -776,6 +593,7 @@ public class LscLedgerServiceImpl implements LscLedgerService {
     private void recordTransaction(Long userId, LscTransactionTypeEnum type, Long amount,
                                    long beforeLocked, long afterLocked,
                                    long beforeAvailable, long afterAvailable,
+                                   long beforeFrozen, long afterFrozen,
                                    Long counterpartyId, String orderNo, String idemKey, String remark) {
         LscTransaction tx = new LscTransaction();
         tx.setUserId(userId);
@@ -785,6 +603,8 @@ public class LscLedgerServiceImpl implements LscLedgerService {
         tx.setAfterLocked(afterLocked);
         tx.setBeforeAvailable(beforeAvailable);
         tx.setAfterAvailable(afterAvailable);
+        tx.setBeforeFrozen(beforeFrozen);
+        tx.setAfterFrozen(afterFrozen);
         tx.setCounterpartyId(counterpartyId);
         tx.setOrderNo(orderNo);
         tx.setIdempotentKey(idemKey);
@@ -869,10 +689,8 @@ public class LscLedgerServiceImpl implements LscLedgerService {
     public void setLockWaitMs(long lockWaitMs) { this.lockWaitMs = lockWaitMs; }
     public long getLockLeaseMs() { return lockLeaseMs; }
     public void setLockLeaseMs(long lockLeaseMs) { this.lockLeaseMs = lockLeaseMs; }
-    public int getB2bValidityDays() { return b2bValidityDays; }
-    public void setB2bValidityDays(int b2bValidityDays) { this.b2bValidityDays = b2bValidityDays; }
+    public int getDetailValidityDays() { return detailValidityDays; }
+    public void setDetailValidityDays(int detailValidityDays) { this.detailValidityDays = detailValidityDays; }
     public boolean getOptimisticLockEnabled() { return optimisticLockEnabled; }
     public void setOptimisticLockEnabled(boolean optimisticLockEnabled) { this.optimisticLockEnabled = optimisticLockEnabled; }
-    public int getExpireBatchSize() { return expireBatchSize; }
-    public void setExpireBatchSize(int expireBatchSize) { this.expireBatchSize = expireBatchSize; }
 }

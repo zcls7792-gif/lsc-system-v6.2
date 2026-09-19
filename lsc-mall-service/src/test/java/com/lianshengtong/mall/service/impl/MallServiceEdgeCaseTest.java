@@ -713,8 +713,9 @@ class MallServiceEdgeCaseTest {
 
         HybridPayDTO result = hybridPayService.calc(dto);
 
-        assertEquals(50L, result.getLscAmount().longValue());
-        assertEquals(new BigDecimal("0.50"), result.getRmbAmount());
+        // V7.3: 50%上限 = floor(50.50 × 0.5) = 25
+        assertEquals(25L, result.getLscAmount().longValue());
+        assertEquals(new BigDecimal("25.50"), result.getRmbAmount());
     }
 
     @Test
@@ -744,7 +745,7 @@ class MallServiceEdgeCaseTest {
     }
 
     @Test
-    @DisplayName("calc: lscAmount为MAX_LONG截断到总价")
+    @DisplayName("calc: lscAmount为MAX_LONG截断到50%上限")
     void calc_maxLongLsc_truncated() {
         HybridPayCalcDTO dto = new HybridPayCalcDTO();
         dto.setTotalPrice(new BigDecimal("100.00"));
@@ -752,8 +753,9 @@ class MallServiceEdgeCaseTest {
 
         HybridPayDTO result = hybridPayService.calc(dto);
 
-        assertEquals(100L, result.getLscAmount().longValue());
-        assertEquals(new BigDecimal("0.00"), result.getRmbAmount());
+        // V7.3: 50%上限 = 100 × 0.5 = 50
+        assertEquals(50L, result.getLscAmount().longValue());
+        assertEquals(new BigDecimal("50.00"), result.getRmbAmount());
     }
 
     @Test
@@ -834,7 +836,7 @@ class MallServiceEdgeCaseTest {
     }
 
     @Test
-    @DisplayName("calc: maxAvailableLsc超过总价时仍受总价约束")
+    @DisplayName("calc: maxAvailableLsc超过总价时仍受50%上限约束")
     void calc_maxAvailableExceedsPrice_priceConstrains() {
         HybridPayCalcDTO dto = new HybridPayCalcDTO();
         dto.setTotalPrice(new BigDecimal("50.00"));
@@ -843,12 +845,13 @@ class MallServiceEdgeCaseTest {
 
         HybridPayDTO result = hybridPayService.calc(dto);
 
-        assertEquals(50L, result.getLscAmount().longValue());
-        assertEquals(new BigDecimal("0.00"), result.getRmbAmount());
+        // V7.3: 50%上限 = 50 × 0.5 = 25
+        assertEquals(25L, result.getLscAmount().longValue());
+        assertEquals(new BigDecimal("25.00"), result.getRmbAmount());
     }
 
     @Test
-    @DisplayName("calc: lscAmount刚好等于maxAvailableLsc和totalPrice")
+    @DisplayName("calc: lscAmount刚好等于maxAvailableLsc和totalPrice时受50%约束")
     void calc_lscEqualsAllThree() {
         HybridPayCalcDTO dto = new HybridPayCalcDTO();
         dto.setTotalPrice(new BigDecimal("30.00"));
@@ -857,8 +860,9 @@ class MallServiceEdgeCaseTest {
 
         HybridPayDTO result = hybridPayService.calc(dto);
 
-        assertEquals(30L, result.getLscAmount().longValue());
-        assertEquals(new BigDecimal("0.00"), result.getRmbAmount());
+        // V7.3: 50%上限 = 30 × 0.5 = 15
+        assertEquals(15L, result.getLscAmount().longValue());
+        assertEquals(new BigDecimal("15.00"), result.getRmbAmount());
     }
 
     @Test

@@ -58,6 +58,12 @@ public class Order implements Serializable {
     /** 人民币支付金额 */
     private BigDecimal rmbAmount;
 
+    /** 单件商品赠送LSC积分快照(V7.3，下单时从商品快照) */
+    private Long grantPoints;
+
+    /** 本订单实际赠送LSC数量(V7.3，=grantPoints×quantity×人民币支付比例，入锁定池) */
+    private Long grantedLsc;
+
     /** 订单状态 0待支付 1已支付 2已完成 3已取消 4已退款 5部分退款 */
     private Integer status;
 

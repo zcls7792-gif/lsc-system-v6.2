@@ -40,6 +40,14 @@ public class ProductPublishDTO implements Serializable {
     @DecimalMin(value = "0.01", message = "价格必须大于0")
     private BigDecimal price;
 
+    /** 成本价/进货价(人民币元，用于计算进销差赠送LSC) */
+    @DecimalMin(value = "0.00", message = "成本价不能为负")
+    private BigDecimal costPrice;
+
+    /** 赠送LSC积分数量(可空，为空时按进销差自动计算；不可超过价格) */
+    @Min(value = 0, message = "赠送积分不能为负")
+    private Long grantPoints;
+
     /** 库存 */
     @NotNull(message = "库存不能为空")
     @Min(value = 0, message = "库存不能为负")

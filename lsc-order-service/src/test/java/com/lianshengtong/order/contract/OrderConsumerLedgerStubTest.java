@@ -79,15 +79,15 @@ class OrderConsumerLedgerStubTest {
     }
 
     @Test
-    @DisplayName("[契约消费] payLsc — 与 orderLedgerClient#payLsc 声明一致")
-    void payLsc_matchesFeignContract() throws Exception {
+    @DisplayName("[契约消费] deductLsc — 与 orderLedgerClient#deductLsc 声明一致")
+    void deductLsc_matchesFeignContract() throws Exception {
         LscLedgerOpDTO dto = LscLedgerOpDTO.builder()
-                .userId(10001L).counterpartyId(20001L).availableDelta(3000L)
+                .userId(10001L).availableDelta(-3000L)
                 .orderNo("ORD-20260901-00002")
-                .idempotentKey("idem-pay-001").transactionType(3)
+                .idempotentKey("idem-deduct-001").transactionType(2)
                 .build();
-        R<Void> r = postJson("/api/ledger/pay", dto);
-        assertEquals(0, r.getCode(), "payLsc code=0");
+        R<Void> r = postJson("/api/ledger/deduct", dto);
+        assertEquals(0, r.getCode(), "deductLsc code=0");
         assertTrue(r.isSuccess());
     }
 

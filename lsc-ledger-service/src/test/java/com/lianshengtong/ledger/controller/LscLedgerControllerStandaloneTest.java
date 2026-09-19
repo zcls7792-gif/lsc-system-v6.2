@@ -90,19 +90,6 @@ class LscLedgerControllerStandaloneTest {
         }
     }
 
-    @Nested @DisplayName("POST /api/ledger/pay")
-    class Pay {
-        @Test @DisplayName("需要 counterpartyId → 调 payLsc(consumer, merchant, amount, orderNo)")
-        void twoParty() throws Exception {
-            when(svc.payLsc(10001L, 20001L, 500L, "ORD-3")).thenReturn(acc(10001L, 0L, 500L, 3));
-            mvc.perform(post("/api/ledger/pay")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(om.writeValueAsString(op(10001L, 0L, 500L, "ORD-3", 20001L))))
-                    .andExpect(status().isOk());
-            verify(svc).payLsc(10001L, 20001L, 500L, "ORD-3");
-        }
-    }
-
     @Nested @DisplayName("POST /api/ledger/refund")
     class Refund {
         @Test @DisplayName("退款回滚路径：可用余额增量入账")

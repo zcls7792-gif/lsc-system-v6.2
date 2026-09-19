@@ -60,8 +60,9 @@ public class PromotionController {
                                     @RequestParam("orderNo") String orderNo,
                                     @RequestParam("orderAmount") BigDecimal orderAmount,
                                     @RequestParam("orderStatus") Integer orderStatus,
-                                    @RequestParam(value = "refundAmount", required = false) BigDecimal refundAmount) {
-        promotionService.notifyFirstOrder(consumerId, orderNo, orderAmount, orderStatus, refundAmount);
+                                    @RequestParam(value = "refundAmount", required = false) BigDecimal refundAmount,
+                                    @RequestParam(value = "grantedLsc", required = false) Long grantedLsc) {
+        promotionService.notifyFirstOrder(consumerId, orderNo, orderAmount, orderStatus, refundAmount, grantedLsc);
         return R.ok();
     }
 }

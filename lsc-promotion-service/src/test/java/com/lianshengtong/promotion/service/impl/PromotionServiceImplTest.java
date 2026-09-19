@@ -77,6 +77,7 @@ class PromotionServiceImplTest {
         dto.setUserId(1L);
         dto.setOrderNo("ORD001");
         dto.setOrderAmount(new BigDecimal("100"));
+        dto.setGrantedLsc(100L);
         dto.setOrderStatus(OrderStatusEnum.COMPLETED.getCode());
         dto.setRefundAmount(BigDecimal.ZERO);
         dto.setReferrerId(100L);
@@ -195,10 +196,10 @@ class PromotionServiceImplTest {
     // ============== calculateReward (calcReward) 测试 ==============
 
     @Test
-    @DisplayName("奖励计算：标准奖励计算(10%比例)")
+    @DisplayName("奖励计算：标准奖励计算(grantedLsc×10%)")
     void testCalcReward_standardReward() {
         FirstOrderCheckDTO dto = buildValidDto();
-        dto.setOrderAmount(new BigDecimal("200"));
+        dto.setGrantedLsc(200L);
         when(promotionPendingMapper.selectCount(any())).thenReturn(0L);
         R<Object> ok = R.ok();
         when(ledgerFeignClient.ledgerOp(any())).thenReturn(ok);
@@ -207,7 +208,7 @@ class PromotionServiceImplTest {
 
         assertTrue(result.getFirstOrder());
         assertTrue(result.getSuccess());
-        assertEquals(new BigDecimal("20.00"), result.getRewardAmount());
+        assertEquals(new BigDecimal("20"), result.getRewardAmount());
     }
 
     @Test
@@ -223,14 +224,14 @@ class PromotionServiceImplTest {
         assertTrue(result.getFirstOrder());
         assertTrue(result.getSuccess());
         assertEquals(100L, result.getReferrerId());
-        assertEquals(new BigDecimal("10.00"), result.getRewardAmount());
+        assertEquals(new BigDecimal("10"), result.getRewardAmount());
     }
 
     @Test
-    @DisplayName("奖励计算：奖励封顶测试")
+    @DisplayName("奖励计算：大赠送量奖励测试")
     void testCalcReward_rewardCappedAtMax() {
         FirstOrderCheckDTO dto = buildValidDto();
-        dto.setOrderAmount(new BigDecimal("10000"));
+        dto.setGrantedLsc(10000L);
         when(promotionPendingMapper.selectCount(any())).thenReturn(0L);
         R<Object> ok = R.ok();
         when(ledgerFeignClient.ledgerOp(any())).thenReturn(ok);
@@ -238,7 +239,7 @@ class PromotionServiceImplTest {
         RewardResultDTO result = promotionService.calcReward(dto);
 
         assertTrue(result.getSuccess());
-        assertEquals(new BigDecimal("1000.00"), result.getRewardAmount());
+        assertEquals(new BigDecimal("1000"), result.getRewardAmount());
     }
 
     @Test
@@ -287,7 +288,7 @@ class PromotionServiceImplTest {
     }
 
     @Test
-    @DisplayName("奖励计算：验证奖励金额 = 订单金额 * 10%")
+    @DisplayName("奖励计算：验证奖励金额 = grantedLsc * 10%")
     void testCalcReward_RewardAmount() {
         FirstOrderCheckDTO dto = buildValidDto();
         when(promotionPendingMapper.selectCount(any())).thenReturn(0L);
@@ -296,7 +297,7 @@ class PromotionServiceImplTest {
 
         RewardResultDTO result = promotionService.calcReward(dto);
 
-        assertEquals(new BigDecimal("10.00"), result.getRewardAmount());
+        assertEquals(new BigDecimal("10"), result.getRewardAmount());
     }
 
     // ============== rollbackReward 测试 ==============

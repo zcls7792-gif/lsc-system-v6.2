@@ -65,16 +65,33 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Order createOrder(OrderCreateDTO dto) {
-        // 计算混合支付拆分：LSC 数量(1:1对应人民币元) + 人民币补足
-        long totalLong = dto.getTotalPrice().longValue();
+        // V7.3 合规基线：LSC 抵扣上限 = 订单总价的 50%
+        BigDecimal totalPrice = dto.getTotalPrice();
+        long maxLscByRatio = totalPrice.multiply(new BigDecimal("0.50"))
+                .setScale(0, java.math.RoundingMode.FLOOR).longValue();
+        long totalLong = totalPrice.longValue();
         Long lscAmount = dto.getLscAmount() == null ? 0L : dto.getLscAmount();
         if (lscAmount < 0) {
             throw new BizException("LSC支付数量不能为负");
         }
-        if (lscAmount > totalLong) {
-            throw new BizException("LSC支付数量不能超过订单总价");
+        // V7.3: LSC 抵扣不超过总价 50%
+        lscAmount = Math.min(lscAmount, Math.min(maxLscByRatio, totalLong));
+        BigDecimal rmbAmount = totalPrice.subtract(BigDecimal.valueOf(lscAmount));
+
+        // V7.3: 计算本订单赠送 LSC = grantPoints × quantity × (人民币支付比例)
+        long grantPoints = dto.getGrantPoints() == null ? 0L : dto.getGrantPoints();
+        int quantity = dto.getQuantity() == null ? 1 : dto.getQuantity();
+        long grantedLsc = 0L;
+        if (grantPoints > 0 && totalPrice.signum() > 0) {
+            grantedLsc = BigDecimal.valueOf(grantPoints)
+                    .multiply(BigDecimal.valueOf(quantity))
+                    .multiply(rmbAmount)
+                    .divide(totalPrice, 0, java.math.RoundingMode.FLOOR)
+                    .longValue();
+            if (grantedLsc < 0) {
+                grantedLsc = 0L;
+            }
         }
-        BigDecimal rmbAmount = dto.getTotalPrice().subtract(BigDecimal.valueOf(lscAmount));
 
         Order order = new Order();
         long snowflake = SnowflakeIdUtil.id();
@@ -85,18 +102,20 @@ public class OrderServiceImpl implements OrderService {
         order.setMerchantId(dto.getMerchantId());
         order.setProductId(dto.getProductId() == null ? 0L : dto.getProductId());
         order.setProductName(dto.getProductName());
-        order.setQuantity(dto.getQuantity() == null ? 1 : dto.getQuantity());
-        order.setTotalPrice(dto.getTotalPrice());
+        order.setQuantity(quantity);
+        order.setTotalPrice(totalPrice);
         order.setLscAmount(lscAmount);
         order.setRmbAmount(rmbAmount);
+        order.setGrantPoints(grantPoints);
+        order.setGrantedLsc(grantedLsc);
         order.setStatus(OrderStatusEnum.PENDING_PAY.getCode());
         order.setRefundLscAmount(0L);
         order.setRefundRmbAmount(BigDecimal.ZERO);
 
         orderMapper.insert(order);
-        log.info("订单创建成功 orderNo={} consumerId={} merchantId={} totalPrice={} lsc={} rmb={}",
+        log.info("订单创建成功 orderNo={} consumerId={} merchantId={} totalPrice={} lsc={} rmb={} grantedLsc={}",
                 order.getOrderNo(), order.getConsumerId(), order.getMerchantId(),
-                order.getTotalPrice(), order.getLscAmount(), order.getRmbAmount());
+                order.getTotalPrice(), order.getLscAmount(), order.getRmbAmount(), order.getGrantedLsc());
         return order;
     }
 
@@ -116,26 +135,41 @@ public class OrderServiceImpl implements OrderService {
             if (!lock.tryLock(lockWaitMs, lockLeaseMs, TimeUnit.MILLISECONDS)) {
                 throw new BizException("订单支付处理中，请稍后重试");
             }
-            // 1. LSC 部分支付：调用账本服务扣减消费者可用 LSC 并转入商家
+            // 1. LSC 部分抵扣：V7.3 LSC 直接销毁(不流转给商家)
             if (order.getLscAmount() > 0) {
                 LscLedgerOpDTO opDTO = LscLedgerOpDTO.builder()
-                        .idempotentKey(IdempotentKeyGenerator.generate("ORDER_PAY", order.getConsumerId()))
-                        .transactionType(LscTransactionTypeEnum.MALL_CONSUMPTION.getCode())
+                        .idempotentKey(IdempotentKeyGenerator.generate("ORDER_DEDUCT", order.getConsumerId()))
+                        .transactionType(LscTransactionTypeEnum.ORDER_DEDUCT.getCode())
                         .userId(order.getConsumerId())
-                        .counterpartyId(order.getMerchantId())
                         .availableDelta(-order.getLscAmount())
                         .orderNo(order.getOrderNo())
-                        .remark("订单LSC支付")
+                        .remark("订单LSC抵扣")
                         .build();
-                R<Void> result = lscLedgerFeignClient.payLsc(opDTO);
+                R<Void> result = lscLedgerFeignClient.deductLsc(opDTO);
                 if (result == null || !result.isSuccess()) {
                     throw new BizException(ResultCode.SEATA_TRANSACTION_EXCEPTION,
-                            "LSC支付失败: " + (result == null ? "账本服务无响应" : result.getMessage()));
+                            "LSC抵扣失败: " + (result == null ? "账本服务无响应" : result.getMessage()));
                 }
             }
             // 2. 人民币部分支付：唤起支付机构(此处模拟，实际调用支付网关)
             if (order.getRmbAmount().compareTo(BigDecimal.ZERO) > 0) {
                 invokeRmbPayment(order.getOrderNo(), order.getRmbAmount());
+            }
+            // 3. V7.3: 支付成功后赠送 LSC(入锁定池)，仅人民币支付部分按比例赠送
+            if (order.getGrantedLsc() != null && order.getGrantedLsc() > 0) {
+                LscLedgerOpDTO grantDTO = LscLedgerOpDTO.builder()
+                        .idempotentKey(IdempotentKeyGenerator.generate("ORDER_GRANT", order.getConsumerId()))
+                        .transactionType(LscTransactionTypeEnum.GRANT_LOCKED.getCode())
+                        .userId(order.getConsumerId())
+                        .lockedDelta(order.getGrantedLsc())
+                        .orderNo(order.getOrderNo())
+                        .remark("订单消费赠送LSC入锁定池")
+                        .build();
+                R<Void> grantResult = lscLedgerFeignClient.issueLsc(grantDTO);
+                if (grantResult == null || !grantResult.isSuccess()) {
+                    log.warn("LSC赠送失败(不阻断订单) orderNo={} err={}",
+                            order.getOrderNo(), grantResult == null ? "账本服务无响应" : grantResult.getMessage());
+                }
             }
             order.setStatus(OrderStatusEnum.PAID.getCode());
             order.setPayTime(LocalDateTime.now());
@@ -176,7 +210,8 @@ public class OrderServiceImpl implements OrderService {
                     ? BigDecimal.ZERO : order.getRefundRmbAmount();
             promotionFeignClient.notifyFirstOrder(
                     order.getConsumerId(), order.getOrderNo(),
-                    paidAmount, OrderStatusEnum.COMPLETED.getCode(), refunded);
+                    paidAmount, OrderStatusEnum.COMPLETED.getCode(), refunded,
+                    order.getGrantedLsc() == null ? 0L : order.getGrantedLsc());
         } catch (RuntimeException e) {
             log.warn("通知推广首单失败 orderNo={} err={}", order.getOrderNo(), e.getMessage());
         }
@@ -223,13 +258,12 @@ public class OrderServiceImpl implements OrderService {
             if (!lock.tryLock(lockWaitMs, lockLeaseMs, TimeUnit.MILLISECONDS)) {
                 throw new BizException("订单退款处理中，请稍后重试");
             }
-            // 1. LSC 全额退回消费者(触发发行回滚)
+            // 1. LSC 全额退回消费者(原抵扣部分退回可用余额)
             if (order.getLscAmount() > 0) {
                 LscLedgerOpDTO opDTO = LscLedgerOpDTO.builder()
-                        .idempotentKey(IdempotentKeyGenerator.generate("ORDER_REFUND", order.getMerchantId()))
+                        .idempotentKey(IdempotentKeyGenerator.generate("ORDER_REFUND", order.getConsumerId()))
                         .transactionType(LscTransactionTypeEnum.REFUND_RETURN.getCode())
                         .userId(order.getConsumerId())
-                        .counterpartyId(order.getMerchantId())
                         .availableDelta(order.getLscAmount())
                         .orderNo(order.getOrderNo())
                         .remark("订单全额退款LSC退回")
@@ -240,7 +274,23 @@ public class OrderServiceImpl implements OrderService {
                             "LSC退款失败: " + (result == null ? "账本服务无响应" : result.getMessage()));
                 }
             }
-            // 2. 人民币全额退回(此处模拟，实际调用支付机构退款)
+            // 2. V7.3: 扣回订单赠送的锁定 LSC(退款回扣)
+            if (order.getGrantedLsc() != null && order.getGrantedLsc() > 0) {
+                LscLedgerOpDTO deductDTO = LscLedgerOpDTO.builder()
+                        .idempotentKey(IdempotentKeyGenerator.generate("ORDER_REFUND_DEDUCT", order.getConsumerId()))
+                        .transactionType(LscTransactionTypeEnum.REFUND_DEDUCT.getCode())
+                        .userId(order.getConsumerId())
+                        .lockedDelta(-order.getGrantedLsc())
+                        .orderNo(order.getOrderNo())
+                        .remark("订单退款扣回赠送LSC")
+                        .build();
+                R<Void> deductResult = lscLedgerFeignClient.refundDeductLsc(deductDTO);
+                if (deductResult == null || !deductResult.isSuccess()) {
+                    log.warn("LSC退款回扣失败(不阻断退款) orderNo={} err={}",
+                            order.getOrderNo(), deductResult == null ? "账本服务无响应" : deductResult.getMessage());
+                }
+            }
+            // 3. 人民币全额退回(此处模拟，实际调用支付机构退款)
             if (order.getRmbAmount().compareTo(BigDecimal.ZERO) > 0) {
                 invokeRmbRefund(order.getOrderNo(), order.getRmbAmount());
             }
@@ -294,13 +344,12 @@ public class OrderServiceImpl implements OrderService {
             if (!lock.tryLock(lockWaitMs, lockLeaseMs, TimeUnit.MILLISECONDS)) {
                 throw new BizException("订单退款处理中，请稍后重试");
             }
-            // 1. 部分退回 LSC
+            // 1. 部分退回 LSC(消费者可用余额入账)
             if (refundLsc > 0) {
                 LscLedgerOpDTO opDTO = LscLedgerOpDTO.builder()
-                        .idempotentKey(IdempotentKeyGenerator.generate("ORDER_PARTIAL_REFUND", order.getMerchantId()))
+                        .idempotentKey(IdempotentKeyGenerator.generate("ORDER_PARTIAL_REFUND", order.getConsumerId()))
                         .transactionType(LscTransactionTypeEnum.REFUND_RETURN.getCode())
                         .userId(order.getConsumerId())
-                        .counterpartyId(order.getMerchantId())
                         .availableDelta(refundLsc)
                         .orderNo(order.getOrderNo())
                         .remark("订单部分退款LSC退回")
@@ -311,7 +360,31 @@ public class OrderServiceImpl implements OrderService {
                             "LSC部分退款失败: " + (result == null ? "账本服务无响应" : result.getMessage()));
                 }
             }
-            // 2. 部分退回人民币
+            // 2. V7.3: 按人民币退款比例扣回赠送的锁定 LSC
+            if (order.getGrantedLsc() != null && order.getGrantedLsc() > 0
+                    && order.getRmbAmount().compareTo(BigDecimal.ZERO) > 0
+                    && refundRmb.compareTo(BigDecimal.ZERO) > 0) {
+                long refundDeductLsc = BigDecimal.valueOf(order.getGrantedLsc())
+                        .multiply(refundRmb)
+                        .divide(order.getRmbAmount(), 0, java.math.RoundingMode.FLOOR)
+                        .longValue();
+                if (refundDeductLsc > 0) {
+                    LscLedgerOpDTO deductDTO = LscLedgerOpDTO.builder()
+                            .idempotentKey(IdempotentKeyGenerator.generate("ORDER_PARTIAL_REFUND_DEDUCT", order.getConsumerId()))
+                            .transactionType(LscTransactionTypeEnum.REFUND_DEDUCT.getCode())
+                            .userId(order.getConsumerId())
+                            .lockedDelta(-refundDeductLsc)
+                            .orderNo(order.getOrderNo())
+                            .remark("订单部分退款扣回赠送LSC")
+                            .build();
+                    R<Void> deductResult = lscLedgerFeignClient.refundDeductLsc(deductDTO);
+                    if (deductResult == null || !deductResult.isSuccess()) {
+                        log.warn("LSC部分退款回扣失败(不阻断退款) orderNo={} err={}",
+                                order.getOrderNo(), deductResult == null ? "账本服务无响应" : deductResult.getMessage());
+                    }
+                }
+            }
+            // 3. 部分退回人民币
             if (refundRmb.compareTo(BigDecimal.ZERO) > 0) {
                 invokeRmbRefund(order.getOrderNo(), refundRmb);
             }
