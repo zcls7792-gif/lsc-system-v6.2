@@ -100,6 +100,10 @@
         {
           "path": "transactions/index",
           "style": { "navigationBarTitleText": "LSC流水", "enablePullDownRefresh": true }
+        },
+        {
+          "path": "grant-lots/index",
+          "style": { "navigationBarTitleText": "释放批次", "enablePullDownRefresh": true }
         }
       ]
     },

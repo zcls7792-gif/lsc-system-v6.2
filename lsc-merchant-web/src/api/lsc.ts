@@ -8,41 +8,32 @@ function merchantUserId(): number | undefined {
   return useMerchantStore().profile?.userId
 }
 
-/** LSC 账户余额 */
+/** LSC 账户余额（V7.7.2 五桶模型） */
 export function getLscAccount() {
-  const userId = merchantUserId()
-  return get<LscAccount>('/ledger/account/' + userId)
+  return get<LscAccount>('/v1/lsc/account')
 }
 
-/** LSC 流水列表 */
+/** LSC 权益事件明细（V7.7.2） */
 export function getLscTransactions(params: {
   page?: number
   size?: number
-  /** 流水类型 1-9 */
-  type?: number
-  startDate?: string
-  endDate?: string
-  orderNo?: string
 }) {
-  return get<PageResult<LscTransaction>>('/ledger/transactions', {
-    userId: merchantUserId(),
+  return get<PageResult<LscTransaction>>('/v1/lsc/events', {
     ...params
   })
 }
 
-/** 可用 LSC 明细列表 (按过期日) */
+/** GrantLot 列表（V7.7.2） */
 export function getAvailableDetails(params: {
   page?: number
   size?: number
-  status?: number
 }) {
-  return get<PageResult<AvailableLscDetail>>('/ledger/available-details', {
-    userId: merchantUserId(),
+  return get<PageResult<AvailableLscDetail>>('/v1/lsc/grant-lots', {
     ...params
   })
 }
 
-/** 近7天交易趋势 */
+/** 近7天交易趋势（V7.7.2 暂无独立接口，返回空数组占位） */
 export interface TrendPoint {
   date: string
   /** 当日订单数 */
@@ -53,14 +44,11 @@ export interface TrendPoint {
   lscIn: number
 }
 
-export function getRecentTrend(days = 7) {
-  return get<TrendPoint[]>('/ledger/recent-trend', {
-    userId: merchantUserId(),
-    days
-  })
+export function getRecentTrend(_days = 7): Promise<TrendPoint[]> {
+  return Promise.resolve([])
 }
 
-/** 商家 LSC 概览 (锁定/可用/已核销/月收入等) */
+/** 商家 LSC 概览（V7.7.2 从五桶账户派生） */
 export interface LscOverview {
   totalLocked: number
   totalAvailable: number
@@ -69,7 +57,14 @@ export interface LscOverview {
   monthlyRevenue: number
 }
 
-export function getLscOverview() {
-  const userId = merchantUserId()
-  return get<LscOverview>('/ledger/overview/' + userId)
+export async function getLscOverview(): Promise<LscOverview> {
+  const acc = await getLscAccount()
+  const unitToLsc = (s?: string) => Number(s || '0') / 10000
+  return {
+    totalLocked: unitToLsc(acc.lockedUnit),
+    totalAvailable: unitToLsc(acc.availableUnit),
+    totalUsed: 0,
+    totalWrittenOff: 0,
+    monthlyRevenue: 0,
+  }
 }

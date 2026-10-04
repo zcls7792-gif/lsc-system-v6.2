@@ -50,14 +50,14 @@ import LoadMore from '@/components/LoadMore.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
 const tabs = [
-  { label: '全部', value: -1 },
-  { label: '待支付', value: 0 },
-  { label: '已支付', value: 1 },
-  { label: '已完成', value: 2 },
-  { label: '退款', value: 4 },
+  { label: '全部', value: '' },
+  { label: '待支付', value: 'UNPAID' },
+  { label: '已支付', value: 'PAID' },
+  { label: '已完成', value: 'COMPLETED' },
+  { label: '退款', value: 'REFUNDED' },
 ]
 
-const activeStatus = ref(-1)
+const activeStatus = ref('')
 const orders = ref<Order[]>([])
 const page = ref(1)
 const size = 10
@@ -79,9 +79,9 @@ async function loadOrders(reset = false) {
     const res = await getOrderList({
       page: page.value,
       size,
-      status: activeStatus.value,
+      paymentStatus: activeStatus.value,
     })
-    const list = res.list || []
+    const list = res.records || []
     if (reset) orders.value = list
     else orders.value.push(...list)
     loadStatus.value = list.length < size ? 'noMore' : 'loadmore'
@@ -93,7 +93,7 @@ async function loadOrders(reset = false) {
   }
 }
 
-function switchTab(v: number) {
+function switchTab(v: string) {
   if (activeStatus.value === v) return
   activeStatus.value = v
   loadOrders(true)

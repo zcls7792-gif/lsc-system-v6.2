@@ -14,47 +14,31 @@
 
     <groupId>com.lianshengtong</groupId>
     <artifactId>lsc-system</artifactId>
-    <version>6.2.0-AI</version>
+    <version>7.7.2</version>
     <packaging>pom</packaging>
-    <name>LSC System V6.2-AI</name>
-    <description>链盛通消费权益凭证循环系统 V6.2 AI增强版</description>
+    <name>LSC System V7.7.2</name>
+    <description>链盛通 LSC 消费回馈权益系统 V7.7.2 - 模块化单体</description>
 
     <modules>
         <module>lsc-common</module>
-        <module>lsc-user-service</module>
-        <module>lsc-ledger-service</module>
-        <module>lsc-b2b-service</module>
-        <module>lsc-order-service</module>
-        <module>lsc-promotion-service</module>
-        <module>lsc-writeoff-service</module>
-        <module>lsc-release-service</module>
-        <module>lsc-mall-service</module>
-        <module>lsc-ai-gateway</module>
-        <module>lsc-risk-service</module>
-        <module>lsc-media-service</module>
-        <module>lsc-map-service</module>
-        <module>lsc-reconciliation-service</module>
-        <module>lsc-evidence-service</module>
-        <module>lsc-admin-service</module>
-        <module>lsc-gateway</module>
+        <module>lsc-user</module>
+        <module>lsc-product</module>
+        <module>lsc-ledger</module>
+        <module>lsc-order</module>
+        <module>lsc-coupon</module>
+        <module>lsc-supplychain</module>
+        <module>lsc-risk</module>
+        <module>lsc-web</module>
     </modules>
 
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-cloud.version>2023.0.1</spring-cloud.version>
-        <spring-cloud-alibaba.version>2023.0.1.0</spring-cloud-alibaba.version>
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
-        <mybatis-plus-spring-boot3.version>3.5.5</mybatis-plus-spring-boot3.version>
-        <shardingsphere.version>5.4.1</shardingsphere.version>
-        <seata.version>2.0.0</seata.version>
-        <xxl-job.version>2.4.0</xxl-job.version>
         <hutool.version>5.8.26</hutool.version>
         <fastjson2.version>2.0.47</fastjson2.version>
         <knife4j.version>4.4.0</knife4j.version>
         <redisson.version>3.27.2</redisson.version>
-        <sentinel.version>1.8.7</sentinel.version>
-        <nacos.version>2.3.2</nacos.version>
         <mysql.version>8.0.33</mysql.version>
         <druid.version>1.2.22</druid.version>
         <okhttp.version>4.12.0</okhttp.version>
@@ -62,52 +46,14 @@
         <guava.version>33.1.0-jre</guava.version>
         <jjwt.version>0.12.6</jjwt.version>
         <lombok.version>1.18.32</lombok.version>
-        <!-- Spring Cloud Contract 4.1.x 对应 Spring Cloud 2023.0.x -->
-        <spring-cloud-contract.version>4.1.2</spring-cloud-contract.version>
-        <!-- H2 内嵌数据库：集成测试阶段替代 MySQL -->
-        <h2.version>2.2.224</h2.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba.cloud</groupId>
-                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
-                <version>${spring-cloud-alibaba.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
-                <version>${mybatis-plus-spring-boot3.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.baomidou</groupId>
-                <artifactId>mybatis-plus-generator</artifactId>
                 <version>${mybatis-plus.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.shardingsphere</groupId>
-                <artifactId>shardingsphere-jdbc-core-spring-boot-starter</artifactId>
-                <version>${shardingsphere.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.seata</groupId>
-                <artifactId>seata-spring-boot-starter</artifactId>
-                <version>${seata.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.xuxueli</groupId>
-                <artifactId>xxl-job-core</artifactId>
-                <version>${xxl-job.version}</version>
             </dependency>
             <dependency>
                 <groupId>cn.hutool</groupId>
@@ -120,11 +66,6 @@
                 <version>${fastjson2.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.fastjson2</groupId>
-                <artifactId>fastjson2-extension-spring6</artifactId>
-                <version>${fastjson2.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
@@ -133,10 +74,6 @@
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson-spring-boot-starter</artifactId>
                 <version>${redisson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba.cloud</groupId>
-                <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
             </dependency>
             <dependency>
                 <groupId>com.mysql</groupId>
@@ -184,41 +121,39 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.skywalking</groupId>
-                <artifactId>apm-toolkit-trace</artifactId>
-                <version>9.0.0</version>
+                <groupId>com.lianshengtong</groupId>
+                <artifactId>lsc-user</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.ben-manes.caffeine</groupId>
-                <artifactId>caffeine</artifactId>
-                <version>3.1.8</version>
-            </dependency>
-            <!-- Spring Cloud Contract (Verifier + Stub Runner) 契约测试 -->
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-starter-contract-verifier</artifactId>
-                <version>${spring-cloud-contract.version}</version>
-                <scope>test</scope>
+                <groupId>com.lianshengtong</groupId>
+                <artifactId>lsc-product</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
-                <version>${spring-cloud-contract.version}</version>
-                <scope>test</scope>
+                <groupId>com.lianshengtong</groupId>
+                <artifactId>lsc-ledger</artifactId>
+                <version>${project.version}</version>
             </dependency>
-            <!-- H2 内嵌数据库：用于 itest profile 集成测试 -->
             <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${h2.version}</version>
-                <scope>test</scope>
+                <groupId>com.lianshengtong</groupId>
+                <artifactId>lsc-order</artifactId>
+                <version>${project.version}</version>
             </dependency>
-            <!-- Spring Rabbit AMQP：lsc-common 里 RabbitTemplateConfig 使用，itest 需要装配 -->
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-amqp</artifactId>
-                <version>3.2.5</version>
-                <scope>test</scope>
+                <groupId>com.lianshengtong</groupId>
+                <artifactId>lsc-coupon</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.lianshengtong</groupId>
+                <artifactId>lsc-supplychain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.lianshengtong</groupId>
+                <artifactId>lsc-risk</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -234,138 +169,9 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
-
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
-                <configuration>
-                    <outputDirectory>${project.build.directory}/jacoco</outputDirectory>
-                    <dataFile>${project.build.directory}/jacoco.exec</dataFile>
-                    <formats>
-                        <format>HTML</format>
-                        <format>XML</format>
-                    </formats>
-                    <rules>
-                        <rule>
-                            <element>PACKAGE</element>
-                            <limits>
-                                <limit>
-                                    <counter>LINE</counter>
-                                    <value>COVEREDRATIO</value>
-                                    <minimum>0.80</minimum>
-                                </limit>
-                            </limits>
-                        </rule>
-                    </rules>
-                    <excludes>
-                        <exclude>**/config/**</exclude>
-                        <exclude>**/entity/**</exclude>
-                        <exclude>**/dto/**</exclude>
-                        <exclude>**/vo/**</exclude>
-                        <exclude>**/enums/**</exclude>
-                        <exclude>**/mapper/**</exclude>
-                        <exclude>**/feign/**</exclude>
-                        <exclude>**/controller/**</exclude>
-                        <exclude>**/*Application.class</exclude>
-                    </excludes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>prepare-agent</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                    <!-- 仅在根聚合 POM (packaging=pom) 生效：汇总全部子模块覆盖率 -->
-                    <execution>
-                        <id>report-aggregate</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report-aggregate</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/site/jacoco-aggregate</outputDirectory>
-                            <formats>
-                                <format>HTML</format>
-                                <format>XML</format>
-                            </formats>
-                            <excludes>
-                                <exclude>**/config/**</exclude>
-                                <exclude>**/entity/**</exclude>
-                                <exclude>**/dto/**</exclude>
-                                <exclude>**/vo/**</exclude>
-                                <exclude>**/enums/**</exclude>
-                                <exclude>**/mapper/**</exclude>
-                                <exclude>**/feign/**</exclude>
-                                <exclude>**/*Application.class</exclude>
-                            </excludes>
-                            <rules>
-                                <rule>
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.30</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                        </configuration>
-                    </execution>
-                    <!-- 聚合后的整体覆盖率阈值检查（对聚合 REPORT 的检查） -->
-                    <execution>
-                        <id>check-aggregate</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <dataFile>${project.build.directory}/jacoco-aggregate.exec</dataFile>
-                            <rules>
-                                <rule>
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.30</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <forkCount>1</forkCount>
-                    <reuseForks>true</reuseForks>
-                    <argLine>${argLine} -Xmx512m -Dmockito.strictness=LENIENT</argLine>
-                </configuration>
-            </plugin>
-        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -395,34 +201,6 @@
                             </path>
                         </annotationProcessorPaths>
                     </configuration>
-                </plugin>
-                <!-- Spring Cloud Contract Verifier Maven Plugin (Provider 端生成契约测试 + stubs jar) -->
-                <plugin>
-                    <groupId>org.springframework.cloud</groupId>
-                    <artifactId>spring-cloud-contract-maven-plugin</artifactId>
-                    <version>${spring-cloud-contract.version}</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                        <!-- stubs 分类器：方便 Stub Runner 通过 +:stubs 定位 -->
-                        <classifier>stubs</classifier>
-                        <!-- 契约来源：Groovy DSL (也支持 YAML) -->
-                        <contractsDirectory>src/test/resources/contracts</contractsDirectory>
-                        <!-- 生成的契约测试输出目录 -->
-                        <generatedTestSourcesDirectory>${project.build.directory}/generated-test-sources/contracts</generatedTestSourcesDirectory>
-                        <!-- 契约测试 base class package prefix -->
-                        <basePackageForTests>com.lianshengtong</basePackageForTests>
-                        <!-- 不把契约测试算作普通测试，避免 mvn test 重复跑 -->
-                        <skipInPlugin>true</skipInPlugin>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>convert</goal>
-                                <goal>generateStubs</goal>
-                                <goal>generateTests</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>

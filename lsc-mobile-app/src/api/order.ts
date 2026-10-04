@@ -1,155 +1,135 @@
 import { http } from '@/utils/request'
-import type { Product } from './product'
 
-/** 订单状态 0-待支付 1-已支付 2-已完成 3-已取消 4-已退款 5-部分退款 */
-export type OrderStatus = 0 | 1 | 2 | 3 | 4 | 5
+/** 订单状态 */
+export type PaymentStatus = 'UNPAID' | 'PAYING' | 'PAID' | 'REFUNDING' | 'PART_REFUNDED' | 'REFUNDED' | 'EXCEPTION'
+export type FulfillmentStatus = 'CREATED' | 'CONFIRMED' | 'SHIPPED' | 'COMPLETED' | 'CANCELED' | 'CLOSED'
 
 export interface OrderItem {
-  productId: number
-  productName: string
-  productImage: string
-  price: number
-  lscPrice: number
-  quantity: number
-  spec?: string
+  itemId: number
+  orderId: number
+  skuId: number
+  qty: number
+  unitPriceCent: number
+  lineGoodsCent: number
+  couponShareCent: number
+  lscShareUnit: number
+  rmbShareCent: number
+  grantedUnit: number
 }
 
 export interface Order {
-  id: number
-  orderNo: string
-  status: OrderStatus
-  /** 订单总金额（元） */
-  totalAmount: number
-  /** 使用 LSC 数量 */
-  lscAmount: number
-  /** 人民币补足金额 */
-  rmbAmount: number
-  items: OrderItem[]
-  /** 收货地址快照 */
-  address?: AddressSnapshot
-  /** 商家门店 */
-  store?: { id: number; name: string; address: string; latitude: number; longitude: number; phone?: string }
-  /** 创建时间 */
-  createTime: string
-  /** 支付时间 */
-  payTime?: string
-  /** 支付超时时间戳(ms) */
-  expireTime?: number
-  /** 退款金额 */
-  refundAmount?: number
-  /** 退款原因 */
-  refundReason?: string
-}
-
-export interface AddressSnapshot {
-  name: string
-  phone: string
-  province: string
-  city: string
-  district: string
-  detail: string
-}
-
-export interface CreateOrderParams {
-  /** 收货地址 id */
-  addressId: number
-  /** 商品项 */
-  items: Array<{ productId: number; quantity: number; spec?: string }>
-  /** 使用的 LSC 数量 */
-  lscAmount: number
-  /** 备注 */
-  remark?: string
-  /** 来源 cart:从购物车结算 */
-  fromCart?: boolean
-}
-
-export interface CreateOrderResult {
   orderId: number
   orderNo: string
-  /** 待支付金额（人民币补足） */
-  payAmount: number
-  lscAmount: number
-  /** 支付超时时间 */
-  expireTime: number
+  userId: number
+  buyerTypeSnapshot: string
+  discountMode: 'NONE' | 'LSC' | 'COUPON'
+  goodsCent: number
+  shippingCent: number
+  couponCent: number
+  lscUnit: number
+  rmbCent: number
+  paymentStatus: PaymentStatus
+  fulfillmentStatus: FulfillmentStatus
+  refundStatus: string
+  expiresAt: string
+  completedAt?: string
+  createdAt?: string
 }
 
-export interface PayOrderParams {
+export interface QuoteRequest {
+  buyerType: 'C' | 'B'
+  skuItems: Array<{ skuId: number; qty: number }>
+  shippingCent?: number
+  deductionPpm?: number
+}
+
+export interface QuoteResult {
+  quoteId: string
+  goodsCent: number
+  shippingCent: number
+  maxDeductionUnit: number
+  maxDeductionCent: number
+  items: Array<{
+    skuId: number
+    qty: number
+    unitPriceCent: number
+    lineGoodsCent: number
+    grantUnitPerPiece: number
+    grantCoefficientPpm: number
+  }>
+  expiresAt: string
+}
+
+export interface CreateOrderRequest {
+  userId: number
+  buyerType: 'C' | 'B'
+  sellerEntityId: number
+  skuItems: Array<{ skuId: number; qty: number }>
+  shippingCent?: number
+  lscUnit?: number
+  couponId?: number
+  couponCent?: number
+}
+
+export interface RefundRequest {
   orderId: number
-  /** 使用的 LSC 数量 */
-  lscAmount: number
-  /** 支付方式: wechat | alipay | balance */
-  payMethod: 'wechat' | 'alipay' | 'balance'
-}
-
-export interface PayResult {
-  orderId: number
-  status: number
-  /** 微信支付参数 */
-  wxPayParams?: {
-    timeStamp: string
-    nonceStr: string
-    package: string
-    signType: string
-    paySign: string
-  }
-}
-
-export interface OrderListParams {
-  page?: number
-  size?: number
-  /** -1 全部 / 0 待支付 / 1 已支付 / 2 已完成 / 4 退款 */
-  status?: number
+  rmbCent: number
+  reason: string
 }
 
 export interface PageResult<T> {
-  list: T[]
+  records: T[]
   total: number
+  size: number
+  current: number
+}
+
+/** 创建报价 */
+export function createQuote(data: QuoteRequest) {
+  return http.post<QuoteResult>('/v1/checkout/quotes', data)
+}
+
+/** 预览订单（复用报价接口） */
+export function previewOrder(data: QuoteRequest) {
+  return createQuote(data)
 }
 
 /** 创建订单 */
-export function createOrder(data: CreateOrderParams) {
-  return http.post<CreateOrderResult>('/api/order/create', data)
-}
-
-/** 支付订单 */
-export function payOrder(data: PayOrderParams) {
-  return http.post<PayResult>('/api/order/pay', data)
+export function createOrder(data: CreateOrderRequest) {
+  return http.post<Order>('/v1/orders', data, { header: { 'Idempotency-Key': Date.now().toString() } })
 }
 
 /** 订单列表 */
-export function getOrderList(params: OrderListParams) {
-  return http.get<PageResult<Order>>('/api/order/list', params)
+export function getOrderList(params: { page?: number; size?: number; paymentStatus?: string; fulfillmentStatus?: string }) {
+  return http.get<PageResult<Order>>('/v1/orders', params)
 }
 
 /** 订单详情 */
 export function getOrderDetail(id: number | string) {
-  return http.get<Order>('/api/order/detail', { id })
+  return http.get<{ order: Order; items: OrderItem[] }>(`/v1/orders/${id}`)
 }
 
 /** 取消订单 */
 export function cancelOrder(id: number | string) {
-  return http.post<void>('/api/order/cancel', { id })
+  return http.post<void>(`/v1/orders/${id}/cancel`)
 }
 
-/** 确认收货 */
+/** 确认收货（完成订单） */
 export function confirmReceive(id: number | string) {
-  return http.post<void>('/api/order/confirm', { id })
+  return http.post<void>(`/v1/orders/${id}/complete`)
 }
 
 /** 申请退款 */
-export function applyRefund(data: { orderId: number; reason: string; amount?: number }) {
-  return http.post<void>('/api/order/refund/apply', data)
+export function applyRefund(data: RefundRequest) {
+  return http.post<void>('/v1/refunds', data)
 }
 
-/** 订单预览（确认订单页用，返回金额试算） */
-export function previewOrder(data: Omit<CreateOrderParams, 'lscAmount'> & { lscAmount: number }) {
-  return http.post<{
-    totalAmount: number
-    lscAmount: number
-    rmbAmount: number
-    items: OrderItem[]
-    address: AddressSnapshot
-  }>('/api/order/preview', data)
+/** 支付成功（测试用） */
+export function paySuccess(orderId: number) {
+  return http.post<void>(`/v1/internal/payments/${orderId}/success`)
 }
 
-export type { Product }
+/** 发起支付（简化：直接调用支付成功回调） */
+export function payOrder(orderId: number) {
+  return paySuccess(orderId)
+}

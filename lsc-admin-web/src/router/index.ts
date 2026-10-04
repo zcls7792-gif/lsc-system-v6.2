@@ -113,6 +113,31 @@ export const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/lsc',
+    component: Layout,
+    meta: { title: '权益管理', icon: 'Coin', group: '权益管理' },
+    children: [
+      {
+        path: 'account',
+        name: 'LscAccount',
+        component: () => import('@/views/lsc/Account.vue'),
+        meta: { title: '权益账户', group: '权益管理' }
+      },
+      {
+        path: 'events',
+        name: 'LscEvents',
+        component: () => import('@/views/lsc/Events.vue'),
+        meta: { title: '权益流水', group: '权益管理' }
+      },
+      {
+        path: 'release',
+        name: 'LscRelease',
+        component: () => import('@/views/lsc/Release.vue'),
+        meta: { title: '释放管理', group: '权益管理' }
+      }
+    ]
+  },
+  {
     path: '/release',
     component: Layout,
     meta: { title: '释放管理', icon: 'TrendCharts', group: '释放管理' },

@@ -14,7 +14,7 @@ function readEnv(): string {
   } catch (e) {
     // ignore
   }
-  return 'https://api.lianshengtong.com'
+  return 'http://localhost:8080'
 }
 
 export const AppConfig = {

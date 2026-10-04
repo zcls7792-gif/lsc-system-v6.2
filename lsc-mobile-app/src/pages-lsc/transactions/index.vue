@@ -24,24 +24,20 @@
       @scrolltolower="loadMore"
     >
       <view class="lsc-tx__list">
-        <view v-for="tx in list" :key="tx.id" class="lsc-tx__item card">
-          <view class="lsc-tx__icon" :class="tx.amount >= 0 ? 'lsc-tx__icon--in' : 'lsc-tx__icon--out'">
-            <text>{{ tx.amount >= 0 ? '↓' : '↑' }}</text>
+        <view v-for="ev in list" :key="ev.eventId" class="lsc-tx__item card">
+          <view class="lsc-tx__icon" :class="isInflow(ev.eventType) ? 'lsc-tx__icon--in' : 'lsc-tx__icon--out'">
+            <text>{{ isInflow(ev.eventType) ? '↓' : '↑' }}</text>
           </view>
           <view class="lsc-tx__info">
             <view class="lsc-tx__info-top">
-              <text class="fw-bold">{{ tx.typeDesc }}</text>
-              <text
-                class="lsc-tx__amount"
-                :class="tx.amount >= 0 ? 'text-success' : 'text-danger'"
-              >{{ tx.amount >= 0 ? '+' : '' }}{{ tx.amount }} LSC</text>
+              <text class="fw-bold">{{ eventTypeDesc(ev.eventType) }}</text>
+              <text class="lsc-tx__seq">#{{ ev.userEventSeq }}</text>
             </view>
             <view class="lsc-tx__info-bottom">
-              <text class="fs-sm text-secondary">{{ tx.createTime }}</text>
-              <text class="fs-sm text-secondary">余额 {{ tx.balance }}</text>
+              <text class="fs-sm text-secondary">{{ ev.occurredAt }}</text>
+              <text class="fs-sm text-secondary">业务日 {{ ev.businessDate }}</text>
             </view>
-            <text v-if="tx.remark" class="fs-sm text-secondary text-ellipsis">{{ tx.remark }}</text>
-            <text v-if="tx.orderNo" class="fs-sm text-secondary">关联订单 {{ tx.orderNo }}</text>
+            <text class="fs-sm text-secondary text-ellipsis">业务键：{{ ev.businessKey }}</text>
           </view>
         </view>
       </view>
@@ -55,26 +51,42 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { getLscTransactions, getLscTxTypes, type LscTransaction } from '@/api/ledger'
+import { getLscEvents, type LscEvent } from '@/api/ledger'
 import LoadMore from '@/components/LoadMore.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
-const txTypes = ref<Array<{ code: number; desc: string }>>([{ code: -1, desc: '全部' }])
-const activeType = ref(-1)
-const list = ref<LscTransaction[]>([])
+const EVENT_TYPES = [
+  { code: '', desc: '全部' },
+  { code: 'GRANT', desc: '消费赠送' },
+  { code: 'DAILY_RELEASE', desc: '每日释放' },
+  { code: 'PAY_RESERVE', desc: '支付占用' },
+  { code: 'PAY_CAPTURE', desc: '支付核销' },
+  { code: 'PAY_RELEASE', desc: '解占用' },
+  { code: 'REFUND_RESTORE', desc: '退款返还' },
+  { code: 'GRANT_CLAWBACK', desc: '赠送撤回' },
+  { code: 'FREEZE', desc: '风险冻结' },
+  { code: 'UNFREEZE', desc: '解除冻结' },
+  { code: 'EXPIRE', desc: '过期作废' },
+  { code: 'RECOVERY_SATISFIED', desc: '追偿冲抵' },
+]
+
+const txTypes = ref(EVENT_TYPES)
+const activeType = ref('')
+const list = ref<LscEvent[]>([])
 const page = ref(1)
 const size = 20
 const loading = ref(false)
 const loadStatus = ref<'loadmore' | 'loading' | 'noMore' | 'error'>('loadmore')
 const refreshing = ref(false)
 
-async function loadTypes() {
-  try {
-    const t = await getLscTxTypes()
-    txTypes.value = [{ code: -1, desc: '全部' }, ...t]
-  } catch (e) {
-    // ignore
-  }
+const INFLOW_TYPES = new Set(['GRANT', 'DAILY_RELEASE', 'PAY_RELEASE', 'REFUND_RESTORE', 'UNFREEZE'])
+
+function isInflow(type: string): boolean {
+  return INFLOW_TYPES.has(type)
+}
+
+function eventTypeDesc(type: string): string {
+  return EVENT_TYPES.find(t => t.code === type)?.desc || type
 }
 
 async function loadList(reset = false) {
@@ -87,8 +99,11 @@ async function loadList(reset = false) {
   loading.value = true
   loadStatus.value = 'loading'
   try {
-    const res = await getLscTransactions({ page: page.value, size, type: activeType.value })
-    const l = res.list || []
+    const res = await getLscEvents({ page: page.value, size })
+    let l = res.records || []
+    if (activeType.value) {
+      l = l.filter((e: LscEvent) => e.eventType === activeType.value)
+    }
     if (reset) list.value = l
     else list.value.push(...l)
     loadStatus.value = l.length < size ? 'noMore' : 'loadmore'
@@ -100,7 +115,7 @@ async function loadList(reset = false) {
   }
 }
 
-function changeType(code: number) {
+function changeType(code: string) {
   if (activeType.value === code) return
   activeType.value = code
   loadList(true)
@@ -117,7 +132,6 @@ async function onRefresh() {
   await loadList(true)
 }
 
-loadTypes()
 loadList(true)
 
 onShow(() => {
@@ -211,9 +225,10 @@ onShow(() => {
     gap: $spacing-sm;
   }
 
-  &__amount {
-    font-weight: 700;
-    font-size: $font-base;
+  &__seq {
+    font-weight: 600;
+    font-size: $font-sm;
+    color: $text-secondary;
   }
 
   &__info-bottom {

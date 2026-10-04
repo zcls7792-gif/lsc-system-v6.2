@@ -2,42 +2,44 @@
   <view class="lsc-account">
     <!-- 余额卡片 -->
     <view class="lsc-account__hero">
-      <view class="lsc-account__hero-row">
-        <view class="lsc-account__hero-col">
-          <text class="lsc-account__label">可用余额</text>
-          <text class="lsc-account__value">{{ formatNum(account?.available) }}</text>
+      <view class="lsc-account__hero-main">
+        <text class="lsc-account__label">可用权益</text>
+        <view class="lsc-account__hero-value">
+          <text class="lsc-account__value-num">{{ formatLsc(account?.availableUnit) }}</text>
           <text class="lsc-account__unit">LSC</text>
         </view>
-        <view class="lsc-account__hero-col lsc-account__hero-col--right">
-          <text class="lsc-account__label">锁定余额</text>
-          <text class="lsc-account__value lsc-account__value--locked">{{ formatNum(account?.locked) }}</text>
-          <text class="lsc-account__unit">LSC</text>
+        <text class="lsc-account__sub">≈ ¥{{ formatYuan(account?.availableUnit) }}</text>
+      </view>
+
+      <!-- 5桶明细 -->
+      <view class="lsc-account__buckets">
+        <view class="lsc-account__bucket">
+          <text class="lsc-account__bucket-label">锁定</text>
+          <text class="lsc-account__bucket-val">{{ formatLsc(account?.lockedUnit) }}</text>
+        </view>
+        <view class="lsc-account__bucket">
+          <text class="lsc-account__bucket-label">支付占用</text>
+          <text class="lsc-account__bucket-val">{{ formatLsc(account?.reservedUnit) }}</text>
+        </view>
+        <view class="lsc-account__bucket">
+          <text class="lsc-account__bucket-label">风险冻结</text>
+          <text class="lsc-account__bucket-val">{{ formatLsc(account?.frozenTotalUnit) }}</text>
         </view>
       </view>
 
       <view class="lsc-account__total">
-        <text class="fs-sm" style="opacity: 0.85">总资产 {{ formatNum(account?.total) }} LSC ≈ ¥{{ formatNum(account?.total) }}</text>
+        <text>总权益 {{ formatLsc(account?.totalUnit) }} LSC</text>
+        <text v-if="hasPendingRecovery" class="lsc-account__pending">待追偿 {{ formatLsc(account?.pendingRecoveryUnit) }}</text>
       </view>
+    </view>
 
-      <!-- 释放进度条 -->
-      <view class="lsc-account__progress">
-        <view class="lsc-account__progress-header">
-          <text class="fs-sm" style="opacity: 0.9">释放进度</text>
-          <text class="fs-sm fw-bold">{{ account?.releaseProgress || 0 }}%</text>
-        </view>
-        <view class="lsc-account__progress-bar">
-          <view class="lsc-account__progress-inner" :style="{ width: (account?.releaseProgress || 0) + '%' }"></view>
-        </view>
-        <view class="lsc-account__progress-meta">
-          <text class="fs-sm" style="opacity: 0.85">已释放 {{ formatNum(account?.released) }}</text>
-          <text class="fs-sm" style="opacity: 0.85">待释放 {{ formatNum(account?.pendingRelease) }}</text>
-        </view>
-      </view>
-
-      <view class="lsc-account__today">
-        <text class="fs-sm" style="opacity: 0.9">今日释放</text>
-        <text class="fw-bold">+{{ formatNum(account?.todayRelease) }} LSC</text>
-      </view>
+    <!-- 规则说明 -->
+    <view class="lsc-account__rules card">
+      <text class="lsc-account__rules-title">权益规则</text>
+      <text class="lsc-account__rules-text">• 消费赠送权益按日释放，释放率 0.05%~0.10%</text>
+      <text class="lsc-account__rules-text">• 权益有效期 365 天，到期自动作废</text>
+      <text class="lsc-account__rules-text">• 100 unit = 1分，抵扣需为 100 的整数倍</text>
+      <text class="lsc-account__rules-text">• 单订单最多抵扣 50%，不可与优惠券叠加</text>
     </view>
 
     <!-- 快捷操作 -->
@@ -50,47 +52,31 @@
         <text class="lsc-account__action-icon">📋</text>
         <text class="fs-sm">流水明细</text>
       </view>
+      <view class="lsc-account__action" @click="goGrantLots">
+        <text class="lsc-account__action-icon">🔓</text>
+        <text class="fs-sm">释放批次</text>
+      </view>
       <view class="lsc-account__action" @click="goPromotion">
         <text class="lsc-account__action-icon">🎁</text>
-        <text class="fs-sm">推广奖励</text>
-      </view>
-      <view class="lsc-account__action" @click="goAi">
-        <text class="lsc-account__action-icon">🤖</text>
-        <text class="fs-sm">咨询客服</text>
+        <text class="fs-sm">推荐奖励</text>
       </view>
     </view>
 
-    <!-- 流水记录列表（类型筛选） -->
+    <!-- 流水记录 -->
     <view class="lsc-account__section card">
       <view class="lsc-account__section-header">
         <text class="fw-bold">最近流水</text>
         <text class="fs-sm text-primary" @click="goTransactions">全部 ›</text>
       </view>
 
-      <scroll-view scroll-x class="lsc-account__filter" :show-scrollbar="false">
-        <view class="lsc-account__filter-list">
-          <text
-            v-for="t in txTypes"
-            :key="t.code"
-            class="lsc-account__filter-item"
-            :class="{ 'lsc-account__filter-item--active': activeType === t.code }"
-            @click="changeType(t.code)"
-          >{{ t.desc }}</text>
-        </view>
-      </scroll-view>
-
       <view class="lsc-account__tx-list">
-        <view v-for="tx in list" :key="tx.id" class="lsc-account__tx">
+        <view v-for="ev in list" :key="ev.eventId" class="lsc-account__tx">
           <view class="lsc-account__tx-info">
-            <text class="fw-bold fs-base">{{ tx.typeDesc }}</text>
-            <text class="fs-sm text-secondary">{{ tx.createTime }}</text>
-            <text v-if="tx.remark" class="fs-sm text-secondary text-ellipsis">{{ tx.remark }}</text>
+            <text class="fw-bold fs-base">{{ eventTypeDesc(ev.eventType) }}</text>
+            <text class="fs-sm text-secondary">{{ ev.occurredAt }}</text>
           </view>
           <view class="lsc-account__tx-amount">
-            <text :class="tx.amount >= 0 ? 'text-success' : 'text-danger'" class="fw-bold">
-              {{ tx.amount >= 0 ? '+' : '' }}{{ tx.amount }}
-            </text>
-            <text class="fs-sm text-secondary">余额 {{ tx.balance }}</text>
+            <text class="fs-sm text-secondary">{{ ev.businessKey }}</text>
           </view>
         </view>
       </view>
@@ -104,39 +90,58 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-import { getLscAccount, getLscTransactions, getLscTxTypes, type LscAccount, type LscTransaction } from '@/api/ledger'
+import { getLscAccount, getLscEvents, type LscAccount, type LscEvent } from '@/api/ledger'
 import { useUserStore } from '@/stores/user'
 import LoadMore from '@/components/LoadMore.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
 const userStore = useUserStore()
 const account = ref<LscAccount | null>(null)
-const list = ref<LscTransaction[]>([])
-const txTypes = ref<Array<{ code: number; desc: string }>>([{ code: -1, desc: '全部' }])
-const activeType = ref(-1)
+const list = ref<LscEvent[]>([])
 const page = ref(1)
 const size = 10
 const loading = ref(false)
 const loadStatus = ref<'loadmore' | 'loading' | 'noMore' | 'error'>('loadmore')
 
-function formatNum(n?: number): string {
-  return (Number(n) || 0).toLocaleString('zh-CN')
+const hasPendingRecovery = computed(() => {
+  return Number(account.value?.pendingRecoveryUnit || '0') > 0
+})
+
+/** unit 字符串转 LSC 显示（1 LSC = 10000 unit） */
+function formatLsc(unitStr?: string): string {
+  const unit = Number(unitStr || '0')
+  return (unit / 10000).toFixed(4)
+}
+
+/** unit 字符串转人民币显示（100 unit = 1分） */
+function formatYuan(unitStr?: string): string {
+  const unit = Number(unitStr || '0')
+  return (unit / 100).toFixed(2)
+}
+
+const EVENT_TYPE_MAP: Record<string, string> = {
+  GRANT: '消费赠送',
+  DAILY_RELEASE: '每日释放',
+  PAY_RESERVE: '支付占用',
+  PAY_CAPTURE: '支付核销',
+  PAY_RELEASE: '解占用',
+  REFUND_RESTORE: '退款返还',
+  GRANT_CLAWBACK: '赠送撤回',
+  FREEZE: '风险冻结',
+  UNFREEZE: '解除冻结',
+  EXPIRE: '过期作废',
+  RECOVERY_OFFSET: '追偿冲抵',
+}
+
+function eventTypeDesc(type: string): string {
+  return EVENT_TYPE_MAP[type] || type
 }
 
 async function loadAccount() {
   try {
-    account.value = await userStore.fetchLscAccount()
-  } catch (e) {
-    // ignore
-  }
-}
-
-async function loadTypes() {
-  try {
-    const t = await getLscTxTypes()
-    txTypes.value = [{ code: -1, desc: '全部' }, ...t]
+    account.value = await getLscAccount()
   } catch (e) {
     // ignore
   }
@@ -152,12 +157,8 @@ async function loadList(reset = false) {
   loading.value = true
   loadStatus.value = 'loading'
   try {
-    const res = await getLscTransactions({
-      page: page.value,
-      size,
-      type: activeType.value,
-    })
-    const l = res.list || []
+    const res = await getLscEvents({ page: page.value, size })
+    const l = res.records || []
     if (reset) list.value = l
     else list.value.push(...l)
     loadStatus.value = l.length < size ? 'noMore' : 'loadmore'
@@ -168,27 +169,21 @@ async function loadList(reset = false) {
   }
 }
 
-function changeType(code: number) {
-  if (activeType.value === code) return
-  activeType.value = code
-  loadList(true)
-}
-
 function goMall() {
   uni.switchTab({ url: '/src/pages/mall/index' })
 }
 function goTransactions() {
   uni.navigateTo({ url: '/src/pages-lsc/transactions/index' })
 }
+function goGrantLots() {
+  uni.navigateTo({ url: '/src/pages-lsc/grant-lots/index' })
+}
 function goPromotion() {
   uni.navigateTo({ url: '/src/pages-account/promotion/index' })
 }
-function goAi() {
-  uni.navigateTo({ url: '/src/pages-ai/assistant/index' })
-}
 
 onMounted(async () => {
-  await Promise.all([loadAccount(), loadTypes()])
+  await loadAccount()
   await loadList(true)
 })
 
@@ -210,96 +205,106 @@ onReachBottom(() => {
   padding-bottom: 40rpx;
 
   &__hero {
-    background: linear-gradient(135deg, $lsc-color 0%, $lsc-color-light 100%);
+    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
     color: #fff;
-    padding: $spacing-lg $spacing-base;
-    margin: $spacing-base;
-    border-radius: $radius-lg;
+    padding: 40rpx 32rpx;
+    margin: 24rpx;
+    border-radius: 24rpx;
     box-shadow: 0 8rpx 24rpx rgba(108, 92, 231, 0.25);
   }
 
-  &__hero-row {
-    display: flex;
-    justify-content: space-between;
-  }
-
-  &__hero-col {
-    display: flex;
-    flex-direction: column;
-    gap: 4rpx;
-
-    &--right {
-      align-items: flex-end;
-    }
+  &__hero-main {
+    text-align: center;
+    padding-bottom: 24rpx;
   }
 
   &__label {
-    font-size: $font-sm;
+    font-size: 24rpx;
     opacity: 0.85;
   }
 
-  &__value {
-    font-size: 56rpx;
-    font-weight: 700;
+  &__hero-value {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8rpx;
+    margin: 8rpx 0;
+  }
 
-    &--locked {
-      font-size: $font-lg;
-      opacity: 0.85;
-    }
+  &__value-num {
+    font-size: 64rpx;
+    font-weight: 700;
   }
 
   &__unit {
-    font-size: $font-xs;
+    font-size: 24rpx;
     opacity: 0.85;
   }
 
-  &__total {
-    margin-top: $spacing-base;
-    padding-top: $spacing-base;
+  &__sub {
+    font-size: 22rpx;
+    opacity: 0.8;
+  }
+
+  &__buckets {
+    display: flex;
+    justify-content: space-around;
+    padding: 24rpx 0;
     border-top: 1rpx solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1rpx solid rgba(255, 255, 255, 0.2);
   }
 
-  &__progress {
-    margin-top: $spacing-base;
-  }
-
-  &__progress-header {
+  &__bucket {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: $spacing-xs;
+    flex-direction: column;
+    align-items: center;
+    gap: 4rpx;
   }
 
-  &__progress-bar {
-    height: 16rpx;
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 999rpx;
-    overflow: hidden;
+  &__bucket-label {
+    font-size: 22rpx;
+    opacity: 0.85;
   }
 
-  &__progress-inner {
-    height: 100%;
-    background: linear-gradient(90deg, #FFF, #FFE08A);
-    border-radius: 999rpx;
-    transition: width 0.3s;
+  &__bucket-val {
+    font-size: 28rpx;
+    font-weight: 600;
   }
 
-  &__progress-meta {
-    display: flex;
-    justify-content: space-between;
-    margin-top: $spacing-xs;
-  }
-
-  &__today {
+  &__total {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: $spacing-base;
-    padding-top: $spacing-base;
-    border-top: 1rpx solid rgba(255, 255, 255, 0.2);
+    margin-top: 20rpx;
+    font-size: 24rpx;
+    opacity: 0.9;
+  }
+
+  &__pending {
+    color: #ffe08a;
+  }
+
+  &__rules {
+    margin: 24rpx;
+    padding: 24rpx;
+  }
+
+  &__rules-title {
+    font-size: 28rpx;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 12rpx;
+  }
+
+  &__rules-text {
+    font-size: 22rpx;
+    color: #666;
+    line-height: 1.8;
+    display: block;
   }
 
   &__actions {
-    margin: $spacing-base;
+    margin: 24rpx;
     display: flex;
   }
 
@@ -308,7 +313,7 @@ onReachBottom(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $spacing-xs;
+    gap: 8rpx;
   }
 
   &__action-icon {
@@ -316,46 +321,22 @@ onReachBottom(() => {
   }
 
   &__section {
-    margin: $spacing-base;
+    margin: 24rpx;
   }
 
   &__section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: $spacing-base;
-    border-bottom: 1rpx solid $border-color-light;
-  }
-
-  &__filter {
-    white-space: nowrap;
-    padding: $spacing-base 0;
-  }
-
-  &__filter-list {
-    display: inline-flex;
-    gap: $spacing-sm;
-  }
-
-  &__filter-item {
-    font-size: $font-xs;
-    padding: 6rpx 16rpx;
-    background: $bg-gray;
-    color: $text-regular;
-    border-radius: 999rpx;
-    flex-shrink: 0;
-
-    &--active {
-      background: $lsc-color;
-      color: #fff;
-    }
+    padding-bottom: 24rpx;
+    border-bottom: 1rpx solid #eee;
   }
 
   &__tx {
     display: flex;
     justify-content: space-between;
-    padding: $spacing-base 0;
-    border-bottom: 1rpx solid $border-color-light;
+    padding: 24rpx 0;
+    border-bottom: 1rpx solid #f0f0f0;
 
     &:last-child {
       border-bottom: none;

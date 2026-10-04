@@ -17,27 +17,7 @@
     </view>
 
     <view class="mall__body">
-      <!-- 左侧分类导航 -->
-      <scroll-view scroll-y class="mall__sidebar">
-        <view
-          v-for="c in categories"
-          :key="c.id"
-          class="mall__cat-item"
-          :class="{ 'mall__cat-item--active': activeCat === c.id }"
-          @click="selectCat(c)"
-        >
-          <text>{{ c.name }}</text>
-        </view>
-        <view
-          class="mall__cat-item"
-          :class="{ 'mall__cat-item--active': activeCat === -1 }"
-          @click="selectCat({ id: -1, name: '全部' } as any)"
-        >
-          <text>全部</text>
-        </view>
-      </scroll-view>
-
-      <!-- 右侧商品列表 -->
+      <!-- 商品列表 -->
       <scroll-view
         scroll-y
         class="mall__list"
@@ -48,29 +28,12 @@
       >
         <view class="mall__list-header">
           <text class="fw-bold">{{ currentCatName }}</text>
-          <view class="mall__sort">
-            <text
-              class="mall__sort-item"
-              :class="{ 'mall__sort-item--active': sort === 'sales' }"
-              @click="changeSort('sales')"
-            >销量</text>
-            <text
-              class="mall__sort-item"
-              :class="{ 'mall__sort-item--active': sort === 'price_asc' }"
-              @click="changeSort('price_asc')"
-            >价格↑</text>
-            <text
-              class="mall__sort-item"
-              :class="{ 'mall__sort-item--active': sort === 'price_desc' }"
-              @click="changeSort('price_desc')"
-            >价格↓</text>
-          </view>
         </view>
 
         <view class="mall__products">
           <view
             v-for="p in products"
-            :key="p.id"
+            :key="p.productId"
             class="mall__product"
           >
             <ProductCard :product="p" mode="horizontal" :show-cart="true" />
@@ -80,7 +43,7 @@
         <LoadMore v-if="products.length" :status="loadStatus" />
         <EmptyState
           v-else-if="!loading"
-          text="该分类下暂无商品"
+          text="暂无商品"
           action-text="去首页看看"
           @action="goHome"
         />
@@ -92,16 +55,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { getCategories, getProductList, type Product, type Category } from '@/api/product'
+import { getProductList, type Product } from '@/api/product'
 import ProductCard from '@/components/ProductCard.vue'
 import LoadMore from '@/components/LoadMore.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
 const keyword = ref('')
 const focusSearch = ref(false)
-const categories = ref<Category[]>([])
-const activeCat = ref<number>(-1)
-const sort = ref<string>('sales')
 const products = ref<Product[]>([])
 const page = ref(1)
 const size = 10
@@ -109,17 +69,7 @@ const loading = ref(false)
 const loadStatus = ref<'loadmore' | 'loading' | 'noMore' | 'error'>('loadmore')
 const refreshing = ref(false)
 
-const currentCatName = computed(
-  () => categories.value.find((c) => c.id === activeCat.value)?.name || '全部',
-)
-
-async function loadCategories() {
-  try {
-    categories.value = await getCategories()
-  } catch (e) {
-    categories.value = []
-  }
-}
+const currentCatName = computed(() => '全部商品')
 
 async function loadProducts(reset = false) {
   if (loading.value) return
@@ -134,11 +84,9 @@ async function loadProducts(reset = false) {
     const res = await getProductList({
       page: page.value,
       size,
-      categoryId: activeCat.value === -1 ? undefined : activeCat.value,
-      keyword: keyword.value || undefined,
-      sort: sort.value,
+      buyerType: 'C',
     })
-    const list = res.list || []
+    const list = res.records || []
     if (reset) {
       products.value = list
     } else {
@@ -151,18 +99,6 @@ async function loadProducts(reset = false) {
     loading.value = false
     refreshing.value = false
   }
-}
-
-function selectCat(c: Category) {
-  if (activeCat.value === c.id) return
-  activeCat.value = c.id
-  loadProducts(true)
-}
-
-function changeSort(s: string) {
-  if (sort.value === s) return
-  sort.value = s
-  loadProducts(true)
 }
 
 function onSearch() {
@@ -185,7 +121,6 @@ function goHome() {
 }
 
 onMounted(async () => {
-  await loadCategories()
   await loadProducts(true)
 })
 

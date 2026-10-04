@@ -2,30 +2,42 @@
  * 商家端共享实体类型 (与后端 lsc_common 数据库字段对齐)
  */
 
-/** LSC 账户 */
+/** LSC 账户（V7.7.2 五桶模型，unit 字符串） */
 export interface LscAccount {
   userId: number
-  totalLocked: number
-  totalAvailable: number
+  /** 锁定余额（未释放） */
+  lockedUnit: string
+  /** 可用余额 */
+  availableUnit: string
+  /** 支付占用 */
+  reservedUnit: string
+  /** 风险冻结-锁定来源 */
+  frozenLockedUnit: string
+  /** 风险冻结-可用来源 */
+  frozenAvailableUnit: string
+  /** 待追偿 */
+  pendingRecoveryUnit: string
+  /** 总权益 */
+  totalUnit: string
+  /** 风险冻结合计 */
+  frozenTotalUnit: string
   version: number
   updatedAt: string
 }
 
-/** LSC 流水 */
+/** LSC 权益事件（V7.7.2 lsc_event） */
 export interface LscTransaction {
-  id: number
+  eventId: number
   userId: number
-  /** 1消费发行 2每日释放 3推广奖励 4商城消费 5线下消费 6过期转回 7商家核销 8B2B流转 9退款退回 */
-  type: number
-  amount: number
-  beforeLocked: number
-  afterLocked: number
-  beforeAvailable: number
-  afterAvailable: number
-  counterpartyId?: number
-  orderNo: string
-  remark?: string
-  createdAt: string
+  userEventSeq: number
+  eventType: string
+  businessKey: string
+  orderId?: number
+  refundId?: number
+  caseId?: number
+  businessDate: string
+  occurredAt: string
+  ruleVersion: string
 }
 
 /** 可用 LSC 明细 */

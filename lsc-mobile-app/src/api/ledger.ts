@@ -1,78 +1,68 @@
 import { http } from '@/utils/request'
 
-/** LSC 账户 */
+/** LSC 账户（V7.7.2 五桶模型） */
 export interface LscAccount {
-  /** 总余额 */
-  total: number
-  /** 可用余额 */
-  available: number
-  /** 锁定余额 */
-  locked: number
-  /** 已释放总量 */
-  released: number
-  /** 待释放总量 */
-  pendingRelease: number
-  /** 释放进度 0-100 */
-  releaseProgress: number
-  /** 今日释放量 */
-  todayRelease: number
+  /** 锁定余额（未释放）unit 字符串 */
+  lockedUnit: string
+  /** 可用余额 unit 字符串 */
+  availableUnit: string
+  /** 支付占用 unit 字符串 */
+  reservedUnit: string
+  /** 风险冻结-锁定来源 unit 字符串 */
+  frozenLockedUnit: string
+  /** 风险冻结-可用来源 unit 字符串 */
+  frozenAvailableUnit: string
+  /** 待追偿 unit 字符串 */
+  pendingRecoveryUnit: string
+  /** 总权益 unit 字符串 */
+  totalUnit: string
+  /** 风险冻结合计 unit 字符串 */
+  frozenTotalUnit: string
 }
 
-export interface LscTransaction {
-  id: number
-  /** 流水号 */
-  txNo: string
-  /** 类型 1-9 见 LscTransactionTypeEnum */
-  type: number
-  typeDesc: string
-  /** 变动数量（正为收入，负为支出） */
-  amount: number
-  /** 变动后余额 */
-  balance: number
-  /** 备注 */
-  remark?: string
-  /** 关联订单号 */
-  orderNo?: string
-  createTime: string
-}
-
-export interface LscTxListParams {
-  page?: number
-  size?: number
-  /** 类型筛选，-1 全部 */
-  type?: number
-  /** 起始时间 yyyy-MM-dd */
-  startDate?: string
-  endDate?: string
+/** LSC 权益事件 */
+export interface LscEvent {
+  eventId: number
+  userId: number
+  userEventSeq: number
+  eventType: string
+  businessKey: string
+  orderId?: number
+  refundId?: number
+  caseId?: number
+  businessDate: string
+  occurredAt: string
+  ruleVersion: string
 }
 
 export interface PageResult<T> {
-  list: T[]
+  records: T[]
   total: number
+  size: number
+  current: number
 }
 
-/** LSC 账户余额 */
+/** LSC 账户余额（5桶） */
 export function getLscAccount() {
-  return http.get<LscAccount>('/api/ledger/account')
+  return http.get<LscAccount>('/v1/lsc/account')
 }
 
-/** LSC 流水列表 */
-export function getLscTransactions(params: LscTxListParams) {
-  return http.get<PageResult<LscTransaction>>('/api/ledger/transactions', params)
+/** LSC 权益明细 */
+export function getLscEvents(params: { page?: number; size?: number }) {
+  return http.get<PageResult<LscEvent>>('/v1/lsc/events', params)
 }
 
-/** LSC 流水类型枚举 */
-export function getLscTxTypes() {
-  return http.get<Array<{ code: number; desc: string }>>('/api/ledger/transaction-types')
+/** GrantLot 列表 */
+export function getGrantLots(params: { page?: number; size?: number }) {
+  return http.get<PageResult<any>>('/v1/lsc/grant-lots', params)
 }
 
-/** 推广奖励概览 */
-export function getPromotionSummary() {
-  return http.get<{
-    totalReward: number
-    invitedCount: number
-    activeCount: number
-    referrerPhone?: string
-    rules?: string
-  }>('/api/ledger/promotion/summary')
+/** 推广汇总（V7.7.2 暂无独立接口，占位） */
+export function getPromotionSummary(): Promise<any> {
+  return Promise.resolve({
+    inviteCount: 0,
+    rewardCouponCount: 0,
+    totalRewardAmount: 0,
+    nextTier: '第2位 30元券',
+  })
 }

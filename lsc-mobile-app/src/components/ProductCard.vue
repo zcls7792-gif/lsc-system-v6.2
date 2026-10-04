@@ -3,28 +3,18 @@
     <view class="product-card__image-wrap">
       <image
         class="product-card__image"
-        :src="product.cover || placeholder"
+        :src="placeholder"
         mode="aspectFill"
         lazy-load
       />
-      <view v-if="product.originPrice && product.originPrice > product.price" class="product-card__discount">
-        特惠
-      </view>
     </view>
 
     <view class="product-card__body">
       <view class="product-card__name text-ellipsis-2">{{ product.name }}</view>
 
-      <view v-if="product.specs && product.specs.length" class="product-card__spec text-ellipsis">
-        {{ product.specs[0].values.join(' / ') }}
-      </view>
-
       <view class="product-card__price-row">
-        <text class="product-card__price-rmb">¥{{ formatPrice(product.price) }}</text>
-        <text class="product-card__price-lsc">{{ Math.floor(product.lscPrice) }} LSC</text>
+        <text class="product-card__price-rmb">¥{{ formatPrice(product.retailPriceCent) }}</text>
       </view>
-
-      <view v-if="product.sales" class="product-card__sales">已售 {{ product.sales }}</view>
 
       <view v-if="showCart" class="product-card__cart" @click.stop="onAddCart">
         <text class="product-card__cart-icon">＋</text>
@@ -39,10 +29,8 @@ import { useCartStore } from '@/stores/cart'
 
 const props = withDefaults(
   defineProps<{
-    product: Product
-    /** card: 卡片(2列网格) / horizontal: 横向 */
+    product: Product & { retailPriceCent?: number }
     mode?: 'card' | 'horizontal'
-    /** 是否显示加入购物车按钮 */
     showCart?: boolean
   }>(),
   {
@@ -59,13 +47,14 @@ const emit = defineEmits<{
 const placeholder = '/static/placeholder/product.png'
 const cartStore = useCartStore()
 
-function formatPrice(n: number): string {
-  return (Number(n) || 0).toFixed(2)
+/** 分转元 */
+function formatPrice(cent?: number): string {
+  return ((cent || 0) / 100).toFixed(2)
 }
 
 function onClick() {
   emit('click', props.product)
-  uni.navigateTo({ url: `/src/pages-product/detail/index?id=${props.product.id}` })
+  uni.navigateTo({ url: `/src/pages-product/detail/index?id=${props.product.productId}` })
 }
 
 function onAddCart() {

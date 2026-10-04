@@ -2,27 +2,12 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import {
   login as apiLogin,
-  loginBySms as apiLoginBySms,
-  register as apiRegister,
   getProfile,
-  logout as apiLogout,
-  submitVerify,
-  type LoginParams,
-  type RegisterParams,
-  type VerifyParams,
   type UserProfile,
 } from '@/api/user'
 import { getToken, setToken, clearToken } from '@/utils/auth'
 import { AppConfig } from '@/config'
 import { getLscAccount, type LscAccount } from '@/api/ledger'
-
-/** 实名状态枚举（与后端 verifyStatus 对齐） */
-export const VerifyStatus = {
-  UNVERIFIED: 0,
-  VERIFIED: 1,
-  AUDITING: 2,
-  REJECTED: 3,
-} as const
 
 export const useUserStore = defineStore('user', () => {
   const token = ref<string>('')
@@ -31,14 +16,12 @@ export const useUserStore = defineStore('user', () => {
 
   /** 是否已登录 */
   const isLoggedIn = computed(() => !!token.value)
-  /** 是否已实名 */
-  const isVerified = computed(() => profile.value?.verifyStatus === VerifyStatus.VERIFIED)
   /** 是否商家 */
-  const isMerchant = computed(() => profile.value?.userType === 2)
-  /** 可用 LSC */
-  const availableLsc = computed(() => lscAccount.value?.available ?? 0)
+  const isMerchant = computed(() => profile.value?.userType === 'B')
+  /** 可用 LSC（unit 字符串转 number） */
+  const availableLsc = computed(() => Number(lscAccount.value?.availableUnit || '0'))
 
-  /** 从本地存储恢复 token（App onLaunch 调用） */
+  /** 从本地存储恢复 token */
   function restore() {
     token.value = getToken()
     const cached = uni.getStorageSync(AppConfig.profileKey)
@@ -60,30 +43,17 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  /** 密码登录 */
-  async function login(params: LoginParams) {
-    const res = await apiLogin(params)
+  /** 手机号登录（V7.7.2 简化） */
+  async function login(mobile: string) {
+    const res = await apiLogin(mobile)
     token.value = res.token
     setToken(res.token)
-    persistProfile(res.userInfo)
-    return res
-  }
-
-  /** 短信登录 */
-  async function loginSms(phone: string, code: string) {
-    const res = await apiLoginBySms(phone, code)
-    token.value = res.token
-    setToken(res.token)
-    persistProfile(res.userInfo)
-    return res
-  }
-
-  /** 注册 */
-  async function register(params: RegisterParams) {
-    const res = await apiRegister(params)
-    token.value = res.token
-    setToken(res.token)
-    persistProfile(res.userInfo)
+    persistProfile({
+      userId: res.userId,
+      nickname: res.nickname,
+      userType: res.userType as any,
+      accountStatus: 'ACTIVE',
+    })
     return res
   }
 
@@ -100,26 +70,8 @@ export const useUserStore = defineStore('user', () => {
     return lscAccount.value
   }
 
-  /** 提交实名认证 */
-  async function doVerify(params: VerifyParams) {
-    const p = await submitVerify(params)
-    persistProfile(p)
-    return p
-  }
-
-  /** 退出登录（调接口） */
+  /** 退出登录 */
   async function logout() {
-    try {
-      if (token.value) await apiLogout()
-    } catch (e) {
-      // 忽略退出接口失败
-    } finally {
-      resetLocal()
-    }
-  }
-
-  /** 静默退出（token 失效时） */
-  function logoutSilent() {
     resetLocal()
   }
 
@@ -136,17 +88,12 @@ export const useUserStore = defineStore('user', () => {
     profile,
     lscAccount,
     isLoggedIn,
-    isVerified,
     isMerchant,
     availableLsc,
     restore,
     login,
-    loginSms,
-    register,
     fetchProfile,
     fetchLscAccount,
-    doVerify,
     logout,
-    logoutSilent,
   }
 })

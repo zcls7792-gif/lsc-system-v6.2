@@ -4,7 +4,7 @@ import { useUserStore } from '@/stores/user'
 import router from '@/router'
 
 const service: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: '/',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'

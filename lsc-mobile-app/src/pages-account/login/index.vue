@@ -9,20 +9,6 @@
       <text class="login__title">链生通</text>
       <text class="login__subtitle">权益商城 · LSC账户 · 混合支付</text>
 
-      <!-- 登录方式切换 -->
-      <view class="login__tabs">
-        <text
-          class="login__tab"
-          :class="{ 'login__tab--active': loginType === 'password' }"
-          @click="loginType = 'password'"
-        >密码登录</text>
-        <text
-          class="login__tab"
-          :class="{ 'login__tab--active': loginType === 'sms' }"
-          @click="loginType = 'sms'"
-        >验证码登录</text>
-      </view>
-
       <!-- 表单 -->
       <view class="login__form">
         <view class="login__field">
@@ -35,40 +21,12 @@
             placeholder="请输入手机号"
           />
         </view>
-
-        <view v-if="loginType === 'password'" class="login__field">
-          <text class="login__field-icon">🔒</text>
-          <input
-            class="login__input"
-            v-model="form.password"
-            :password="!showPwd"
-            placeholder="请输入密码"
-          />
-          <text class="login__field-action" @click="showPwd = !showPwd">{{ showPwd ? '🙈' : '👁️' }}</text>
-        </view>
-
-        <view v-else class="login__field">
-          <text class="login__field-icon">💬</text>
-          <input
-            class="login__input"
-            v-model="form.code"
-            type="number"
-            maxlength="6"
-            placeholder="请输入验证码"
-          />
-          <text
-            class="login__field-action"
-            :class="{ 'login__field-action--disabled': counting }"
-            @click="sendCode"
-          >{{ counting ? `${count}s` : '获取验证码' }}</text>
-        </view>
       </view>
 
       <button class="login__btn" :loading="loading" @click="onLogin">登 录</button>
 
       <view class="login__footer">
         <text class="login__link" @click="goRegister">没有账号？立即注册</text>
-        <text class="login__link" @click="goReset">忘记密码</text>
       </view>
 
       <view class="login__agreement">
@@ -87,51 +45,15 @@
 import { ref, reactive } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useUserStore } from '@/stores/user'
-import { sendSmsCode } from '@/api/user'
 
 const userStore = useUserStore()
-const loginType = ref<'password' | 'sms'>('password')
 const loading = ref(false)
 const agreed = ref(false)
-const showPwd = ref(false)
-const counting = ref(false)
-const count = ref(60)
 const redirect = ref('')
 
 const form = reactive({
   phone: '',
-  password: '',
-  code: '',
 })
-
-let timer: ReturnType<typeof setInterval> | null = null
-
-function startCount() {
-  counting.value = true
-  count.value = 60
-  timer = setInterval(() => {
-    count.value--
-    if (count.value <= 0) {
-      counting.value = false
-      if (timer) clearInterval(timer)
-    }
-  }, 1000)
-}
-
-async function sendCode() {
-  if (counting.value) return
-  if (!/^1\d{10}$/.test(form.phone)) {
-    uni.showToast({ title: '请输入正确手机号', icon: 'none' })
-    return
-  }
-  try {
-    await sendSmsCode(form.phone, 'login')
-    uni.showToast({ title: '验证码已发送', icon: 'success' })
-    startCount()
-  } catch (e) {
-    // ignore
-  }
-}
 
 async function onLogin() {
   if (!agreed.value) {
@@ -142,22 +64,10 @@ async function onLogin() {
     uni.showToast({ title: '请输入正确手机号', icon: 'none' })
     return
   }
-  if (loginType.value === 'password' && !form.password) {
-    uni.showToast({ title: '请输入密码', icon: 'none' })
-    return
-  }
-  if (loginType.value === 'sms' && !form.code) {
-    uni.showToast({ title: '请输入验证码', icon: 'none' })
-    return
-  }
 
   loading.value = true
   try {
-    if (loginType.value === 'password') {
-      await userStore.login({ account: form.phone, password: form.password, loginType: 'password' })
-    } else {
-      await userStore.loginSms(form.phone, form.code)
-    }
+    await userStore.login(form.phone)
     uni.showToast({ title: '登录成功', icon: 'success' })
     setTimeout(() => {
       if (redirect.value) {

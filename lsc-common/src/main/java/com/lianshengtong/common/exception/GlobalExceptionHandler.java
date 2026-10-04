@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     public R<Void> handleBizException(BizException e, HttpServletRequest request) {
         log.warn("[BizException] traceId={} uri={} code={} msg={}",
                 TraceIdHolder.get(), request.getRequestURI(), e.getCode(), e.getMessage());
-        return R.fail(e.getCode(), e.getMessage(), TraceIdHolder.currentOrCreate());
+        return R.fail(e.getCode(), e.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         log.warn("[ValidException] traceId={} uri={} msg={}",
                 TraceIdHolder.get(), request.getRequestURI(), msg);
-        return R.fail(400, msg, TraceIdHolder.currentOrCreate());
+        return R.fail(400, msg);
     }
 
     @ExceptionHandler(BindException.class)
@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         log.warn("[BindException] traceId={} uri={} msg={}",
                 TraceIdHolder.get(), request.getRequestURI(), msg);
-        return R.fail(400, msg, TraceIdHolder.currentOrCreate());
+        return R.fail(400, msg);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -54,21 +54,21 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         log.warn("[ConstraintViolationException] traceId={} uri={} msg={}",
                 TraceIdHolder.get(), request.getRequestURI(), msg);
-        return R.fail(400, msg, TraceIdHolder.currentOrCreate());
+        return R.fail(400, msg);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public R<Void> handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
         log.warn("[IllegalArgumentException] traceId={} uri={} msg={}",
                 TraceIdHolder.get(), request.getRequestURI(), e.getMessage());
-        return R.fail(400, "请求参数不合法", TraceIdHolder.currentOrCreate());
+        return R.fail(400, "请求参数不合法");
     }
 
     @ExceptionHandler(Exception.class)
     public R<Void> handleException(Exception e, HttpServletRequest request) {
         log.error("[Exception] traceId={} uri={} msg={}",
                 TraceIdHolder.get(), request.getRequestURI(), e.getMessage(), e);
-        return R.fail(500, "系统错误，请稍后重试", TraceIdHolder.currentOrCreate());
+        return R.fail(500, "系统错误，请稍后重试");
     }
 
 

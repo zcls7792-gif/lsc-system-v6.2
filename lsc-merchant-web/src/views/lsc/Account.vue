@@ -1,46 +1,40 @@
 <script setup lang="ts">
-// LSC账户 — 锁定/可用环形图 + 明细列表
+// LSC账户 — V7.7.2 五桶模型：锁定/可用/支付占用/风险冻结/待追偿
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowRight, DataLine } from '@element-plus/icons-vue'
 import LscBalanceCard from '@/components/LscBalanceCard.vue'
-import { getLscAccount, getLscOverview, getAvailableDetails, type LscOverview } from '@/api/lsc'
-import type { AvailableLscDetail, LscAccount } from '@/api/types'
+import { getLscAccount, getLscTransactions } from '@/api/lsc'
+import type { LscAccount, LscTransaction } from '@/api/types'
 import type { PageResult } from '@/utils/request'
 import dayjs from 'dayjs'
 
 const router = useRouter()
 const loading = ref(false)
 const account = ref<LscAccount | null>(null)
-const overview = ref<LscOverview | null>(null)
-const details = ref<AvailableLscDetail[]>([])
+const transactions = ref<LscTransaction[]>([])
 
-const DETAIL_STATUS_MAP: Record<number, { label: string; type: 'info' | 'success' | 'warning' | 'danger' }> = {
-  1: { label: '有效', type: 'success' },
-  2: { label: '过期转回', type: 'info' },
-  3: { label: '已使用', type: 'info' },
-  4: { label: '已核销', type: 'warning' },
-  5: { label: '退款退回', type: 'danger' }
+const EVENT_TYPE_MAP: Record<string, string> = {
+  GRANT: '消费赠送',
+  DAILY_RELEASE: '每日释放',
+  PAY_RESERVE: '支付占用',
+  PAY_CAPTURE: '支付核销',
+  PAY_RELEASE: '解占用',
+  REFUND_RESTORE: '退款返还',
+  GRANT_CLAWBACK: '赠送撤回',
+  FREEZE: '风险冻结',
+  UNFREEZE: '解除冻结',
+  EXPIRE: '过期作废',
+  RECOVERY_SATISFIED: '追偿冲抵',
 }
 
-async function load() {
-  loading.value = true
-  try {
-    const [a, o, d] = await Promise.all([
-      getLscAccount(),
-      getLscOverview(),
-      getAvailableDetails({ page: 1, size: 10 }).catch(() => ({ records: [], total: 0 }))
-    ])
-    account.value = a
-    overview.value = o
-    details.value = (d as PageResult<AvailableLscDetail>).records || []
-  } finally {
-    loading.value = false
-  }
+/** unit 字符串转 LSC 数值（1 LSC = 10000 unit） */
+function unitToLsc(unitStr?: string): number {
+  return Number(unitStr || '0') / 10000
 }
 
 function fmt(n: number) {
-  return Number(n || 0).toLocaleString('en-US')
+  return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 4 })
 }
 
 function fmtMoney(n: number) {
@@ -48,18 +42,32 @@ function fmtMoney(n: number) {
 }
 
 function fmtDate(d: string) {
-  return dayjs(d).format('YYYY-MM-DD')
+  return d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '-'
+}
+
+async function load() {
+  loading.value = true
+  try {
+    const [a, t] = await Promise.all([
+      getLscAccount(),
+      getLscTransactions({ page: 1, size: 10 }).catch(() => ({ records: [], total: 0 } as PageResult<LscTransaction>))
+    ])
+    account.value = a
+    transactions.value = (t as PageResult<LscTransaction>).records || []
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(load)
 </script>
 
 <template>
-  <div class="lsc-page" v-loading="loading" data-testid="merchant-lsc-account-page">
+  <div class="lsc-page" v-loading="loading">
     <div class="lsc-page-header">
       <div>
         <h1 class="lsc-page-title">LSC 账户</h1>
-        <p class="lsc-page-subtitle">查看锁定 / 可用 LSC 余额分布与可用明细</p>
+        <p class="lsc-page-subtitle">V7.7.2 五桶模型：锁定 / 可用 / 支付占用 / 风险冻结 / 待追偿</p>
       </div>
       <el-button type="primary" :icon="DataLine" @click="router.push('/lsc/transactions')">查看流水</el-button>
     </div>
@@ -68,26 +76,44 @@ onMounted(load)
       <div class="account-left">
         <LscBalanceCard
           v-if="account"
-          :total-locked="account.totalLocked"
-          :total-available="account.totalAvailable"
+          :total-locked="unitToLsc(account.lockedUnit)"
+          :total-available="unitToLsc(account.availableUnit)"
         />
 
-        <div class="lsc-card stat-grid">
+        <div class="lsc-card bucket-grid">
           <div class="lsc-card__pad">
-            <div class="stat-item">
-              <div class="stat-item__label">月营业额</div>
-              <div class="stat-item__value lsc-num">¥ {{ fmtMoney(overview?.monthlyRevenue || 0) }}</div>
+            <div class="bucket-item">
+              <div class="bucket-item__label">总权益</div>
+              <div class="bucket-item__value lsc-num">{{ fmt(unitToLsc(account?.totalUnit)) }}</div>
             </div>
-            <div class="stat-divider" />
-            <div class="stat-item">
-              <div class="stat-item__label">累计已使用 LSC</div>
-              <div class="stat-item__value lsc-num">{{ fmt(overview?.totalUsed || 0) }}</div>
+            <div class="bucket-divider" />
+            <div class="bucket-item">
+              <div class="bucket-item__label">支付占用</div>
+              <div class="bucket-item__value lsc-num" style="color:#f59e0b">{{ fmt(unitToLsc(account?.reservedUnit)) }}</div>
             </div>
-            <div class="stat-divider" />
-            <div class="stat-item">
-              <div class="stat-item__label">累计已核销 LSC</div>
-              <div class="stat-item__value lsc-num lsc-gold-text">{{ fmt(overview?.totalWrittenOff || 0) }}</div>
+            <div class="bucket-divider" />
+            <div class="bucket-item">
+              <div class="bucket-item__label">风险冻结</div>
+              <div class="bucket-item__value lsc-num" style="color:#ef4444">{{ fmt(unitToLsc(account?.frozenTotalUnit)) }}</div>
             </div>
+            <div class="bucket-divider" />
+            <div class="bucket-item">
+              <div class="bucket-item__label">待追偿</div>
+              <div class="bucket-item__value lsc-num" style="color:#6366f1">{{ fmt(unitToLsc(account?.pendingRecoveryUnit)) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lsc-card rule-card">
+          <div class="lsc-card__pad">
+            <h3 class="rule-title">权益规则</h3>
+            <ul class="rule-list">
+              <li>消费赠送权益按日释放，释放率 0.05% ~ 0.10%</li>
+              <li>权益有效期 365 天，到期自动作废</li>
+              <li>100 unit = 1 分，抵扣需为 100 的整数倍</li>
+              <li>单订单最多抵扣 50%，不可与优惠券叠加</li>
+              <li>退款返还：原批次未到期恢复原到期日，已过期给 30 天宽限</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -96,36 +122,34 @@ onMounted(load)
         <div class="lsc-card detail-card">
           <div class="lsc-card__pad">
             <div class="detail-head">
-              <h3>可用 LSC 明细</h3>
-              <span class="detail-sub">按过期日排序 · 最近 10 条</span>
+              <h3>最近权益流水</h3>
+              <span class="detail-sub">按事件序号倒序</span>
             </div>
 
-            <el-table :data="details" row-key="id" size="small" :show-header="true" data-testid="merchant-lsc-details-table">
-              <el-table-column label="数量" width="100">
+            <el-table :data="transactions" row-key="eventId" size="small">
+              <el-table-column label="类型" width="120">
                 <template #default="{ row }">
-                  <span class="lsc-num lsc-gold-text">{{ row.amount }}</span>
+                  <el-tag size="small">{{ EVENT_TYPE_MAP[row.eventType] || row.eventType }}</el-tag>
                 </template>
               </el-table-column>
-              <el-table-column label="来源" min-width="120">
+              <el-table-column label="业务键" min-width="180">
                 <template #default="{ row }">
-                  <span>{{ row.sourceType }}</span>
+                  <span class="lsc-num" style="font-size:12px">{{ row.businessKey }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="过期日期" width="120">
+              <el-table-column label="业务日" width="110">
                 <template #default="{ row }">
-                  <span class="lsc-num">{{ fmtDate(row.expireDate) }}</span>
+                  <span>{{ row.businessDate }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="状态" width="100">
+              <el-table-column label="发生时间" width="150">
                 <template #default="{ row }">
-                  <el-tag :type="DETAIL_STATUS_MAP[row.status]?.type" effect="light" size="small">
-                    {{ DETAIL_STATUS_MAP[row.status]?.label || '未知' }}
-                  </el-tag>
+                  <span>{{ fmtDate(row.occurredAt) }}</span>
                 </template>
               </el-table-column>
 
               <template #empty>
-                <el-empty description="暂无可用 LSC 明细" :image-size="80" />
+                <el-empty description="暂无流水记录" :image-size="80" />
               </template>
             </el-table>
 
@@ -154,34 +178,52 @@ onMounted(load)
   gap: 16px;
 }
 
-.stat-grid .lsc-card__pad {
+.bucket-grid .lsc-card__pad {
   display: flex;
   align-items: center;
   justify-content: space-around;
   padding: 22px 16px;
 }
 
-.stat-item {
+.bucket-item {
   flex: 1;
   text-align: center;
 }
 
-.stat-item__label {
+.bucket-item__label {
   font-size: 12px;
   color: var(--lsc-text-secondary);
   margin-bottom: 6px;
 }
 
-.stat-item__value {
-  font-size: 22px;
+.bucket-item__value {
+  font-size: 20px;
   font-weight: 700;
   color: var(--lsc-text);
 }
 
-.stat-divider {
+.bucket-divider {
   width: 1px;
   height: 36px;
   background: var(--lsc-border-soft);
+}
+
+.rule-card .lsc-card__pad {
+  padding: 18px 20px;
+}
+
+.rule-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.rule-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: var(--lsc-text-secondary);
+  line-height: 1.9;
 }
 
 .detail-head {
