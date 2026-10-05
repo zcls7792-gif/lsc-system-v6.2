@@ -29,11 +29,14 @@ public class GrantServiceImpl implements GrantService {
     private final JdbcTemplate jdbc;
     private final GrantCalculator calculator;
     private final LedgerService ledger;
+    private final com.zcls.lsc.risk.rule.RiskInterceptionService riskInterception;
 
-    public GrantServiceImpl(JdbcTemplate jdbc, GrantCalculator calculator, LedgerService ledger) {
+    public GrantServiceImpl(JdbcTemplate jdbc, GrantCalculator calculator, LedgerService ledger,
+                            com.zcls.lsc.risk.rule.RiskInterceptionService riskInterception) {
         this.jdbc = jdbc;
         this.calculator = calculator;
         this.ledger = ledger;
+        this.riskInterception = riskInterception;
     }
 
     @Override
@@ -45,6 +48,9 @@ public class GrantServiceImpl implements GrantService {
         if (userId == null) {
             throw new IllegalArgumentException("order not found: " + orderId);
         }
+
+        // 风控规则引擎拦截：权益发放前评估用户风险，命中则自动立案并阻断
+        riskInterception.checkGrant(userId, orderId);
 
         // 2. 查订单行
         List<OrderItemRow> items = jdbc.query(

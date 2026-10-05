@@ -29,10 +29,13 @@ public class OrderService {
 
     private final JdbcTemplate jdbc;
     private final ReservationService reservationService;
+    private final com.zcls.lsc.risk.rule.RiskInterceptionService riskInterception;
 
-    public OrderService(JdbcTemplate jdbc, ReservationService reservationService) {
+    public OrderService(JdbcTemplate jdbc, ReservationService reservationService,
+                        com.zcls.lsc.risk.rule.RiskInterceptionService riskInterception) {
         this.jdbc = jdbc;
         this.reservationService = reservationService;
+        this.riskInterception = riskInterception;
     }
 
     /**
@@ -68,6 +71,9 @@ public class OrderService {
         if (q.expiresAt().isBefore(LocalDateTime.now())) {
             throw new BusinessException(ErrorCode.QUOTE_EXPIRED, "quote expired");
         }
+
+        // 风控规则引擎拦截：下单前评估用户风险，命中则自动立案并阻断
+        riskInterception.checkOrderCreation(userId, q.goodsCent(), q.buyerType());
 
         // 解析报价商品项
         List<QuoteItemRow> items = parseItems(q.payloadJson());

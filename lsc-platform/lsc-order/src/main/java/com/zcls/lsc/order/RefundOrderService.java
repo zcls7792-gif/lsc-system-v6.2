@@ -25,10 +25,13 @@ public class RefundOrderService {
 
     private final JdbcTemplate jdbc;
     private final RefundService refundService;
+    private final com.zcls.lsc.risk.rule.RiskInterceptionService riskInterception;
 
-    public RefundOrderService(JdbcTemplate jdbc, RefundService refundService) {
+    public RefundOrderService(JdbcTemplate jdbc, RefundService refundService,
+                              com.zcls.lsc.risk.rule.RiskInterceptionService riskInterception) {
         this.jdbc = jdbc;
         this.refundService = refundService;
+        this.riskInterception = riskInterception;
     }
 
     /**
@@ -67,6 +70,9 @@ public class RefundOrderService {
         if (rmbCent > item.lineGoodsCent()) {
             throw new IllegalArgumentException("refund exceeds line goods cent");
         }
+
+        // 风控规则引擎拦截：退款申请前评估用户风险，命中则自动立案并阻断
+        riskInterception.checkRefund(order.userId(), orderId, rmbCent, refundKind);
 
         // 创建退款单
         long refundId = nextId();
