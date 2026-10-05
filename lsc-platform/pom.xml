@@ -39,8 +39,9 @@
         <module>lsc-order</module>
         <module>lsc-coupon</module>
         <module>lsc-supplychain</module>
+        <module>lsc-risk</module>
         <module>lsc-api</module>
-        <!-- 后续模块待开发: lsc-product lsc-risk lsc-config lsc-task lsc-app -->
+        <!-- 后续模块待开发: lsc-product lsc-task lsc-app -->
     </modules>
 
     <dependencyManagement>
