@@ -41,8 +41,9 @@
         <module>lsc-supplychain</module>
         <module>lsc-risk</module>
         <module>lsc-task</module>
+        <module>lsc-product</module>
         <module>lsc-api</module>
-        <!-- 后续模块待开发: lsc-product lsc-app -->
+        <!-- 后续模块待开发: lsc-app -->
     </modules>
 
     <dependencyManagement>
