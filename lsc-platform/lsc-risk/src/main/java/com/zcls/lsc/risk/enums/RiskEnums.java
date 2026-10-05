@@ -111,4 +111,29 @@ public final class RiskEnums {
         /** 紧急回滚 */
         EMERGENCY_ROLLBACK
     }
+
+    /** 规则状态。 */
+    public enum RuleStatus {
+        /** 草稿 */
+        DRAFT,
+        /** 生效中 */
+        ACTIVE,
+        /** 已被新版本取代 */
+        SUPERSEDED,
+        /** 已停用 */
+        DISABLED
+    }
+
+    /** 规则匹配模式。 */
+    public enum MatchMode {
+        /** 所有条件都满足才命中 */
+        ALL,
+        /** 任一条件满足即命中 */
+        ANY
+    }
+
+    /** 条件运算符。 */
+    public enum ConditionOp {
+        EQ, NE, GT, GTE, LT, LTE, IN, NOT_IN, CONTAINS
+    }
 }
