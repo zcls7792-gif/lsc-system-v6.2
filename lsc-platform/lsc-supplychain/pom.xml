@@ -9,9 +9,9 @@
         <version>7.7.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>lsc-api</artifactId>
-    <name>LSC API Layer</name>
-    <description>第13章 REST接口+统一返回体+全局异常处理+42206-42301错误码映射</description>
+    <artifactId>lsc-supplychain</artifactId>
+    <name>LSC Supply Chain</name>
+    <description>第9章 供应链采购与履约:供应商准入/采购单/收货/质检/库存三桶/出库/结算四单匹配</description>
 
     <dependencies>
         <dependency>
@@ -20,31 +20,15 @@
         </dependency>
         <dependency>
             <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-order</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-account</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-coupon</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-supplychain</artifactId>
+            <artifactId>lsc-db</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
