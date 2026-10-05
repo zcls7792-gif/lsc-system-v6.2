@@ -1,7 +1,14 @@
 import axios, { type AxiosRequestConfig } from 'axios'
 import { showToast } from 'vant'
 
-const BASE_URL = '/v1'
+// 后端地址：
+//   开发环境(dev)：走 Vite 代理 /v1 -> http://localhost:8080
+//   生产环境(build)：通过环境变量 VITE_API_BASE_URL 注入
+//     例：VITE_API_BASE_URL=https://api.lsc.example.com/v1
+const BASE_URL =
+  import.meta.env.MODE === 'production'
+    ? (import.meta.env.VITE_API_BASE_URL || 'https://api.lsc.example.com/v1')
+    : '/v1'
 
 const service = axios.create({
   baseURL: BASE_URL,

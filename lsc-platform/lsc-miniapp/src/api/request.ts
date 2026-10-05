@@ -1,7 +1,13 @@
 // 请求层：统一适配后端 ApiResponse { code, message, data }
 // 业务页面只处理单一 data 形态，降低前后端响应结构差异
+//
+// 后端地址通过环境变量注入（uni-app 读取 .env / .env.production）：
+//   VITE_API_BASE_URL=https://api.lsc.example.com/v1
+// 未配置时回退到本地开发地址。
 
-const BASE_URL = 'https://api.lsc.example.com/v1'
+const BASE_URL =
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+  'http://localhost:8080/v1'
 
 function getToken(): string {
   return uni.getStorageSync('token') || ''

@@ -1,11 +1,11 @@
 {
   "name": "链盛通 LSC",
-  "appid": "",
+  "appid": "__UNI__LSCPLATFORM",
   "description": "链盛通消费回馈权益系统小程序",
   "versionName": "7.7.2",
   "versionCode": "772",
   "mp-weixin": {
-    "appid": "",
+    "appid": "wx0000000000000000",
     "setting": {
       "urlCheck": false,
       "es6": true,
