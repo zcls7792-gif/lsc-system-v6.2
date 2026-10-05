@@ -9,9 +9,9 @@
         <version>7.7.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>lsc-api</artifactId>
-    <name>LSC API Layer</name>
-    <description>第13章 REST接口+统一返回体+全局异常处理+42206-42301错误码映射</description>
+    <artifactId>lsc-task</artifactId>
+    <name>LSC Task Scheduler</name>
+    <description>第12.7章 任务调度与可靠性:分布式租约(lease fencing)+事务消息Outbox/Inbox+日终快照+补单重试+CronJob编排</description>
 
     <dependencies>
         <dependency>
@@ -20,39 +20,15 @@
         </dependency>
         <dependency>
             <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-order</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-account</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-coupon</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-supplychain</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-risk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.zcls.lsc</groupId>
-            <artifactId>lsc-task</artifactId>
+            <artifactId>lsc-db</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
