@@ -42,6 +42,7 @@
         <module>lsc-risk</module>
         <module>lsc-task</module>
         <module>lsc-product</module>
+        <module>lsc-user</module>
         <module>lsc-api</module>
         <!-- 后续模块待开发: lsc-app -->
     </modules>
@@ -80,6 +81,11 @@
             <dependency>
                 <groupId>com.zcls.lsc</groupId>
                 <artifactId>lsc-product</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zcls.lsc</groupId>
+                <artifactId>lsc-user</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

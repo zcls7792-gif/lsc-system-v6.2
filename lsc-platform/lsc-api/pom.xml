@@ -47,6 +47,10 @@
             <artifactId>lsc-product</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.zcls.lsc</groupId>
+            <artifactId>lsc-user</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
