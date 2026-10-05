@@ -100,10 +100,12 @@ public class RuleEngineService {
                     matched ? score : 0, totalScore, ruleTriggered, aiFlag);
 
             // 达到阈值则触发动作
+            // 仅阻塞类动作(非 ALERT)才置 triggered=true 并立案；
+            // ALERT 类规则仅记录执行日志，不阻断业务流程。
             if (ruleTriggered && !triggered) {
-                triggered = true;
                 ProposedAction proposedAction = parseAction(action);
                 if (proposedAction != null && isBlockingAction(proposedAction)) {
+                    triggered = true;
                     createdCaseId = riskService.createCase(
                             userId, ruleCode, aiFlag, aiEvidence, proposedAction);
                 }
@@ -139,13 +141,18 @@ public class RuleEngineService {
             String matchModeStr = (String) rule.get("match_mode");
             int score = ((Number) rule.get("score")).intValue();
             int threshold = ((Number) rule.get("threshold")).intValue();
+            String action = (String) rule.get("action");
 
             if (matchRule(conditionJson, matchModeStr, context)) {
                 matchedCount++;
                 totalScore += score;
             }
+            // 仅阻塞类动作(非 ALERT)才置 triggered
             if (totalScore >= threshold) {
-                triggered = true;
+                ProposedAction proposedAction = parseAction(action);
+                if (proposedAction != null && isBlockingAction(proposedAction)) {
+                    triggered = true;
+                }
             }
         }
         return new EvaluationResult(matchedCount, totalScore, triggered, null);
