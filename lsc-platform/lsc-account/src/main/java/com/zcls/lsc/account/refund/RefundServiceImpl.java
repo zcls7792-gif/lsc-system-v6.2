@@ -113,7 +113,7 @@ public class RefundServiceImpl implements RefundService {
             // 查原批次到期时间
             LocalDateTime expireAt = jdbc.queryForObject(
                     "SELECT expire_at FROM lsc_available_lot WHERE available_lot_id=?",
-                    rs -> rs.getTimestamp("expire_at").toLocalDateTime(),
+                    (rs, rowNum) -> rs.getTimestamp("expire_at").toLocalDateTime(),
                     c.availableLotId());
 
             if (expireAt.isAfter(refundAt)) {

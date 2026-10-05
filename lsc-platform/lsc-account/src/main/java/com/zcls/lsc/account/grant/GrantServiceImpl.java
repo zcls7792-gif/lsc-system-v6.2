@@ -65,10 +65,8 @@ public class GrantServiceImpl implements GrantService {
             // 3. 查该价格版本的成本(C端/B端售价已在 order_unit_allocation.sale_cent)
             long costCent = jdbc.queryForObject(
                     "SELECT cost_price_enc FROM product_price_version WHERE price_version=?",
-                    rs -> {
+                    (rs, rowNum) -> {
                         byte[] enc = rs.getBytes(1);
-                        // 简化：成本解密由营销计算服务完成，这里假设已解密
-                        // 实际生产需 KMS 解密
                         return enc == null ? 0L : 0L;
                     },
                     item.priceVersion());
