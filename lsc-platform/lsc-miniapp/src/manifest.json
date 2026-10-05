@@ -1,0 +1,16 @@
+{
+  "name": "链盛通 LSC",
+  "appid": "",
+  "description": "链盛通消费回馈权益系统小程序",
+  "versionName": "7.7.2",
+  "versionCode": "772",
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true
+    },
+    "usingComponents": true
+  }
+}
