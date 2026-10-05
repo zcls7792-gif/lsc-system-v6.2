@@ -36,15 +36,7 @@
         <module>lsc-common</module>
         <module>lsc-db</module>
         <module>lsc-account</module>
-        <module>lsc-product</module>
-        <module>lsc-order</module>
-        <module>lsc-coupon</module>
-        <module>lsc-supplychain</module>
-        <module>lsc-risk</module>
-        <module>lsc-config</module>
-        <module>lsc-task</module>
-        <module>lsc-api</module>
-        <module>lsc-app</module>
+        <!-- 后续模块待开发: lsc-product lsc-order lsc-coupon lsc-supplychain lsc-risk lsc-config lsc-task lsc-api lsc-app -->
     </modules>
 
     <dependencyManagement>
