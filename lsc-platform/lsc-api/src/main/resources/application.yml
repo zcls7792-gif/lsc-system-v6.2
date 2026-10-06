@@ -17,6 +17,15 @@ mybatis-plus:
 server:
   port: 8080
 
+# 微信小程序配置 — 敏感凭证从环境变量注入，缺失时为空字符串（开发期不阻断启动）
+# 部署时通过 -Dwx.mp.app-id=xxx 或 WX_MP_APP_ID/WX_MP_APP_SECRET 环境变量注入
+wx:
+  mp:
+    app-id: ${WX_MP_APP_ID:}
+    app-secret: ${WX_MP_APP_SECRET:}
+    token: ${WX_MP_TOKEN:}
+    aes-key: ${WX_MP_AES_KEY:}
+
 logging:
   level:
     com.zcls.lsc: INFO
