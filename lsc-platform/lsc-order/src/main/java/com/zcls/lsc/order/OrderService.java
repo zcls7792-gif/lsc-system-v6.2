@@ -269,10 +269,10 @@ public class OrderService {
 
     /** C 端订单列表（按用户查询，可选状态过滤）。 */
     public List<Map<String, Object>> listUserOrders(long userId, String status, int limit, long offset) {
-        String statusFilter = (status == null || status.isEmpty()) ? "" : " AND status = ?";
-        String sql = "SELECT order_id, order_no, user_id, status, goods_cent, coupon_cent, "
-                + "lsc_unit, rmb_cent, created_at FROM `order` WHERE user_id = ?"
-                + statusFilter + " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        String statusFilter = (status == null || status.isEmpty()) ? "" : " AND payment_status = ?";
+        String sql = "SELECT order_id, order_no, user_id, payment_status, fulfillment_status, "
+                + "goods_cent, coupon_cent, lsc_unit, rmb_cent, created_at, completed_at "
+                + "FROM orders WHERE user_id = ?" + statusFilter + " ORDER BY created_at DESC LIMIT ? OFFSET ?";
         List<Object> args = new java.util.ArrayList<>();
         args.add(userId);
         if (statusFilter.length() > 0) args.add(status);
@@ -283,9 +283,33 @@ public class OrderService {
 
     /** C 端订单详情。 */
     public Map<String, Object> getOrderDetail(long orderId, long userId) {
-        Map<String, Object> order = jdbc.queryForMap(
-                "SELECT order_id, order_no, user_id, status, goods_cent, coupon_cent, lsc_unit, rmb_cent, "
-                        + "created_at, paid_at, shipped_at, completed_at FROM `order` WHERE order_id = ?", orderId);
+        List<Map<String, Object>> rows = jdbc.query(
+                "SELECT order_id, order_no, user_id, buyer_type_snapshot, payment_status, fulfillment_status, "
+                        + "refund_status, goods_cent, shipping_cent, coupon_cent, lsc_unit, rmb_cent, "
+                        + "discount_mode, created_at, completed_at FROM orders WHERE order_id = ?",
+                (rs, rowNum) -> {
+                    Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("order_id", rs.getLong("order_id"));
+                    m.put("order_no", rs.getString("order_no"));
+                    m.put("user_id", rs.getLong("user_id"));
+                    m.put("buyer_type_snapshot", rs.getString("buyer_type_snapshot"));
+                    m.put("payment_status", rs.getString("payment_status"));
+                    m.put("fulfillment_status", rs.getString("fulfillment_status"));
+                    m.put("refund_status", rs.getString("refund_status"));
+                    m.put("goods_cent", rs.getLong("goods_cent"));
+                    m.put("shipping_cent", rs.getLong("shipping_cent"));
+                    m.put("coupon_cent", rs.getLong("coupon_cent"));
+                    m.put("lsc_unit", rs.getLong("lsc_unit"));
+                    m.put("rmb_cent", rs.getLong("rmb_cent"));
+                    m.put("discount_mode", rs.getString("discount_mode"));
+                    m.put("created_at", rs.getString("created_at"));
+                    m.put("completed_at", rs.getString("completed_at"));
+                    return m;
+                }, orderId);
+        if (rows.isEmpty()) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "order not found: " + orderId);
+        }
+        Map<String, Object> order = rows.get(0);
         if (!Long.valueOf(userId).equals(order.get("user_id"))) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "order not owned by user");
         }
