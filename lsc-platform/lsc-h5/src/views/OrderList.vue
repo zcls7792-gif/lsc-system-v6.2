@@ -7,13 +7,13 @@
     <van-list v-model:loading="loading" :finished="finished" @load="onLoad">
       <div v-for="o in orders" :key="o.orderId" class="order-card" @click="goDetail(o.orderId)">
         <div class="order-header">
-          <span class="order-no">订单 #{{ o.orderId }}</span>
-          <span :class="'status-' + o.status">{{ statusText(o.status) }}</span>
+          <span class="order-no">订单 #{{ o.orderNo || o.order_no || o.orderId || o.order_id }}</span>
+          <span :class="'status-' + paymentStatus(o)">{{ statusText(paymentStatus(o)) }}</span>
         </div>
         <div class="order-amount">
-          实付 <span class="amount">¥{{ formatCent(o.rmbCent) }}</span>
+          实付 <span class="amount">¥{{ formatCent(o.rmbCent ?? o.rmb_cent) }}</span>
         </div>
-        <div class="order-time">{{ o.createdAt }}</div>
+        <div class="order-time">{{ o.createdAt || o.created_at }}</div>
       </div>
       <van-empty v-if="!loading && orders.length === 0" description="暂无订单" />
     </van-list>
@@ -56,9 +56,10 @@ function goDetail(id: number) {
   router.push(`/order/${id}`)
 }
 
-function formatCent(c: number) { return (c / 100).toFixed(2) }
+function formatCent(c: number) { return ((c ?? 0) / 100).toFixed(2) }
+function paymentStatus(o: any) { return o.status || o.paymentStatus || o.payment_status || 'PENDING' }
 function statusText(s: string) {
-  return ({ PENDING: '待支付', PAID: '已支付', COMPLETED: '已完成', CANCELED: '已取消', REFUNDED: '已退款' } as any)[s] || s
+  return ({ PENDING: '待支付', PAID: '已支付', UNPAID: '待支付', COMPLETED: '已完成', CREATED: '待支付', CANCELED: '已取消', REFUNDED: '已退款' } as any)[s] || s
 }
 </script>
 

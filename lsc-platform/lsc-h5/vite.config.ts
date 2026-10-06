@@ -14,7 +14,12 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 3000,
+    hmr: {
+      host: 'localhost',
+      port: 3000,
+      protocol: 'ws'
+    },
     proxy: {
       '/v1': { target: 'http://localhost:8080', changeOrigin: true }
     }
