@@ -2,6 +2,7 @@ package com.zcls.lsc.api.auth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,9 +46,48 @@ public class WeChatLoginService {
     public WeChatLoginService(JdbcTemplate jdbc, ObjectMapper objectMapper) {
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
+        this.httpClient = buildHttpClient();
+    }
+
+    /**
+     * 构建 HttpClient，自动读取 HTTP(S)_PROXY 环境变量。
+     * 生产环境若需直连可不设代理变量；沙箱/容器环境通过代理出口访问微信 API。
+     */
+    private HttpClient buildHttpClient() {
+        HttpClient.Builder builder = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5));
+        String proxy = System.getenv("HTTPS_PROXY");
+        if (proxy == null || proxy.isBlank()) proxy = System.getenv("https_proxy");
+        if (proxy == null || proxy.isBlank()) proxy = System.getenv("HTTP_PROXY");
+        if (proxy == null || proxy.isBlank()) proxy = System.getenv("http_proxy");
+        if (proxy != null && !proxy.isBlank()) {
+            try {
+                java.net.URL proxyUrl = new java.net.URL(proxy);
+                builder.proxy(java.net.ProxySelector.of(
+                        new java.net.InetSocketAddress(proxyUrl.getHost(), proxyUrl.getPort())));
+                log.info("WeChat HTTP client using proxy: {}:{}", proxyUrl.getHost(), proxyUrl.getPort());
+            } catch (Exception e) {
+                log.warn("Invalid proxy URL {}, ignoring: {}", proxy, e.getMessage());
+            }
+        }
+        return builder.build();
+    }
+
+    /**
+     * 启动时校验微信配置是否生效。
+     * 若 appid/secret 为空或疑似未解析的占位符（含 "${"），打印 WARN 提示并保持开发期模式。
+     */
+    @PostConstruct
+    public void validateConfig() {
+        boolean appIdValid = appId != null && !appId.isBlank() && !appId.contains("${");
+        boolean secretValid = appSecret != null && !appSecret.isBlank() && !appSecret.contains("${");
+        if (appIdValid && secretValid) {
+            log.info("WeChat config OK: appId={}*** (len={}), secret=*** (len={})",
+                    appId.substring(0, Math.min(4, appId.length())), appId.length(), appSecret.length());
+        } else {
+            log.warn("WeChat config NOT set — running in DEV mode. "
+                    + "Set WX_MP_APP_ID and WX_MP_APP_SECRET env vars for production.");
+        }
     }
 
     /**
@@ -65,9 +105,10 @@ public class WeChatLoginService {
                     + "&grant_type=authorization_code";
             JsonNode resp = httpGet(url);
             if (resp == null || resp.has("errcode")) {
-                log.warn("code2session failed: {}", resp);
-                throw new RuntimeException("wechat code2session failed: "
-                        + (resp == null ? "null response" : resp.path("errmsg").asText()));
+                int errCode = resp == null ? -1 : resp.path("errcode").asInt();
+                String errMsg = resp == null ? "null response" : resp.path("errmsg").asText("unknown");
+                log.error("WeChat code2session failed: errcode={}, errmsg={}, raw={}", errCode, errMsg, resp);
+                throw new RuntimeException("wechat code2session failed: errcode=" + errCode + ", " + errMsg);
             }
             openid = resp.path("openid").asText();
         } else {
@@ -96,9 +137,10 @@ public class WeChatLoginService {
                     + "&grant_type=authorization_code";
             JsonNode tokenResp = httpGet(tokenUrl);
             if (tokenResp == null || tokenResp.has("errcode")) {
-                log.warn("oauth2 access_token failed: {}", tokenResp);
-                throw new RuntimeException("wechat oauth2 failed: "
-                        + (tokenResp == null ? "null" : tokenResp.path("errmsg").asText()));
+                int errCode = tokenResp == null ? -1 : tokenResp.path("errcode").asInt();
+                String errMsg = tokenResp == null ? "null response" : tokenResp.path("errmsg").asText("unknown");
+                log.error("WeChat oauth2 access_token failed: errcode={}, errmsg={}, raw={}", errCode, errMsg, tokenResp);
+                throw new RuntimeException("wechat oauth2 failed: errcode=" + errCode + ", " + errMsg);
             }
             String accessToken = tokenResp.path("access_token").asText();
             openid = tokenResp.path("openid").asText();
