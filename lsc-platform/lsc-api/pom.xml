@@ -84,7 +84,20 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>com.zcls.lsc.api.LscApplication</mainClass>
+                    <!-- 分层 jar：分离依赖/应用代码，配合 Docker 多阶段构建最大化层缓存复用 -->
+                    <layers>
+                        <enabled>true</enabled>
+                    </layers>
                 </configuration>
+                <!-- 项目用自定义父 pom（非 spring-boot-starter-parent），需显式绑定 repackage -->
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
