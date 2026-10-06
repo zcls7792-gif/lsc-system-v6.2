@@ -2,9 +2,9 @@ spring:
   application:
     name: lsc-platform
   datasource:
-    url: jdbc:mysql://localhost:3306/lsc?useSSL=false&serverTimezone=UTC&characterEncoding=utf8mb4
-    username: root
-    password: root
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/lsc?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci}
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jackson:
     serialization:
