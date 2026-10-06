@@ -43,6 +43,7 @@ export function createQuote(
 
 export interface Order {
   orderId: number
+  orderNo?: string
   userId: number
   buyerType: string
   goodsCent: number
@@ -52,6 +53,28 @@ export interface Order {
   discountMode: string
   status: string
   createdAt: string
+  // 后端 snake_case 兼容字段
+  order_id?: number
+  order_no?: string
+  goods_cent?: number
+  coupon_cent?: number
+  lsc_unit?: number
+  rmb_cent?: number
+  payment_status?: string
+  created_at?: string
+  items?: OrderItem[]
+}
+
+export interface OrderItem {
+  itemId?: number
+  item_id?: number
+  skuId?: number
+  sku_id?: number
+  qty: number
+  unitPriceCent?: number
+  unit_price_cent?: number
+  lineGoodsCent?: number
+  line_goods_cent?: number
 }
 
 export function listOrders(status?: string) {

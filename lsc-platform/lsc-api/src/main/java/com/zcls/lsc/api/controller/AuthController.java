@@ -1,28 +1,33 @@
 package com.zcls.lsc.api.controller;
 
 import com.zcls.lsc.api.auth.JwtUtil;
+import com.zcls.lsc.api.auth.WeChatLoginService;
 import com.zcls.lsc.api.common.ApiResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
  * 第14.1章 鉴权接口（C 端登录/换 token）。
  *
- * 开发期简化：用 phone + 短信验证码登录（验证码固定为 1234，生产环境对接短信网关）。
- * 生产环境应替换为：
- *  - 短信验证码（接腾讯云/阿里云短信）
- *  - 微信小程序 code2session 换 openid
+ * 登录方式：
+ *  - 短信验证码登录：POST /v1/auth/login/sms（开发期验证码 1234）
+ *  - 微信小程序登录：POST /v1/auth/login/wechat（code2session 换 openid）
+ *  - 微信 H5 授权登录：POST /v1/auth/login/wechat/h5（OAuth2 code 换 openid）
  */
 @RestController
 @RequestMapping("/v1/auth")
 public class AuthController {
 
     private final JdbcTemplate jdbc;
+    private final WeChatLoginService weChatLoginService;
 
-    public AuthController(JdbcTemplate jdbc) {
+    public AuthController(JdbcTemplate jdbc, WeChatLoginService weChatLoginService) {
         this.jdbc = jdbc;
+        this.weChatLoginService = weChatLoginService;
     }
 
     /**
@@ -62,20 +67,48 @@ public class AuthController {
     }
 
     /**
-     * POST /v1/auth/login/wechat — 微信小程序登录（code 换 token）。
-     * 开发期占位：直接返回 token，不调 code2session。
+     * POST /v1/auth/login/wechat — 微信小程序登录（code2session 换 openid）。
+     * 前端 wx.login() 拿到 code 后调用此接口。
+     * 未配置 appid/appsecret 时走开发期模式。
      */
     @PostMapping("/login/wechat")
     public ApiResponse<Map<String, Object>> loginByWechat(@RequestParam String code) {
-        // 开发期：用 code 哈希作为临时 userId
-        long userId = Math.abs(code.hashCode()) & 0xFFFFFFFFL;
-        if (userId == 0) userId = 1L;
-        String token = JwtUtil.issue(userId);
-        return ApiResponse.ok(Map.of(
-                "token", token,
-                "userId", userId,
-                "expiresIn", 7L * 24 * 3600
-        ));
+        return ApiResponse.ok(weChatLoginService.loginByMiniAppCode(code));
+    }
+
+    /**
+     * POST /v1/auth/login/wechat/h5 — 微信 H5 网页授权登录（OAuth2 code 换 openid）。
+     * 前端在微信内打开授权页，回调带 code 后调用此接口。
+     */
+    @PostMapping("/login/wechat/h5")
+    public ApiResponse<Map<String, Object>> loginByWechatH5(@RequestParam String code) {
+        return ApiResponse.ok(weChatLoginService.loginByH5Code(code));
+    }
+
+    /**
+     * GET /v1/auth/wechat/h5/auth-url — 获取微信 H5 网页授权跳转 URL。
+     * 前端拿到此 URL 后重定向，微信授权回调会带 code 到 redirectUri。
+     */
+    @GetMapping("/wechat/h5/auth-url")
+    public ApiResponse<Map<String, String>> wechatH5AuthUrl(
+            @RequestParam String redirectUri,
+            @RequestParam(required = false, defaultValue = "snsapi_userinfo") String scope,
+            @RequestParam(required = false) String state) {
+        String url = "https://open.weixin.qq.com/connect/oauth2/authorize"
+                + "?appid=" + weChatAppId()
+                + "&redirect_uri=" + java.net.URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
+                + "&response_type=code"
+                + "&scope=" + scope
+                + (state != null ? "&state=" + state : "")
+                + "#wechat_redirect";
+        return ApiResponse.ok(Map.of("url", url));
+    }
+
+    @Value("${wx.mp.app-id:}")
+    private String wxAppId;
+
+    private String weChatAppId() {
+        return wxAppId != null ? wxAppId : "";
     }
 
     /** GET /v1/auth/me — 查询当前登录用户（需 token）。 */

@@ -83,7 +83,7 @@ onMounted(async () => {
 
 async function selectSku(sku: Sku) {
   selectedSku.value = sku
-  qty.value = sku.bMinQty
+  qty.value = sku.bMinQty ?? sku.b_min_qty ?? 1
   price.value = await getActivePrice(sku.skuId)
   quote.value = null
 }

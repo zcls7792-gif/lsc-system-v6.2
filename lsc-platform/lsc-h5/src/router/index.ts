@@ -3,6 +3,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/home' },
   { path: '/login', component: () => import('@/views/Login.vue'), meta: { title: '登录', public: true } },
+  { path: '/wechat/callback', component: () => import('@/views/WechatCallback.vue'), meta: { title: '微信登录', public: true } },
   { path: '/home', component: () => import('@/views/Home.vue'), meta: { title: '首页', public: true } },
   { path: '/products', component: () => import('@/views/ProductList.vue'), meta: { title: '商品', public: true } },
   { path: '/product/:id', component: () => import('@/views/ProductDetail.vue'), meta: { title: '商品详情', hideTabBar: true, public: true } },

@@ -37,6 +37,13 @@
       </div>
     </van-form>
 
+    <div class="login-divider">— 其他登录方式 —</div>
+    <div class="login-wechat">
+      <van-button round block icon="chat-o" @click="onWechatLogin">
+        微信登录
+      </van-button>
+    </div>
+
     <p class="login-tip">开发期：手机号任意，验证码固定 1234</p>
   </div>
 </template>
@@ -45,7 +52,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
-import { loginBySms } from '@/api/auth'
+import { loginBySms, getWechatH5AuthUrl } from '@/api/auth'
 
 const router = useRouter()
 const phone = ref('')
@@ -74,6 +81,28 @@ async function onLogin() {
     loading.value = false
   }
 }
+
+/**
+ * 微信 H5 网页授权登录。
+ * 开发期（未配置 appid）直接用模拟 code 走回调页，方便本地调试。
+ */
+async function onWechatLogin() {
+  try {
+    const callbackUri = window.location.origin + '/wechat/callback'
+    const { url } = await getWechatH5AuthUrl(callbackUri, 'redirect=/mine')
+    // 检查 appid 是否已配置（URL 中 appid=xxx 不为空）
+    const appIdMatch = url.match(/appid=([^&]*)/)
+    if (appIdMatch && appIdMatch[1]) {
+      window.location.href = url
+    } else {
+      // 开发期：appid 为空，用模拟 code 直接跳回调页
+      showToast('开发期：使用模拟微信 code')
+      window.location.href = callbackUri + '?code=dev_wechat_code'
+    }
+  } catch (e: any) {
+    showToast(e?.message || '微信登录失败')
+  }
+}
 </script>
 
 <style scoped>
@@ -99,6 +128,20 @@ async function onLogin() {
 }
 .login-submit {
   margin: 24px 16px 0;
+}
+.login-divider {
+  text-align: center;
+  margin: 32px 0 16px;
+  color: #c8c9cc;
+  font-size: 12px;
+}
+.login-wechat {
+  margin: 0 16px;
+}
+.login-wechat .van-button {
+  background: #07c160;
+  border-color: #07c160;
+  color: #fff;
 }
 .login-tip {
   text-align: center;

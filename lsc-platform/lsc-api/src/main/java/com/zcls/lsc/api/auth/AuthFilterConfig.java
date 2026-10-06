@@ -28,6 +28,7 @@ public class AuthFilterConfig {
     /** 白名单路径前缀（精确前缀匹配，避免 contains 误判）。 */
     private static final List<String> WHITELIST = List.of(
             "/v1/auth/login",             // 登录入口（短信/微信）
+            "/v1/auth/wechat",            // 微信登录+授权URL（登录前调用）
             "/v1/products",              // C 端商品公开接口（GET，无登录）
             "/v1/skus",                   // C 端 SKU 公开接口
             "/v1/coupons",                // 优惠券公开查询

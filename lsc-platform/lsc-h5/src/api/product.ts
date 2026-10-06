@@ -13,6 +13,15 @@ export interface Sku {
   specJson: string
   saleUnit: string
   packQty: number
+  bMinQty?: number
+  bMinPackQty?: number
+  // snake_case 兼容
+  sku_id?: number
+  sku_code?: string
+  spec_json?: string
+  sale_unit?: string
+  pack_qty?: number
+  b_min_qty?: number
 }
 
 export function listProducts(status = 'ON_SALE', limit = 20, offset = 0) {
