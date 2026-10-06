@@ -76,7 +76,7 @@ CREATE TABLE task_run (
     business_date    DATE         NOT NULL COMMENT '业务日',
     run_id           VARCHAR(64)  NOT NULL COMMENT '运行实例ID',
     status           VARCHAR(16)  NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING/RUNNING/SUCCEEDED/FAILED/LEASE_LOST',
-    cursor           BIGINT       NULL COMMENT '断点游标',
+    `cursor`         BIGINT       NULL COMMENT '断点游标',
     lease_owner      VARCHAR(128) NULL COMMENT '租约持有者',
     fencing_token    BIGINT       NOT NULL DEFAULT 0 COMMENT 'fencing token(防止旧执行器提交)',
     started_at       DATETIME(3)  NULL,

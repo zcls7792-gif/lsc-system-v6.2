@@ -29,3 +29,12 @@ wx:
 logging:
   level:
     com.zcls.lsc: INFO
+
+# 禁用系统指标（沙箱/容器环境 cgroup v2 与 JDK 17 ProcessorMetrics 不兼容）
+management:
+  metrics:
+    binders:
+      system:
+        enabled: false
+      jvm:
+        enabled: true
