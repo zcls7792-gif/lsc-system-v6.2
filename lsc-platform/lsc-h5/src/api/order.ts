@@ -14,13 +14,13 @@ export interface Order {
 }
 
 export function listOrders(status?: string) {
-  return get<Order[]>('/user/orders', { status })
+  return get<Order[]>('/orders', { status })
 }
 
 export function getOrder(orderId: number) {
-  return get<Order>(`/user/orders/${orderId}`)
+  return get<Order>(`/orders/${orderId}`)
 }
 
 export function cancelOrder(orderId: number) {
-  return post(`/user/orders/${orderId}/cancel`)
+  return post(`/orders/${orderId}/cancel`)
 }

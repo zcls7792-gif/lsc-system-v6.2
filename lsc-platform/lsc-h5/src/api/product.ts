@@ -28,5 +28,5 @@ export function listSkus(productId: number) {
 }
 
 export function getActivePrice(skuId: number) {
-  return get<any>(`/skus/${skuId}/price-versions/active`)
+  return get<any>(`/skus/${skuId}/price`)
 }

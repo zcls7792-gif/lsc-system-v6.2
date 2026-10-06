@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 第13.1章 订单与报价接口。
@@ -61,5 +62,25 @@ public class OrderController {
     public ApiResponse<Void> cancelOrder(@PathVariable long id) {
         // 简化：由 OrderService.cancel 实现（关闭支付 + 释放权益占用 + 释放券）
         return ApiResponse.ok(null);
+    }
+
+    // ===== C 端订单查询接口 =====
+
+    /** C 端订单列表（按用户查询，可选状态过滤）。 */
+    @GetMapping("/orders")
+    public ApiResponse<List<Map<String, Object>>> listMyOrders(
+            @RequestAttribute("userId") long userId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "0") long offset) {
+        return ApiResponse.ok(orderService.listUserOrders(userId, status, limit, offset));
+    }
+
+    /** C 端订单详情。 */
+    @GetMapping("/orders/{id}")
+    public ApiResponse<Map<String, Object>> getOrderDetail(
+            @PathVariable long id,
+            @RequestAttribute("userId") long userId) {
+        return ApiResponse.ok(orderService.getOrderDetail(id, userId));
     }
 }

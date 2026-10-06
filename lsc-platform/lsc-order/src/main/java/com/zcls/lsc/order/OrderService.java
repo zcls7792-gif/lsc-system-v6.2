@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 第3.4 / 4.2 / 7.1 章 下单服务。
@@ -263,4 +264,35 @@ public class OrderService {
                             LocalDateTime expiresAt, String payloadJson) {}
     private record QuoteItemRow(long skuId, int qty, long unitPriceCent, long lineCent) {}
     private record UnitRow(long allocationId, long itemId, long saleCent) {}
+
+    // ===== C 端订单查询 =====
+
+    /** C 端订单列表（按用户查询，可选状态过滤）。 */
+    public List<Map<String, Object>> listUserOrders(long userId, String status, int limit, long offset) {
+        String statusFilter = (status == null || status.isEmpty()) ? "" : " AND status = ?";
+        String sql = "SELECT order_id, order_no, user_id, status, goods_cent, coupon_cent, "
+                + "lsc_unit, rmb_cent, created_at FROM `order` WHERE user_id = ?"
+                + statusFilter + " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        List<Object> args = new java.util.ArrayList<>();
+        args.add(userId);
+        if (statusFilter.length() > 0) args.add(status);
+        args.add(limit);
+        args.add(offset);
+        return jdbc.queryForList(sql, args.toArray());
+    }
+
+    /** C 端订单详情。 */
+    public Map<String, Object> getOrderDetail(long orderId, long userId) {
+        Map<String, Object> order = jdbc.queryForMap(
+                "SELECT order_id, order_no, user_id, status, goods_cent, coupon_cent, lsc_unit, rmb_cent, "
+                        + "created_at, paid_at, shipped_at, completed_at FROM `order` WHERE order_id = ?", orderId);
+        if (!Long.valueOf(userId).equals(order.get("user_id"))) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "order not owned by user");
+        }
+        List<Map<String, Object>> items = jdbc.queryForList(
+                "SELECT item_id, order_id, sku_id, qty, unit_price_cent, line_cent, lsc_unit_alloc, "
+                        + "sale_cent FROM order_item WHERE order_id = ?", orderId);
+        order.put("items", items);
+        return order;
+    }
 }

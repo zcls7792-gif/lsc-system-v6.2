@@ -47,8 +47,36 @@ public class ProductController {
 
     // ===== 商品 =====
 
+    // ===== C 端公开接口（只读，无需鉴权） =====
+
+    /** C 端商品列表（仅 ON_SALE）。 */
+    @GetMapping("/products")
+    public ApiResponse<List<ProductRow>> listOnSaleProducts(
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "0") long offset) {
+        return ApiResponse.ok(productService.listByStatus(ProductStatus.ON_SALE, limit, offset));
+    }
+
+    /** C 端商品详情。 */
+    @GetMapping("/products/{id}")
+    public ApiResponse<ProductRow> getProductPublic(@PathVariable long id) {
+        return ApiResponse.ok(productService.getProduct(id));
+    }
+
+    /** C 端查询商品下的 SKU 列表。 */
+    @GetMapping("/products/{productId}/skus")
+    public ApiResponse<List<SkuRow>> listSkusByProductPublic(@PathVariable long productId) {
+        return ApiResponse.ok(skuService.listByProduct(productId));
+    }
+
+    /** C 端查询 SKU 当前生效价格版本。 */
+    @GetMapping("/skus/{skuId}/price")
+    public ApiResponse<PriceVersionRow> getSkuActivePrice(@PathVariable long skuId) {
+        return ApiResponse.ok(priceVersionService.getActivePriceVersion(skuId));
+    }
+
     @PostMapping("/admin/products")
-    public ApiResponse<Long> createProduct(
+    public ApiResponse<Long> createProductAdmin(
             @RequestParam long sellerEntityId,
             @RequestParam String name,
             @RequestParam long categoryId,
