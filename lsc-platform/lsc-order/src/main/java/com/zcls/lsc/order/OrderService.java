@@ -314,8 +314,8 @@ public class OrderService {
             throw new BusinessException(ErrorCode.FORBIDDEN, "order not owned by user");
         }
         List<Map<String, Object>> items = jdbc.queryForList(
-                "SELECT item_id, order_id, sku_id, qty, unit_price_cent, line_cent, lsc_unit_alloc, "
-                        + "sale_cent FROM order_item WHERE order_id = ?", orderId);
+                "SELECT item_id, order_id, sku_id, qty, unit_price_cent, line_goods_cent, "
+                        + "coupon_share_cent, lsc_share_unit, rmb_share_cent FROM order_item WHERE order_id = ?", orderId);
         order.put("items", items);
         return order;
     }

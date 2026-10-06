@@ -39,7 +39,7 @@ public class QuoteService {
      * @param couponId    券ID（discountMode=COUPON 时）
      * @return 报价结果
      */
-    @Transactional(readOnly = true)
+    @Transactional(rollbackFor = Exception.class)
     public QuoteResult createQuote(long userId, String buyerType, List<QuoteItem> items,
                                    String discountMode, Long lscUnit, Long couponId) {
         if (items == null || items.isEmpty()) {
