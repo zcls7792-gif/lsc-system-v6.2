@@ -21,8 +21,10 @@ public final class RiskEnums {
 
     /** 风控案件处置动作。 */
     public enum ProposedAction {
-        /** 仅提示 */
+        /** 仅提示（不阻断业务，不立案） */
         ALERT,
+        /** 人工复核（阻塞业务，立案待审核） */
+        REVIEW,
         /** 冻结可用余额 */
         FREEZE_AVAILABLE,
         /** 冻结全部权益 */
