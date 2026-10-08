@@ -87,13 +87,21 @@ public class AuthController {
 
     /**
      * GET /v1/auth/wechat/h5/auth-url — 获取微信 H5 网页授权跳转 URL。
-     * 前端拿到此 URL 后重定向，微信授权回调会带 code 到 redirectUri。
+     * redirectUri 可省略：省略时使用 wx.mp.callback-domain 配置 + 默认回调路径 /wechat/callback。
      */
     @GetMapping("/wechat/h5/auth-url")
     public ApiResponse<Map<String, String>> wechatH5AuthUrl(
-            @RequestParam String redirectUri,
+            @RequestParam(required = false) String redirectUri,
             @RequestParam(required = false, defaultValue = "snsapi_userinfo") String scope,
             @RequestParam(required = false) String state) {
+        if (redirectUri == null || redirectUri.isBlank()) {
+            // 用配置的回调域名兜底
+            if (callbackDomain != null && !callbackDomain.isBlank()) {
+                redirectUri = callbackDomain.replaceAll("/+$", "") + "/wechat/callback";
+            } else {
+                redirectUri = "/wechat/callback";
+            }
+        }
         String url = "https://open.weixin.qq.com/connect/oauth2/authorize"
                 + "?appid=" + weChatAppId()
                 + "&redirect_uri=" + java.net.URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
@@ -107,8 +115,24 @@ public class AuthController {
     @Value("${wx.mp.app-id:}")
     private String wxAppId;
 
+    @Value("${wx.mp.callback-domain:}")
+    private String callbackDomain;
+
+    @Value("${wx.mp.server-domain:}")
+    private String serverDomain;
+
     private String weChatAppId() {
         return wxAppId != null ? wxAppId : "";
+    }
+
+    /** GET /v1/auth/wechat/config — 返回微信配置的非敏感信息（供前端/运维核对）。 */
+    @GetMapping("/wechat/config")
+    public ApiResponse<Map<String, Object>> wechatConfig() {
+        return ApiResponse.ok(Map.of(
+                "appIdConfigured", wxAppId != null && !wxAppId.isBlank(),
+                "callbackDomain", callbackDomain != null ? callbackDomain : "",
+                "serverDomain", serverDomain != null ? serverDomain : ""
+        ));
     }
 
     /** GET /v1/auth/me — 查询当前登录用户（需 token）。 */

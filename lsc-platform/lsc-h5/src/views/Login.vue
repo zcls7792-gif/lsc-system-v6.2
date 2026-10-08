@@ -88,14 +88,15 @@ async function onLogin() {
  */
 async function onWechatLogin() {
   try {
-    const callbackUri = window.location.origin + '/wechat/callback'
-    const { url } = await getWechatH5AuthUrl(callbackUri, 'redirect=/mine')
+    // 不传 redirectUri，由后端按 wx.mp.callback-domain 配置构造回调地址
+    const { url } = await getWechatH5AuthUrl('', 'redirect=/mine')
     // 检查 appid 是否已配置（URL 中 appid=xxx 不为空）
     const appIdMatch = url.match(/appid=([^&]*)/)
     if (appIdMatch && appIdMatch[1]) {
       window.location.href = url
     } else {
       // 开发期：appid 为空，用模拟 code 直接跳回调页
+      const callbackUri = window.location.origin + '/wechat/callback'
       showToast('开发期：使用模拟微信 code')
       window.location.href = callbackUri + '?code=dev_wechat_code'
     }

@@ -25,6 +25,18 @@ wx:
     app-secret: ${WX_MP_APP_SECRET:}
     token: ${WX_MP_TOKEN:}
     aes-key: ${WX_MP_AES_KEY:}
+    # 微信 H5 网页授权回调域名（不含路径），需在微信公众平台「网页授权域名」中配置一致
+    # 例：https://h5.lsc.example.com
+    callback-domain: ${WX_MP_CALLBACK_DOMAIN:}
+    # 小程序服务器域名（request 合法域名），需在微信公众平台「服务器域名」中配置
+    # 仅用于文档/校验参考，实际请求由小程序前端发起
+    server-domain: ${WX_MP_SERVER_DOMAIN:}
+
+# CORS 跨域配置 — 生产环境填写 H5 域名，多个用逗号分隔
+# 开发期由 Vite 代理处理，保持 * 即可
+app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:*}
 
 logging:
   level:
