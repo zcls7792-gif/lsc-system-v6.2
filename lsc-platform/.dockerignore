@@ -1,0 +1,16 @@
+# Docker 构建上下文排除清单（避免大文件/敏感文件进入镜像）
+**/target/
+!lsc-api/target/lsc-api-7.7.2-SNAPSHOT.jar
+**/*.iml
+.idea/
+.vscode/
+**/.env
+**/.env.local
+**/.env.*.local
+**/node_modules/
+**/dist/
+*.log
+*.bak
+*.tmp
+.git/
+.gitignore

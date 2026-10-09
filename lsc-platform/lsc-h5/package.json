@@ -1,0 +1,25 @@
+{
+  "name": "lsc-h5",
+  "version": "7.7.2",
+  "description": "链盛通 LSC 消费回馈权益系统 - H5移动端",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0",
+    "pinia": "^2.1.7",
+    "axios": "^1.6.8",
+    "vant": "^4.9.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "typescript": "^5.4.0",
+    "vite": "^5.2.0",
+    "vue-tsc": "^2.0.0",
+    "unplugin-vue-components": "^0.26.0",
+    "@vant/auto-import-resolver": "^1.2.1"
+  }
+}

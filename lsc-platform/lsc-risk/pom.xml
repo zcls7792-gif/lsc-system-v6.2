@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.zcls.lsc</groupId>
+        <artifactId>lsc-platform-parent</artifactId>
+        <version>7.7.2-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>lsc-risk</artifactId>
+    <name>LSC Risk and Config Audit</name>
+    <description>第10/11章 风控与配置审计:风控案件(48h复核)+申诉(5工作日答复)+配置变更双签+版本生效+管理员审计日志+合规门禁(AI启用/上线发布)+通知投递防重</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.zcls.lsc</groupId>
+            <artifactId>lsc-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.zcls.lsc</groupId>
+            <artifactId>lsc-db</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
