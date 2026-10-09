@@ -76,6 +76,8 @@ public final class TaskEnums {
         /** 通知投递 */
         NOTIFICATION,
         /** 合规门禁清扫 */
-        GATE_SWEEP
+        GATE_SWEEP,
+        /** 合规巡检 R01-R12 */
+        COMPLIANCE_INSPECTION
     }
 }

@@ -2,6 +2,8 @@ package com.zcls.lsc.api.controller;
 
 import com.zcls.lsc.api.common.ApiResponse;
 import com.zcls.lsc.risk.ComplianceGateService;
+import com.zcls.lsc.risk.ComplianceInspectionService;
+import com.zcls.lsc.risk.ComplianceInspectionService.InspectionResultRow;
 import com.zcls.lsc.risk.ConfigAuditService;
 import com.zcls.lsc.risk.ConfigAuditService.ActiveConfig;
 import com.zcls.lsc.risk.ConfigAuditService.AuditLogRow;
@@ -35,13 +37,16 @@ public class RiskConfigController {
     private final ConfigAuditService configAuditService;
     private final ComplianceGateService gateService;
     private final NotificationService notificationService;
+    private final ComplianceInspectionService inspectionService;
 
     public RiskConfigController(RiskService riskService, ConfigAuditService configAuditService,
-                               ComplianceGateService gateService, NotificationService notificationService) {
+                               ComplianceGateService gateService, NotificationService notificationService,
+                               ComplianceInspectionService inspectionService) {
         this.riskService = riskService;
         this.configAuditService = configAuditService;
         this.gateService = gateService;
         this.notificationService = notificationService;
+        this.inspectionService = inspectionService;
     }
 
     // ===== 风控案件 =====
@@ -267,5 +272,27 @@ public class RiskConfigController {
     public ApiResponse<List<PendingDelivery>> findDeadNotifications(
             @RequestParam(defaultValue = "50") int limit) {
         return ApiResponse.ok(notificationService.findDeadDeliveries(limit));
+    }
+
+    // ===== 合规巡检 R01-R12 =====
+
+    /**
+     * 手动触发合规巡检（执行全部 R01-R12）。
+     * 返回 true 表示所有 CRITICAL 规则均通过；false 表示存在 CRITICAL 违规。
+     */
+    @PostMapping("/admin/compliance/inspect")
+    public ApiResponse<Boolean> runComplianceInspection(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate businessDate) {
+        LocalDate date = businessDate != null ? businessDate : LocalDate.now();
+        return ApiResponse.ok(inspectionService.runInspection(date));
+    }
+
+    /**
+     * 查询指定业务日的合规巡检结果。
+     */
+    @GetMapping("/admin/compliance/inspection-results")
+    public ApiResponse<List<InspectionResultRow>> getInspectionResults(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate businessDate) {
+        return ApiResponse.ok(inspectionService.queryResults(businessDate));
     }
 }
